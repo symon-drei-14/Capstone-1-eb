@@ -71,7 +71,7 @@
             <div class="container">
                 <h2>Fleet Management</h2>
                 <div class="button-row">
-                    <button class="add_trip" onclick="openModal()">Assign Trip</button>
+                    <button class="add_trip" onclick="openModal()">Assign Trips</button>
                 </div>
                 <br />
 
