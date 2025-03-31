@@ -97,7 +97,7 @@
     <div class="main-content3">
         <section class="dashboard">
             <div class="container">
-                <h2>Fleet Management</h2>
+                <h2>Fleet Managements</h2>
                 <div class="button-row">
                     <button class="add_driver" onclick="openModal()">Assign Trip</button>
                 </div>
