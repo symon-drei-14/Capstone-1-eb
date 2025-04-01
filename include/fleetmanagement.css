@@ -17,7 +17,7 @@ th, td {
 }
 
 th {
-    background-color: #ffffff;
+    background-color:  #ffffff;
     font-weight: bold;
     position: relative;
     box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
@@ -48,12 +48,14 @@ tr:hover {
     padding: 5px 10px;
     border-radius: 20px;
 }
-
 .status-in-progress {
     background-color: #2196F3;
     color: white;
     padding: 5px 10px;
     border-radius: 20px;
+    white-space: nowrap;
+    display: inline-block;
+    
 }
 
 .status-pending {
@@ -84,7 +86,7 @@ tr:hover {
 }
 
 .actions button.edit {
-    background-color: #4CAF50;
+    background-color:#4CAF50;
     color: white;
 }
 
@@ -104,17 +106,21 @@ tr:hover {
 
 .container {
     padding: 20px;
+   
+    overflow-x: hidden;
 }
 
 .table-container {
     margin-bottom: 20px;
+    margin-right: 20px;
+
 }
 
 .pagination {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .pagination button {
@@ -126,6 +132,7 @@ tr:hover {
     cursor: pointer;
     border-radius: 10px;
     margin: 0 5px;
+   
 }
 
 .pagination .prev, .pagination .next {

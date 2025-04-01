@@ -9,6 +9,11 @@
    
 </head>
 <body>
+<style>
+
+
+</style>
+
     <header class="header">
         <div class="logo-container">
             <img src="/img/logo.png" alt="Company Logo" class="logo">
@@ -97,13 +102,15 @@
                     </table>
                 </div>
 
-                <div class="pagination">
+               
+            </div>
+            <div class="pagination">
                     <button class="prev" onclick="changePage(-1)">◄</button> 
                     <span id="page-info">Page 1</span>
                     <button class="next" onclick="changePage(1)">►</button> 
                 </div>
-            </div>
         </section>
+     
     </div>
 
     <!-- Modal Structure -->
@@ -168,7 +175,7 @@
     <script>
         // Sample data
         const fleetData = [
-            {id: 1, vehicle: 'Truck 101', driver: 'John Smith', driverAssistant: 'Carlos Rodriguez', client: 'ABC Corp', containerNo: 'CONT7890', destination: 'New York', departureTime: '2025-03-30 08:00', estimatedArrivalTime: '2025-03-31 14:00', status: 'In Progress'},
+            {id: 1, vehicle: 'Truck 101', driver: 'Glen Diana', driverAssistant: 'Carlos Rodriguez', client: 'ABC Corp', containerNo: 'CONT7890', destination: 'New York', departureTime: '2025-03-30 08:00', estimatedArrivalTime: '2025-03-31 14:00', status: 'In Progress'},
             {id: 2, vehicle: 'Van 202', driver: 'Sarah Johnson', driverAssistant: 'Mike Lee', client: 'XYZ Ltd', containerNo: 'CONT1234', destination: 'Los Angeles', departureTime: '2025-03-29 09:30', estimatedArrivalTime: '2025-03-29 18:30', status: 'Completed'},
             {id: 3, vehicle: 'Truck 303', driver: 'David Wilson', driverAssistant: 'Emma Clark', client: 'DEF Inc', containerNo: 'CONT5678', destination: 'Chicago', departureTime: '2025-03-31 07:00', estimatedArrivalTime: '2025-04-01 12:00', status: 'Pending'},
             {id: 4, vehicle: 'Semi 404', driver: 'Lisa Brown', driverAssistant: 'James Taylor', client: 'GHI LLC', containerNo: 'CONT9012', destination: 'Miami', departureTime: '2025-03-28 06:00', estimatedArrivalTime: '2025-03-30 10:00', status: 'Completed'},
@@ -202,7 +209,7 @@
                     <td>${row.destination}</td>
                     <td>${row.departureTime}</td>
                     <td>${row.estimatedArrivalTime}</td>
-                    <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
+                    <td><span class="status-${row.status.toLowerCase().replace(/\s+/g, "-")}">${row.status}</span></td>
                     <td class="actions">
                         <button class="edit" onclick="openModal()">Edit</button>
                         <button class="delete" onclick="deleteRecord(${row.id})">Delete</button>
