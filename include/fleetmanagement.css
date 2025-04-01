@@ -3,12 +3,14 @@ body {
     margin: 10px;
     background-color: rgb(241, 241, 244);
 }
-
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin-top: 10px;
+    table-layout: fixed; /* Add this */
+    overflow: hidden; /* Add this */
 }
+
 
 th, td {
     padding: 12px;
@@ -23,6 +25,7 @@ th {
     box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
     border-bottom: 5px double #d3d1d15c;
     z-index: 1;
+    box-sizing: border-box;
 }
 
 tr:nth-child(even) {
@@ -104,6 +107,15 @@ tr:hover {
     overflow-x: hidden;
 }
 
+.main-content4 {
+    width: 90vw;
+    height:fit-content;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    overflow-x: hidden;
+}
+
 .container {
     padding: 20px;
    
@@ -111,9 +123,14 @@ tr:hover {
 }
 
 .table-container {
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     margin-right: 20px;
 
+}
+
+h3 {
+    text-align: center;
+    margin-right: 20px;
 }
 
 .pagination {
