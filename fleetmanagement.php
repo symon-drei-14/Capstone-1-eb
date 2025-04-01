@@ -113,6 +113,8 @@
      
     </div>
 
+    
+
     <!-- Modal Structure -->
     <div id="tripModal" class="modal">
         <div class="modal-content">
