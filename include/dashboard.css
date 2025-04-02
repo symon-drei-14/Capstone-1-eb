@@ -1,8 +1,11 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 80px;
+    margin:100px;
+
+
     background-color: rgb(241, 241, 244);
 }
+
 
 .dashboard-grid {
     display: grid;
@@ -11,20 +14,136 @@ body {
     padding: 20px;
 }
 
+
 .grid-item {
+    display: flex;
+    justify-content: space-between;
     background: #fff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
     font-size: 18px;
     font-weight: bold;
 }
 
-.on-route { background-color: #4CAF50; color: black; }
-.errors { background-color: #FF5722; color: black; }
-.late { background-color:rgb(255, 191, 0); color: black; }
-.deviated { background-color: #2196F3; color: black; }
+
+.content {
+    display: inline-block;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.content2 {
+    display: inline-block;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+.content3 {
+    display: inline-block;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+.content4 {
+    display: inline-block;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+
+.grid-item.card.statistic {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.grid-item.card.statistic:hover {
+    transform: scale(1.05); 
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); 
+}
+
+
+
+.icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding:10px;
+    background-color: #2ecc7061;
+    margin-top: 50px;
+    font-size: 30px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+.icon-container2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding:10px;
+    background-color: rgba(255, 0, 0, 0.174);
+    margin-top: 50px;
+    font-size: 30px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+ 
+}
+
+
+.icon-container3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding:10px;
+    background-color: rgba(240, 189, 7, 0.303);;
+    margin-top: 50px;
+    font-size: 30px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+.icon-container4 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding:10px;
+    background-color:rgba(230, 121, 49, 0.289);
+    margin-top: 50px;
+    font-size: 30px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+h2{
+    font-size: 30px;
+}
+
+
+
+
+
+
+ 
+
 
 .dashboard-section {
     display: flex;
@@ -32,11 +151,13 @@ body {
     padding: 20px;
 }
 
+
 .dashboard-section2 {
     display: flex;
     gap: 20px;
     padding: 20px;
 }
+
 
 .card {
     flex: 1;
@@ -67,16 +188,21 @@ body {
 }
 
 
+
+
 .table-container {
     padding: 20px;
 }
+
 
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
 
+
 }
+
 
 th, td {
     border: 1px solid #ddd;
@@ -87,11 +213,13 @@ th, td {
     border-radius:2px;
 }
 
+
 th {
     background-color:rgba(235, 233, 233, 0.32);
     padding:10px;
     border-bottom:none;
 }
+
 
 .orders {
     margin-top: 20px;
@@ -101,33 +229,40 @@ th {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+
 .order-section {
     margin-top: 10px;
 }
+
 
 .order-section h4 {
     color: #4CAF50; /* Adjust color as needed */
     margin: 10px 0;
 }
 
+
 .order-item {
     padding: 10px 0;
     border-bottom: 1px dashed #ddd;
 }
 
+
 .order-item:last-child {
     border-bottom: none; /* Removes the border for the last item */
 }
+
 
 .overview-item {
 display: flex;
 justify-content: space-between;
 align-items: center;
 padding: 10px 0;
-border-bottom: 1px solid #ddd; 
+border-bottom: 1px solid #ddd;
 line-height:50px;
 
+
 }
+
 
 .overview-left {
 display: flex;
@@ -136,10 +271,13 @@ gap: 10px;
 font-size: 16px;
 }
 
-.overview-right {
+
+.overview-  {
 font-size: 16px;
 font-weight: bold;
 }
+
+
 
 
 .fas {
@@ -147,35 +285,40 @@ font-size: 20px; /* Adjust icon size */
 color:rgb(41, 42, 41); /* Icon color */
 }
 
+
 .performance {
 display: flex;
 align-items: center;
 margin-bottom: 10px;
 }
 
+
 .icon-bg {
 display: inline-block;
-width: 40px; 
-height: 40px; 
-border-radius: 8px; 
+width: 40px;
+height: 40px;
+border-radius: 8px;
 text-align: center;
-line-height: 40px; 
-margin-right: 15px; 
-color: white; 
-background-color: #3498db; 
+line-height: 40px;
+margin-right: 15px;
+color: white;
+background-color: #3498db;
 }
+
 
 .icon-bg2 {
 display: inline-block;
 width: 40px;
-height: 40px; 
-border-radius: 20px; 
+height: 40px;
+border-radius: 20px;
 text-align: center;
-line-height: 40px; 
-margin-right: 15px; 
+line-height: 40px;
+margin-right: 15px;
 color: white;
-background-color:rgb(190, 193, 196); 
+background-color:rgb(190, 193, 196);
 }
+
+
 
 
 .card-large {
@@ -193,6 +336,7 @@ background-color:rgb(190, 193, 196);
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+
 .week-schedule {
 display: grid;
 grid-template-columns: repeat(7, 1fr);
@@ -203,7 +347,9 @@ padding: 20px;
 padding-top: 20px;
 border-radius: 10px;
 
+
 }
+
 
 .day {
 background-color:rgba(224, 205, 205, 0.34);
@@ -213,16 +359,19 @@ box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px
 margin-right:10px;
 }
 
+
 .day h4 {
 text-align: center;
 margin-bottom: 10px;
 color: #2c3e50;
 }
 
+
 .day ul {
 list-style: none;
 padding: 5px 0;
 }
+
 
 .day ul li {
     background-color:rgba(255, 255, 255, 0);
@@ -239,6 +388,7 @@ padding: 5px 0;
 .day:nth-child(6) {background-color: rgba(231, 76, 60, 0.13); border-color: #2ECC71; box-shadow: 5px 4px 8px rgba(231, 76, 60, 0.5); }
 .day:nth-child(7) {background-color: rgba(46, 204, 113, 0.13); border-color: #E74C3C; box-shadow: 5px 4px 8px rgba(46, 204, 113, 0.5)  }
 
+
 .progress-container {
     width: 100%;
     background-color: #e0e0e0;
@@ -253,7 +403,3 @@ padding: 5px 0;
     line-height: 20px;
     font-size:14px;
 }
-
-/* .grid-item card statistic deviated { 
-    
-} */
