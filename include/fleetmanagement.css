@@ -109,12 +109,19 @@ tr:hover {
 
 .main-content4 {
     width: 90vw;
-    height:fit-content;
+    height:auto;
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     overflow-x: hidden;
 }
+
+.main-content4 .pagination {
+    margin-top: -15px;  /* Move pagination up closer to the table */
+    margin-bottom: 20px; /* Increase bottom margin to create more space from the bottom */
+    padding-bottom: 15px; /* Add padding at the bottom */
+  }
+  
 
 .container {
     padding: 20px;
@@ -138,6 +145,33 @@ h3 {
     justify-content: center;
     align-items: center;
     margin-bottom: 10px;
+}
+
+.pagination2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.pagination2 button {
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 10px;
+    margin: 0 5px;
+   
+}
+
+.pagination2 .prev, .pagination .next {
+    font-size: 18px;
+}
+
+.pagination2 button:hover {
+    opacity: 0.7;
 }
 
 .pagination button {
@@ -185,18 +219,118 @@ h3 {
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
     background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
 }
 
 .modal-content {
     background-color: #fff;
-    margin: 1% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 50%;
+    margin: 30px auto;
+    padding: 20px 30px;
+    width: 100%;
     max-width: 500px;
-    border-radius: 20px;
-    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    border-radius: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow-x: auto; /* Add this line to contain horizontal overflow */
+    overflow-y: auto; /* Ensure vertical scrolling works properly */
+    max-height: 80vh; /* Limit height to prevent overflowing viewport */
 }
 
+/* Make sure form elements don't expand beyond the modal */
+.form-control {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Prevent date inputs from overflowing */
+input[type="datetime-local"] {
+    width: 100%;
+    min-width: 0;
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close:hover {
+    color: #333;
+}
+
+h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: normal;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+select.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    padding-right: 30px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.save-btn, .cancel-btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.save-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #d7584f;
+    color: white;
+}
+
+.save-btn:hover {
+    background-color: #45a049;
+}
+
+.cancel-btn:hover {
+    background-color: #c04b42;
+}
