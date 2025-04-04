@@ -366,17 +366,17 @@
 
         // Fleet data
         const fleetData = [
-            {id: 1, truckid: 'T-001', driver: 'Glen Diana', driverAssistant: 'Carlos Rodriguez', client: 'ABC Corp', containerNo: 'CONT7890', destination: 'New York', departureTime: '2025-03-30 08:00', estimatedArrivalTime: '2025-03-31 14:00', allotedBudget: 'Php 10,000', status: 'In Progress'},
-            {id: 2, truckid: 'T-002', driver: 'Sarah Johnson', driverAssistant: 'Mike Lee', client: 'XYZ Ltd', containerNo: 'CONT1234', destination: 'Los Angeles', departureTime: '2025-03-29 09:30', estimatedArrivalTime: '2025-03-29 18:30', allotedBudget: 'Php 10,000', status: 'Completed'},
-            {id: 3, truckid: 'T-003', driver: 'David Wilson', driverAssistant: 'Emma Clark', client: 'DEF Inc', containerNo: 'CONT5678', destination: 'Chicago', departureTime: '2025-03-31 07:00', estimatedArrivalTime: '2025-04-01 12:00', allotedBudget: 'Php 10,000', status: 'Pending'},
-            {id: 4, truckid: 'T-004', driver: 'Lisa Brown', driverAssistant: 'James Taylor', client: 'GHI LLC', containerNo: 'CONT9012', destination: 'Miami', departureTime: '2025-03-28 06:00', estimatedArrivalTime: '2025-03-30 10:00', allotedBudget: 'Php 10,000', status: 'Completed'},
-            {id: 5, truckid: 'T-005', driver: 'Michael Davis', driverAssistant: 'Anna White', client: 'JKL Corp', containerNo: 'CONT3456', destination: 'Dallas', departureTime: '2025-04-01 10:00', estimatedArrivalTime: '2025-04-02 16:00', allotedBudget: 'Php 10,000', status: 'Pending'},
-            {id: 6, truckid: 'T-006', driver: 'Emily Black', driverAssistant: 'Ryan Green', client: 'MNO Inc', containerNo: 'CONT7890', destination: 'Houston', departureTime: '2025-03-30 11:00', estimatedArrivalTime: '2025-03-31 08:00', allotedBudget: 'Php 10,000', status: 'In Progress'},
-            {id: 7, truckid: 'T-007', driver: 'Daniel Gray', driverAssistant: 'Olivia Brown', client: 'PQR Ltd', containerNo: 'CONT2345', destination: 'Boston', departureTime: '2025-03-29 14:00', estimatedArrivalTime: '2025-03-30 19:00', allotedBudget: 'Php 10,000', status: 'Completed'},
-            {id: 8, truckid: 'T-008', driver: 'Sophia Blue', driverAssistant: 'Noah Adams', client: 'STU Corp', containerNo: 'CONT6789', destination: 'Atlanta', departureTime: '2025-04-02 08:30', estimatedArrivalTime: '2025-04-03 15:30', allotedBudget: 'Php 10,000', status: 'Pending'},
-            {id: 9, truckid: 'T-009', driver: 'James White', driverAssistant: 'Isabella Johnson', client: 'VWX Ltd', containerNo: 'CONT0123', destination: 'Phoenix', departureTime: '2025-03-31 09:00', estimatedArrivalTime: '2025-04-01 17:00', allotedBudget: 'Php 10,000', status: 'In Progress'},
-            {id: 10, truckid: 'T-010', driver: 'Olivia Pink', driverAssistant: 'William Moore', client: 'YZA Inc', containerNo: 'CONT4567', destination: 'Seattle', departureTime: '2025-03-30 12:00', estimatedArrivalTime: '2025-03-31 20:00', allotedBudget: 'Php 10,000', status: 'Pending'},
-        ];
+    {id: 1, truckid: 'T-001', driver: 'Glen Diana', driverAssistant: 'Carlos Rodriguez', containerNo: 'CONT7890', client: 'ABC Corp', shippingLine: 'Maersk', consignee: 'Acme Imports', size: '40ft', cashAdvance: 'Php 10,000', status: 'In Progress'},
+    {id: 2, truckid: 'T-002', driver: 'Sarah Johnson', driverAssistant: 'Mike Lee', containerNo: 'CONT1234', client: 'XYZ Ltd', shippingLine: 'MSC', consignee: 'Global Trading Co.', size: '20ft', cashAdvance: 'Php 8,500', status: 'Completed'},
+    {id: 3, truckid: 'T-003', driver: 'David Wilson', driverAssistant: 'Emma Clark', containerNo: 'CONT5678', client: 'DEF Inc', shippingLine: 'CMA CGM', consignee: 'Eastern Distributors', size: '40ft', cashAdvance: 'Php 12,000', status: 'Pending'},
+    {id: 4, truckid: 'T-004', driver: 'Lisa Brown', driverAssistant: 'James Taylor', containerNo: 'CONT9012', client: 'GHI LLC', shippingLine: 'Evergreen', consignee: 'Pacific Enterprises', size: '45ft', cashAdvance: 'Php 15,000', status: 'Completed'},
+    {id: 5, truckid: 'T-005', driver: 'Michael Davis', driverAssistant: 'Anna White', containerNo: 'CONT3456', client: 'JKL Corp', shippingLine: 'Maersk', consignee: 'Western Logistics', size: '20ft', cashAdvance: 'Php 7,000', status: 'Pending'},
+    {id: 6, truckid: 'T-006', driver: 'Emily Black', driverAssistant: 'Ryan Green', containerNo: 'CONT7890', client: 'MNO Inc', shippingLine: 'MSC', consignee: 'Southern Freight', size: '40ft', cashAdvance: 'Php 11,500', status: 'In Progress'},
+    {id: 7, truckid: 'T-007', driver: 'Daniel Gray', driverAssistant: 'Olivia Brown', containerNo: 'CONT2345', client: 'PQR Ltd', shippingLine: 'CMA CGM', consignee: 'Northern Cargo', size: '20ft', cashAdvance: 'Php 9,000', status: 'Completed'},
+    {id: 8, truckid: 'T-008', driver: 'Sophia Blue', driverAssistant: 'Noah Adams', containerNo: 'CONT6789', client: 'STU Corp', shippingLine: 'Evergreen', consignee: 'Metro Shipping', size: '45ft', cashAdvance: 'Php 16,000', status: 'Pending'},
+    {id: 9, truckid: 'T-009', driver: 'James White', driverAssistant: 'Isabella Johnson', containerNo: 'CONT0123', client: 'VWX Ltd', shippingLine: 'Maersk', consignee: 'City Logistics', size: '40ft', cashAdvance: 'Php 13,000', status: 'In Progress'},
+    {id: 10, truckid: 'T-010', driver: 'Olivia Pink', driverAssistant: 'William Moore', containerNo: 'CONT4567', client: 'YZA Inc', shippingLine: 'MSC', consignee: 'Urban Freight', size: '20ft', cashAdvance: 'Php 8,000', status: 'Pending'},
+];
 
         // Trucks data
         const trucksData = [
