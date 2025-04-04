@@ -78,15 +78,15 @@
                     <table id="fleetTable">
                         <thead>
                             <tr>
-                                <th>Truck ID</th>
+                                <th>Plate Number</th>
                                 <th>Driver</th>
-                                <th>Driver Assistant</th>
-                                <th>Client</th>
+                                <th>Helper</th>
                                 <th>Container No.</th>
-                                <th>Destination</th>
-                                <th>Departure Time</th>
-                                <th>Estimated Arrival Time</th>
-                                <th>Alloted Budget</th>
+                                <th>Client</th>
+                                <th>Shipping Line</th>
+                                <th>Consignee</th>
+                                <th>Size</th>
+                                <th>Cash Advance</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -140,87 +140,99 @@
 
     <!-- Modal for Assign Trip -->
     <div id="tripModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('tripModal')">&times;</span>
-            <h2>Trip Log</h2>
-            
-            <div class="form-group">
-                <label for="vehicle">Truck ID</label>
-                <select id="vehicle" name="vehicle" class="form-control" required>
-                    <option value="T-001">T-001</option>
-                    <option value="T-002">T-002</option>
-                    <option value="T-003">T-003</option>
-                    <option value="T-004">T-004</option>
-                </select>
-            </div>
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('tripModal')">&times;</span>
+        <h2>Assign Trip</h2>
+       
+        <div class="form-group">
+            <label for="vehicle">Plate Number</label>
+            <select id="vehicle" name="vehicle" class="form-control" required>
+                <option value="T-001">T-001</option>
+                <option value="T-002">T-002</option>
+                <option value="T-003">T-003</option>
+                <option value="T-004">T-004</option>
+            </select>
+        </div>
 
-            <div class="form-group">
-                <label for="driver">Driver</label>
-                <select id="driver" name="driver" class="form-control" required>
-                    <option value="driver 1">driver 1</option>
-                    <option value="driver 2">driver 2</option>
-                    <option value="driver 3">driver 3</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label for="driver">Driver</label>
+            <select id="driver" name="driver" class="form-control" required>
+                <option value="Glen Diana">Glen Diana</option>
+                <option value="Sarah Johnson">Sarah Johnson</option>
+                <option value="David Wilson">David Wilson</option>
+                <option value="Lisa Brown">Lisa Brown</option>
+            </select>
+        </div>
 
-            <div class="form-group">
-                <label for="driverAssistant">Driver Assistant</label>
-                <select id="driverAssistant" name="driverAssistant" class="form-control" required>
-                    <option value="assistant 1">assistant 1</option>
-                    <option value="assistant 2">assistant 2</option>
-                    <option value="assistant 3">assistant 3</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label for="driverAssistant">Helper</label>
+            <select id="driverAssistant" name="driverAssistant" class="form-control" required>
+                <option value="Carlos Rodriguez">Carlos Rodriguez</option>
+                <option value="Mike Lee">Mike Lee</option>
+                <option value="Emma Clark">Emma Clark</option>
+                <option value="James Taylor">James Taylor</option>
+            </select>
+        </div>
 
-            <div class="form-group">
-                <label for="client">Client</label>
-                <select id="client" name="client" class="form-control" required>
-                    <option value="client 1">client 1</option>
-                    <option value="client 2">client 2</option>
-                    <option value="client 3">client 3</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label for="containerNo">Container No.</label>
+            <input type="text" id="containerNo" name="containerNo" class="form-control" required>
+        </div>
 
-            <div class="form-group">
-                <label for="containerNo">Container No.</label>
-                <input type="text" id="containerNo" name="containerNo" class="form-control" required>
-            </div>
+        <div class="form-group">
+            <label for="client">Client</label>
+            <select id="client" name="client" class="form-control" required>
+                <option value="ABC Corp">ABC Corp</option>
+                <option value="XYZ Ltd">XYZ Ltd</option>
+                <option value="DEF Inc">DEF Inc</option>
+                <option value="GHI LLC">GHI LLC</option>
+            </select>
+        </div>
 
-            <div class="form-group">
-                <label for="destination">Destination</label>
-                <input type="text" id="destination" name="destination" class="form-control" required>
-            </div>
+        <div class="form-group">
+            <label for="shippingLine">Shipping Line</label>
+            <select id="shippingLine" name="shippingLine" class="form-control" required>
+                <option value="Maersk">Maersk</option>
+                <option value="MSC">MSC</option>
+                <option value="CMA CGM">CMA CGM</option>
+                <option value="Evergreen">Evergreen</option>
+            </select>
+        </div>
 
-            <div class="form-group">
-                <label for="departureTime">Departure Time</label>
-                <input type="datetime-local" id="departureTime" name="departureTime" class="form-control" required>
-            </div>
+        <div class="form-group">
+            <label for="consignee">Consignee</label>
+            <input type="text" id="consignee" name="consignee" class="form-control" required>
+        </div>
 
-            <div class="form-group">
-                <label for="estimatedArrivalTime">Estimated Arrival Time</label>
-                <input type="datetime-local" id="estimatedArrivalTime" name="estimatedArrivalTime" class="form-control" required>
-            </div>
+        <div class="form-group">
+            <label for="size">Size</label>
+            <select id="size" name="size" class="form-control" required>
+                <option value="20ft">20ft</option>
+                <option value="40ft">40ft</option>
+                <option value="45ft">45ft</option>
+            </select>
+        </div>
 
-            <div class="form-group">
-                <label for="allotedBudget">Alloted Budget</label>
-                <input type="text" id="allotedBudget" name="allotedBudget" class="form-control" required>
-            </div>
+        <div class="form-group">
+            <label for="cashAdvance">Cash Advance</label>
+            <input type="text" id="cashAdvance" name="cashAdvance" class="form-control" required>
+        </div>
 
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status" class="form-control" required>
-                    <option value="Pending">Pending</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status" class="form-control" required>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+            </select>
+        </div>
 
-            <div class="button-group">
-                <button type="button" class="save-btn" onclick="saveTrip()">Save</button>
-                <button type="button" class="cancel-btn" onclick="closeModal('tripModal')">Cancel</button>
-            </div>
+        <div class="button-group">
+            <button type="button" class="save-btn" onclick="saveTrip()">Save</button>
+            <button type="button" class="cancel-btn" onclick="closeModal('tripModal')">Cancel</button>
         </div>
     </div>
+</div>
 
     <!-- Modal for Add Truck -->
     <div id="truckModal" class="modal">
@@ -387,67 +399,36 @@
 
         // Table rendering functions
         function renderTable() {
-            const start = (currentPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const pageData = fleetData.slice(start, end);
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = fleetData.slice(start, end);
 
-            const tableBody = document.querySelector("#fleetTable tbody");
-            tableBody.innerHTML = ""; // Clear existing rows
+    const tableBody = document.querySelector("#fleetTable tbody");
+    tableBody.innerHTML = ""; // Clear existing rows
 
-            pageData.forEach(row => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${row.truckid}</td>
-                    <td>${row.driver}</td>
-                    <td>${row.driverAssistant}</td>
-                    <td>${row.client}</td>
-                    <td>${row.containerNo}</td>
-                    <td>${row.destination}</td>
-                    <td>${row.departureTime}</td>
-                    <td>${row.estimatedArrivalTime}</td>
-                    <td>${row.allotedBudget}</td>
-                    <td><span class="status-${row.status.toLowerCase().replace(/\s+/g, "-")}">${row.status}</span></td>
-                    <td class="actions">
-                        <button class="edit" onclick="editTrip(${row.id})">Edit</button>
-                        <button class="delete" onclick="deleteRecord(${row.id})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
+    pageData.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${row.truckid}</td>
+            <td>${row.driver}</td>
+            <td>${row.driverAssistant}</td>
+            <td>${row.containerNo}</td>
+            <td>${row.client}</td>
+            <td>${row.shippingLine || 'N/A'}</td>
+            <td>${row.consignee || 'N/A'}</td>
+            <td>${row.size || 'N/A'}</td>
+            <td>${row.cashAdvance || 'N/A'}</td>
+            <td><span class="status-${row.status.toLowerCase().replace(/\s+/g, "-")}">${row.status}</span></td>
+            <td class="actions">
+                <button class="edit" onclick="editTrip(${row.id})">Edit</button>
+                <button class="delete" onclick="deleteRecord(${row.id})">Delete</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
 
-            document.getElementById("fleet-page-info").textContent = `Page ${currentPage}`;
-        }
-
-        function renderTrucksTable() {
-            const start = (currentTruckPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const pageData = trucksData.slice(start, end);
-
-            const tableBody = document.querySelector("#trucksTable tbody");
-            if (!tableBody) {
-                console.error("Trucks table body not found");
-                return;
-            }
-            
-            tableBody.innerHTML = ""; // Clear existing rows
-
-            pageData.forEach(truck => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${truck.truckId}</td>
-                    <td>${truck.driver}</td>
-                    <td>${truck.driverAssistant}</td>
-                    <td><span class="status-${truck.status.toLowerCase().replace(/\s+/g, "-")}">${truck.status}</span></td>
-                    <td class="actions">
-                        <button class="edit" onclick="editTruck(${truck.id})">Edit</button>
-                        <button class="delete" onclick="deleteTruck(${truck.id})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-
-            document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage}`;
-        }
+    document.getElementById("fleet-page-info").textContent = Page ${currentPage};
+}
 
         // Pagination functions
         function changePage(direction) {
