@@ -75,13 +75,44 @@ tr:hover {
     border-radius: 20px;
 }
 
+.status-available {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.status-on-trip {
+    background-color: #2196F3; /* Blue */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.status-maintenance {
+    background-color: #FF9800; /* Orange */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+
+
 .actions button {
     padding: 6px 12px;
     font-size: 14px;
     cursor: pointer;
     border: none;
     border-radius: 7px;
-    margin: 0 5px;
+    margin:  5px 0;
     transition: background-color 0.3s, color 0.3s;
     width: 100px;
     white-space: nowrap;
@@ -100,28 +131,30 @@ tr:hover {
 
 .main-content3 {
     width: 90vw;
-    height: auto;
+    height: 90vh;
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     overflow-x: hidden;
+   overflow-y: hidden;
 }
 
 .main-content4 {
     width: 90vw;
-    height:auto;
+    height: 85vh;
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     overflow-x: hidden;
+   overflow-y: hidden;
 }
-
+/* 
 .main-content4 .pagination {
-    margin-top: -15px;  /* Move pagination up closer to the table */
-    margin-bottom: 20px; /* Increase bottom margin to create more space from the bottom */
-    padding-bottom: 15px; /* Add padding at the bottom */
+    margin-top: -15px;
+    margin-bottom: 20px; 
+    padding-bottom: 15px; 
   }
-  
+   */
 
 .container {
     padding: 20px;
@@ -141,17 +174,17 @@ h3 {
 }
 
 .pagination {
-    display: flex;
+    display:flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 10px;
+margin-top:-200px;
 }
 
 .pagination2 {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 30px;
+    margin-top:-250px;
 }
 
 .pagination2 button {

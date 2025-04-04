@@ -98,9 +98,9 @@
                 </div>
             </div>
             <div class="pagination">
-                <button class="prev" onclick="changePage(-1)">◄</button> 
+                <button class="prev" onclick="changePage(-1)">◄</button>
                 <span id="fleet-page-info">Page 1</span>
-                <button class="next" onclick="changePage(1)">►</button> 
+                <button class="next" onclick="changePage(1)">►</button>
             </div>
         </section>
     </div>
@@ -131,115 +131,107 @@
                 </div>
             </div>
             <div class="pagination2">
-                <button class="prev" onclick="changeTruckPage(-1)">◄</button> 
+                <button class="prev" onclick="changeTruckPage(-1)">◄</button>
                 <span id="truck-page-info">Page 1</span>
-                <button class="next" onclick="changeTruckPage(1)">►</button> 
+                <button class="next" onclick="changeTruckPage(1)">►</button>
             </div>
         </section>
     </div>
 
     <!-- Modal for Assign Trip -->
     <div id="tripModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('tripModal')">&times;</span>
-        <h2>Assign Trip</h2>
-       
-        <div class="form-group">
-            <label for="vehicle">Plate Number</label>
-            <select id="vehicle" name="vehicle" class="form-control" required>
-                <option value="T-001">T-001</option>
-                <option value="T-002">T-002</option>
-                <option value="T-003">T-003</option>
-                <option value="T-004">T-004</option>
-            </select>
-        </div>
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('tripModal')">&times;</span>
+            <h2>Trip Log</h2>
+           
+            <div class="form-group">
+                <label for="plateNumber">Plate Number</label>
+                <select id="plateNumber" name="plateNumber" class="form-control" required>
+                    <option value="ABC-123">ABC-123</option>
+                    <option value="DEF-456">DEF-456</option>
+                    <option value="GHI-789">GHI-789</option>
+                    <option value="JKL-012">JKL-012</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-            <label for="driver">Driver</label>
-            <select id="driver" name="driver" class="form-control" required>
-                <option value="Glen Diana">Glen Diana</option>
-                <option value="Sarah Johnson">Sarah Johnson</option>
-                <option value="David Wilson">David Wilson</option>
-                <option value="Lisa Brown">Lisa Brown</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="driver">Driver</label>
+                <select id="driver" name="driver" class="form-control" required>
+                    <option value="driver 1">driver 1</option>
+                    <option value="driver 2">driver 2</option>
+                    <option value="driver 3">driver 3</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-            <label for="driverAssistant">Helper</label>
-            <select id="driverAssistant" name="driverAssistant" class="form-control" required>
-                <option value="Carlos Rodriguez">Carlos Rodriguez</option>
-                <option value="Mike Lee">Mike Lee</option>
-                <option value="Emma Clark">Emma Clark</option>
-                <option value="James Taylor">James Taylor</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="helper">Helper</label>
+                <select id="helper" name="helper" class="form-control" required>
+                    <option value="helper 1">helper 1</option>
+                    <option value="helper 2">helper 2</option>
+                    <option value="helper 3">helper 3</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-            <label for="containerNo">Container No.</label>
-            <input type="text" id="containerNo" name="containerNo" class="form-control" required>
-        </div>
+            <div class="form-group">
+                <label for="containerNo">Container No.</label>
+                <input type="text" id="containerNo" name="containerNo" class="form-control" required>
+            </div>
 
-        <div class="form-group">
-            <label for="client">Client</label>
-            <select id="client" name="client" class="form-control" required>
-                <option value="ABC Corp">ABC Corp</option>
-                <option value="XYZ Ltd">XYZ Ltd</option>
-                <option value="DEF Inc">DEF Inc</option>
-                <option value="GHI LLC">GHI LLC</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="client">Client</label>
+                <select id="client" name="client" class="form-control" required>
+                    <option value="client 1">client 1</option>
+                    <option value="client 2">client 2</option>
+                    <option value="client 3">client 3</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-            <label for="shippingLine">Shipping Line</label>
-            <select id="shippingLine" name="shippingLine" class="form-control" required>
-                <option value="Maersk">Maersk</option>
-                <option value="MSC">MSC</option>
-                <option value="CMA CGM">CMA CGM</option>
-                <option value="Evergreen">Evergreen</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="shippingLine">Shipping Line</label>
+                <input type="text" id="shippingLine" name="shippingLine" class="form-control" required>
+            </div>
 
-        <div class="form-group">
-            <label for="consignee">Consignee</label>
-            <input type="text" id="consignee" name="consignee" class="form-control" required>
-        </div>
+            <div class="form-group">
+                <label for="consignee">Consignee</label>
+                <input type="text" id="consignee" name="consignee" class="form-control" required>
+            </div>
 
-        <div class="form-group">
-            <label for="size">Size</label>
-            <select id="size" name="size" class="form-control" required>
-                <option value="20ft">20ft</option>
-                <option value="40ft">40ft</option>
-                <option value="45ft">45ft</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="size">Size</label>
+                <select id="size" name="size" class="form-control" required>
+                    <option value="20ft">20ft</option>
+                    <option value="40ft">40ft</option>
+                    <option value="45ft">45ft</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-            <label for="cashAdvance">Cash Advance</label>
-            <input type="text" id="cashAdvance" name="cashAdvance" class="form-control" required>
-        </div>
+            <div class="form-group">
+                <label for="cashAdvance">Cash Advance</label>
+                <input type="text" id="cashAdvance" name="cashAdvance" class="form-control" required>
+            </div>
 
-        <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status" class="form-control" required>
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" class="form-control" required>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
 
-        <div class="button-group">
-            <button type="button" class="save-btn" onclick="saveTrip()">Save</button>
-            <button type="button" class="cancel-btn" onclick="closeModal('tripModal')">Cancel</button>
+            <div class="button-group">
+                <button type="button" class="save-btn" onclick="saveTrip()">Save</button>
+                <button type="button" class="cancel-btn" onclick="closeModal('tripModal')">Cancel</button>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- Modal for Add Truck -->
     <div id="truckModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('truckModal')">&times;</span>
             <h2>Add Truck</h2>
-            
+           
             <div class="form-group">
                 <label for="truckId">Truck ID</label>
                 <input type="text" id="truckId" name="truckId" class="form-control" required>
@@ -300,38 +292,38 @@
         // Save functions
         function saveTrip() {
             // Get form values
-            const vehicle = document.getElementById('vehicle').value;
+            const plateNumber = document.getElementById('plateNumber').value;
             const driver = document.getElementById('driver').value;
-            const driverAssistant = document.getElementById('driverAssistant').value;
-            const client = document.getElementById('client').value;
+            const helper = document.getElementById('helper').value;
             const containerNo = document.getElementById('containerNo').value;
-            const destination = document.getElementById('destination').value;
-            const departureTime = document.getElementById('departureTime').value;
-            const estimatedArrivalTime = document.getElementById('estimatedArrivalTime').value;
-            const allotedBudget = document.getElementById('allotedBudget').value;
+            const client = document.getElementById('client').value;
+            const shippingLine = document.getElementById('shippingLine').value;
+            const consignee = document.getElementById('consignee').value;
+            const size = document.getElementById('size').value;
+            const cashAdvance = document.getElementById('cashAdvance').value;
             const status = document.getElementById('status').value;
-            
+           
             // Create new trip object
             const newTrip = {
                 id: fleetData.length + 1,
-                truckid: vehicle,
+                plateNumber: plateNumber,
                 driver: driver,
-                driverAssistant: driverAssistant,
-                client: client,
+                helper: helper,
                 containerNo: containerNo,
-                destination: destination,
-                departureTime: departureTime,
-                estimatedArrivalTime: estimatedArrivalTime,
-                allotedBudget: allotedBudget,
+                client: client,
+                shippingLine: shippingLine,
+                consignee: consignee,
+                size: size,
+                cashAdvance: cashAdvance,
                 status: status
             };
-            
+           
             // Add to fleet data
             fleetData.push(newTrip);
-            
+           
             // Re-render table
             renderTable();
-            
+           
             // Close modal and show success message
             alert("Trip saved successfully!");
             closeModal('tripModal');
@@ -343,7 +335,7 @@
             const driver = document.getElementById('truckDriver').value;
             const driverAssistant = document.getElementById('truckDriverAssistant').value;
             const status = document.getElementById('truckStatus').value;
-            
+           
             // Create new truck object
             const newTruck = {
                 id: trucksData.length + 1,
@@ -352,13 +344,13 @@
                 driverAssistant: driverAssistant,
                 status: status
             };
-            
+           
             // Add to trucks data
             trucksData.push(newTruck);
-            
+           
             // Re-render trucks table
             renderTrucksTable();
-            
+           
             // Close modal and show success message
             alert("Truck added successfully!");
             closeModal('truckModal');
@@ -366,17 +358,17 @@
 
         // Fleet data
         const fleetData = [
-    {id: 1, truckid: 'T-001', driver: 'Glen Diana', driverAssistant: 'Carlos Rodriguez', containerNo: 'CONT7890', client: 'ABC Corp', shippingLine: 'Maersk', consignee: 'Acme Imports', size: '40ft', cashAdvance: 'Php 10,000', status: 'In Progress'},
-    {id: 2, truckid: 'T-002', driver: 'Sarah Johnson', driverAssistant: 'Mike Lee', containerNo: 'CONT1234', client: 'XYZ Ltd', shippingLine: 'MSC', consignee: 'Global Trading Co.', size: '20ft', cashAdvance: 'Php 8,500', status: 'Completed'},
-    {id: 3, truckid: 'T-003', driver: 'David Wilson', driverAssistant: 'Emma Clark', containerNo: 'CONT5678', client: 'DEF Inc', shippingLine: 'CMA CGM', consignee: 'Eastern Distributors', size: '40ft', cashAdvance: 'Php 12,000', status: 'Pending'},
-    {id: 4, truckid: 'T-004', driver: 'Lisa Brown', driverAssistant: 'James Taylor', containerNo: 'CONT9012', client: 'GHI LLC', shippingLine: 'Evergreen', consignee: 'Pacific Enterprises', size: '45ft', cashAdvance: 'Php 15,000', status: 'Completed'},
-    {id: 5, truckid: 'T-005', driver: 'Michael Davis', driverAssistant: 'Anna White', containerNo: 'CONT3456', client: 'JKL Corp', shippingLine: 'Maersk', consignee: 'Western Logistics', size: '20ft', cashAdvance: 'Php 7,000', status: 'Pending'},
-    {id: 6, truckid: 'T-006', driver: 'Emily Black', driverAssistant: 'Ryan Green', containerNo: 'CONT7890', client: 'MNO Inc', shippingLine: 'MSC', consignee: 'Southern Freight', size: '40ft', cashAdvance: 'Php 11,500', status: 'In Progress'},
-    {id: 7, truckid: 'T-007', driver: 'Daniel Gray', driverAssistant: 'Olivia Brown', containerNo: 'CONT2345', client: 'PQR Ltd', shippingLine: 'CMA CGM', consignee: 'Northern Cargo', size: '20ft', cashAdvance: 'Php 9,000', status: 'Completed'},
-    {id: 8, truckid: 'T-008', driver: 'Sophia Blue', driverAssistant: 'Noah Adams', containerNo: 'CONT6789', client: 'STU Corp', shippingLine: 'Evergreen', consignee: 'Metro Shipping', size: '45ft', cashAdvance: 'Php 16,000', status: 'Pending'},
-    {id: 9, truckid: 'T-009', driver: 'James White', driverAssistant: 'Isabella Johnson', containerNo: 'CONT0123', client: 'VWX Ltd', shippingLine: 'Maersk', consignee: 'City Logistics', size: '40ft', cashAdvance: 'Php 13,000', status: 'In Progress'},
-    {id: 10, truckid: 'T-010', driver: 'Olivia Pink', driverAssistant: 'William Moore', containerNo: 'CONT4567', client: 'YZA Inc', shippingLine: 'MSC', consignee: 'Urban Freight', size: '20ft', cashAdvance: 'Php 8,000', status: 'Pending'},
-];
+            {id: 1, plateNumber: 'ABC-123', driver: 'Glen Diana', helper: 'Carlos Rodriguez', containerNo: 'CONT7890', client: 'ABC Corp', shippingLine: 'Maersk Line', consignee: 'Global Trading Ltd', size: '40ft', cashAdvance: 'Php 10,000', status: 'In Progress'},
+            {id: 2, plateNumber: 'DEF-456', driver: 'Sarah Johnson', helper: 'Mike Lee', containerNo: 'CONT1234', client: 'XYZ Ltd', shippingLine: 'MSC', consignee: 'Retail Solutions Inc', size: '20ft', cashAdvance: 'Php 8,000', status: 'Completed'},
+            {id: 3, plateNumber: 'GHI-789', driver: 'David Wilson', helper: 'Emma Clark', containerNo: 'CONT5678', client: 'DEF Inc', shippingLine: 'CMA CGM', consignee: 'Industrial Corp', size: '45ft', cashAdvance: 'Php 12,000', status: 'Pending'},
+            {id: 4, plateNumber: 'JKL-012', driver: 'Lisa Brown', helper: 'James Taylor', containerNo: 'CONT9012', client: 'GHI LLC', shippingLine: 'Evergreen', consignee: 'Supply Chain Co', size: '40ft', cashAdvance: 'Php 9,500', status: 'Completed'},
+            {id: 5, plateNumber: 'MNO-345', driver: 'Michael Davis', helper: 'Anna White', containerNo: 'CONT3456', client: 'JKL Corp', shippingLine: 'COSCO', consignee: 'Logistics Pro', size: '20ft', cashAdvance: 'Php 7,000', status: 'Pending'},
+            {id: 6, plateNumber: 'PQR-678', driver: 'Emily Black', helper: 'Ryan Green', containerNo: 'CONT7890', client: 'MNO Inc', shippingLine: 'Hapag-Lloyd', consignee: 'Import Export Co', size: '45ft', cashAdvance: 'Php 13,000', status: 'In Progress'},
+            {id: 7, plateNumber: 'STU-901', driver: 'Daniel Gray', helper: 'Olivia Brown', containerNo: 'CONT2345', client: 'PQR Ltd', shippingLine: 'ONE', consignee: 'Distribution Experts', size: '40ft', cashAdvance: 'Php 11,000', status: 'Completed'},
+            {id: 8, plateNumber: 'VWX-234', driver: 'Sophia Blue', helper: 'Noah Adams', containerNo: 'CONT6789', client: 'STU Corp', shippingLine: 'Yang Ming', consignee: 'Worldwide Shipping', size: '20ft', cashAdvance: 'Php 6,500', status: 'Pending'},
+            {id: 9, plateNumber: 'YZA-567', driver: 'James White', helper: 'Isabella Johnson', containerNo: 'CONT0123', client: 'VWX Ltd', shippingLine: 'ZIM', consignee: 'Freight Solutions', size: '40ft', cashAdvance: 'Php 10,500', status: 'In Progress'},
+            {id: 10, plateNumber: 'BCD-890', driver: 'Olivia Pink', helper: 'William Moore', containerNo: 'CONT4567', client: 'YZA Inc', shippingLine: 'HMM', consignee: 'Global Logistics', size: '45ft', cashAdvance: 'Php 14,000', status: 'Pending'},
+        ];
 
         // Trucks data
         const trucksData = [
@@ -399,35 +391,66 @@
 
         // Table rendering functions
         function renderTable() {
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageData = fleetData.slice(start, end);
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageData = fleetData.slice(start, end);
 
-    const tableBody = document.querySelector("#fleetTable tbody");
+            const tableBody = document.querySelector("#fleetTable tbody");
+            tableBody.innerHTML = ""; // Clear existing rows
+
+            pageData.forEach(row => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${row.plateNumber}</td>
+                    <td>${row.driver}</td>
+                    <td>${row.helper}</td>
+                    <td>${row.containerNo}</td>
+                    <td>${row.client}</td>
+                    <td>${row.shippingLine}</td>
+                    <td>${row.consignee}</td>
+                    <td>${row.size}</td>
+                    <td>${row.cashAdvance}</td>
+                    <td><span class="status-${row.status.toLowerCase().replace(/\s+/g, "-")}">${row.status}</span></td>
+                    <td class="actions">
+                        <button class="edit" onclick="editTrip(${row.id})">Edit</button>
+                        <button class="delete" onclick="deleteRecord(${row.id})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            document.getElementById("fleet-page-info").textContent = `Page ${currentPage}`;
+        }
+
+        function renderTrucksTable() {
+    const start = (currentTruckPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = trucksData.slice(start, end);
+
+    const tableBody = document.querySelector("#trucksTable tbody");
+    if (!tableBody) {
+        console.error("Trucks table body not found");
+        return;
+    }
+   
     tableBody.innerHTML = ""; // Clear existing rows
 
-    pageData.forEach(row => {
+    pageData.forEach(truck => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${row.truckid}</td>
-            <td>${row.driver}</td>
-            <td>${row.driverAssistant}</td>
-            <td>${row.containerNo}</td>
-            <td>${row.client}</td>
-            <td>${row.shippingLine || 'N/A'}</td>
-            <td>${row.consignee || 'N/A'}</td>
-            <td>${row.size || 'N/A'}</td>
-            <td>${row.cashAdvance || 'N/A'}</td>
-            <td><span class="status-${row.status.toLowerCase().replace(/\s+/g, "-")}">${row.status}</span></td>
+            <td>${truck.truckId}</td>
+            <td>${truck.driver}</td>
+            <td>${truck.driverAssistant}</td>
+            <td><span class="status-${truck.status.toLowerCase().replace(/\s+/g, "-")}">${truck.status}</span></td>
             <td class="actions">
-                <button class="edit" onclick="editTrip(${row.id})">Edit</button>
-                <button class="delete" onclick="deleteRecord(${row.id})">Delete</button>
+                <button class="edit" onclick="editTruck(${truck.id})">Edit</button>
+                <button class="delete" onclick="deleteTruck(${truck.id})">Delete</button>
             </td>
         `;
         tableBody.appendChild(tr);
     });
 
-    document.getElementById("fleet-page-info").textContent = Page ${currentPage};
+    document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage}`;
 }
 
         // Pagination functions
@@ -486,17 +509,17 @@
             if (trip) {
                 // Open the modal
                 openTripModal();
-                
+               
                 // Populate the form fields
-                document.getElementById('vehicle').value = trip.truckid;
+                document.getElementById('plateNumber').value = trip.plateNumber;
                 document.getElementById('driver').value = trip.driver;
-                document.getElementById('driverAssistant').value = trip.driverAssistant;
-                document.getElementById('client').value = trip.client;
+                document.getElementById('helper').value = trip.helper;
                 document.getElementById('containerNo').value = trip.containerNo;
-                document.getElementById('destination').value = trip.destination;
-                document.getElementById('departureTime').value = trip.departureTime.replace(' ', 'T');
-                document.getElementById('estimatedArrivalTime').value = trip.estimatedArrivalTime.replace(' ', 'T');
-                document.getElementById('allotedBudget').value = trip.allotedBudget;
+                document.getElementById('client').value = trip.client;
+                document.getElementById('shippingLine').value = trip.shippingLine;
+                document.getElementById('consignee').value = trip.consignee;
+                document.getElementById('size').value = trip.size;
+                document.getElementById('cashAdvance').value = trip.cashAdvance;
                 document.getElementById('status').value = trip.status;
             }
         }
@@ -507,7 +530,7 @@
             if (truck) {
                 // Open the modal
                 openTruckModal();
-                
+               
                 // Populate the form fields
                 document.getElementById('truckId').value = truck.truckId;
                 document.getElementById('truckDriver').value = truck.driver;
