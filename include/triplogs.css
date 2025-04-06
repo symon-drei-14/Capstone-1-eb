@@ -1,205 +1,243 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 10px;
-    background-color: rgb(241, 241, 244);
+body{
+margin: 100px;
+
+}
+.event-details-container {
+    width: 500px;
+    height: auto; /* Let the height adjust automatically based on content */
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: relative;
+    margin: 50px;
+    margin-top: 100px;
+    line-height: 30px;
+    max-height: 600px;
+    overflow-y: auto;
 }
 
-table {
+        .event-details-container h4 {
+            margin-top: 0;
+        }
+
+        .event-details-container p {
+            margin: 5px 0;
+        }
+
+        .event-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .event-list li {
+            margin: 10px 0;
+        }
+
+        .calendar-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 5px;
+
+        }
+
+        #calendar {
+            max-width: 900px;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: rgba(0, 0, 0, 0.15) 0px 15px 25px, rgba(0, 0, 0, 0.05) 0px 5px 10px;
+         
+        }
+
+        #noEventsMessage {
+            display: block;
+        }
+
+
+        .events-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+
 }
 
-th, td {
+.events-table th {
     padding: 12px;
     text-align: center;
     border-radius: 1px;
+    word-wrap: break-word;
+  
+    
+}
+.events-table td{
+
+    padding: 15px;
+    text-align: center;
+    border-radius: 1px;
+    word-wrap: break-word;
+    font-size: 20px;
 }
 
-th {
+.events-table th {
     background-color: #ffffff;
     font-weight: bold;
     position: relative;
     box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
     border-bottom: 5px double #d3d1d15c;
     z-index: 1;
+  
+
+}
+/* .events-table td{
+    font-size: 25px;
+} */
+
+.events-table tr:nth-child(even) {
+    background-color: #f9f9f9;
 }
 
-tr:nth-child(even) {
-    background-color: #f0eeee9a; /* Light gray for even rows */
-}
-
-tr:nth-child(odd) {
-    background-color: #ffffff; /* White for odd rows */
-}
-
-tr:hover {
-    background-color: #e0e0e0; /* Light gray on hover */
-}
-
-.actions {
-    text-align: center;
-}
-
-/* Column Widths */
-th:nth-child(1), td:nth-child(1) {
-    width: 5%; 
-}
-
-th:nth-child(2), td:nth-child(2) {
-    width: 7%; 
-}
-
-th:nth-child(3), td:nth-child(3) {
-    width: 12%; 
-}
-
-th:nth-child(4), td:nth-child(4) {
-    width: 10%;
-}
-
-th:nth-child(5), td:nth-child(5) {
-    width: 20%;
-}
-
-th:nth-child(6), td:nth-child(6) {
-    width: 10%; 
-}
-
-th:nth-child(7), td:nth-child(7) {
-    width: 10%; 
-}
-
-th:nth-child(8), td:nth-child(8) {
-    width: 5%; 
-}
-
-/* Status Colors */
-.status-completed {
-    background-color: #4CAF50; /* Green */
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-}
-
-.status-pending {
-    background-color: #FF9800; /* Orange */
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-}
-
-.status-in-progress {
-    background-color: #2196F3; /* Blue */
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-}
-
-.status-overdue {
-    background-color: #F44336; /* Red */
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-}
-
-.actions button {
-    padding: 6px 12px;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    border-radius: 7px;
-    margin: 0 5px;
-    transition: background-color 0.3s, color 0.3s;
-    width: 100px; 
-    white-space: nowrap; 
-    margin-bottom: 10px;
-}
-
-/* Individual Button Styles */
-.actions button.edit {
-    background-color: #4CAF50; /* Green */
-    color: white;
-}
-
-.actions button.delete {
-    background-color: #d7584f; /* Red */
-    color: white;
-}
-
-.actions button.history {
-    background-color: #2196F3; /* Blue */
-    color: white;
-}
-
-/* Button Hover Effects */
-.actions button:hover {
-    opacity: 0.8; /* Slightly less opaque on hover */
-}
-
-.main-content3 {
-    width: 90vw;
-    height: auto; /* Adjusted to auto for better responsiveness */
+.events-table tr:nth-child(odd) {
     background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-    overflow-x: hidden;
 }
 
-.container {
-    padding: 20px;
+.events-table td {
+    color: #333;
 }
 
-.table-container {
-    margin-bottom: 20px;
+.events-table tr:hover {
+    background-color: #f1f1f1;
+    cursor: pointer;
 }
 
+/* .events-table td {
+    font-size: 13px;
+    color: #555;
+} */
+
+.events-table td a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+.events-table td a:hover {
+    text-decoration: underline;
+}
+
+.events-table .description-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media screen and (max-width: 768px) {
+    .events-table {
+        width: 100%;
+        font-size: 12px;
+    }
+
+    .events-table th, .events-table td {
+        padding: 8px 10px;
+    }
+}
+
+        /* Button styling */
+        .toggle-btns {
+            display: flex;
+            gap: 0px;
+            margin-bottom: 20px;
+        
+        }
+
+        .toggle-btn {
+            padding: 10px 20px;
+            border: none;
+            background-color: #e4e4e4;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+
+        }
+
+        .toggle-btn.active {
+            background-color: #1b1963;
+            color: #fff;
+        }
+        .status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 5px;
+    
+}
+
+.status.Completed {
+    background-color: #28a745; /* Green */
+    color: white;
+}
+
+.status.Pending {
+    background-color: #ffc107; /* Yellow */
+    color: black;
+}
+
+.status.Cancelled {
+    background-color: #dc3545; /* Red */
+    color: white;
+}
+
+/* Pagination controls */
 .pagination {
     display: flex;
     justify-content: center;
-    align-items: center;
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
 .pagination button {
-    background-color: #ffffff; /* White */
-    color: rgb(0, 0, 0);
-    border: 1px solid #ccc; /* Added border for better visibility */
-    padding: 6px 12px;
-    font-size: 18px;
-    cursor: pointer;
-    border-radius: 10px;
+    padding: 5px 10px;
     margin: 0 5px;
-}
-
-.pagination .prev, .pagination .next {
-    font-size: 18px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #ddd;
 }
 
 .pagination button:hover {
-    opacity: 0.7; /* Slightly less opaque on hover */
+    background-color: #f0f0f0;
 }
 
-.add_sched {
-    background-color: #4CAF50;
-    border: none;
-    color: #ffffff;
-    padding: 10px;
+
+.fc-day-selected {
+    background-color: #d5d5d8 !important;
+    color: white !important;
+}
+
+.fc-day:hover {
+    background-color: #d5d5d8 ;
+    color: white ;
+}
+
+.edit-btn{
+    background-color: #28a745   ;
+    padding: 10px 20px;
     border-radius: 5px;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.reminder_btn {
-    background-color: #e4873f;
+    color: white;
     border: none;
-    color: #ffffff;
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 14px;
-    font-weight: bold;
+    margin-bottom: 2px;
+    width: 80px;
 }
 
+.delete-btn{
+    background-color: #cc4141   ;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    border: none;
+}
 
 .modal {
     display: none; 
@@ -209,300 +247,103 @@ th:nth-child(8), td:nth-child(8) {
     top: 0;
     width: 100%; 
     height: 100%;
-    overflow: auto;  
+  
     background-color: rgba(0, 0, 0, 0.5); /* Black with opacity */
+
 }
 
 .modal-content {
     background-color: #fff;
     margin: 1% auto;
     padding: 20px;
+    height: 90vh;
     border: 1px solid #888;
     width: 50%;
     max-width: 400px;
     border-radius: 20px;
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-
+overflow-y: auto;
 }
 
-.close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    float: right;
-}
 
 .close:hover,
 .close:focus {
-    color: black;
+    color: rgb(255, 255, 255);
     text-decoration: none;
+    cursor: pointer;
+    background-color: #730707;
+
+}
+
+.modal button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
     cursor: pointer;
 }
 
-
-form label {
-    display: block;
-    margin-top: 10px;
-}
-
-form input,
-form select {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-
-form button {
-    margin-top: 20px;
+.add-schedule-btn {
     padding: 10px 20px;
     background-color: #4CAF50;
     color: white;
     border: none;
+    border-radius: 5px;
     cursor: pointer;
 }
 
-form button:hover {
+.add-schedule-btn:hover {
     background-color: #45a049;
 }
 
-.cancelbtn {
-    background-color: #d02b2b; /* Red */
-    color: white;
-    padding: 12px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.cancelbtn:hover {
-    background-color: #a22222; /* Darker Red */
-    color: white;
-    padding: 12px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-
-body {
-    font-family: Arial, sans-serif;
-    margin: 10px;
-    background-color: rgb(241, 241, 244);
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-th, td {
-    padding: 12px;
-    text-align: center;
-    border-radius: 1px;
-}
-
-th {
-    background-color: #ffffff;
+label {
+    font-size: 16px;
+    color: #333;
     font-weight: bold;
-    position: relative;
-    box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
-    border-bottom: 5px double #d3d1d15c;
-    z-index: 1;
+    margin-bottom: 5px; /* Add space between label and input */
+    text-align: left;
+    width: 100%; /* Ensure label takes up full width */
 }
 
-tr:nth-child(even) {
-    background-color: #f0eeee9a; /* Light gray for even rows */
-}
-
-tr:nth-child(odd) {
-    background-color: #ffffff; /* White for odd rows */
-}
-
-tr:hover {
-    background-color: #e0e0e0; /* Light gray on hover */
-}
-
-.actions {
-    text-align: center;
-}
-
-/* Column Widths */
-th:nth-child(1), td:nth-child(1) {
-    width: 5%; 
-}
-
-th:nth-child(2), td:nth-child(2) {
-    width: 7%; 
-}
-
-th:nth-child(3), td:nth-child(3) {
-    width: 12%; 
-}
-
-th:nth-child(4), td:nth-child(4) {
-    width: 10%;
-}
-
-th:nth-child(5), td:nth-child(5) {
-    width: 20%;
-}
-
-th:nth-child(6), td:nth-child(6) {
-    width: 10%; 
-}
-
-th:nth-child(7), td:nth-child(7) {
-    width: 10%; 
-}
-
-th:nth-child(8), td:nth-child(8) {
-    width: 5%; 
-}
-
-/* Status Colors */
-.status-completed {
-    background-color: #4CAF50; /* Green */
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-}
-
-.status-pending {
-    background-color: #FF9800; /* Orange */
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-}
-
-.status-in-progress {
-    background-color: #2196F3; /* Blue */
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-}
-
-.status-overdue {
-    background-color: #F44336; /* Red */
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-}
-
-.actions button {
-    padding: 6px 12px;
+input, select {
+    padding: 10px;
     font-size: 14px;
-    cursor: pointer;
-    border: none;
-    border-radius: 7px;
-    margin: 0 5px;
-    transition: background-color 0.3s, color 0.3s;
-    width: 100px; 
-    white-space: nowrap; 
-    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: border-color 0.3s;
+    width: 90%; /* Make inputs fill the container */
+    max-width: 400px; /* Limit input width */
+    margin-bottom: 10px; /* Add spacing between inputs */
 }
 
-
-.actions button.edit {
-    background-color: #4CAF50; /* Green */
-    color: white;
+input:focus, select:focus {
+    border-color: #4CAF50;
 }
 
-.actions button.delete {
-    background-color: #d7584f; /* Red */
-    color: white;
+input[type="datetime-local"] {
+    padding: 8px;
 }
 
-.actions button.history {
-    background-color: #2196F3; /* Blue */
-    color: white;
-}
-
-/* Button Hover Effects */
-.actions button:hover {
-    opacity: 0.8; 
-}
-
-.main-content3 {
-    width: 90vw;
-    height: 120vh; 
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-    overflow-x: hidden;
-    overflow-y: hidden;
-}
-
-.container {
-    padding: 20px;
-}
-
-.table-container {
-    margin-bottom: 20px;
-    margin-right: 20px;
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+#editForm button[type="submit"],
+#addScheduleForm button[type="submit"] {
     margin-top: 10px;
-
-}
-
-.pagination button {
-    background-color: #ffffff; /* White */
-    color: rgb(0, 0, 0);
-    border: 1px solid #cccccc00; 
-    padding: 6px 12px;
-    font-size: 18px;
-    cursor: pointer;
-    border-radius: 10px;
-    margin: 0 5px;
-}
-
-.pagination .prev, .pagination .next {
-    font-size: 18px;
-}
-
-.pagination button:hover {
-    opacity: 0.7; 
-}
-
-.add_triplog {
+    padding: 10px 20px;
     background-color: #4CAF50;
-    color: white; 
-    padding: 10px 20px; 
-    border: none;
-    cursor: pointer; 
-    font-size: 14px; 
-    border-radius: 10px; 
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-.add_triplog:hover {
-    background-color: #45a049; /* Darker green on hover */
-}
-
-button[type="submit"] {
-    background-color: #4CAF50; /* Green */
     color: white;
-    padding: 12px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
 }
 
-button[type="submit"]:hover {
-    background-color: #28652b; 
+button.close {
+    margin-top: 10px;
+    background-color: #f44336; /* Red color for cancel button */
+    color: white;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
 }
 
 

@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="include/sidenav.css">
     <link rel="stylesheet" href="include/triplogs.css">
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
 </head>
 <body>
 
@@ -69,179 +76,350 @@
     </div>
 </div>
 
-    <div class="main-content3">
-        <section class="dashboard">
-            <div class="container">
-                <h2>Trip Logs</h2>
-                <div class="button-row">
-                <button class="add_triplog" onclick="openModal()"> Add Trip log</button>
-                </div>
-                <br />
-
-                <div class="table-container">
-                    <table id="maintenanceTable">
-                        <thead>
-                            <tr>
-                        <th> Driver</th>
-                       <th> Broker/Client</th>
-                       <th>Destination</th>
-                       <th>Container No.</th>
-                       <th>BL REF NO.</th>
-                       <th>Status</th>
-                       <th>Cash Advance</th>
-                       <th>Additional Cash Advance</th>
-                       <th>Total Amount</th>
-                       <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                       </tbody>
-                    </table>
-                </div>
-
-                <div class="pagination">
-                    <button class="prev" onclick="changePage(-1)">◄</button> 
-                    <span id="page-info">Page 1</span>
-                    <button class="next" onclick="changePage(1)">►</button> 
-                </div>
+<div class="calendar-container">
+        <section class="calendar-section">
+            <h3>Trip Management</h3>
+            <div class="toggle-btns">
+                <button id="calendarViewBtn" class="toggle-btn active"> <i class="fa fa-calendar"> Calendar</i></button>
+                <button id="tableViewBtn" class="toggle-btn">  <i class="fa fa-tasks"> Table</i></button>
+            
             </div>
+            <button id="addScheduleBtnTable" class="toggle-btn">Add Schedule</button>
+    
+            <div id="calendar"></div>
+        </section>
+        
+        <section class="event-details-container" id="eventDetails">
+            <h4>Event Details</h4>
+            <p id="noEventsMessage">Click a date to show details</p>
+            <ul id="eventList" class="event-list"></ul>
         </section>
     </div>
-<!-- Modal Structure -->
-<div id="maintenanceModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">×</span>
-        <h2> Trip Log</h2>
-        <form>
-            <label for="driver">Driver</label>
-            <select id="driver" name="driver" required>
-                <option value="driver 1">driver 1</option>
-                <option value="driver 2">driver 2</option>
-            </select>
 
-
-            <label for="broker">Broker</label>
-            <select id="broker" name="broker" required>
-                <option value="broker 1">broker 1</option>
-                <option value="broker 2">broker 2</option>
-            </select>
-
-
-            <label for="destination">Destination</label>
-            <input type="text" id="destination" name="destination" required>
-
-            <label for="containerNo">Container No.</label>
-            <input type="text" id="containerNo" name="containerNo" required>
-
-            <label for="blRefNo">BL Ref No.</label>
-            <input type="text" id="blRefNo" name="blRefNo" required>
-
-            <label for="status">Status</label>
-            <select id="status" name="status" required>
-                <option value="Completed">Completed</option>
-                <option value="Pending">Pending</option>
-            </select>
-
-            <label for="cashAdvance">Cash Advance</label>
-            <input type="number" id="cashAdvance" name="cashAdvance" required>
-
-            <label for="additionalCashAdvance">Additional Cash Advance</label>
-            <input type="number" id="additionalCashAdvance" name="additionalCashAdvance" required>
-
-            <label for="totalAmount">Total Amount</label>
-            <input type="number" id="totalAmount" name="totalAmount" required>
-
-            <button type="submit">Save</button>
-            <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
-        </form>
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Edit Event</h3>
+            <form id="editForm">
+                <label for="eventPlateNo">Plate No.:</label><br>
+                <input type="text" id="eventPlateNo" name="eventPlateNo" required><br><br>
+        
+                <label for="eventDate">Date:</label><br>
+                <input type="datetime-local" id="eventDate" name="eventDate" required><br><br>
+        
+                <label for="eventDriver">Driver:</label><br>
+                <input type="text" id="eventDriver" name="eventDriver" required><br><br>
+        
+                <label for="eventHelper">Helper:</label><br>
+                <input type="text" id="eventHelper" name="eventHelper" required><br><br>
+        
+                <label for="eventContainerNo">Container No.:</label><br>
+                <input type="text" id="eventContainerNo" name="eventContainerNo" required><br><br>
+        
+                <label for="eventClient">Client:</label><br>
+                <input type="text" id="eventClient" name="eventClient" required><br><br>
+        
+                <label for="eventDestination">Destination:</label><br>
+                <input type="text" id="eventDestination" name="eventDestination" required><br><br>
+        
+                <label for="eventShippingLine">Shipping Line:</label><br>
+                <input type="text" id="eventShippingLine" name="eventShippingLine" required><br><br>
+        
+                <label for="eventConsignee">Consignee:</label><br>
+                <input type="text" id="eventConsignee" name="eventConsignee" required><br><br>
+        
+                <label for="eventSize">Size:</label><br>
+                <input type="text" id="eventSize" name="eventSize" required><br><br>
+        
+                <label for="eventCashAdvance">Cash Advance:</label><br>
+                <input type="text" id="eventCashAdvance" name="eventCashAdvance" required><br><br>
+        
+                <label for="eventStatus">Status:</label><br>
+                <select id="eventStatus" name="eventStatus" required>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select><br><br>
+        
+                <button type="submit">Save Changes</button>
+                <button type="button" class="close">Cancel</button>
+            </form>
+        </div>
     </div>
-</div>
+    
+    <div id="addScheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add Schedule</h2>
+            <form id="addScheduleForm">
+                <label for="eventPlateNo">Plate No.:</label><br>
+                <input type="text" id="eventPlateNo" name="eventPlateNo" required><br><br>
+        
+                <label for="eventDate">Date:</label><br>
+                <input type="datetime-local" id="eventDate" name="eventDate" required><br><br>
+        
+                <label for="eventDriver">Driver:</label><br>
+                <input type="text" id="eventDriver" name="eventDriver" required><br><br>
+        
+                <label for="eventHelper">Helper:</label><br>
+                <input type="text" id="eventHelper" name="eventHelper" required><br><br>
+        
+                <label for="eventContainerNo">Container No.:</label><br>
+                <input type="text" id="eventContainerNo" name="eventContainerNo" required><br><br>
+        
+                <label for="eventClient">Client:</label><br>
+                <input type="text" id="eventClient" name="eventClient" required><br><br>
+        
+                <label for="eventDestination">Destination:</label><br>
+                <input type="text" id="eventDestination" name="eventDestination" required><br><br>
+        
+                <label for="eventShippingLine">Shipping Line:</label><br>
+                <input type="text" id="eventShippingLine" name="eventShippingLine" required><br><br>
+        
+                <label for="eventConsignee">Consignee:</label><br>
+                <input type="text" id="eventConsignee" name="eventConsignee" required><br><br>
+        
+                <label for="eventSize">Size:</label><br>
+                <input type="text" id="eventSize" name="eventSize" required><br><br>
+        
+                <label for="eventCashAdvance">Cash Advance:</label><br>
+                <input type="text" id="eventCashAdvance" name="eventCashAdvance" required><br><br>
+        
+                <label for="eventStatus">Status:</label><br>
+                <select id="eventStatus" name="eventStatus" required>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select><br><br>
+        
+                <!-- Save and Cancel buttons -->
+                <button type="submit">Save Schedule</button>
+                <button type="button" class="close">Cancel</button>
+            </form>
+        </div>
+    </div>
+    
+
+    <div id="tableView" style="display: none;">
+        <h3>Event Table</h3>
+
+        <table class="events-table" id="eventsTable"> 
+            <thead>
+                <tr>
+                    <th>Plate No.</th>
+                    <th>Date</th>
+                    <th> Driver</th>
+                    <th> Helper</th>
+                    <th>Container No.</th>
+                    <th>Client</th>
+                    <th>Destination</th>
+                    <th>Shipping Line</th>
+                    <th>Consignee</th>
+                    <th>Size</th>
+                    <th>Cash Advance</th>
+                  <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="eventTableBody"></tbody>
+        </table>
+        <div class="pagination-container">
+            <button class="pagination-btn" id="prevPageBtn">Previous</button>
+            <button class="pagination-btn" id="nextPageBtn">Next</button>
+        </div>
+    </div>
 
     <script>
-function openModal() {
-    document.getElementById("maintenanceModal").style.display = "block";
-}
+        
+        $(document).ready(function() {
+       
+            $('#addScheduleBtnCalendar, #addScheduleBtnTable').on('click', function() {
+                $('#addScheduleModal').show();
+            });
+    
+   
+            $('.close').on('click', function() {
+                $('#addScheduleModal').hide();
+            });
+    
 
-// Close the modal
-function closeModal() {
-    document.getElementById("maintenanceModal").style.display = "none";
-}
-
-        // Sample data
-        const maintenanceData = [
-            {id: 1, driver: 'John Doe', broker: 'ABC Corp', destination: 'NYC', containerNo: 'C123', blRefNo: 'BL123', status: 'Completed', cashAdvance: '₱ 100', additionalCashAdvance: '₱ 50', totalAmount: '₱ 150'},
-            {id: 2, driver: 'Jane Smith', broker: 'XYZ Ltd', destination: 'LA', containerNo: 'C124', blRefNo: 'BL124', status: 'Pending', cashAdvance: '₱ 120', additionalCashAdvance: '₱ 60', totalAmount: '₱ 180'},
-            {id: 3, driver: 'Alex Green', broker: 'DEF Inc', destination: 'Chicago', containerNo: 'C125', blRefNo: 'BL125', status: 'Completed', cashAdvance: '₱ 110', additionalCashAdvance: '₱ 40', totalAmount: '₱ 150'},
-            {id: 4, driver: 'Lisa White', broker: 'GHI LLC', destination: 'Miami', containerNo: 'C126', blRefNo: 'BL126', status: 'Completed', cashAdvance: '₱ 130', additionalCashAdvance: '₱ 70', totalAmount: '₱ 200'},
-            {id: 5, driver: 'Michael Brown', broker: 'JKL Corp', destination: 'Dallas', containerNo: 'C127', blRefNo: 'BL127', status: 'Pending', cashAdvance: '₱ 140', additionalCashAdvance: '₱ 80', totalAmount: '₱ 220'},
-            {id: 6, driver: 'Emily Black', broker: 'MNO Inc', destination: 'Houston', containerNo: 'C128', blRefNo: 'BL128', status: 'Completed', cashAdvance: '₱ 150', additionalCashAdvance: '₱ 90', totalAmount: '₱ 240'},
-            {id: 7, driver: 'David Gray', broker: 'PQR Ltd', destination: 'Boston', containerNo: 'C129', blRefNo: 'BL129', status: 'Completed', cashAdvance: '₱ 160', additionalCashAdvance: '₱ 100', totalAmount: '₱ 260'},
-            {id: 8, driver: 'Sophia Blue', broker: 'STU Corp', destination: 'Atlanta', containerNo: 'C130', blRefNo: 'BL130', status: 'Pending', cashAdvance: '₱ 170', additionalCashAdvance: '₱ 110', totalAmount: '₱ 280'},
-            {id: 9, driver: 'James White', broker: 'VWX Ltd', destination: 'Phoenix', containerNo: 'C131', blRefNo: 'BL131', status: 'Completed', cashAdvance: '₱ 180', additionalCashAdvance: '₱ 120', totalAmount: '₱ 300'},
-            {id: 10, driver: 'Olivia Pink', broker: 'YZA Inc', destination: 'Seattle', containerNo: 'C132', blRefNo: 'BL132', status: 'Pending', cashAdvance: '₱ 190', additionalCashAdvance: '₱ 130', totalAmount: '₱320'},
-        ];
-
-        let currentPage = 1;
-        const rowsPerPage = 5;
-
-        function renderTable() {
-            const start = (currentPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const pageData = maintenanceData.slice(start, end);
-
-            const tableBody = document.querySelector("#maintenanceTable tbody");
-            tableBody.innerHTML = ""; // Clear existing rows
-
-            pageData.forEach(row => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${row.driver}</td>
-                    <td>${row.broker}</td>
-                    <td>${row.destination}</td>
-                    <td>${row.containerNo}</td>
-                    <td>${row.blRefNo}</td>
-                    <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-                    <td>${row.cashAdvance}</td>
-                    <td>${row.additionalCashAdvance}</td>
-                    <td>${row.totalAmount}</td>
-                    <td class="actions">
-                        <button class="edit" onclick="openModal()">Edit</button>
-                        <button class="delete" onclick="deleteRecord('${row.id}')">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
+            $(window).on('click', function(event) {
+                if ($(event.target).is('#addScheduleModal')) {
+                    $('#addScheduleModal').hide();
+                }
             });
 
-            document.getElementById("page-info").textContent = `Page ${currentPage}`;
-        }
+            
+            $('.close').on('click', function() {
+                $('#editModal').hide();
+            });
+    
 
-        function changePage(direction) {
-            const totalPages = Math.ceil(maintenanceData.length / rowsPerPage);
-            currentPage += direction;
-
-            if (currentPage < 1) {
-                currentPage = 1;
-            } else if (currentPage > totalPages) {
-                currentPage = totalPages;
+            $(window).on('click', function(event) {
+                if ($(event.target).is('#editModal')) {
+                    $('#editModal').hide();
+                }
+            });
+    
+            var eventsData = [
+                { 
+                    plateNo: 'ABC123', date: '2025-04-06', driver: 'John Doe', helper: 'Jane Doe', 
+                    containerNo: 'C123', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
+                    consignee: 'John Doe', size: '20ft', cashAdvance: '₱ 100', status: 'Completed'
+                },
+                { 
+                    plateNo: 'ABC124', date: '2025-04-06', driver: 'John Doe', helper: 'Jane Doe', 
+                    containerNo: 'C124', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
+                    consignee: 'John Doe', size: '40ft', cashAdvance: '₱ 150', status: 'Pending'
+                },
+                { 
+                    plateNo: 'ABC125', date: '2025-04-12', driver: 'John Doe', helper: 'Jane Doe', 
+                    containerNo: 'C125', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
+                    consignee: 'John Doe', size: '40ft', cashAdvance: '₱ 200', status: 'Cancelled'
+                },
+                { 
+                    plateNo: 'ABC126', date: '2025-04-15', driver: 'John Doe', helper: 'Jane Doe', 
+                    containerNo: 'C126', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
+                    consignee: 'John Doe', size: '20ft', cashAdvance: '₱ 120', status: 'Pending'
+                },
+                { 
+                    plateNo: 'ABC127', date: '2025-04-20', driver: 'John Doe', helper: 'Jane Doe', 
+                    containerNo: 'C127', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
+                    consignee: 'John Doe', size: '20ft', cashAdvance: '₱ 110', status: 'Pending'
+                }
+            ];
+    
+            var currentPage = 1;
+            var rowsPerPage = 5;
+    
+            // Render events in table
+            function renderTable() {
+                $('#eventTableBody').empty();
+                var startIndex = (currentPage - 1) * rowsPerPage;
+                var endIndex = startIndex + rowsPerPage;
+                var pageData = eventsData.slice(startIndex, endIndex);
+    
+                pageData.forEach(function(event, index) {
+                    var row = `<tr>
+                        <td>${event.plateNo}</td>
+                        <td>${event.date}</td>
+                        <td>${event.driver}</td>
+                        <td>${event.helper}</td>
+                        <td>${event.containerNo}</td>
+                        <td>${event.client}</td>
+                        <td>${event.destination}</td>
+                        <td>${event.shippingLine}</td>
+                        <td>${event.consignee}</td>
+                        <td>${event.size}</td>
+                        <td>${event.cashAdvance}</td>
+                         <td> <span class="status ${event.status}">${event.status}</span> </td>
+                        <td>
+                            <button class="edit-btn" data-index="${startIndex + index}">Edit</button>
+                            <button class="delete-btn" data-index="${startIndex + index}">Delete</button>
+                        </td>
+                    </tr>`;
+                    $('#eventTableBody').append(row);
+                });
             }
+    
+
+    
+          
+            $(document).on('click', '.edit-btn', function() {
+                var index = $(this).data('index');
+                var event = eventsData[index];
+    
+                $('#eventPlateNo').val(event.plateNo);  
+                $('#eventDate').val(event.date);  
+                $('#eventDriver').val(event.driver);
+                $('#eventHelper').val(event.helper);  
+                $('#eventContainerNo').val(event.containerNo);
+                $('#eventClient').val(event.client);  
+                $('#eventDestination').val(event.destination);
+                $('#eventShippingLine').val(event.shippingLine);  
+                $('#eventConsignee').val(event.consignee);  
+                $('#eventSize').val(event.size);  
+                $('#eventCashAdvance').val(event.cashAdvance);
+                $('#eventStatus').val(event.status);  
+    
+    
+                $('#editModal').show();
+
+                
+            });
+
+            $(document).on('click', '.delete-btn', function() {
+                var index = $(this).data('index');
+                eventsData.splice(index, 1); 
+                renderTable();  
+                updatePagination();  
+            });
+    
+            // Initialize Calendar
+            $('#calendar').fullCalendar({
+                header: { left: 'prev,next today', center: 'title', right: 'month,agendaWeek,agendaDay' },
+                events: eventsData,
+                dayClick: function(date, jsEvent, view) {
+                    var clickedDay = $(this);
+                    
+                    $('.fc-day').removeClass('fc-day-selected');
+                    clickedDay.addClass('fc-day-selected');
+    
+                    var eventsOnDay = $('#calendar').fullCalendar('clientEvents', function(event) {
+                        return moment(event.start).isSame(date, 'day');
+                    });
+    
+                    $('#eventList').empty();
+                    $('#noEventsMessage').hide();
+    
+                    if (eventsOnDay.length > 0) {
+                        eventsOnDay.forEach(function(event, index) {
+                            var eventDetailsHtml = `
+                                <p><strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY, h:mm A')} to ${moment(event.end).format('MMMM D, YYYY, h:mm A')}</p>
+                                <p><strong>Driver:</strong> ${event.driver}</p>
+                                <p><strong>Client:</strong> ${event.client}</p>
+                                <p><strong>Destination:</strong> ${event.destination}</p>
+                                <p><strong>Container No.:</strong> ${event.containerNo}</p>
+                                <p><strong>Status:</strong> <span class="status ${event.status}">${event.status}</span></p>
+                                <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
+                                <button class="edit-btn" data-index="' + index + '">Edit</button>
+                                <button class="delete-btn" data-index="' + index + '">Delete</button>
+                                <hr>
+                            `;
+                            $('#eventList').append(eventDetailsHtml);
+                        });
+                        $('#eventDetails').show();
+                    } else {
+                        $('#noEventsMessage').show();
+                    }
+                }
+            });
+    
+
+            $('#calendarViewBtn').on('click', function() {
+                $(this).addClass('active');
+                $('#tableViewBtn').removeClass('active');
+                $('#calendar').show();
+                $('#tableView').hide();
+                $('#eventDetails').show();
+            });
+    
+            $('#tableViewBtn').on('click', function() {
+                $(this).addClass('active');
+                $('#calendarViewBtn').removeClass('active');
+                $('#calendar').hide();
+                $('#tableView').show();
+                $('#eventDetails').hide();
+                renderTable();
+                updatePagination();
+            });
+    
 
             renderTable();
-        }
-
-        function deleteRecord(id) {
-    const confirmDelete = confirm("Are you sure you want to delete this Re4cord?");
-    if (confirmDelete) {
-        const index = driverData.findIndex(d => d.id === id);
-        if (index !== -1) {
-            driverData.splice(index, 1);
-            renderTable();
-        }
-    }
-}
-
-
-        renderTable();
+            updatePagination();
+        });
     </script>
+    
 
 </body>
 </html>
