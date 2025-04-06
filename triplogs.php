@@ -44,7 +44,7 @@
     </div>
     <div class="sidebar-item">
         <i class="icon2">📋</i>
-        <a asp-area="" asp-controller="Home" asp-action="TripLogs">Trip Logs</a>
+        <a asp-area="" asp-controller="Home" asp-action="TripLogs">Trip Management</a>
     </div>
     <div class="sidebar-item">
         <i class="icon2">📍</i>

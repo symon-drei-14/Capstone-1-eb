@@ -26,46 +26,47 @@
     </header>
 
     <div class="sidebar">
-        <div class="sidebar-item">
-            <i class="icon2">🏠</i>
-            <a asp-area="" asp-controller="Home" asp-action="LandingPage">Home</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🚗</i>
-            <a asp-area="" asp-controller="Home" asp-action="DriverManagement">Driver Management</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🚛</i>
-            <span class="text">Fleet Management</span>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">📋</i>
-            <a asp-area="" asp-controller="Home" asp-action="TripLogs">Trip Logs</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">📍</i>
-            <span class="text">Tracking</span>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🔧</i>
-            <a asp-area="" asp-controller="Home" asp-action="PreventiveMaintenance" class="text">Maintenance Scheduling</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2"> 📈  </i>
-            <span class="text">Fleet Performance Analytics</span>
-        </div>
-        <hr>
-        <div class="sidebar-item">
-            <i class="icon2"> ⚙️ </i>
-            <span class="text">Settings</span>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2"> 🚪 </i>
-            <a asp-area="" asp-controller="Home" asp-action="Login" class="text">Logout</a>
-        </div>
-    </div>
 
-    <div class="main-content3">
+<div class="sidebar-item">
+    <i class="icon2">🏠</i>
+    <a asp-area="" asp-controller="Home" asp-action="LandingPage">Home</a>
+</div>
+<div class="sidebar-item">
+    <i class="icon2">🚗</i>
+    <span class="text">Driver Management</span>
+</div>
+<div class="sidebar-item">
+    <i class="icon2">🚛</i>
+    <a asp-area="" asp-controller="Home" asp-action="FleetManagement">Fleet Management</a>
+</div>
+<div class="sidebar-item">
+    <i class="icon2">📋</i>
+    <a asp-area="" asp-controller="Home" asp-action="TripLogs">Trip Management</a>
+</div>
+<div class="sidebar-item">
+    <i class="icon2">📍</i>
+    <span class="text">Tracking</span>
+</div>
+<div class="sidebar-item">
+    <i class="icon2">🔧</i>
+    <a asp-area="" asp-controller="Home" asp-action="PreventiveMaintenance" class="text">Maintenance Scheduling</a>
+</div>
+<div class="sidebar-item">
+    <i class="icon2"> 📈  </i>
+    <span class="text">Fleet Performance Analytics</span>
+</div>
+<hr>
+<div class="sidebar-item">
+    <i class="icon2"> ⚙️ </i>
+    <span class="text">Settings</span>
+</div>
+<div class="sidebar-item">
+    <i class="icon2"> 🚪 </i>
+    <a asp-area="" asp-controller="Home" asp-action="Login" class="text">Logout</a>
+</div>
+</div>
+
+    <!-- <div class="main-content4">
         <section class="dashboard">
             <div class="container">
                 <h2>Fleet Management</h2>
@@ -103,7 +104,7 @@
                 <button class="next" onclick="changePage(1)">►</button>
             </div>
         </section>
-    </div>
+    </div> -->
 
     <div class="main-content4">
         <section class="content-2">

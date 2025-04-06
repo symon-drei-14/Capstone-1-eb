@@ -40,9 +40,9 @@ tr:hover {
     background-color: #e0e0e0;
 }
 
-.actions {
+/* .actions {
     text-align: center;
-}
+} */
 
 /* Status Colors */
 .status-completed {
@@ -107,7 +107,7 @@ tr:hover {
 
 
 .actions button {
-    padding: 6px 12px;
+    padding: 4px 10px;
     font-size: 14px;
     cursor: pointer;
     border: none;
@@ -116,7 +116,7 @@ tr:hover {
     transition: background-color 0.3s, color 0.3s;
     width: 100px;
     white-space: nowrap;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .actions button.edit {
@@ -131,7 +131,7 @@ tr:hover {
 
 .main-content3 {
     width: 90vw;
-    height: 120vh;
+    height: 130vh;
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
@@ -163,7 +163,7 @@ tr:hover {
 }
 
 .table-container {
-    margin-bottom: 30px;
+    margin-bottom:30px;
     margin-right: 20px;
 
 }
@@ -178,7 +178,7 @@ h3 {
     justify-content: center;
     align-items: center;
 /* margin-top:-10px; */
-margin-top:25px;
+margin-top:15px;
 }
 
 .pagination2 {
@@ -186,7 +186,7 @@ margin-top:25px;
     justify-content: center;
     align-items: center;
     /* margin-top:-150px; */
-    margin-top:15px;
+    margin-top:-20px;
 }
 
 .pagination2 button {

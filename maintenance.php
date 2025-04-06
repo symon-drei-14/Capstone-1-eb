@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Maintenance Scheduling</title>
     
     <link rel="stylesheet" href="include/sidenav.css">
     <link rel="stylesheet" href="include/maintenancestyle.css">
-
+    <!-- Add jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 
@@ -29,63 +30,60 @@
     </header>
 
     <div class="sidebar">
-
-    <div class="sidebar-item">
-        <i class="icon2">🏠</i>
-        <a asp-area="" asp-controller="Home" asp-action="LandingPage">Home</a>
+        <div class="sidebar-item">
+            <i class="icon2">🏠</i>
+            <a href="LandingPage.php">Home</a>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">🚗</i>
+            <span class="text">Driver Management</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">🚛</i>
+            <a href="FleetManagement.php">Fleet Management</a>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">📋</i>
+            <a href="TripLogs.php">Trip Management</a>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">📍</i>
+            <span class="text">Tracking</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">🔧</i>
+            <a href="PreventiveMaintenance.php" class="text">Maintenance Scheduling</a>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2"> 📈  </i>
+            <span class="text">Fleet Performance Analytics</span>
+        </div>
+        <hr>
+        <div class="sidebar-item">
+            <i class="icon2"> ⚙️ </i>
+            <span class="text">Settings</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2"> 🚪 </i>
+            <a href="Login.php" class="text">Logout</a>
+        </div>
     </div>
-    <div class="sidebar-item">
-        <i class="icon2">🚗</i>
-        <span class="text">Driver Management</span>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2">🚛</i>
-        <a asp-area="" asp-controller="Home" asp-action="FleetManagement">Fleet Management</a>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2">📋</i>
-        <a asp-area="" asp-controller="Home" asp-action="TripLogs">Trip Logs</a>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2">📍</i>
-        <span class="text">Tracking</span>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2">🔧</i>
-        <a asp-area="" asp-controller="Home" asp-action="PreventiveMaintenance" class="text">Maintenance Scheduling</a>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2"> 📈  </i>
-        <span class="text">Fleet Performance Analytics</span>
-    </div>
-    <hr>
-    <div class="sidebar-item">
-        <i class="icon2"> ⚙️ </i>
-        <span class="text">Settings</span>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2"> 🚪 </i>
-        <a asp-area="" asp-controller="Home" asp-action="Login" class="text">Logout</a>
-    </div>
-</div>
-
 
     <div class="main-content3">
         <section class="dashboard">
             <div class="container">
                 <h2>Preventive Maintenance Scheduling</h2>
                 <div class="button-row">
-                    <button class="add_sched" onclick="openModal()"> Add Maintenance Schedule</button>
-                    <button class="reminder_btn" onclick="checkReminders()"> Maintenance Reminders</button>
+                    <button class="add_sched" onclick="openModal('add')">Add Maintenance Schedule</button>
+                    <button class="reminder_btn" onclick="openRemindersModal()">Maintenance Reminders</button>
                 </div>
                 <br />
-
 
                 <div class="table-container">
                     <table id="maintenanceTable">
                         <thead>
                             <tr>
-                                <th>Maintenance <br/> ID</th>
+                                <!-- Removed Maintenance ID column -->
                                 <th>Truck ID</th>
                                 <th>License Plate</th>
                                 <th>Date of <br /> Inspection</th>
@@ -97,7 +95,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                       </tbody>
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
                     </table>
                 </div>
 
@@ -110,168 +109,377 @@
         </section>
     </div>
 
-    <!-- Modal -->
+    <!-- Add/Edit Maintenance Modal -->
     <div id="maintenanceModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Add Maintenance Schedule</h2>
-            <form>
+            <h2 id="modalTitle">Add Maintenance Schedule</h2>
+            <form id="maintenanceForm">
+                <input type="hidden" id="maintenanceId" name="maintenanceId">
+                
                 <label for="truckId">Truck ID:</label>
-                <select id="status" name="status">
-                    <option value="Truck 1">Truck 1</option>
-                    <option value="Truck 2">Truck 2</option>
-                    <option value="Truck 3">Truck 3 </option>
-                    <option value="Truck 4">Truck 4</option>
+                <select id="truckId" name="truckId" required>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
                 </select><br><br>
-
+                <label for="licensePlate">License Plate:</label>
+                <input type="text" id="licensePlate" name="licensePlate" ><br><br>
 
                 <label for="date">Date of Inspection:</label>
-                <input type="date" id="date" name="date"><br><br>
+                <input type="date" id="date" name="date" required><br><br>
 
                 <label for="remarks">Remarks:</label>
-                <input type="text" id="remarks" name="remarks"><br><br>
+                <input type="text" id="remarks" name="remarks" required><br><br>
 
                 <label for="status">Status:</label>
-                <select id="status" name="status">
+                <select id="status" name="status" required>
                     <option value="Completed">Completed</option>
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Overdue">Overdue</option>
                 </select><br><br>
+                
+                <label for="supplier">Supplier:</label>
+                <input type="text" id="supplier" name="supplier"><br><br>
 
                 <label for="cost">Cost:</label>
-                <input type="text" id="cost" name="cost"><br><br>
+                <input type="number" id="cost" name="cost" step="0.01"><br><br>
 
-                <button type="submit">Submit</button>
+                <button type="button" onclick="saveMaintenanceRecord()">Submit</button>
                 <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
             </form>
         </div>
     </div>
 
+    <!-- Maintenance History Modal -->
     <div id="historyModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeHistoryModal()">&times;</span>
             <h2>Maintenance History</h2>
-            <div class="history-list">
-                <div class="history-item">
-                    <strong>Maintenance ID:</strong> 001<br>
-                    <strong>Remarks:</strong> Oil Change<br>
-                    <strong>Date of Inspection:</strong> 2023-10-01<br>
-                    <strong>Status:</strong> Completed<br>
-                    <strong>Supplier:</strong> Supplier A<br>
-                    <strong>Cost:</strong> ₱ 100<br>
-                    <hr>
-                </div>
-                <div class="history-item">
-                    <strong>Maintenance ID:</strong> 002<br>
-                    <strong>Remarks:</strong> Tire Replacement<br>
-                    <strong>Date of Inspection:</strong> 2023-10-05<br>
-                    <strong>Status:</strong> Pending<br>
-                    <strong>Supplier:</strong> Supplier B<br>
-                    <strong>Cost:</strong> ₱ 300<br>
-                    <hr>
-                </div>
-                <div class="history-item">
-                    <strong>Maintenance ID:</strong> 003<br>
-                    <strong>Remarks:</strong> Brake Inspection<br>
-                    <strong>Date of Inspection:</strong> 2023-10-10<br>
-                    <strong>Status:</strong> In Progress<br>
-                    <strong>Supplier:</strong> Supplier C<br>
-                    <strong>Cost:</strong> ₱ 150<br>
-                    <hr>
-                </div>
-                <!-- Add more history records here as needed -->
+            <div class="history-list" id="historyList">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Maintenance Reminders Modal -->
+    <div id="remindersModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRemindersModal()">&times;</span>
+            <h2>Maintenance Reminders</h2>
+            <div class="reminders-list" id="remindersList">
+                <!-- Will be populated by JavaScript -->
             </div>
         </div>
     </div>
 
     <script>
-     
-     function openHistoryModal() {
-            document.getElementById("historyModal").style.display = "block";
-        }
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentTruckId = 0;
+        let isEditing = false;
+        
+        // Load data when page loads
+        $(document).ready(function() {
+            loadMaintenanceData();
+        });
+        
+        // Load maintenance records
+       // Load maintenance records
+function loadMaintenanceData() {
+    fetch('include/handlers/maintenance_handler.php?action=getRecords&page=' + currentPage)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(response => {
+            console.log("Response data:", response); // Add this for debugging
+            renderTable(response.records || []);
+            totalPages = response.totalPages || 1;
+            currentPage = response.currentPage || 1;
+            updatePagination();
+        })
+        .catch(error => {
+            console.error("Error loading data:", error);
+            alert("Failed to load maintenance records: " + error.message);
+            // Show empty state in the table
+            const tableBody = document.querySelector("#maintenanceTable tbody");
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Error loading data. Please try again.</td></tr>';
+        });
+}
 
-        // Close the history modal
-        function closeHistoryModal() {
-            document.getElementById("historyModal").style.display = "none";
-        }
+// Render table with maintenance data
+function renderTable(data) {
+    const tableBody = document.querySelector("#maintenanceTable tbody");
+    tableBody.innerHTML = ""; // Clear existing rows
+    
+    if (data.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="8" class="text-center">No maintenance records found</td>';
+        tableBody.appendChild(tr);
+        return;
+    }
 
-        function openModal() {
+    data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${row.truck_id}</td>
+            <td>${row.licence_plate || 'N/A'}</td>
+            <td>${formatDate(row.date_mtnce)}</td>
+            <td>${row.remarks}</td>
+            <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
+            <td>${row.supplier || 'N/A'}</td>
+            <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
+            <td class="actions">
+                <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost})">Edit</button>
+                <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
+                <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+        // Format date for display
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+        }
+        
+        // Update pagination display
+        function updatePagination() {
+            document.getElementById("page-info").textContent = `Page ${currentPage} of ${totalPages}`;
+            
+            // Disable/enable pagination buttons
+            document.querySelector('.prev').disabled = currentPage <= 1;
+            document.querySelector('.next').disabled = currentPage >= totalPages;
+        }
+        
+        // Change page
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            
+            if (newPage < 1 || newPage > totalPages) {
+                return;
+            }
+            
+            currentPage = newPage;
+            loadMaintenanceData();
+        }
+        
+        // Open modal for add/edit
+        function openModal(mode) {
             document.getElementById("maintenanceModal").style.display = "block";
+            
+            if (mode === 'add') {
+                isEditing = false;
+                document.getElementById("modalTitle").textContent = "Add Maintenance Schedule";
+                document.getElementById("maintenanceForm").reset();
+                document.getElementById("maintenanceId").value = "";
+                // Set today's date as default
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById("date").value = today;
+            }
         }
-
+        
+        // Open edit modal with data
+        function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost) {
+    isEditing = true;
+    document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
+    document.getElementById("maintenanceId").value = id;
+    document.getElementById("truckId").value = truckId;
+    document.getElementById("licensePlate").value = licensePlate || '';
+    document.getElementById("date").value = date;
+    document.getElementById("remarks").value = remarks;
+    document.getElementById("status").value = status;
+    document.getElementById("supplier").value = supplier;
+    document.getElementById("cost").value = cost;
+    
+    document.getElementById("maintenanceModal").style.display = "block";
+}
         // Close the modal
         function closeModal() {
             document.getElementById("maintenanceModal").style.display = "none";
         }
-        function confirmDelete(id) {
-            const confirmation = confirm("Are you sure you want to delete this maintenance record?");
-        }
-        let currentPage = 1;
-        const rowsPerPage = 5;
-        const maintenanceData = [
-            { id: "001", truckId: "TRK-1234", licensePlate: "ABC-1234", date: "2023-10-01", remarks: "Oil Change", status: "Completed", supplier: "Supplier A", cost: "₱ 100" },
-            { id: "002", truckId: "TRK-5678", licensePlate: "XYZ-5678", date: "2023-10-05", remarks: "Tire Replacement", status: "Pending", supplier: "Supplier B", cost: "₱ 300" },
-            { id: "003", truckId: "TRK-9876", licensePlate: "DEF-9876", date: "2023-10-10", remarks: "Brake Inspection", status: "In Progress", supplier: "Supplier C", cost: "₱ 150" },
-            { id: "004", truckId: "TRK-6543", licensePlate: "GHI-6543", date: "2023-10-15", remarks: "Transmission Repair", status: "Overdue", supplier: "Supplier D", cost: "₱ 500" },
-            { id: "005", truckId: "TRK-3210", licensePlate: "JKL-3210", date: "2023-10-20", remarks: "Oil Change", status: "Completed", supplier: "Supplier E", cost: "₱ 120" },
-            { id: "006", truckId: "TRK-1357", licensePlate: "MNO-1357", date: "2023-10-25", remarks: "Tire Replacement", status: "Pending", supplier: "Supplier F", cost: "₱ 250" },
-            { id: "007", truckId: "TRK-2468", licensePlate: "PQR-2468", date: "2023-11-01", remarks: "Suspension Check", status: "Completed", supplier: "Supplier G", cost: "₱ 300" },
-            { id: "008", truckId: "TRK-3690", licensePlate: "STU-3690", date: "2023-11-05", remarks: "Engine Inspection", status: "In Progress", supplier: "Supplier H", cost: "₱ 400" }
-        ];
-
-        function renderTable() {
-            const start = (currentPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const pageData = maintenanceData.slice(start, end);
-
-            const tableBody = document.querySelector("#maintenanceTable tbody");
-            tableBody.innerHTML = ""; // Clear existing rows
-
-            pageData.forEach(row => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${row.id}</td>
-                    <td>${row.truckId}</td>
-                    <td>${row.licensePlate}</td>
-                    <td>${row.date}</td>
-                    <td>${row.remarks}</td>
-                    <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-                    <td>${row.supplier}</td>
-                    <td>${row.cost}</td>
-                    <td class="actions">
-                        <button class="edit" onclick="openModal()" >Edit</button>
-                         <button class="delete" onclick="if(confirm('Are you sure you want to delete this maintenance record?')) {
-                    const index = maintenanceData.findIndex(record => record.id === '${row.id}');
-                    if (index !== -1) {
-                        maintenanceData.splice(index, 1);
-                        renderTable(); // Re-render the table after deletion
-                    }
-                }">Delete</button>
-                         <button class="history" onclick="openHistoryModal()">View History</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-
-            document.getElementById("page-info").textContent = `Page ${currentPage}`;
-        }
-
-        function changePage(direction) {
-            const totalPages = Math.ceil(maintenanceData.length / rowsPerPage);
-            currentPage += direction;
-
-            if (currentPage < 1) {
-                currentPage = 1;
-            } else if (currentPage > totalPages) {
-                currentPage = totalPages;
+        
+        // Save maintenance record (add or update)
+        function saveMaintenanceRecord() {
+    const form = document.getElementById("maintenanceForm");
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const maintenanceId = document.getElementById("maintenanceId").value;
+    const action = isEditing ? 'edit' : 'add';
+    
+    const formData = {
+        maintenanceId: maintenanceId ? parseInt(maintenanceId) : null,
+        truckId: parseInt(document.getElementById("truckId").value),
+        licensePlate: document.getElementById("licensePlate").value,
+        date: document.getElementById("date").value,
+        remarks: document.getElementById("remarks").value,
+        status: document.getElementById("status").value,
+        supplier: document.getElementById("supplier").value,
+        cost: parseFloat(document.getElementById("cost").value || 0)
+    };
+    
+    $.ajax({
+        url: 'include/handlers/maintenance_handler.php?action=' + action,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            if (response.success) {
+                closeModal();
+                loadMaintenanceData();
+                alert(isEditing ? "Maintenance record updated successfully!" : "Maintenance record added successfully!");
+            } else {
+                alert("Error: " + (response.message || "Unknown error"));
             }
-
-            renderTable();
+        },
+        error: function(xhr, status, error) {
+            console.error("Error saving record: " + error);
+            alert("Failed to save maintenance record.");
         }
-
-        // Initial render
-        renderTable();
+    });
+}
+        
+        // Delete maintenance record
+        function deleteMaintenance(id) {
+            if (!confirm("Are you sure you want to delete this maintenance record?")) {
+                return;
+            }
+            
+            $.ajax({
+                url: 'include/handlers/maintenance_handler.php?action=delete&id=' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        loadMaintenanceData();
+                        alert("Maintenance record deleted successfully!");
+                    } else {
+                        alert("Error: " + (response.message || "Unknown error"));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error deleting record: " + error);
+                    alert("Failed to delete maintenance record.");
+                }
+            });
+        }
+        
+        // Open maintenance history modal
+        function openHistoryModal(truckId) {
+            currentTruckId = truckId;
+            
+            $.ajax({
+                url: 'include/handlers/maintenance_handler.php?action=getHistory&truckId=' + truckId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    const historyList = document.getElementById("historyList");
+                    historyList.innerHTML = ""; // Clear existing items
+                    
+                    if (response.history.length === 0) {
+                        historyList.innerHTML = "<p>No maintenance history found for this truck.</p>";
+                    } else {
+                        response.history.forEach(item => {
+                            const historyItem = document.createElement("div");
+                            historyItem.className = "history-item";
+                            historyItem.innerHTML = `
+                                <strong>Date of Inspection:</strong> ${formatDate(item.date_mtnce)}<br>
+                                <strong>Remarks:</strong> ${item.remarks}<br>
+                                <strong>Status:</strong> ${item.status}<br>
+                                <strong>Supplier:</strong> ${item.supplier || 'N/A'}<br>
+                                <strong>Cost:</strong> ₱ ${parseFloat(item.cost).toFixed(2)}<br>
+                                <hr>
+                            `;
+                            historyList.appendChild(historyItem);
+                        });
+                    }
+                    
+                    document.getElementById("historyModal").style.display = "block";
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading history: " + error);
+                    alert("Failed to load maintenance history.");
+                }
+            });
+        }
+        
+        // Close history modal
+        function closeHistoryModal() {
+            document.getElementById("historyModal").style.display = "none";
+        }
+        
+        // Open reminders modal
+        function openRemindersModal() {
+            $.ajax({
+                url: 'include/handlers/maintenance_handler.php?action=getReminders',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    const remindersList = document.getElementById("remindersList");
+                    remindersList.innerHTML = ""; // Clear existing items
+                    
+                    if (response.reminders.length === 0) {
+                        remindersList.innerHTML = "<p>No upcoming maintenance reminders.</p>";
+                    } else {
+                        response.reminders.forEach(item => {
+                            const daysRemaining = parseInt(item.days_remaining);
+                            let statusClass = '';
+                            let daysText = '';
+                            
+                            if (daysRemaining < 0) {
+                                statusClass = 'overdue';
+                                daysText = `<span class="overdue">OVERDUE by ${Math.abs(daysRemaining)} days</span>`;
+                            } else if (daysRemaining === 0) {
+                                statusClass = 'due-today';
+                                daysText = `<span class="due-today">DUE TODAY</span>`;
+                            } else {
+                                statusClass = 'upcoming';
+                                daysText = `<span class="upcoming">Due in ${daysRemaining} days</span>`;
+                            }
+                            
+                            const reminderItem = document.createElement("div");
+                            reminderItem.className = `reminder-item ${statusClass}`;
+                            reminderItem.innerHTML = `
+                                <strong>Truck:</strong> ${item.truck_id} (${item.licence_plate || 'N/A'})<br>
+                                <strong>Maintenance:</strong> ${item.remarks}<br>
+                                <strong>Due Date:</strong> ${formatDate(item.date_mtnce)} - ${daysText}<br>
+                                <strong>Status:</strong> ${item.status}<br>
+                                <hr>
+                            `;
+                            remindersList.appendChild(reminderItem);
+                        });
+                    }
+                    
+                    document.getElementById("remindersModal").style.display = "block";
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading reminders: " + error);
+                    alert("Failed to load maintenance reminders.");
+                }
+            });
+        }
+        
+        // Close reminders modal
+        function closeRemindersModal() {
+            document.getElementById("remindersModal").style.display = "none";
+        }
     </script>
 
 </body>
