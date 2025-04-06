@@ -289,9 +289,23 @@
         }
 
         function openTripModal() {
-            openModal('tripModal');
-        }
-
+    openModal('tripModal');
+    
+    // Clear form fields
+    document.getElementById('plateNumber').value = '';
+    document.getElementById('driver').value = '';
+    document.getElementById('helper').value = '';
+    document.getElementById('containerNo').value = '';
+    document.getElementById('client').value = '';
+    document.getElementById('shippingLine').value = '';
+    document.getElementById('consignee').value = '';
+    document.getElementById('size').value = '';
+    document.getElementById('cashAdvance').value = '';
+    document.getElementById('status').value = '';
+    
+    // Set save button to create new trip
+    document.querySelector('#tripModal .save-btn').onclick = function() { saveTrip(); };
+}
         function openTruckModal() {
             openModal('truckModal');
         }
@@ -521,15 +535,25 @@ fetchTrips();
 
         // Record management functions
         function deleteRecord(id) {
-            const confirmDelete = confirm("Are you sure you want to delete this record?");
-            if (confirmDelete) {
-                const index = fleetData.findIndex(d => d.id === id);
-                if (index !== -1) {
-                    fleetData.splice(index, 1);
-                    renderTable();
-                }
+    const confirmDelete = confirm("Are you sure you want to delete this record?");
+    if (confirmDelete) {
+        fetch('include/handlers/delete_trip.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Trip deleted successfully!');
+                fetchTrips(); // Reload the table
+            } else {
+                alert('Error: ' + data.message);
             }
-        }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
 
         function deleteTruck(id) {
             const confirmDelete = confirm("Are you sure you want to delete this truck?");
@@ -543,12 +567,26 @@ fetchTrips();
         }
 
         function editTrip(id) {
-            // Find the trip
-            const trip = fleetData.find(t => t.id === id);
-            if (trip) {
+    // Fetch the trip data first
+    fetch(`include/handlers/get_trip.php?id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const trip = data.trip;
+                
                 // Open the modal
                 openTripModal();
-               
+                
+                // Add a hidden input for the ID
+                let idInput = document.getElementById('tripId');
+                if (!idInput) {
+                    idInput = document.createElement('input');
+                    idInput.type = 'hidden';
+                    idInput.id = 'tripId';
+                    document.querySelector('#tripModal .modal-content').appendChild(idInput);
+                }
+                idInput.value = trip.id;
+                
                 // Populate the form fields
                 document.getElementById('plateNumber').value = trip.plateNumber;
                 document.getElementById('driver').value = trip.driver;
@@ -560,8 +598,49 @@ fetchTrips();
                 document.getElementById('size').value = trip.size;
                 document.getElementById('cashAdvance').value = trip.cashAdvance;
                 document.getElementById('status').value = trip.status;
+                
+                // Change the save function to update instead of create
+                document.querySelector('#tripModal .save-btn').onclick = function() { updateTrip(); };
+            } else {
+                alert('Failed to fetch trip data: ' + data.message);
             }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function updateTrip() {
+    const tripData = {
+        id: document.getElementById('tripId').value,
+        plateNumber: document.getElementById('plateNumber').value,
+        driver: document.getElementById('driver').value,
+        helper: document.getElementById('helper').value,
+        containerNo: document.getElementById('containerNo').value,
+        client: document.getElementById('client').value,
+        shippingLine: document.getElementById('shippingLine').value,
+        consignee: document.getElementById('consignee').value,
+        size: document.getElementById('size').value,
+        cashAdvance: document.getElementById('cashAdvance').value,
+        status: document.getElementById('status').value
+    };
+
+    fetch('include/handlers/edit_trip.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tripData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Trip updated successfully!');
+            closeModal('tripModal');
+            fetchTrips(); // Reload the table
+        } else {
+            alert('Error: ' + data.message);
         }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
 
         function editTruck(id) {
             // Find the truck
