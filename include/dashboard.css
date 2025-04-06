@@ -419,24 +419,24 @@ padding: 5px 0;
 }
 
 .on-route {
-background-color:rgba(69, 137, 63, 0.13);
-color: rgb(27, 123, 19);
-}
-
-
-.error {
-background-color:rgba(255, 0, 0, 0.2);
-color: rgb(209, 25, 25);
-}
-
-
-.late {
-background-color:rgba(255, 202, 8, 0.18);
-color: rgb(187, 148, 7);
-}
-
-
-.deviated {
-background-color:rgba(230, 121, 49, 0.19);
-color: rgb(230, 121, 49);
-}
+    background-color:rgba(69, 137, 63, 0.13);
+    color: rgb(27, 123, 19);
+    }
+    
+    
+    .error {
+    background-color:rgba(255, 0, 0, 0.2);
+    color: rgb(209, 25, 25);
+    }
+    
+    
+    .late {
+    background-color:rgba(255, 202, 8, 0.18);
+    color: rgb(187, 148, 7);
+    }
+    
+    
+    .deviated {
+    background-color:rgba(230, 121, 49, 0.19);
+    color: rgb(230, 121, 49);
+    }

@@ -16,7 +16,37 @@
 
 </head>
 <body>
-
+    <?php
+    // Include database connection
+    require 'include/handlers/dbhandler.php';
+    
+    // Fetch all trips from the database
+    $sql = "SELECT * FROM assign";
+    $result = $conn->query($sql);
+    $eventsData = [];
+    
+    if ($result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $eventsData[] = [
+                'id' => $row['trip_id'],
+                'plateNo' => $row['plate_no'],
+                'date' => $row['date'],
+                'driver' => $row['driver'],
+                'helper' => $row['helper'],
+                'containerNo' => $row['container_no'],
+                'client' => $row['client'],
+                'destination' => $row['destination'],
+                'shippingLine' => $row['shippine_line'],
+                'consignee' => $row['consignee'],
+                'size' => $row['size'],
+                'cashAdvance' => $row['cash_adv'],
+                'status' => $row['status']
+            ];
+        }
+    }
+    // Convert to JSON for JavaScript use
+    $eventsDataJson = json_encode($eventsData);
+    ?>
 
     <header class="header">
         <div class="logo-container">
@@ -36,47 +66,46 @@
     </header>
 
     <div class="sidebar">
+        <div class="sidebar-item">
+            <i class="icon2">🏠</i>
+            <a asp-area="" asp-controller="Home" asp-action="LandingPage">Home</a>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">🚗</i>
+            <span class="text">Driver Management</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">🚛</i>
+            <a asp-area="" asp-controller="Home" asp-action="FleetManagement">Fleet Management</a>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">📋</i>
+            <a asp-area="" asp-controller="Home" asp-action="TripLogs">Trip Management</a>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">📍</i>
+            <span class="text">Tracking</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2">🔧</i>
+            <a asp-area="" asp-controller="Home" asp-action="PreventiveMaintenance" class="text">Maintenance Scheduling</a>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2"> 📈  </i>
+            <span class="text">Fleet Performance Analytics</span>
+        </div>
+        <hr>
+        <div class="sidebar-item">
+            <i class="icon2"> ⚙️ </i>
+            <span class="text">Settings</span>
+        </div>
+        <div class="sidebar-item">
+            <i class="icon2"> 🚪 </i>
+            <a asp-area="" asp-controller="Home" asp-action="Login" class="text">Logout</a>
+        </div>
+    </div>
 
-    <div class="sidebar-item">
-        <i class="icon2">🏠</i>
-        <a asp-area="" asp-controller="Home" asp-action="LandingPage">Home</a>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2">🚗</i>
-        <span class="text">Driver Management</span>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2">🚛</i>
-        <a asp-area="" asp-controller="Home" asp-action="FleetManagement">Fleet Management</a>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2">📋</i>
-        <a asp-area="" asp-controller="Home" asp-action="TripLogs">Trip Management</a>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2">📍</i>
-        <span class="text">Tracking</span>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2">🔧</i>
-        <a asp-area="" asp-controller="Home" asp-action="PreventiveMaintenance" class="text">Maintenance Scheduling</a>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2"> 📈  </i>
-        <span class="text">Fleet Performance Analytics</span>
-    </div>
-    <hr>
-    <div class="sidebar-item">
-        <i class="icon2"> ⚙️ </i>
-        <span class="text">Settings</span>
-    </div>
-    <div class="sidebar-item">
-        <i class="icon2"> 🚪 </i>
-        <a asp-area="" asp-controller="Home" asp-action="Login" class="text">Logout</a>
-    </div>
-</div>
-
-<div class="calendar-container">
+    <div class="calendar-container">
         <section class="calendar-section">
             <h3>Trip Management</h3>
             <div class="toggle-btns">
@@ -101,48 +130,50 @@
             <span class="close">&times;</span>
             <h3>Edit Event</h3>
             <form id="editForm">
-                <label for="eventPlateNo">Plate No.:</label><br>
-                <input type="text" id="eventPlateNo" name="eventPlateNo" required><br><br>
+                <input type="hidden" id="editEventId" name="eventId">
+                
+                <label for="editEventPlateNo">Plate No.:</label><br>
+                <input type="text" id="editEventPlateNo" name="eventPlateNo" required><br><br>
         
-                <label for="eventDate">Date:</label><br>
-                <input type="datetime-local" id="eventDate" name="eventDate" required><br><br>
+                <label for="editEventDate">Date:</label><br>
+                <input type="date" id="editEventDate" name="eventDate" required><br><br>
         
-                <label for="eventDriver">Driver:</label><br>
-                <input type="text" id="eventDriver" name="eventDriver" required><br><br>
+                <label for="editEventDriver">Driver:</label><br>
+                <input type="text" id="editEventDriver" name="eventDriver" required><br><br>
         
-                <label for="eventHelper">Helper:</label><br>
-                <input type="text" id="eventHelper" name="eventHelper" required><br><br>
+                <label for="editEventHelper">Helper:</label><br>
+                <input type="text" id="editEventHelper" name="eventHelper" required><br><br>
         
-                <label for="eventContainerNo">Container No.:</label><br>
-                <input type="text" id="eventContainerNo" name="eventContainerNo" required><br><br>
+                <label for="editEventContainerNo">Container No.:</label><br>
+                <input type="text" id="editEventContainerNo" name="eventContainerNo" required><br><br>
         
-                <label for="eventClient">Client:</label><br>
-                <input type="text" id="eventClient" name="eventClient" required><br><br>
+                <label for="editEventClient">Client:</label><br>
+                <input type="text" id="editEventClient" name="eventClient" required><br><br>
         
-                <label for="eventDestination">Destination:</label><br>
-                <input type="text" id="eventDestination" name="eventDestination" required><br><br>
+                <label for="editEventDestination">Destination:</label><br>
+                <input type="text" id="editEventDestination" name="eventDestination" required><br><br>
         
-                <label for="eventShippingLine">Shipping Line:</label><br>
-                <input type="text" id="eventShippingLine" name="eventShippingLine" required><br><br>
+                <label for="editEventShippingLine">Shipping Line:</label><br>
+                <input type="text" id="editEventShippingLine" name="eventShippingLine" required><br><br>
         
-                <label for="eventConsignee">Consignee:</label><br>
-                <input type="text" id="eventConsignee" name="eventConsignee" required><br><br>
+                <label for="editEventConsignee">Consignee:</label><br>
+                <input type="text" id="editEventConsignee" name="eventConsignee" required><br><br>
         
-                <label for="eventSize">Size:</label><br>
-                <input type="text" id="eventSize" name="eventSize" required><br><br>
+                <label for="editEventSize">Size:</label><br>
+                <input type="text" id="editEventSize" name="eventSize" required><br><br>
         
-                <label for="eventCashAdvance">Cash Advance:</label><br>
-                <input type="text" id="eventCashAdvance" name="eventCashAdvance" required><br><br>
+                <label for="editEventCashAdvance">Cash Advance:</label><br>
+                <input type="text" id="editEventCashAdvance" name="eventCashAdvance" required><br><br>
         
-                <label for="eventStatus">Status:</label><br>
-                <select id="eventStatus" name="eventStatus" required>
+                <label for="editEventStatus">Status:</label><br>
+                <select id="editEventStatus" name="eventStatus" required>
                     <option value="Completed">Completed</option>
                     <option value="Pending">Pending</option>
                     <option value="Cancelled">Cancelled</option>
                 </select><br><br>
         
                 <button type="submit">Save Changes</button>
-                <button type="button" class="close">Cancel</button>
+                <button type="button" class="close-btn">Cancel</button>
             </form>
         </div>
     </div>
@@ -152,41 +183,41 @@
             <span class="close">&times;</span>
             <h2>Add Schedule</h2>
             <form id="addScheduleForm">
-                <label for="eventPlateNo">Plate No.:</label><br>
-                <input type="text" id="eventPlateNo" name="eventPlateNo" required><br><br>
+                <label for="addEventPlateNo">Plate No.:</label><br>
+                <input type="text" id="addEventPlateNo" name="eventPlateNo" required><br><br>
         
-                <label for="eventDate">Date:</label><br>
-                <input type="datetime-local" id="eventDate" name="eventDate" required><br><br>
+                <label for="addEventDate">Date:</label><br>
+                <input type="date" id="addEventDate" name="eventDate" required><br><br>
         
-                <label for="eventDriver">Driver:</label><br>
-                <input type="text" id="eventDriver" name="eventDriver" required><br><br>
+                <label for="addEventDriver">Driver:</label><br>
+                <input type="text" id="addEventDriver" name="eventDriver" required><br><br>
         
-                <label for="eventHelper">Helper:</label><br>
-                <input type="text" id="eventHelper" name="eventHelper" required><br><br>
+                <label for="addEventHelper">Helper:</label><br>
+                <input type="text" id="addEventHelper" name="eventHelper" required><br><br>
         
-                <label for="eventContainerNo">Container No.:</label><br>
-                <input type="text" id="eventContainerNo" name="eventContainerNo" required><br><br>
+                <label for="addEventContainerNo">Container No.:</label><br>
+                <input type="text" id="addEventContainerNo" name="eventContainerNo" required><br><br>
         
-                <label for="eventClient">Client:</label><br>
-                <input type="text" id="eventClient" name="eventClient" required><br><br>
+                <label for="addEventClient">Client:</label><br>
+                <input type="text" id="addEventClient" name="eventClient" required><br><br>
         
-                <label for="eventDestination">Destination:</label><br>
-                <input type="text" id="eventDestination" name="eventDestination" required><br><br>
+                <label for="addEventDestination">Destination:</label><br>
+                <input type="text" id="addEventDestination" name="eventDestination" required><br><br>
         
-                <label for="eventShippingLine">Shipping Line:</label><br>
-                <input type="text" id="eventShippingLine" name="eventShippingLine" required><br><br>
+                <label for="addEventShippingLine">Shipping Line:</label><br>
+                <input type="text" id="addEventShippingLine" name="eventShippingLine" required><br><br>
         
-                <label for="eventConsignee">Consignee:</label><br>
-                <input type="text" id="eventConsignee" name="eventConsignee" required><br><br>
+                <label for="addEventConsignee">Consignee:</label><br>
+                <input type="text" id="addEventConsignee" name="eventConsignee" required><br><br>
         
-                <label for="eventSize">Size:</label><br>
-                <input type="text" id="eventSize" name="eventSize" required><br><br>
+                <label for="addEventSize">Size:</label><br>
+                <input type="text" id="addEventSize" name="eventSize" required><br><br>
         
-                <label for="eventCashAdvance">Cash Advance:</label><br>
-                <input type="text" id="eventCashAdvance" name="eventCashAdvance" required><br><br>
+                <label for="addEventCashAdvance">Cash Advance:</label><br>
+                <input type="text" id="addEventCashAdvance" name="eventCashAdvance" required><br><br>
         
-                <label for="eventStatus">Status:</label><br>
-                <select id="eventStatus" name="eventStatus" required>
+                <label for="addEventStatus">Status:</label><br>
+                <select id="addEventStatus" name="eventStatus" required>
                     <option value="Completed">Completed</option>
                     <option value="Pending">Pending</option>
                     <option value="Cancelled">Cancelled</option>
@@ -194,11 +225,20 @@
         
                 <!-- Save and Cancel buttons -->
                 <button type="submit">Save Schedule</button>
-                <button type="button" class="close">Cancel</button>
+                <button type="button" class="close-btn">Cancel</button>
             </form>
         </div>
     </div>
     
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to delete this trip?</p>
+            <input type="hidden" id="deleteEventId">
+            <button id="confirmDeleteBtn">Yes, Delete</button>
+            <button class="close-btn">Cancel</button>
+        </div>
+    </div>
 
     <div id="tableView" style="display: none;">
         <h3>Event Table</h3>
@@ -208,8 +248,8 @@
                 <tr>
                     <th>Plate No.</th>
                     <th>Date</th>
-                    <th> Driver</th>
-                    <th> Helper</th>
+                    <th>Driver</th>
+                    <th>Helper</th>
                     <th>Container No.</th>
                     <th>Client</th>
                     <th>Destination</th>
@@ -217,7 +257,7 @@
                     <th>Consignee</th>
                     <th>Size</th>
                     <th>Cash Advance</th>
-                  <th>Status</th>
+                    <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -225,81 +265,63 @@
         </table>
         <div class="pagination-container">
             <button class="pagination-btn" id="prevPageBtn">Previous</button>
+            <span id="pageInfo"></span>
             <button class="pagination-btn" id="nextPageBtn">Next</button>
         </div>
     </div>
 
     <script>
-        
         $(document).ready(function() {
-       
-            $('#addScheduleBtnCalendar, #addScheduleBtnTable').on('click', function() {
+            // Load events data from PHP
+            var eventsData = <?php echo $eventsDataJson; ?>;
+            
+            // Format the data for fullCalendar
+            var calendarEvents = eventsData.map(function(event) {
+                return {
+                    id: event.id,
+                    title: event.plateNo + ' - ' + event.destination,
+                    start: event.date,
+                    plateNo: event.plateNo,
+                    driver: event.driver,
+                    helper: event.helper,
+                    containerNo: event.containerNo,
+                    client: event.client,
+                    destination: event.destination,
+                    shippingLine: event.shippingLine,
+                    consignee: event.consignee,
+                    size: event.size,
+                    cashAdvance: event.cashAdvance,
+                    status: event.status
+                };
+            });
+
+            // Modal handling
+            $('.close, .close-btn').on('click', function() {
+                $('.modal').hide();
+            });
+            
+            $(window).on('click', function(event) {
+                if ($(event.target).hasClass('modal')) {
+                    $('.modal').hide();
+                }
+            });
+            
+            $('#addScheduleBtnTable').on('click', function() {
                 $('#addScheduleModal').show();
             });
-    
-   
-            $('.close').on('click', function() {
-                $('#addScheduleModal').hide();
-            });
-    
 
-            $(window).on('click', function(event) {
-                if ($(event.target).is('#addScheduleModal')) {
-                    $('#addScheduleModal').hide();
-                }
-            });
-
-            
-            $('.close').on('click', function() {
-                $('#editModal').hide();
-            });
-    
-
-            $(window).on('click', function(event) {
-                if ($(event.target).is('#editModal')) {
-                    $('#editModal').hide();
-                }
-            });
-    
-            var eventsData = [
-                { 
-                    plateNo: 'ABC123', date: '2025-04-06', driver: 'John Doe', helper: 'Jane Doe', 
-                    containerNo: 'C123', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
-                    consignee: 'John Doe', size: '20ft', cashAdvance: '₱ 100', status: 'Completed'
-                },
-                { 
-                    plateNo: 'ABC124', date: '2025-04-06', driver: 'John Doe', helper: 'Jane Doe', 
-                    containerNo: 'C124', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
-                    consignee: 'John Doe', size: '40ft', cashAdvance: '₱ 150', status: 'Pending'
-                },
-                { 
-                    plateNo: 'ABC125', date: '2025-04-12', driver: 'John Doe', helper: 'Jane Doe', 
-                    containerNo: 'C125', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
-                    consignee: 'John Doe', size: '40ft', cashAdvance: '₱ 200', status: 'Cancelled'
-                },
-                { 
-                    plateNo: 'ABC126', date: '2025-04-15', driver: 'John Doe', helper: 'Jane Doe', 
-                    containerNo: 'C126', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
-                    consignee: 'John Doe', size: '20ft', cashAdvance: '₱ 120', status: 'Pending'
-                },
-                { 
-                    plateNo: 'ABC127', date: '2025-04-20', driver: 'John Doe', helper: 'Jane Doe', 
-                    containerNo: 'C127', client: 'XYZ Corp', destination: 'NYC', shippingLine: 'ABC Shipping', 
-                    consignee: 'John Doe', size: '20ft', cashAdvance: '₱ 110', status: 'Pending'
-                }
-            ];
-    
+            // Pagination variables
             var currentPage = 1;
             var rowsPerPage = 5;
-    
-            // Render events in table
+            
+            // Render table and update pagination
             function renderTable() {
                 $('#eventTableBody').empty();
                 var startIndex = (currentPage - 1) * rowsPerPage;
                 var endIndex = startIndex + rowsPerPage;
-                var pageData = eventsData.slice(startIndex, endIndex);
-    
-                pageData.forEach(function(event, index) {
+                var pageData = eventsData.slice(startIndex, Math.min(endIndex, eventsData.length));
+                
+                pageData.forEach(function(event) {
                     var row = `<tr>
                         <td>${event.plateNo}</td>
                         <td>${event.date}</td>
@@ -312,114 +334,258 @@
                         <td>${event.consignee}</td>
                         <td>${event.size}</td>
                         <td>${event.cashAdvance}</td>
-                         <td> <span class="status ${event.status}">${event.status}</span> </td>
+                        <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
                         <td>
-                            <button class="edit-btn" data-index="${startIndex + index}">Edit</button>
-                            <button class="delete-btn" data-index="${startIndex + index}">Delete</button>
+                            <button class="edit-btn" data-id="${event.id}">Edit</button>
+                            <button class="delete-btn" data-id="${event.id}">Delete</button>
                         </td>
                     </tr>`;
                     $('#eventTableBody').append(row);
                 });
-            }
-    
-
-    
-          
-            $(document).on('click', '.edit-btn', function() {
-                var index = $(this).data('index');
-                var event = eventsData[index];
-    
-                $('#eventPlateNo').val(event.plateNo);  
-                $('#eventDate').val(event.date);  
-                $('#eventDriver').val(event.driver);
-                $('#eventHelper').val(event.helper);  
-                $('#eventContainerNo').val(event.containerNo);
-                $('#eventClient').val(event.client);  
-                $('#eventDestination').val(event.destination);
-                $('#eventShippingLine').val(event.shippingLine);  
-                $('#eventConsignee').val(event.consignee);  
-                $('#eventSize').val(event.size);  
-                $('#eventCashAdvance').val(event.cashAdvance);
-                $('#eventStatus').val(event.status);  
-    
-    
-                $('#editModal').show();
-
                 
+                updatePagination();
+            }
+            
+            function updatePagination() {
+                var totalPages = Math.ceil(eventsData.length / rowsPerPage);
+                $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
+                
+                $('#prevPageBtn').prop('disabled', currentPage === 1);
+                $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
+            }
+            
+            $('#prevPageBtn').on('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTable();
+                }
             });
-
-            $(document).on('click', '.delete-btn', function() {
-                var index = $(this).data('index');
-                eventsData.splice(index, 1); 
-                renderTable();  
-                updatePagination();  
+            
+            $('#nextPageBtn').on('click', function() {
+                var totalPages = Math.ceil(eventsData.length / rowsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTable();
+                }
             });
-    
+            
             // Initialize Calendar
             $('#calendar').fullCalendar({
-                header: { left: 'prev,next today', center: 'title', right: 'month,agendaWeek,agendaDay' },
-                events: eventsData,
+                header: { 
+                    left: 'prev,next today', 
+                    center: 'title', 
+                    right: 'month,agendaWeek,agendaDay' 
+                },
+                events: calendarEvents,
+                eventRender: function(event, element) {
+                    // Customize event rendering
+                    var statusClass = event.status.toLowerCase();
+                    element.addClass(statusClass);
+                },
                 dayClick: function(date, jsEvent, view) {
                     var clickedDay = $(this);
                     
                     $('.fc-day').removeClass('fc-day-selected');
                     clickedDay.addClass('fc-day-selected');
-    
+                    
                     var eventsOnDay = $('#calendar').fullCalendar('clientEvents', function(event) {
                         return moment(event.start).isSame(date, 'day');
                     });
-    
+                    
                     $('#eventList').empty();
                     $('#noEventsMessage').hide();
-    
+                    
                     if (eventsOnDay.length > 0) {
-                        eventsOnDay.forEach(function(event, index) {
+                        eventsOnDay.forEach(function(event) {
                             var eventDetailsHtml = `
-                                <p><strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY, h:mm A')} to ${moment(event.end).format('MMMM D, YYYY, h:mm A')}</p>
-                                <p><strong>Driver:</strong> ${event.driver}</p>
-                                <p><strong>Client:</strong> ${event.client}</p>
-                                <p><strong>Destination:</strong> ${event.destination}</p>
-                                <p><strong>Container No.:</strong> ${event.containerNo}</p>
-                                <p><strong>Status:</strong> <span class="status ${event.status}">${event.status}</span></p>
-                                <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
-                                <button class="edit-btn" data-index="' + index + '">Edit</button>
-                                <button class="delete-btn" data-index="' + index + '">Delete</button>
-                                <hr>
+                                <li class="event-item">
+                                    <p><strong>Plate No:</strong> ${event.plateNo}</p>
+                                    <p><strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}</p>
+                                    <p><strong>Driver:</strong> ${event.driver}</p>
+                                    <p><strong>Helper:</strong> ${event.helper}</p>
+                                    <p><strong>Client:</strong> ${event.client}</p>
+                                    <p><strong>Destination:</strong> ${event.destination}</p>
+                                    <p><strong>Container No.:</strong> ${event.containerNo}</p>
+                                    <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
+                                    <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
+                                    <div class="event-actions">
+                                        <button class="edit-btn" data-id="${event.id}">Edit</button>
+                                        <button class="delete-btn" data-id="${event.id}">Delete</button>
+                                    </div>
+                                </li>
                             `;
                             $('#eventList').append(eventDetailsHtml);
                         });
-                        $('#eventDetails').show();
                     } else {
                         $('#noEventsMessage').show();
                     }
                 }
             });
-    
-
+            
+            // Toggle between Calendar and Table views
             $('#calendarViewBtn').on('click', function() {
                 $(this).addClass('active');
                 $('#tableViewBtn').removeClass('active');
                 $('#calendar').show();
                 $('#tableView').hide();
                 $('#eventDetails').show();
+                
+                // Refresh calendar
+                $('#calendar').fullCalendar('render');
             });
-    
+            
             $('#tableViewBtn').on('click', function() {
                 $(this).addClass('active');
                 $('#calendarViewBtn').removeClass('active');
                 $('#calendar').hide();
                 $('#tableView').show();
                 $('#eventDetails').hide();
+                
+                // Reset to first page
+                currentPage = 1;
                 renderTable();
-                updatePagination();
             });
-    
-
+            
+            // Edit event handler (for both table and calendar view)
+            $(document).on('click', '.edit-btn', function() {
+                var eventId = $(this).data('id');
+                var event = eventsData.find(function(e) { return e.id == eventId; });
+                
+                if (event) {
+                    $('#editEventId').val(event.id);
+                    $('#editEventPlateNo').val(event.plateNo);
+                    $('#editEventDate').val(event.date);
+                    $('#editEventDriver').val(event.driver);
+                    $('#editEventHelper').val(event.helper);
+                    $('#editEventContainerNo').val(event.containerNo);
+                    $('#editEventClient').val(event.client);
+                    $('#editEventDestination').val(event.destination);
+                    $('#editEventShippingLine').val(event.shippingLine);
+                    $('#editEventConsignee').val(event.consignee);
+                    $('#editEventSize').val(event.size);
+                    $('#editEventCashAdvance').val(event.cashAdvance);
+                    $('#editEventStatus').val(event.status);
+                    
+                    $('#editModal').show();
+                }
+            });
+            
+            // Delete event handler (for both table and calendar view)
+            $(document).on('click', '.delete-btn', function() {
+                var eventId = $(this).data('id');
+                $('#deleteEventId').val(eventId);
+                $('#deleteConfirmModal').show();
+            });
+            
+            // Form submissions
+            
+            // Add new schedule
+            $('#addScheduleForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                $.ajax({
+                    url: 'include/handlers/trip_operations.php',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        action: 'add',
+                        plateNo: $('#addEventPlateNo').val(),
+                        date: $('#addEventDate').val(),
+                        driver: $('#addEventDriver').val(),
+                        helper: $('#addEventHelper').val(),
+                        containerNo: $('#addEventContainerNo').val(),
+                        client: $('#addEventClient').val(),
+                        destination: $('#addEventDestination').val(),
+                        shippingLine: $('#addEventShippingLine').val(),
+                        consignee: $('#addEventConsignee').val(),
+                        size: $('#addEventSize').val(),
+                        cashAdvance: $('#addEventCashAdvance').val(),
+                        status: $('#addEventStatus').val()
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Trip added successfully!');
+                            $('#addScheduleModal').hide();
+                            location.reload(); // Reload to refresh data
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Server error occurred');
+                    }
+                });
+            });
+            
+            // Edit schedule
+            $('#editForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                $.ajax({
+                    url: 'include/handlers/trip_operations.php',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        action: 'edit',
+                        id: $('#editEventId').val(),
+                        plateNo: $('#editEventPlateNo').val(),
+                        date: $('#editEventDate').val(),
+                        driver: $('#editEventDriver').val(),
+                        helper: $('#editEventHelper').val(),
+                        containerNo: $('#editEventContainerNo').val(),
+                        client: $('#editEventClient').val(),
+                        destination: $('#editEventDestination').val(),
+                        shippingLine: $('#editEventShippingLine').val(),
+                        consignee: $('#editEventConsignee').val(),
+                        size: $('#editEventSize').val(),
+                        cashAdvance: $('#editEventCashAdvance').val(),
+                        status: $('#editEventStatus').val()
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Trip updated successfully!');
+                            $('#editModal').hide();
+                            location.reload(); // Reload to refresh data
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Server error occurred');
+                    }
+                });
+            });
+            
+            // Delete confirmation
+            $('#confirmDeleteBtn').on('click', function() {
+                var eventId = $('#deleteEventId').val();
+                
+                $.ajax({
+                    url: 'include/handlers/trip_operations.php',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        action: 'delete',
+                        id: eventId
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Trip deleted successfully!');
+                            $('#deleteConfirmModal').hide();
+                            location.reload(); // Reload to refresh data
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Server error occurred');
+                    }
+                });
+            });
+            
+            // Initial render
             renderTable();
-            updatePagination();
         });
     </script>
-    
-
 </body>
 </html>
