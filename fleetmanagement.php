@@ -91,9 +91,9 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Data will be populated by JavaScript -->
-                        </tbody>
+                        <tbody id="fleetTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
                     </table>
                 </div>
             </div>
@@ -144,7 +144,7 @@
             <span class="close" onclick="closeModal('tripModal')">&times;</span>
             <h2>Trip Log</h2>
            
-            <div class="form-group">
+            <!-- <div class="form-group">
                 <label for="plateNumber">Plate Number</label>
                 <select id="plateNumber" name="plateNumber" class="form-control" required>
                     <option value="ABC-123">ABC-123</option>
@@ -152,7 +152,14 @@
                     <option value="GHI-789">GHI-789</option>
                     <option value="JKL-012">JKL-012</option>
                 </select>
-            </div>
+            </div> -->
+
+            <div class="form-group">
+    <label for="plateNumber">Plate Number</label>
+    <input type="text" id="plateNumber" name="plateNumber" class="form-control" required placeholder="Enter Plate Number">
+</div>
+
+            
 
             <div class="form-group">
                 <label for="driver">Driver</label>
@@ -291,43 +298,75 @@
 
         // Save functions
         function saveTrip() {
-            // Get form values
-            const plateNumber = document.getElementById('plateNumber').value;
-            const driver = document.getElementById('driver').value;
-            const helper = document.getElementById('helper').value;
-            const containerNo = document.getElementById('containerNo').value;
-            const client = document.getElementById('client').value;
-            const shippingLine = document.getElementById('shippingLine').value;
-            const consignee = document.getElementById('consignee').value;
-            const size = document.getElementById('size').value;
-            const cashAdvance = document.getElementById('cashAdvance').value;
-            const status = document.getElementById('status').value;
-           
-            // Create new trip object
-            const newTrip = {
-                id: fleetData.length + 1,
-                plateNumber: plateNumber,
-                driver: driver,
-                helper: helper,
-                containerNo: containerNo,
-                client: client,
-                shippingLine: shippingLine,
-                consignee: consignee,
-                size: size,
-                cashAdvance: cashAdvance,
-                status: status
-            };
-           
-            // Add to fleet data
-            fleetData.push(newTrip);
-           
-            // Re-render table
-            renderTable();
-           
-            // Close modal and show success message
-            alert("Trip saved successfully!");
+    const tripData = {
+        plateNumber: document.getElementById('plateNumber').value,
+        driver: document.getElementById('driver').value,
+        helper: document.getElementById('helper').value,
+        containerNo: document.getElementById('containerNo').value,
+        client: document.getElementById('client').value,
+        shippingLine: document.getElementById('shippingLine').value,
+        consignee: document.getElementById('consignee').value,
+        size: document.getElementById('size').value,
+        cashAdvance: document.getElementById('cashAdvance').value,
+        status: document.getElementById('status').value
+    };
+
+    fetch('include/handlers/save_trip.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tripData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Trip assigned successfully!');
             closeModal('tripModal');
+            fetchTrips(); // Reload the table
+        } else {
+            alert('Error: ' + data.message);
         }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Fetch and display trips from database
+function fetchTrips() {
+    fetch('include/handlers/get_trips.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const tableBody = document.getElementById('fleetTableBody'); // Correct ID here
+                tableBody.innerHTML = ''; // Clear existing table data
+
+                data.trips.forEach(trip => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${trip.plateNumber}</td>
+                        <td>${trip.driver}</td>
+                        <td>${trip.helper}</td>
+                        <td>${trip.containerNo}</td>
+                        <td>${trip.client}</td>
+                        <td>${trip.shippingLine}</td>
+                        <td>${trip.consignee}</td>
+                        <td>${trip.size}</td>
+                        <td>${trip.cashAdvance}</td>
+                        <td>${trip.status}</td>
+                        <td class="actions">
+                            <button class="edit" onclick="editTrip(${trip.id})">Edit</button>
+                            <button class="delete" onclick="deleteRecord(${trip.id})">Delete</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                alert('Failed to fetch trips');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// Call this function when the page loads or after a new trip is added
+fetchTrips();
 
         function saveTruck() {
             // Get form values
