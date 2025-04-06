@@ -8,50 +8,20 @@
     <link rel="stylesheet" href="include/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+ 
+    <!-- Add jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css" rel="stylesheet">
+
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
+
 </head>
-<style>
-    .on-route {
-    background-color:rgba(69, 137, 63, 0.13);
-    color: rgb(27, 123, 19);
-}
 
-
-.error {
-    background-color:rgba(255, 0, 0, 0.2);
-    color: rgb(209, 25, 25);
-}
-
-
-.late {
-    background-color:rgba(255, 202, 8, 0.18);
-    color: rgb(187, 148, 7);
-}
-
-
-.deviated {
-    background-color:rgba(230, 121, 49, 0.19);
-    color: rgb(230, 121, 49);
-}
-    </style>
 <body>
-<header class="header">
-    <div class="logo-container">
-        <img src="/img/logo.png" alt="Company Logo" class="logo">
-        <img src="/img/mansar.png" alt="Company Name" class="company">
-    </div>
-
-
-    <div class="search-container">
-        <input type="text" placeholder="Search..." class="search-bar">
-    </div>
-
-
-    <div class="profile">
-        <i class="icon">✉</i>
-        <img src="/img/profile.png" alt="Admin Profile" class="profile-icon">
-        <div class="profile-name">Jesus Christ</div>
-    </div>
-</header>
 
 <div class="sidebar">
 
@@ -94,6 +64,7 @@
 </div>
 </div>
 
+
 <div class="dashboard-grid">
     <div class="grid-item card statistic on-route">
         <div class="content">
@@ -125,6 +96,7 @@
             <i class="fa fa-hourglass-end"></i>
         </div>
     </div>
+    
     <div class="grid-item card statistic deviated">
         <div class="content4">
             <p>Unchecked Vehicles</p>
@@ -137,98 +109,6 @@
     </div>
 </div>
 
-
-<section class="weekly-trip-schedule">
-    <div class="card-large">
-        <h3>Weekly Schedule</h3>
-        <div class="week-schedule">
-            <div class="day">
-                <h4>Monday</h4>
-                <ul>
-                    <li>Trip 1: 10:00 AM - Delivery sa bahay ni kuya</li>
-                    <li>Trip 2: 02:00 PM - Delivery sa toro house</li>
-                </ul>
-            </div>
-            <div class="day">
-                <h4>Tuesday</h4>
-                <ul>
-                    <li>Trip 1: 09:00 AM - Delivery fee</li>
-                    <li>Trip 2: 01:00 PM - Delivery sa fine dining restaurant</li>
-                </ul>
-            </div>
-            <div class="day">
-                <h4>Wednesday</h4>
-                <ul>
-                    <li>Trip 1: 11:00 AM - Where to the house</li>
-                </ul>
-            </div>
-            <div class="day">
-                <h4>Thursday</h4>
-                <ul>
-                    <li>Trip 1: 12:00 PM - Birthday ni Gemma</li>
-                </ul>
-            </div>
-            <div class="day">
-                <h4>Friday</h4>
-                <ul>
-                    <li>Trip 1: 08:00 AM - Tripping langs</li>
-                    <li>Trip 2: 04:00 AM - Night Rides</li>
-                </ul>
-            </div>
-            <div class="day">
-                <h4>Saturday</h4>
-                <ul>
-                    <li>Trip 1: 10:00 AM - Trip to busan</li>
-                </ul>
-            </div>
-            <div class="day">
-                <h4>Sunday</h4>
-                <ul>
-                    <li>Trip 1: 09:00 AM - Betty Go Belmonte</li>
-                </ul>
-            </div>
-            <a asp-area="" asp-controller="Home" asp-action="FleetManagement">
-                <button>View More</button>
-            </a>
-        </div>
-    </div>
-</section>
-
-
-<div class="dashboard-section">
-    <div class="card-large">
-        <h3>Shipment Statistics</h3>
-        <p>Total deliveries: 23.8k</p>
-        <div id="shipmentStatisticsChart"></div> <!-- Added for line chart -->
-    </div>
-    <div class="card-small">
-        <h3>Driving Drivers</h3>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-    </div>
-</div>
 
 
 <div class="card-large">
@@ -282,7 +162,47 @@
         </table>
     </div>
 </div>
+<div class="dashboard-section">
+    <div class="card-large">
+        <h3>Shipment Statistics</h3>
+        <p>Total deliveries: 23.8k</p>
+        <div id="shipmentStatisticsChart"></div> <!-- Added for line chart -->
+    </div>
+    <div class="card-small">
+        <h3>Driving Drivers</h3>
+        <div class="performance">
+            <i class="fa fa-user icon-bg"></i>
+            <p>Enter Name Here - Destination: Los Angeles</p>
+        </div>
+        <div class="performance">
+            <i class="fa fa-user icon-bg"></i>
+            <p>Enter Name Here - Destination: Los Angeles</p>
+        </div>
+        <div class="performance">
+            <i class="fa fa-user icon-bg"></i>
+            <p>Enter Name Here - Destination: Los Angeles</p>
+        </div>
+        <div class="performance">
+            <i class="fa fa-user icon-bg"></i>
+            <p>Enter Name Here - Destination: Los Angeles</p>
+        </div>
+        <div class="performance">
+            <i class="fa fa-user icon-bg"></i>
+            <p>Enter Name Here - Destination: Los Angeles</p>
+        </div>
+        <div class="performance">
+            <i class="fa fa-user icon-bg"></i>
+            <p>Enter Name Here - Destination: Los Angeles</p>
+        </div>
+    </div>
+</div>
 
+
+<section class="calendar-section">
+    <div class="card-large">
+        <h3>Event Calendar</h3>
+        <div id="calendar"></div> 
+</section>
 
 <script>
     // Shipment Statistics Line Chart
@@ -358,6 +278,105 @@
         },
         labels: ['On the way', 'Unloading', 'Loading', 'Waiting']
     };
+
+    $(document).ready(function() {
+        $('#calendar').fullCalendar({
+            header: {
+                left: 'prev,next today',    // Buttons for navigation
+                center: 'title',            // Title in the center
+                right: 'agendaWeek'         // Only show agenda week view
+            },
+            defaultView: 'agendaWeek',      // Start with week view
+            views: {
+                agendaWeek: {
+                    titleFormat: 'YYYY-MM-DD',  // Display only the week title
+                }
+            },
+            // Custom day render to highlight today's date
+            dayRender: function(date, cell) {
+                var today = moment().format('YYYY-MM-DD');
+                if (date.format('YYYY-MM-DD') === today) {
+                    // Apply a gray background for today's date
+                    cell.css("background-color", "#e0e0e0");
+                    cell.addClass("highlight-today");
+                }
+            },
+            events: [
+                {
+                    title: 'Ongoing Delivery',
+                    start: '2025-04-06T10:00:00',
+                    end: '2025-04-06T12:00:00',
+                    color: '#457B3D', // Custom color for event
+                    description: 'Delivering goods to clients'
+                },
+                {
+                    title: 'Damaged Vehicle',
+                    start: '2025-04-07T14:00:00',
+                    color: '#D91F19', // Custom color for event
+                    description: 'Vehicle needs repair'
+                },
+                {
+                    title: 'Late Delivery',
+                    start: '2025-04-08T16:00:00',
+                    color: '#BB9407', // Custom color for event
+                    description: 'Delivery delayed due to traffic'
+                },
+                {
+                    title: 'Vehicle Maintenance',
+                    start: '2025-04-09T09:00:00',
+                    color: '#E67931', // Custom color for event
+                    description: 'Routine maintenance'
+                },
+                {
+                    title: 'New Event',
+                    start: '2025-04-10T10:00:00',
+                    end: '2025-04-10T12:00:00',
+                    color: '#0077FF',
+                    description: 'Client delivery on time'
+                },
+                {
+                    title: 'Package Delivery',
+                    start: '2025-04-11T14:00:00',
+                    end: '2025-04-11T16:00:00',
+                    color: '#FF5733',
+                    description: 'Package delivery scheduled for today'
+                },
+                {
+                    title: 'Routine Check-up',
+                    start: '2025-04-06T08:00:00',
+                    end: '2025-04-06T09:00:00',
+                    color: '#F1C40F',
+                    description: 'Routine vehicle check-up in the morning'
+                },
+                {
+                    title: 'Urgent Delivery',
+                    start: '2025-04-07T11:00:00',
+                    color: '#E74C3C',
+                    description: 'Urgent delivery to client A'
+                },
+                {
+                    title: 'Driver Rest',
+                    start: '2025-04-09T18:00:00',
+                    end: '2025-04-09T20:00:00',
+                    color: '#2ECC71',
+                    description: 'Rest period for driver'
+                },
+                {
+                    title: 'Heavy Traffic Expected',
+                    start: '2025-04-10T08:00:00',
+                    color: '#9B59B6',
+                    description: 'Expect delays due to roadwork'
+                },
+                {
+                    title: 'New Vehicle Inspection',
+                    start: '2025-04-11T10:00:00',
+                    end: '2025-04-11T11:00:00',
+                    color: '#FF8C00',
+                    description: 'Inspect new vehicle before use'
+                }
+            ]
+        });
+    });
 </script>
 </body>
 </html>

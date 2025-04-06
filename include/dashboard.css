@@ -1,6 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    margin:100px;
+    margin:80px;
 
 
     background-color: rgb(241, 241, 244);
@@ -411,4 +411,32 @@ padding: 5px 0;
     background-color:rgb(83, 103, 158);
     line-height: 20px;
     font-size:14px;
+}
+
+.highlight-today {
+    font-weight: bold;
+    color: #333;
+}
+
+.on-route {
+background-color:rgba(69, 137, 63, 0.13);
+color: rgb(27, 123, 19);
+}
+
+
+.error {
+background-color:rgba(255, 0, 0, 0.2);
+color: rgb(209, 25, 25);
+}
+
+
+.late {
+background-color:rgba(255, 202, 8, 0.18);
+color: rgb(187, 148, 7);
+}
+
+
+.deviated {
+background-color:rgba(230, 121, 49, 0.19);
+color: rgb(230, 121, 49);
 }
