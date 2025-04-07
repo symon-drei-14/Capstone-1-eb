@@ -1,3 +1,13 @@
+<?php
+session_start();
+// Check if user is logged in
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    // Not logged in, redirect to login page
+    header("Location: login.php");
+    exit();
+}
+// User is logged in, continue with the page
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,6 +27,8 @@
 </head>
 <body>
     <?php
+
+
     // Include database connection
     require 'include/handlers/dbhandler.php';
     
