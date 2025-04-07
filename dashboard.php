@@ -22,46 +22,44 @@
 </head>
 
 <body>
-
 <div class="sidebar">
-
-<div class="sidebar-item">
-    <i class="icon2">🏠</i>
-    <a asp-area="" asp-controller="Home" asp-action="LandingPage">Home</a>
-</div>
-<div class="sidebar-item">
-    <i class="icon2">🚗</i>
-    <span class="text">Driver Management</span>
-</div>
-<div class="sidebar-item">
-    <i class="icon2">🚛</i>
-    <a asp-area="" asp-controller="Home" asp-action="FleetManagement">Fleet Management</a>
-</div>
-<div class="sidebar-item">
-    <i class="icon2">📋</i>
-    <a asp-area="" asp-controller="Home" asp-action="TripLogs">Trip Management</a>
-</div>
-<div class="sidebar-item">
-    <i class="icon2">📍</i>
-    <span class="text">Tracking</span>
-</div>
-<div class="sidebar-item">
-    <i class="icon2">🔧</i>
-    <a asp-area="" asp-controller="Home" asp-action="PreventiveMaintenance" class="text">Maintenance Scheduling</a>
-</div>
-<div class="sidebar-item">
-    <i class="icon2"> 📈  </i>
-    <span class="text">Fleet Performance Analytics</span>
-</div>
-<hr>
-<div class="sidebar-item">
-    <i class="icon2"> ⚙️ </i>
-    <span class="text">Settings</span>
-</div>
-<div class="sidebar-item">
-    <i class="icon2"> 🚪 </i>
-    <a asp-area="" asp-controller="Home" asp-action="Login" class="text">Logout</a>
-</div>
+    <div class="sidebar-item">
+        <i class="icon2">🏠</i>
+        <a href="dashboard.php">Home</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">🚗</i>
+        <a href="drivermanagement.php">Driver Management</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">🚛</i>
+        <a href="fleetmanagement.php">Fleet Management</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">📋</i>
+        <a href="triplogs.php">Trip Management</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">📍</i>
+        <a href="tracking.php">Tracking</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">🔧</i>
+        <a href="maintenance.php">Maintenance Scheduling</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">📈</i>
+        <a href="fleetperformance.php">Fleet Performance Analytics</a>
+    </div>
+    <hr>
+    <div class="sidebar-item">
+        <i class="icon2">⚙️</i>
+        <a href="settings.php">Settings</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">🚪</i>
+        <a href="logout.php">Logout</a>
+    </div>
 </div>
 
 

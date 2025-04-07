@@ -68,7 +68,8 @@
 
 .sidebar {
     position: fixed;
-    top: 1rem;
+  
+    top: 0;
     left: 0;
     width: 80px;
     height: 100%;
