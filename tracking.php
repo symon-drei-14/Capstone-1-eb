@@ -51,7 +51,7 @@
     </div>
     <div class="sidebar-item">
         <i class="icon2">🚪</i>
-        <a href="logout.php">Logout</a>
+        <a href="include/handlers/logout.php">Logout</a>
     </div>
 </div>
 
