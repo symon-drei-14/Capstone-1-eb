@@ -48,22 +48,7 @@
     $eventsDataJson = json_encode($eventsData);
     ?>
 
-    <header class="header">
-        <div class="logo-container">
-            <img src="/img/logo.png" alt="Company Logo" class="logo">
-            <img src="/img/mansar.png" alt="Company Name" class="company">
-        </div>
 
-        <div class="search-container">
-            <input type="text" placeholder="Search..." class="search-bar">
-        </div>
-
-        <div class="profile">
-            <i class="icon">✉</i>
-            <img src="/img/profile.png" alt="Admin Profile" class="profile-icon">
-            <div class="profile-name">Jesus Christ</div>
-        </div>
-    </header>
 
     <div class="sidebar">
         <div class="sidebar-item">
@@ -279,7 +264,7 @@
             var calendarEvents = eventsData.map(function(event) {
                 return {
                     id: event.id,
-                    title: event.plateNo + ' - ' + event.destination,
+                    title: event.client + ' - ' + event.destination,
                     start: event.date,
                     plateNo: event.plateNo,
                     driver: event.driver,
@@ -378,6 +363,10 @@
                 },
                 events: calendarEvents,
                 eventRender: function(event, element) {
+                    element.find('.fc-title').css({
+            'white-space': 'normal',
+            'overflow': 'visible'
+        });
                     // Customize event rendering
                     var statusClass = event.status.toLowerCase();
                     element.addClass(statusClass);
