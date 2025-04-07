@@ -12,62 +12,46 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <header class="header">
-        <div class="logo-container">
-            <img src="/img/logo.png" alt="Company Logo" class="logo">
-            <img src="/img/mansar.png" alt="Company Name" class="company">
-        </div>
-
-        <div class="search-container">
-            <input type="text" placeholder="Search..." class="search-bar">
-        </div>
-
-        <div class="profile">
-            <i class="icon">✉</i>
-            <img src="/img/profile.png" alt="Admin Profile" class="profile-icon">
-            <div class="profile-name">Jesus Christ</div>
-        </div>
-    </header>
-
-    <div class="sidebar">
-        <div class="sidebar-item">
-            <i class="icon2">🏠</i>
-            <a asp-area="" asp-controller="Home" asp-action="LandingPage">Home</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🚗</i>
-            <a asp-area="" asp-controller="Home" asp-action="DriverManagement">Driver Management</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🚛</i>
-            <span class="text">Fleet Management</span>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">📋</i>
-            <a asp-area="" asp-controller="Home" asp-action="TripLogs">Trip Logs</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">📍</i>
-            <span class="text">Tracking</span>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🔧</i>
-            <a asp-area="" asp-controller="Home" asp-action="PreventiveMaintenance" class="text">Maintenance Scheduling</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2"> 📈  </i>
-            <span class="text">Fleet Performance Analytics</span>
-        </div>
-        <hr>
-        <div class="sidebar-item">
-            <i class="icon2"> ⚙️ </i>
-            <span class="text">Settings</span>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2"> 🚪 </i>
-            <a asp-area="" asp-controller="Home" asp-action="Login" class="text">Logout</a>
-        </div>
+    
+<div class="sidebar">
+    <div class="sidebar-item">
+        <i class="icon2">🏠</i>
+        <a href="dashboard.php">Home</a>
     </div>
+    <div class="sidebar-item">
+        <i class="icon2">🚗</i>
+        <a href="drivermanagement.php">Driver Management</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">🚛</i>
+        <a href="fleetmanagement.php">Fleet Management</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">📋</i>
+        <a href="triplogs.php">Trip Management</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">📍</i>
+        <a href="tracking.php">Tracking</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">🔧</i>
+        <a href="maintenance.php">Maintenance Scheduling</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">📈</i>
+        <a href="fleetperformance.php">Fleet Performance Analytics</a>
+    </div>
+    <hr>
+    <div class="sidebar-item">
+        <i class="icon2">⚙️</i>
+        <a href="settings.php">Settings</a>
+    </div>
+    <div class="sidebar-item">
+        <i class="icon2">🚪</i>
+        <a href="include/handlers/logout.php">Logout</a>
+    </div>
+</div>
 
     <div class="container mt-4">
         <div class="row mb-3">
