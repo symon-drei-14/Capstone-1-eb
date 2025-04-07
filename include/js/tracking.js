@@ -1,15 +1,41 @@
 let map;
 let markers = {};
 let updateTimer;
+let allDrivers = {};
 
-const firebase_url = "https://mansartrucking1-default-rtdb.asia-southeast1.firebasedatabase.app";
-const firebase_auth = "Xtnh1Zva11o8FyDEA75gzep6NUeNJLMZiCK6mXB7";
-
-document.addEventListener('DOMContentLoaded', function() {
-    initMap();
-});
+const sampleData = {
+    "drivers": {
+        "GpVwz7fj6EoZquvkdFrN": {
+            "assigned_truck_id": 1,
+            "driver_id": "GpVwz7fj6EoZquvkdFrN",
+            "email": "charles@gmail.com",
+            "location": {
+                "last_updated": 1743941547705,
+                "latitude": 14.7874657,
+                "longitude": 121.0040989
+            },
+            "name": "Charles Cahilig",
+            "assigned_trip_id": "trip_1743941164224"
+        },
+        "m5ugaxPnkaXIPYIkOePE": {
+            "assigned_truck_id": 2,
+            "driver_id": "m5ugaxPnkaXIPYIkOePE",
+            "email": "Andrew@gmail.com",
+            "location": {
+                "last_updated": 1743931958718,
+                "latitude": 14.7874641,
+                "longitude": 121.0040972
+            },
+            "name": "Andrew cahilig",
+            "assigned_trip_id": "trip_1743931815461"
+        }
+    }
+};
 
 function initMap() {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+
     map = L.map('map').setView([14.7874696, 121.0040994], 15);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -18,68 +44,84 @@ function initMap() {
     }).addTo(map);
 
     fetchDriverData();
-
     updateTimer = setInterval(fetchDriverData, 10000);
 
     document.getElementById('refresh-btn').addEventListener('click', function() {
         fetchDriverData();
-        console.log('Data manually refreshed');
     });
 }
 
 function fetchDriverData() {
-    fetch(`${firebase_url}/drivers.json?auth=${firebase_auth}`)
+    fetch('include/config/firebase.php')
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            updateMap(data);
-            updateDriversList(data);
-            updateTrackingTable(data);
+            console.log("API Response:", data);
+            if (data && data.drivers) {
+                allDrivers = data.drivers;
+                updateMap(data.drivers);
+                updateDriversList(data.drivers);
+            } else {
+                console.log("Using sample data (no drivers in API response)");
+                allDrivers = sampleData.drivers;
+                updateMap(sampleData.drivers);
+                updateDriversList(sampleData.drivers);
+            }
         })
         .catch(error => {
             console.error('Error fetching data:', error);
+            console.log("Using sample data due to API error");
+            allDrivers = sampleData.drivers;
+            updateMap(sampleData.drivers);
+            updateDriversList(sampleData.drivers);
+            
             document.getElementById('drivers-list').innerHTML = `
-                <div style="padding: 15px; background-color: #f8d7da; color: #721c24; border-radius: 5px;">
-                    Error loading data: ${error.message}
-                </div>
+                <div id="drivers-content"></div>
             `;
         });
 }
 
-function updateMap(data) {
-    if (!data) return;
-
+function updateMap(drivers) {
+    if (!drivers || !map) return;
+    
     const bounds = [];
     const driversFound = new Set();
-
-    Object.entries(data).forEach(([driverId, driverData]) => {
-        if (!driverData.current_location) return;
+    
+    Object.entries(drivers).forEach(([driverId, driverData]) => {
+        if (!driverData.location || !driverData.location.latitude || !driverData.location.longitude) return;
         
         driversFound.add(driverId);
         
-        const location = driverData.current_location;
         const position = [
-            parseFloat(location.latitude),
-            parseFloat(location.longitude)
+            parseFloat(driverData.location.latitude),
+            parseFloat(driverData.location.longitude)
         ];
 
         if (isNaN(position[0]) || isNaN(position[1])) return;
 
         bounds.push(position);
 
-        const driverName = location.driver_name || driverId;
+        const driverName = driverData.name || "Unknown Driver";
+
+        let truckId = driverData.assigned_truck_id || 'N/A';
+
+        const tripId = driverData.assigned_trip_id || null;
+
+        const lastUpdated = driverData.location.last_updated ? 
+            new Date(parseInt(driverData.location.last_updated)).toLocaleString() : 
+            'Unknown';
 
         const popupContent = `
             <div style="width: 200px; padding: 10px;">
                 <h6>${driverName}</h6>
-                <p><strong>Truck ID:</strong> ${location.truck_id || 'N/A'}</p>
-                <p><strong>Last Updated:</strong> ${location.timestamp || 'Unknown'}</p>
-                <p><strong>Coordinates:</strong> ${position[0].toFixed(6)}, ${position[1].toFixed(6)}</p>
-                ${location.destination ? `<p><strong>Destination:</strong> ${location.destination}</p>` : ''}
+                <p>Assigned Truck: ${truckId}</p>
+                <p>Last Updated: ${lastUpdated}</p>
+                <p>Coordinates: ${position[0].toFixed(6)}, ${position[1].toFixed(6)}</p>
+                ${tripId ? `<p>Trip ID: ${tripId}</p>` : ''}
             </div>
         `;
 
@@ -87,21 +129,18 @@ function updateMap(data) {
             markers[driverId].setLatLng(position);
             markers[driverId].getPopup().setContent(popupContent);
         } else {
-
             const truckIcon = L.divIcon({
-                html: '🚚',
-                className: 'driver-marker-icon',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
+                className: 'truck-icon',
+                html: '<i class="fas fa-truck" style="font-size: 20px; color: #3388ff;"></i>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
             });
-
+            
             const marker = L.marker(position, {
-                title: driverName,
                 icon: truckIcon
             }).addTo(map);
-
+            
             marker.bindPopup(popupContent);
-
             markers[driverId] = marker;
         }
     });
@@ -115,111 +154,85 @@ function updateMap(data) {
 
     if (bounds.length > 0) {
         map.fitBounds(bounds);
-
-        if (map.getZoom() > 16) {
-            map.setZoom(16);
+        if (bounds.length === 1) {
+            map.setZoom(15); 
         }
     }
+
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 100);
 }
 
-function updateDriversList(data) {
-    if (!data) {
-        document.getElementById('drivers-list').innerHTML = '<div style="padding: 15px; background-color: #fff3cd; color: #856404; border-radius: 5px;">No drivers found</div>';
+function updateDriversList(drivers) {
+    const driversListContainer = document.getElementById('drivers-content') || document.getElementById('drivers-list');
+    if (!drivers || !driversListContainer) {
+        driversListContainer.innerHTML = '<div class="alert alert-warning">No drivers found</div>';
         return;
     }
     
     let html = '';
+    let hasDrivers = false;
     
-    Object.entries(data).forEach(([driverId, driverData]) => {
-        if (!driverData.current_location) return;
+    Object.entries(drivers).forEach(([driverId, driverData]) => {
+        if (!driverData.location) return;
         
-        const location = driverData.current_location;
-        const timestamp = location.timestamp || 'Unknown';
-        const truckId = location.truck_id || 'N/A';
-        const driverName = location.driver_name || driverId;
+        hasDrivers = true;
+
+        const lastUpdated = driverData.location.last_updated ? 
+            new Date(parseInt(driverData.location.last_updated)).toLocaleString() : 
+            'Unknown';
+
+        let truckId = driverData.assigned_truck_id || 'N/A';
+
+        const driverName = driverData.name || "Unknown Driver";
+
+        const tripId = driverData.assigned_trip_id || null;
         
         html += `
-            <div class="driver-info" onclick="centerOnDriver('${driverId}')">
-                <div class="fw-bold">${driverName}</div>
-                <div style="font-size: 14px; margin-bottom: 5px;">Truck: ${truckId}</div>
-                <div style="font-size: 12px; color: #6c757d;">Last update: ${timestamp}</div>
+            <div class="driver-info" data-driver-id="${driverId}" onclick="centerOnDriver('${driverId}')">
+                <div class="d-flex justify-content-between">
+                    <div class="fw-bold">${driverName}</div>
+                    <div><i class="fas fa-truck text-primary"></i></div>
+                </div>
+                <div class="small mb-1">Truck: ${truckId}</div>
+                <div class="small text-muted">Last update: ${lastUpdated}</div>
+                ${tripId ? `<div class="small">Trip: ${tripId}</div>` : ''}
             </div>
         `;
     });
     
-    document.getElementById('drivers-list').innerHTML = html || '<div style="padding: 15px; background-color: #fff3cd; color: #856404; border-radius: 5px;">No drivers found</div>';
-}
-
-function updateTrackingTable(data) {
-    if (!data) {
-        document.getElementById('tracking-table-body').innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center">No vehicle data available</td>
-            </tr>
-        `;
-        return;
+    if (!hasDrivers) {
+        html = '<div class="alert alert-warning">No drivers found</div>';
     }
     
-    let html = '';
-    
-    Object.entries(data).forEach(([driverId, driverData]) => {
-        if (!driverData.current_location) return;
-        
-        const location = driverData.current_location;
-        const driverName = location.driver_name || driverId;
-        const truckId = location.truck_id || 'N/A';
-        const currentLocation = `${location.latitude?.toFixed(6)}, ${location.longitude?.toFixed(6)}`;
-        const destination = location.destination || 'Not specified';
-        const status = location.status || 'On route';
-        const progress = Math.floor(Math.random() * 100);
-        
-        html += `
-            <tr>
-                <td><i class="fas fa-truck icon-bg2"></i></td>
-                <td>${driverName}</td>
-                <td>${truckId}</td>
-                <td>${currentLocation}</td>
-                <td>${destination}</td>
-                <td>${status}</td>
-                <td>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: ${progress}%;">${progress}%</div>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-    
-    if (html) {
-        document.getElementById('tracking-table-body').innerHTML = html;
-    } else {
-        document.getElementById('tracking-table-body').innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center">No vehicle data available</td>
-            </tr>
-        `;
-    }
+    driversListContainer.innerHTML = html;
 }
 
 function centerOnDriver(driverId) {
     const marker = markers[driverId];
     if (marker) {
         map.setView(marker.getLatLng(), 16);
-
         map.closePopup();
-
         marker.openPopup();
 
         document.querySelectorAll('.driver-info').forEach(el => {
-            el.style.backgroundColor = '';
+            el.classList.remove('active');
         });
-
-        document.querySelectorAll('.driver-info').forEach(el => {
-            if (el.textContent.includes(driverId)) {
-                el.style.backgroundColor = '#e2e6ea';
-            }
-        });
+        
+        const driverElement = document.querySelector(`.driver-info[data-driver-id="${driverId}"]`);
+        if (driverElement) {
+            driverElement.classList.add('active');
+            driverElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     }
 }
 
-window.centerOnDriver = centerOnDriver;
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(initMap, 500);
+    window.addEventListener('resize', function() {
+        if (map) {
+            map.invalidateSize();
+        }
+    });
+});

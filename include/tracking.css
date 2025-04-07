@@ -1,47 +1,42 @@
-#map {
-    height: 600px;
-    width: 100%;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    z-index: 1;
-    position: relative;
-    background-color: #f8f9fa;
-}
 .driver-info {
     padding: 10px;
-    border-radius: 5px;
-    background-color: #f8f9fa;
-    margin-bottom: 8px;
+    border-bottom: 1px solid #eee;
     cursor: pointer;
-}
-.driver-info:hover {
-    background-color: #e9ecef;
-}
-.driver-marker-icon {
-    text-align: center;
-    color: white;
-    font-weight: bold;
-    background-color: #0d6efd;
-    border-radius: 50%;
-    border: 2px solid white;
+    transition: background-color 0.2s;
 }
 
-.container {
-    margin-left: 240px;
-    width: calc(100% - 240px);
-    padding: 20px;
+.driver-info:hover {
+    background-color: #f5f5f5;
+}
+
+.driver-info.active {
+    background-color: #e2e6ea;
+}
+
+.status-active {
+    color: #28a745;
+}
+
+.status-offline {
+    color: #dc3545;
 }
 
 .map-container {
     height: 600px;
-    width: 100%;
-    position: relative;
+    border-radius: 8px;
     overflow: hidden;
+    border: 1px solid #ddd;
 }
 
-.header {
-    z-index: 2;
+#map {
+    height: 100%;
+    width: 100%;
 }
-.sidebar {
-    z-index: 2;
+
+.driver-marker-icon {
+    font-size: 24px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
