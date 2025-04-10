@@ -1,0 +1,42 @@
+2025-04-07 17:05:40 - Login request received
+{"email":"Andrei@gmail.com","password":"12345678"}
+
+2025-04-07 17:05:40 - JSON parsed successfully
+2025-04-07 17:05:40 - Data validation passed
+2025-04-07 17:05:40 - Database connection successful
+2025-04-07 17:05:40 - User not found: Andrei@gmail.com
+2025-04-07 17:05:45 - Login request received
+{"email":"andrei@gmail.com","password":"12345678"}
+
+2025-04-07 17:05:45 - JSON parsed successfully
+2025-04-07 17:05:45 - Data validation passed
+2025-04-07 17:05:45 - Database connection successful
+2025-04-07 17:05:45 - User not found: andrei@gmail.com
+2025-04-07 17:07:26 - Login request received
+{"email":"Sim@gmail.com","password":"12345678"}
+
+2025-04-07 17:07:26 - JSON parsed successfully
+2025-04-07 17:07:26 - Data validation passed
+2025-04-07 17:07:26 - Database connection successful
+2025-04-07 17:07:26 - Login successful for: Sim@gmail.com
+2025-04-07 17:09:31 - Login request received
+{"email":"Sim@gmail.com","password":"12345678"}
+
+2025-04-07 17:09:31 - JSON parsed successfully
+2025-04-07 17:09:31 - Data validation passed
+2025-04-07 17:09:31 - Database connection successful
+2025-04-07 17:09:31 - Login successful for: Sim@gmail.com
+2025-04-07 17:12:55 - Login request received
+{"email":"Sim@gmail.com","password":"12345678"}
+
+2025-04-07 17:12:55 - JSON parsed successfully
+2025-04-07 17:12:55 - Data validation passed
+2025-04-07 17:12:55 - Database connection successful
+2025-04-07 17:12:55 - Login successful for: Sim@gmail.com
+2025-04-07 17:20:49 - Login request received
+{"email":"Sim@gmail.com","password":"12345678"}
+
+2025-04-07 17:20:49 - JSON parsed successfully
+2025-04-07 17:20:49 - Data validation passed
+2025-04-07 17:20:49 - Database connection successful
+2025-04-07 17:20:49 - Login successful for: Sim@gmail.com

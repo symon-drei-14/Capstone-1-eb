@@ -143,7 +143,8 @@ th:nth-child(8), td:nth-child(8) {
 
 .main-content3{
     width: 90vw;
-    height: 145vh;
+    max-height: 145vh;
+    height: auto;
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;

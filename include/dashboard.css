@@ -1,8 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    margin:80px;
-
-
+    margin:90px;
     background-color: rgb(241, 241, 244);
 }
 
@@ -11,7 +9,7 @@ body {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 15px;
-    padding: 20px;
+    padding: 10px;
 }
 
 

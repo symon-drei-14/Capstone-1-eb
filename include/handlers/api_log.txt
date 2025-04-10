@@ -1,0 +1,29 @@
+2025-04-07 16:59:52 - Request received
+{"driver_id":"1744037991495","firebase_uid":"1744037991495","name":"Symons","email":"gmail123@gmail.com","password":"12345678","assigned_truck_id":1}
+
+2025-04-07 16:59:52 - JSON parsed successfully
+2025-04-07 16:59:52 - Data validation passed
+2025-04-07 16:59:52 - Database connection successful
+2025-04-07 16:59:52 - ERROR: No database selected
+2025-04-07 17:04:00 - Request received
+{"driver_id":"1744038238958","firebase_uid":"1744038238958","name":"Andrei","email":"Andrei@gmal.com","password":"12345678","assigned_truck_id":1}
+
+2025-04-07 17:04:00 - JSON parsed successfully
+2025-04-07 17:04:00 - Data validation passed
+2025-04-07 17:04:00 - Database connection successful
+2025-04-07 17:04:00 - Table 'drivers_table' exists
+2025-04-07 17:04:00 - Table columns: driver_id, firebase_uid, name, email, password, assigned_truck_id, created_at, last_login
+2025-04-07 17:04:00 - Email check passed
+2025-04-07 17:04:00 - SQL prepared successfully
+2025-04-07 17:04:00 - Driver registered successfully
+2025-04-07 17:06:14 - Request received
+{"driver_id":"1744038373383","firebase_uid":"1744038373383","name":"Sim","email":"Sim@gmail.com","password":"12345678","assigned_truck_id":1}
+
+2025-04-07 17:06:14 - JSON parsed successfully
+2025-04-07 17:06:14 - Data validation passed
+2025-04-07 17:06:14 - Database connection successful
+2025-04-07 17:06:14 - Table 'drivers_table' exists
+2025-04-07 17:06:14 - Table columns: driver_id, firebase_uid, name, email, password, assigned_truck_id, created_at, last_login
+2025-04-07 17:06:14 - Email check passed
+2025-04-07 17:06:14 - SQL prepared successfully
+2025-04-07 17:06:14 - Driver registered successfully

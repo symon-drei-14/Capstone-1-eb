@@ -1,10 +1,10 @@
 <?php
-$servername = "localhost";
+$host = "localhost";
+$db_name = "capstonedb"; 
 $username = "root";
-$password = "";
-$dbname = "capstonedb";
+$password = ""; 
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($host, $username, $password,$db_name);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
