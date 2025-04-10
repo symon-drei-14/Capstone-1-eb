@@ -63,7 +63,7 @@ require_once 'include/handlers/dbhandler.php';
     <hr>
     <div class="sidebar-item">
         <i class="icon2">⚙️</i>
-        <a href="settings.php">Admin Management</a>
+        <a href="adminmanagement.php">Admin Management</a>
     </div>
     <div class="sidebar-item">
         <i class="icon2">🚪</i>
@@ -76,7 +76,7 @@ require_once 'include/handlers/dbhandler.php';
             <div class="container">
                 <h2>Driver Management</h2>
                 <div class="button-row">
-                    <button class="add_driver" onclick="openModal('add')">Add Driver</button>
+                    <!-- <button class="add_driver" onclick="openModal('add')">Add Driver</button> -->
                 </div>
                 <br />
 

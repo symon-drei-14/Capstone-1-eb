@@ -95,7 +95,7 @@ body {
     <hr>
     <div class="sidebar-item">
         <i class="icon2">⚙️</i>
-        <a href="settings.php">Admin Management</a>
+        <a href="adminmanagement.php">Admin Management</a>
     </div>
     <div class="sidebar-item">
         <i class="icon2">🚪</i>

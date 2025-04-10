@@ -107,7 +107,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <hr>
     <div class="sidebar-item">
         <i class="icon2">⚙️</i>
-        <a href="settings.php">Admin Management</a>
+        <a href="adminmanagement.php">Admin Management</a>
     </div>
     <div class="sidebar-item">
         <i class="icon2">🚪</i>
