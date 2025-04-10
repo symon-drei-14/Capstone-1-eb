@@ -6,6 +6,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header("Location: login.php");
     exit();
 }
+require_once 'include/handlers/dbhandler.php';
 // User is logged in, continue with the page
 ?>
 <!DOCTYPE html>
@@ -18,7 +19,18 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <link rel="stylesheet" href="include/drivermanagement.css">
 </head>
 <body>
+<header class="header">
+        <div class="logo-container">
+            <img src="include/img/logo.png" alt="Company Logo" class="logo">
+            <img src="include/img/mansar.png" alt="Company Name" class="company">
+        </div>
 
+        <div class="profile">
+            <i class="icon">✉</i>
+            <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
+            <div class="profile-name">Jesus Christ</div>
+        </div>
+    </header>
 <div class="sidebar">
     <div class="sidebar-item">
         <i class="icon2">🏠</i>
@@ -51,7 +63,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <hr>
     <div class="sidebar-item">
         <i class="icon2">⚙️</i>
-        <a href="settings.php">Settings</a>
+        <a href="settings.php">Admin Management</a>
     </div>
     <div class="sidebar-item">
         <i class="icon2">🚪</i>
@@ -64,7 +76,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             <div class="container">
                 <h2>Driver Management</h2>
                 <div class="button-row">
-                    <button class="add_driver" onclick="openModal()">Add Driver</button>
+                    <button class="add_driver" onclick="openModal('add')">Add Driver</button>
                 </div>
                 <br />
 
@@ -72,16 +84,40 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     <table id="driverTable">
                         <thead>
                             <tr>
-                                <th>Picture</th>
+                                <th>ID</th>
                                 <th>Name</th>
-                                <th>License Number</th>
-                                <th>Phone</th>
-                                <th>Address</th>
-                                <th>Status</th>
+                                <th>Email</th>
+                                <th>Assigned Truck</th>
+                                <th>Created At</th>
+                                <th>Last Login</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <?php
+                            // Fetch driver data from the database
+                            $query = "SELECT driver_id, name, email, assigned_truck_id, created_at, last_login FROM drivers_table";
+                            $result = $conn->query($query);
+                            
+                            if ($result && $result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    echo "<tr>";
+                                    echo "<td>" . htmlspecialchars($row['driver_id']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['name']) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['email']) . "</td>";
+                                    echo "<td>" . (empty($row['assigned_truck_id']) ? 'None' : htmlspecialchars($row['assigned_truck_id'])) . "</td>";
+                                    echo "<td>" . htmlspecialchars($row['created_at']) . "</td>";
+                                    echo "<td>" . (empty($row['last_login']) ? 'Never' : htmlspecialchars($row['last_login'])) . "</td>";
+                                    echo "<td class='actions'>";
+                                    echo "<button class='edit' onclick='editDriver(\"" . $row['driver_id'] . "\")'>Edit</button>";
+                                    echo "<button class='delete' onclick='deleteDriver(\"" . $row['driver_id'] . "\")'>Delete</button>";
+                                    echo "</td>";
+                                    echo "</tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='7'>No drivers found</td></tr>";
+                            }
+                            ?>
                         </tbody>
                     </table>
                 </div>
@@ -91,36 +127,53 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
     <!-- Modal Structure -->
     <div id="driverModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">×</span>
-            <h2>Driver Details</h2>
-            <form id="driverForm">
-                <label for="driverName">Name</label>
-                <input type="text" id="driverName" name="driverName" required>
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">×</span>
+        <h2 id="modalTitle">Driver Details</h2>
+        <form id="driverForm">
+            <input type="hidden" id="driverId" name="driverId">
+            
+            <label for="driverName">Name</label>
+            <input type="text" id="driverName" name="driverName" required>
 
-                <label for="licenseNo">License Number</label>
-                <input type="text" id="licenseNo" name="licenseNo" required>
+            <label for="driverEmail">Email</label>
+            <input type="email" id="driverEmail" name="driverEmail" required>
+            
+            <label for="firebaseUid">Firebase UID</label>
+            <input type="text" id="firebaseUid" name="firebaseUid">
+            
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password">
+            
+            <label for="assignedTruck">Assigned Truck ID</label>
+            <input type="text" id="assignedTruck" name="assignedTruck">
+            
+            <label for="lastLogin">Last Login</label>
+            <input type="text" id="lastLogin" name="lastLogin" placeholder="YYYY-MM-DD HH:MM:SS">
 
-                <label for="phone">Phone</label>
-                <input type="text" id="phone" name="phone" required>
-
-                <label for="address">Address</label>
-                <input type="text" id="address" name="address" required>
-
-                <label for="status">Status</label>
-                <select id="status" name="status" required>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                </select>
-
-                <button type="submit">Save</button>
-                <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
-            </form>
-        </div>
+            <button type="submit" id="saveButton">Save</button>
+            <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
+        </form>
     </div>
+</div>
 
     <script>
-        function openModal() {
+        let currentDriverId = null;
+        let modalMode = 'add';
+
+        function openModal(mode, driverId = null) {
+            modalMode = mode;
+            currentDriverId = driverId;
+            
+            if (mode === 'add') {
+                document.getElementById("modalTitle").textContent = "Add New Driver";
+                document.getElementById("driverForm").reset();
+                document.getElementById("driverId").value = "";
+            } else {
+                document.getElementById("modalTitle").textContent = "Edit Driver";
+                // The data will be populated in the editDriver function
+            }
+            
             document.getElementById("driverModal").style.display = "block";
         }
 
@@ -128,85 +181,111 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             document.getElementById("driverModal").style.display = "none";
         }
 
-        // Sample data with placeholder image URLs
-        const driverData = [
-            {id: 1, name: 'John Doe', licenseNo: 'D12345', phone: '123-456-7890', address: '123 Street, City', status: 'Active', picture: '/img/placeholder.png'},
-            {id: 2, name: 'Jane Smith', licenseNo: 'D67890', phone: '234-567-8901', address: '456 Avenue, City', status: 'Inactive', picture: '/img/placeholder.png'},
-            {id: 3, name: 'Alex Green', licenseNo: 'D11223', phone: '345-678-9012', address: '789 Road, City', status: 'Active', picture: '/img/placeholder.png'},
-            {id: 4, name: 'Lisa White', licenseNo: 'D44556', phone: '456-789-0123', address: '101 Parkway, City', status: 'Active', picture: '/img/placeholder.png'},
-            {id: 5, name: 'Michael Brown', licenseNo: 'D78901', phone: '567-890-1234', address: '202 Boulevard, City', status: 'Inactive', picture: '/img/placeholder.png'},
-        ];
+        function editDriver(driverId) {
+            // Fetch driver data using AJAX
+            fetch('include/handlers/get_driver.php?id=' + driverId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const driver = data.driver;
+                        
+                        // Populate the form with driver data
+                        document.getElementById("driverId").value = driver.driver_id;
+                        document.getElementById("driverName").value = driver.name;
+                        document.getElementById("driverEmail").value = driver.email;
+                        document.getElementById("firebaseUid").value = driver.firebase_uid || '';
+                        // Don't pre-fill password for security reasons
+                        document.getElementById("password").value = '';
+                        document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
+                        document.getElementById("lastLogin").value = driver.last_login === 'NULL' ? '' : (driver.last_login || '');
+                        
+                        // Open the modal in edit mode
+                        openModal('edit', driverId);
+                    } else {
+                        alert("Error fetching driver data: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred while fetching driver data.");
+                });
+        }
 
-        function renderTable() {
-            const tableBody = document.querySelector("#driverTable tbody");
-            tableBody.innerHTML = ""; // Clear existing rows
+        function deleteDriver(driverId) {
+            if (confirm("Are you sure you want to delete this driver?")) {
+                // Send AJAX request to delete the driver
+                fetch('include/handlers/delete_driver.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ driverId: driverId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Driver deleted successfully.");
+                        // Reload the page to refresh the table
+                        location.reload();
+                    } else {
+                        alert("Error deleting driver: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred while deleting the driver.");
+                });
+            }
+        }
 
-            driverData.forEach(driver => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td><img src="${driver.picture}" alt="${driver.name}'s Picture" class="driver-picture" /></td>
-                    <td>${driver.name}</td>
-                    <td>${driver.licenseNo}</td>
-                    <td>${driver.phone}</td>
-                    <td>${driver.address}</td>
-                    <td><span class="status-${driver.status.toLowerCase()}">${driver.status}</span></td>
-                    <td class="actions">
-                        <button class="edit" onclick="editDriver(${driver.id})">Edit</button>
-                        <button class="delete" onclick="deleteDriver(${driver.id})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
+        // Event listener for the form submission
+        document.getElementById("driverForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                driverId: document.getElementById("driverId").value,
+                name: document.getElementById("driverName").value,
+                email: document.getElementById("driverEmail").value,
+                firebaseUid: document.getElementById("firebaseUid").value,
+                password: document.getElementById("password").value,
+                assignedTruck: document.getElementById("assignedTruck").value,
+                lastLogin: document.getElementById("lastLogin").value,
+                mode: modalMode
+            };
+            
+            // Send AJAX request to save the driver
+            fetch('include/handlers/save_driver.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(modalMode === 'add' ? "Driver added successfully." : "Driver updated successfully.");
+                    // Reload the page to refresh the table
+                    location.reload();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while saving the driver data.");
             });
-        }
+            
+            closeModal();
+        });
 
-        function editDriver(id) {
-            const driver = driverData.find(d => d.id === id);
-            if (driver) {
-                document.getElementById("driverName").value = driver.name;
-                document.getElementById("licenseNo").value = driver.licenseNo;
-                document.getElementById("phone").value = driver.phone;
-                document.getElementById("address").value = driver.address;
-                document.getElementById("status").value = driver.status;
-
-                // Modify the form to handle edit
-                const form = document.getElementById("driverForm");
-                form.onsubmit = function (e) {
-                    e.preventDefault();
-                    updateDriver(id);
-                    closeModal();
-                };
-
-                openModal();
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            const modal = document.getElementById("driverModal");
+            if (event.target == modal) {
+                closeModal();
             }
         }
-
-        function updateDriver(id) {
-            const driver = driverData.find(d => d.id === id);
-            if (driver) {
-                driver.name = document.getElementById("driverName").value;
-                driver.licenseNo = document.getElementById("licenseNo").value;
-                driver.phone = document.getElementById("phone").value;
-                driver.address = document.getElementById("address").value;
-                driver.status = document.getElementById("status").value;
-
-                renderTable();
-            }
-        }
-
-        function deleteDriver(id) {
-    const confirmDelete = confirm("Are you sure you want to delete this driver?");
-    if (confirmDelete) {
-        const index = driverData.findIndex(d => d.id === id);
-        if (index !== -1) {
-            driverData.splice(index, 1);
-            renderTable();
-        }
-    }
-}
-
-
-        // Initial rendering of the table
-        renderTable();
     </script>
 
 </body>

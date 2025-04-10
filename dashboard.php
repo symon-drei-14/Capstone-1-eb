@@ -32,6 +32,21 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 </head>
 
 <body>
+<header class="header">
+        <div class="logo-container">
+            <img src="include/img/logo.png" alt="Company Logo" class="logo">
+            <img src="include/img/mansar.png" alt="Company Name" class="company">
+        </div>
+
+     
+
+        <div class="profile">
+            <i class="icon">✉</i>
+            <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
+            <div class="profile-name">Jesus Christ</div>
+        </div>
+    </header>
+
 <div class="sidebar">
     <div class="sidebar-item">
         <i class="icon2">🏠</i>
@@ -64,7 +79,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <hr>
     <div class="sidebar-item">
         <i class="icon2">⚙️</i>
-        <a href="settings.php">Settings</a>
+        <a href="settings.php">Admin Management</a>
     </div>
     <div class="sidebar-item">
         <i class="icon2">🚪</i>
