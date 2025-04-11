@@ -45,7 +45,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
             <div class="profile-name">
         <?php 
-        // Display the username from session instead of hardcoded "Jesus Christ"
+    
         echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
         ?>
     </div>

@@ -10,7 +10,7 @@
     max-height: 40px;
     top: 0;
     left: 0;
-    z-index: 1000;
+    z-index: 1200;
 
 }
 
@@ -79,7 +79,7 @@
     transition: width 0.3s ease;
     overflow-x: hidden;
     overflow-y: hidden;
-    z-index: 999;
+    z-index: 1100;
     border-right: 2px solid #16161627;
 }
 
