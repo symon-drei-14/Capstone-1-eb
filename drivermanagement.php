@@ -211,24 +211,26 @@ require_once 'include/handlers/dbhandler.php';
         
         let totalPages = 0;
 
-function updatePagination() {
+        function updatePagination() {
     totalPages = Math.ceil(driversData.length / rowsPerPage);
     
     // Clear previous page numbers
     $('#page-numbers').empty();
     
-    // Add page numbers
+    // Add page numbers with circular styling
     for (var i = 1; i <= totalPages; i++) {
         var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
-        $('#page-numbers').append(`<div class="${pageNumClass}" data-page="${i}">${i}</div>`);
-    
-    pageNumberElement.on('click', function() {
+        var pageNumberElement = $(`<div class="${pageNumClass}">${i}</div>`);
+        
+        // Add click event to each page number
+        pageNumberElement.on('click', function() {
             var page = parseInt($(this).text());
             goToPage(page);
         });
         
         $('#page-numbers').append(pageNumberElement);
     }
+    
     // Enable/disable prev/next buttons
     $('#prevPageBtn').prop('disabled', currentPage === 1);
     $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
