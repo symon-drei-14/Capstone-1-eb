@@ -1,35 +1,47 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Webleb</title>
+    <title>Mansar Login</title>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link href="include/login.css" rel="stylesheet">
-</head>
-<body>
-    <div class="login-box">
-        <h2>Login</h2>
-        <form id="loginForm">
-            <div class="user-box">
-                <input type="text" id="username" name="Username" required />
-                <label>Username</label>
-            </div>
-            <div class="user-box">
-                <input type="password" id="password" name="Password" required />
-                <label>Password</label>
-            </div>
-            <a href="#" id="loginButton">
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                Submit
-            </a>
-            <p id="error-message" style="color: red;"></p>
-        </form>
-    </div>
 
+</head>
+<style>
+
+</style>
+<body>
+<div class="login-box">
+    <div class="login-container">
+        <div class="login-image">
+            <img src="./include/img/loginbg2.png" alt="Login Image" />
+        </div>
+        <div class="login-form-content">
+        <h1>Mansar Trucking</h1>
+            <h2>Admin Login</h2>
+            <form id="loginForm">
+                <div class="user-box">
+                    <input type="text" id="username" name="Username" required />
+                    <label>Username</label>
+                </div>
+                <div class="user-box">
+                    <input type="password" id="password" name="Password" required />
+                    <label>Password</label>
+                </div>
+                <a href="#" id="loginButton">
+                    <span></span><span></span><span></span><span></span>
+                    Submit
+                </a>
+                <p id="error-message"></p>
+                
+            </form>
+            <div class="forgot-password">
+    Forgot Password? <a href="#"><span class="click-here">Click here</span></a>
+</div>
+        </div>
+    </div>
+</div>  
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const loginButton = document.getElementById('loginButton');

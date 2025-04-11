@@ -6,152 +6,154 @@ body {
     margin: 0;
     padding: 0;
     font-family: sans-serif;
-    /* background-image: url('/img/bggif.gif'); */
-    background-color: #467c49;
-    background-size: cover;
-    background-position: center center;
-    background-attachment: fixed;
+    background-color:rgba(20, 20, 20, 0.12);
+    background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+    
 }
+ 
+    .login-box {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width:700px;
+        height:500px;
+        padding: 0;
+        transform: translate(-50%, -50%);
+        background-color:rgb(255, 255, 255);
+        box-sizing: border-box;
+        box-shadow: 0 15px 25px rgba(0, 0, 0, .9);
+        border-radius: 10px;
+        overflow: hidden;
+    }
 
-.login-box {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 400px;
-    padding: 40px;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,.5);
-    box-sizing: border-box;
-    box-shadow: 0 15px 25px rgba(0,0,0,.9);
-    border-radius: 10px;
-}
+    .login-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items:center;
+        justify-content:center;
+    }
 
-    .login-box h2 {
+    .login-image {
+        width: 100%;
+        background-color:rgba(255, 255, 255, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0px;
+
+    }
+
+    .login-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+   
+    }
+
+    .login-form-content {
+        width: 70%;
+        padding: 40px;
+        color: black;
+        display: flex;
+        flex-direction: column; /* Stack elements vertically */
+        align-items: center; /* Center elements horizontally */
+        justify-content: center; /* Center elements vertically */
+        
+    }
+
+    .login-form-content h2 {
         margin: 0 0 30px;
         padding: 0;
-        color: #fff;
+        color: black;
+        text-align: center;
+   
+    }
+
+    .user-box {
+        position: relative;
+        margin-bottom: 30px;
+        
+    }
+
+    .user-box input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid rgba(23, 22, 22, 0.57);
+        background: rgba(23, 22, 22, 0);
+        border-radius:20px;
+        color: black;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .user-box label {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: black;
+        font-size: 14px;
+        transition: 0.5s;
+    }
+
+    .user-box input:focus ~ label,
+    .user-box input:valid ~ label {
+        top: -20px;
+        left: 10px;
+        font-size: 16px;
+        color: black;
+    }
+
+    #loginButton {
+        display: block; /* Make it behave like a block element */
+        margin: 20px auto 0 auto; /* Top margin + center horizontally */
+        padding: 10px 20px;
+        color: white;
+        background:rgb(27, 127, 64);
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background 0.3s;
+        text-align:center;  
+        margin-top: 20px; /* Add some space above the button */
+
+    }
+
+    #loginButton:hover {
+        background: #0056b3;
+    }
+
+    #error-message {
+        color: red;
         text-align: center;
     }
+h1{
+    color:rgb(211, 39, 39);
+    margin-top:-10px;
+    margin-bottom:30px;
+    font-size:30px;
+    text-align:center;  
+}
+h2{
+    margin-bottom:30px;
+}
 
-    .login-box .user-box {
-        position: relative;
-    }
+#loginButton:hover {
+    background: #0056b3;
+}
 
-        .login-box .user-box input {
-            width: 100%;
-            padding: 10px 0;
-            font-size: 16px;
-            color: #fff;
-            margin-bottom: 30px;
-            border: none;
-            border-bottom: 1px solid #fff;
-            outline: none;
-            background: transparent;
-        }
+.forgot-password {
+    margin-top: 20px;
+    text-align: center;
+    color: black;
+}
 
-        .login-box .user-box label {
-            position: absolute;
-            top: 0;
-            left: 0;
-            padding: 10px 0;
-            font-size: 16px;
-            color: #fff;
-            pointer-events: none;
-            transition: .5s;
-        }
+.forgot-password .click-here {
+    color: rgb(239, 14, 14);
+    text-decoration: none;
+}
 
-        .login-box .user-box input:focus ~ label,
-        .login-box .user-box input:valid ~ label {
-            top: -20px;
-            left: 0;
-            color: #4caf50;
-            font-size: 12px;
-        }
-
-    .login-box form a {
-        position: relative;
-        display: inline-block;
-        padding: 10px 20px;
-        color: #266628;
-        font-size: 16px;
-        text-decoration: none;
-        text-transform: uppercase;
-        overflow: hidden;
-        transition: .5s;
-        margin-top: 40px;
-        letter-spacing: 4px;
-        background-color: #FFFDD0;
-    }
-
-    .login-box a:hover {
-        background: #388e3c;
-        color: #fff;
-        border-radius: 5px;
-        box-shadow: 0 0 5px #4caf50, 0 0 25px #388e3c, 0 0 50px #66bb6a, 0 0 100px #2e7d32;
-    }
-
-    .login-box a span {
-        position: absolute;
-        display: block;
-      
-    }
-
-        .login-box a span:nth-child(1) {
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #FFFDD0);
-            transform: translateX(100%);
-            transition: transform 0.5s ease-out, background 0.5s ease-out;
-        }
-
-        .login-box a span:nth-child(2) {
-            top: -100%;
-            right: 0;
-            width: 2px;
-            height: 100%;
-            background: linear-gradient(180deg, fill, #FFFDD0);
-            transform: translateY(100%);
-            transition: transform 0.5s ease-out, background 0.5s ease-out;
-        }
-
-        .login-box a span:nth-child(3) {
-            bottom: 0;
-            right: -100%;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(270deg, transparent, #FFFDD0);
-            transform: translateX(-100%);
-            transition: transform 0.5s ease-out, background 0.5s ease-out;
-        }
-
-        .login-box a span:nth-child(4) {
-            bottom: -100%;
-            left: 0;
-            width: 2px;
-            height: 100%;
-            background: linear-gradient(360deg, transparent, #FFFDD0);
-            transform: translateY(-100%);
-            transition: transform 0.5s ease-out, background 0.5s ease-out;
-        }
-
-    .login-box a:hover span:nth-child(1) {
-        transform: translateX(0);
-        background: linear-gradient(90deg, transparent, #66bb6a);
-    }
-
-    .login-box a:hover span:nth-child(2) {
-        transform: translateY(0);
-        background: linear-gradient(180deg, transparent, #66bb6a);
-    }
-
-    .login-box a:hover span:nth-child(3) {
-        transform: translateX(0);
-        background: linear-gradient(270deg, transparent, #81c784);
-    }
-
-    .login-box a:hover span:nth-child(4) {
-        transform: translateY(0);
-        background: linear-gradient(360deg, transparent, #81c784);
-    }
+.forgot-password .click-here:hover {
+    color: rgb(48, 33, 148);
+}
