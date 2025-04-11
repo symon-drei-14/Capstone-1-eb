@@ -60,7 +60,12 @@ body {
         <div class="profile">
             <i class="icon">✉</i>
             <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
-            <div class="profile-name">Jesus Christ</div>
+            <div class="profile-name">
+        <?php 
+    
+        echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+        ?>
+    </div>
         </div>
     </header>
 <div class="sidebar">
