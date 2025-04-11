@@ -40,3 +40,10 @@
 2025-04-07 17:20:49 - Data validation passed
 2025-04-07 17:20:49 - Database connection successful
 2025-04-07 17:20:49 - Login successful for: Sim@gmail.com
+2025-04-11 20:52:25 - Login request received
+{"email":"alcedo@gmail.com","password":"12345678"}
+
+2025-04-11 20:52:25 - JSON parsed successfully
+2025-04-11 20:52:25 - Data validation passed
+2025-04-11 20:52:25 - Database connection successful
+2025-04-11 20:52:25 - Login successful for: alcedo@gmail.com
