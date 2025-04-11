@@ -191,7 +191,14 @@
     overflow-y: auto;
 }
 
-
+.main-content3 {
+    margin-top: 80px;
+    margin-left: 100px; /* Reduced left margin from 200px to 100px */
+    margin-right: 20px; /* Reduced right margin from 40px to 20px */
+    width: calc(100% - 140px); /* Adjusted width calculation based on new margins */
+    transition: margin-left 0.3s ease;
+    overflow-y: auto;
+}
 
 .main-content4 {
     margin-top: 80px;
