@@ -1,5 +1,6 @@
 body{
 margin: 100px;
+background-color: rgb(241, 241, 244);
 
 }
 .event-details-container {
@@ -11,7 +12,7 @@ margin: 100px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     display: relative;
     margin: 50px;
-    margin-top: 100px;
+    margin-top: 155px;
     line-height: 30px;
     max-height: 600px;
     overflow-y: auto;

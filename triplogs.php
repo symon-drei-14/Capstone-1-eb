@@ -120,6 +120,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     </div>
 </div>
 
+<!-- <div class="main-content3"> -->
     <div class="calendar-container">
         <section class="calendar-section">
             <h3>Trip Management</h3>
@@ -139,6 +140,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             <ul id="eventList" class="event-list"></ul>
         </section>
     </div>
+    <!-- </div> -->
 
     <div id="editModal" class="modal">
         <div class="modal-content">
