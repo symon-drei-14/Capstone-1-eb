@@ -1,6 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 10px;
+    margin: 100px;
     background-color: rgb(241, 241, 244);
 }
 
@@ -108,7 +108,7 @@ tr:hover {
 
 .main-content3 {
     width: 90vw;
-    height: auto; /* Adjusted to auto for better responsiveness */
+    height: auto; 
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;

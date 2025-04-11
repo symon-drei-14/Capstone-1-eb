@@ -21,6 +21,425 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <!-- Add jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 100px;
+    background-color: rgb(241, 241, 244);
+}
+
+table {
+    width: 98%;
+    border-collapse: collapse;
+    margin-top: 20px;
+
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-radius: 1px;
+    text-align: center;
+}
+
+th {
+    background-color: #ffffff;
+    font-weight: bold;
+    position: relative;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
+    border-bottom: 5px double #d3d1d15c;
+    z-index: 1;
+    text-align: center;
+}
+
+tr:nth-child(even) {
+    background-color: #f0eeee9a; /* Light gray for even rows */
+}
+
+tr:nth-child(odd) {
+    background-color: #ffffff; /* White for odd rows */
+}
+
+tr:hover {
+    background-color: #e0e0e0; /* Light gray on hover */
+}
+
+.actions {
+    text-align: center;
+}
+
+/* Column Widths */
+th:nth-child(1), td:nth-child(1) {
+    width: 5%; 
+}
+
+th:nth-child(2), td:nth-child(2) {
+    width: 7%; 
+}
+
+th:nth-child(3), td:nth-child(3) {
+    width: 12%; 
+}
+
+th:nth-child(4), td:nth-child(4) {
+    width: 20%;
+}
+
+th:nth-child(5), td:nth-child(5) {
+    width: 10%;
+}
+
+th:nth-child(6), td:nth-child(6) {
+    width: 10%; 
+}
+
+th:nth-child(7), td:nth-child(7) {
+    width: 10%; 
+}
+
+th:nth-child(8), td:nth-child(8) {
+    width: 5%; 
+}
+
+/* Status Colors */
+.status-completed {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.status-pending {
+    background-color: #FF9800; /* Orange */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.status-in-progress {
+    background-color: #2196F3; /* Blue */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.status-overdue {
+    background-color: #F44336; /* Red */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.actions button {
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 7px;
+    margin: 0 5px;
+    transition: background-color 0.3s, color 0.3s;
+    width: 100px; 
+    white-space: nowrap; 
+    margin-bottom: 10px;
+}
+
+/* Individual Button Styles */
+.actions button.edit {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+.actions button.delete {
+    background-color: #d7584f; /* Red */
+    color: white;
+}
+
+.actions button.history {
+    background-color: #2196F3; /* Orange */
+    color: rgb(255, 252, 252);
+}
+
+/* Button Hover Effects */
+.actions button:hover {
+    opacity: 0.5;
+}
+
+.main-content3{
+    width: 90vw;
+    height: 145vh;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    overflow-x: hidden;
+    overflow-y:hidden;
+}
+
+.container{
+    padding: 20px;
+}
+
+.table-container {
+    margin-bottom: 20px;
+   
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.pagination button {
+    background-color: #ffffff00; /* Blue */
+    color: rgb(0, 0, 0);
+    border: none;
+    padding: 6px 12px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 10px;
+    margin: 0 5px;
+}
+
+.pagination .prev, .pagination .next {
+    font-size: 18px;
+}
+
+.pagination button:hover {
+    opacity: 0.7;
+}
+
+.page-numbers {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.page-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    background-color:rgb(255, 255, 255);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.page-number:hover {
+    background-color:rgba(183, 181, 181, 0.95);
+    color: #fff;
+}
+
+.page-number.active {
+    background-color:rgba(255, 255, 255, 0.82);
+    color: black;
+    border-color:rgb(26, 97, 12);
+    border-width:2px;
+}
+
+.add_sched{
+    background-color: #4CAF50;
+    border:#ffffff;
+    color: #ffffff;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.reminder_btn{
+    background-color: #e4873f;
+    border:#ffffff;
+    color: #ffffff;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+
+}
+
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 11000; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; 
+    background-color: rgba(0, 0, 0, 0.4); 
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%; 
+    max-width: 400px;
+    border-radius: 20px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end; /* Aligns buttons to the right */
+    margin-top: 20px; /* Optional: Adds some space above the buttons */
+}
+
+.modal-footer button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-left: 10px;
+}
+
+.modal-footer button:hover {
+    opacity: 0.8;
+
+
+}
+
+form label {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+form input, form select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+
+button[type="submit"] {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button[type="submit"]:hover {
+    background-color: #28652b; 
+}
+
+.cancelbtn{
+    background-color: #d02b2b; /* Green */
+    color: white;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.cancelbtn:hover{
+    background-color: #a22222; /* Green */
+    color: white;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+
+#historyModal .modal-content {
+    width: 70%; 
+    max-width: 400px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
+
+#historyModal .history-list {
+    margin-top: 10px;
+}
+
+#historyModal .history-item {
+    margin-bottom: 15px;
+    line-height: 30px;
+
+}
+
+#historyModal .history-item strong {
+    display: inline-block;
+    width: 150px;
+    font-weight: bold;
+}
+
+#historyModal .history-item hr {
+    margin-top: 10px;
+    border: 1px solid #ddd;
+}
+
+#historyModal .close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#historyModal .close:hover,
+#historyModal .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#dateSortIcon{
+    font-size:20px;
+    position: relative;
+
+}
+.submitbtn{
+    background-color:green;
+    padding:12px;
+    font-size:14px;
+    border:none;
+    border-radius:5px;
+    color:white;
+}
+
+</style>
 <body>
 
 <header class="header">
@@ -92,10 +511,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     <table id="maintenanceTable">
                         <thead>
                             <tr>
-                                <!-- Removed Maintenance ID column -->
+                      
                                 <th>Truck ID</th>
                                 <th>License Plate</th>
-                                <th>Date of <br /> Inspection</th>
+                                <th onclick="sortByDate()" style="cursor:pointer;">
+                             Date of <br /> Inspection <span id="dateSortIcon">⬍</span>
+                            </th>
+
                                 <th>Remarks</th>
                                 <th>Status</th>
                                 <th>Supplier</th>
@@ -104,18 +526,19 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Will be populated by JavaScript -->
+              
                         </tbody>
                     </table>
-                </div>
+             
 
-                <div class="pagination">
+                    <div class="pagination">
                     <button class="prev" onclick="changePage(-1)">◄</button> 
-                    <span id="page-info">Page 1</span>
+                    <div id="page-numbers" class="page-numbers"></div>
                     <button class="next" onclick="changePage(1)">►</button> 
-                </div>
+</div>
             </div>
         </section>
+        </div>
     </div>
 
     <!-- Add/Edit Maintenance Modal -->
@@ -162,7 +585,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <label for="cost">Cost:</label>
                 <input type="number" id="cost" name="cost" step="0.01"><br><br>
 
-                <button type="button" onclick="saveMaintenanceRecord()">Submit</button>
+                <button type="button" class="submitbtn" onclick="saveMaintenanceRecord()">Submit</button>
                 <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
             </form>
         </div>
@@ -267,12 +690,63 @@ function renderTable(data) {
         
         // Update pagination display
         function updatePagination() {
-            document.getElementById("page-info").textContent = `Page ${currentPage} of ${totalPages}`;
-            
-            // Disable/enable pagination buttons
-            document.querySelector('.prev').disabled = currentPage <= 1;
-            document.querySelector('.next').disabled = currentPage >= totalPages;
+    const pageNumbersContainer = document.getElementById("page-numbers");
+    pageNumbersContainer.innerHTML = "";
+
+    const createPageButton = (page) => {
+        const pageBtn = document.createElement("div");
+        pageBtn.classList.add("page-number");
+        if (page === currentPage) {
+            pageBtn.classList.add("active");
         }
+        pageBtn.textContent = page;
+        pageBtn.onclick = () => {
+            if (page !== currentPage) {
+                currentPage = page;
+                loadMaintenanceData();
+            }
+        };
+        pageNumbersContainer.appendChild(pageBtn);
+    };
+
+    const addEllipsis = () => {
+        const ellipsis = document.createElement("div");
+        ellipsis.classList.add("page-number");
+        ellipsis.textContent = "...";
+        ellipsis.style.pointerEvents = "none";
+        pageNumbersContainer.appendChild(ellipsis);
+    };
+
+    // Always show first page
+    if (totalPages <= 7) {
+        // Show all pages if small number
+        for (let i = 1; i <= totalPages; i++) {
+            createPageButton(i);
+        }
+    } else {
+        // Show first page
+        createPageButton(1);
+
+        if (currentPage > 4) {
+            addEllipsis();
+        }
+
+        // Calculate range of middle buttons
+        let startPage = Math.max(2, currentPage - 1);
+        let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+        for (let i = startPage; i <= endPage; i++) {
+            createPageButton(i);
+        }
+
+        if (currentPage < totalPages - 3) {
+            addEllipsis();
+        }
+
+        // Show last page
+        createPageButton(totalPages);
+    }
+}
         
         // Change page
         function changePage(direction) {
@@ -489,6 +963,32 @@ function renderTable(data) {
         function closeRemindersModal() {
             document.getElementById("remindersModal").style.display = "none";
         }
+
+        let sortDateAsc = true; // default sorting order
+
+function sortByDate() {
+    const tableBody = document.querySelector("#maintenanceTable tbody");
+    const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+    const sortedRows = rows.sort((a, b) => {
+        const dateA = new Date(a.children[2].textContent.trim());
+        const dateB = new Date(b.children[2].textContent.trim());
+
+        return sortDateAsc ? dateA - dateB : dateB - dateA;
+    });
+
+    // Toggle sort direction
+    sortDateAsc = !sortDateAsc;
+
+    // Update icon
+    const icon = document.getElementById("dateSortIcon");
+    icon.textContent = sortDateAsc ? '⬆' : '⬇';
+
+    // Replace rows with sorted ones
+    tableBody.innerHTML = '';
+    sortedRows.forEach(row => tableBody.appendChild(row));
+}
+
     </script>
 
 </body>
