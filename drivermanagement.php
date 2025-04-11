@@ -17,6 +17,7 @@ require_once 'include/handlers/dbhandler.php';
     <title>Driver Management</title>
     <link rel="stylesheet" href="include/sidenav.css">
     <link rel="stylesheet" href="include/drivermanagement.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 <header class="header">
@@ -98,33 +99,16 @@ require_once 'include/handlers/dbhandler.php';
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php
-                            // Fetch driver data from the database
-                            $query = "SELECT driver_id, name, email, assigned_truck_id, created_at, last_login FROM drivers_table";
-                            $result = $conn->query($query);
-                            
-                            if ($result && $result->num_rows > 0) {
-                                while ($row = $result->fetch_assoc()) {
-                                    echo "<tr>";
-                                    echo "<td>" . htmlspecialchars($row['driver_id']) . "</td>";
-                                    echo "<td>" . htmlspecialchars($row['name']) . "</td>";
-                                    echo "<td>" . htmlspecialchars($row['email']) . "</td>";
-                                    echo "<td>" . (empty($row['assigned_truck_id']) ? 'None' : htmlspecialchars($row['assigned_truck_id'])) . "</td>";
-                                    echo "<td>" . htmlspecialchars($row['created_at']) . "</td>";
-                                    echo "<td>" . (empty($row['last_login']) ? 'Never' : htmlspecialchars($row['last_login'])) . "</td>";
-                                    echo "<td class='actions'>";
-                                    echo "<button class='edit' onclick='editDriver(\"" . $row['driver_id'] . "\")'>Edit</button>";
-                                    echo "<button class='delete' onclick='deleteDriver(\"" . $row['driver_id'] . "\")'>Delete</button>";
-                                    echo "</td>";
-                                    echo "</tr>";
-                                }
-                            } else {
-                                echo "<tr><td colspan='7'>No drivers found</td></tr>";
-                            }
-                            ?>
+                        <tbody id="driverTableBody">
+                            <!-- Table data will be loaded here via JavaScript -->
                         </tbody>
                     </table>
+                    
+                    <div class="pagination">
+                        <button class="prev" id="prevPageBtn">◄</button>
+                        <span id="pageInfo">Page 1 of 1</span>
+                        <button class="next" id="nextPageBtn">►</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -165,6 +149,88 @@ require_once 'include/handlers/dbhandler.php';
     <script>
         let currentDriverId = null;
         let modalMode = 'add';
+        
+        // Pagination variables
+        let driversData = [];
+        let currentPage = 1;
+        let rowsPerPage = 5;
+
+        // Fetch all drivers when page loads
+        $(document).ready(function() {
+            fetchDrivers();
+        });
+
+        function fetchDrivers() {
+            $.ajax({
+                url: 'include/handlers/get_all_drivers.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        driversData = data.drivers;
+                        renderTable();
+                    } else {
+                        alert("Error fetching drivers: " + data.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    alert("An error occurred while fetching driver data.");
+                }
+            });
+        }
+
+        function renderTable() {
+            $('#driverTableBody').empty();
+            var startIndex = (currentPage - 1) * rowsPerPage;
+            var endIndex = startIndex + rowsPerPage;
+            var pageData = driversData.slice(startIndex, Math.min(endIndex, driversData.length));
+            
+            if (pageData.length > 0) {
+                pageData.forEach(function(driver) {
+                    var row = "<tr>" +
+                        "<td>" + driver.driver_id + "</td>" +
+                        "<td>" + driver.name + "</td>" +
+                        "<td>" + driver.email + "</td>" +
+                        "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
+                        "<td>" + driver.created_at + "</td>" +
+                        "<td>" + (driver.last_login || 'Never') + "</td>" +
+                        "<td class='actions'>" +
+                        "<button class='edit' onclick='editDriver(\"" + driver.driver_id + "\")'>Edit</button>" +
+                        "<button class='delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>Delete</button>" +
+                        "</td>" +
+                        "</tr>";
+                    $('#driverTableBody').append(row);
+                });
+            } else {
+                $('#driverTableBody').append("<tr><td colspan='7'>No drivers found</td></tr>");
+            }
+            
+            updatePagination();
+        }
+        
+        function updatePagination() {
+            var totalPages = Math.ceil(driversData.length / rowsPerPage);
+            $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
+            
+            $('#prevPageBtn').prop('disabled', currentPage === 1);
+            $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
+        }
+        
+        $('#prevPageBtn').on('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+        
+        $('#nextPageBtn').on('click', function() {
+            var totalPages = Math.ceil(driversData.length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        });
 
         function openModal(mode, driverId = null) {
             modalMode = mode;
@@ -188,9 +254,11 @@ require_once 'include/handlers/dbhandler.php';
 
         function editDriver(driverId) {
             // Fetch driver data using AJAX
-            fetch('include/handlers/get_driver.php?id=' + driverId)
-                .then(response => response.json())
-                .then(data => {
+            $.ajax({
+                url: 'include/handlers/get_driver.php?id=' + driverId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
                     if (data.success) {
                         const driver = data.driver;
                         
@@ -209,36 +277,35 @@ require_once 'include/handlers/dbhandler.php';
                     } else {
                         alert("Error fetching driver data: " + data.message);
                     }
-                })
-                .catch(error => {
+                },
+                error: function(xhr, status, error) {
                     console.error('Error:', error);
                     alert("An error occurred while fetching driver data.");
-                });
+                }
+            });
         }
 
         function deleteDriver(driverId) {
             if (confirm("Are you sure you want to delete this driver?")) {
                 // Send AJAX request to delete the driver
-                fetch('include/handlers/delete_driver.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+                $.ajax({
+                    url: 'include/handlers/delete_driver.php',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ driverId: driverId }),
+                    success: function(data) {
+                        if (data.success) {
+                            alert("Driver deleted successfully.");
+                            // Refresh the data without reloading the page
+                            fetchDrivers();
+                        } else {
+                            alert("Error deleting driver: " + data.message);
+                        }
                     },
-                    body: JSON.stringify({ driverId: driverId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("Driver deleted successfully.");
-                        // Reload the page to refresh the table
-                        location.reload();
-                    } else {
-                        alert("Error deleting driver: " + data.message);
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        alert("An error occurred while deleting the driver.");
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("An error occurred while deleting the driver.");
                 });
             }
         }
@@ -259,29 +326,26 @@ require_once 'include/handlers/dbhandler.php';
             };
             
             // Send AJAX request to save the driver
-            fetch('include/handlers/save_driver.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            $.ajax({
+                url: 'include/handlers/save_driver.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(data) {
+                    if (data.success) {
+                        alert(modalMode === 'add' ? "Driver added successfully." : "Driver updated successfully.");
+                        // Refresh the data without reloading the page
+                        fetchDrivers();
+                        closeModal();
+                    } else {
+                        alert("Error: " + data.message);
+                    }
                 },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(modalMode === 'add' ? "Driver added successfully." : "Driver updated successfully.");
-                    // Reload the page to refresh the table
-                    location.reload();
-                } else {
-                    alert("Error: " + data.message);
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    alert("An error occurred while saving the driver data.");
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("An error occurred while saving the driver data.");
             });
-            
-            closeModal();
         });
 
         // When the user clicks anywhere outside of the modal, close it
