@@ -26,376 +26,38 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
 </head>
 <style>
-    body{
-margin: 100px;
-font-family: Arial, sans-serif;
-background-color: rgb(241, 241, 244);
-}
-
-.main-container{
-    background-color: rgb(255, 255, 255);
-    margin-left:10px;
-    padding:10px;
-    border-radius:20px;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-}
-
-.event-item{
-    padding:20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.event-details-container {
-    width: 500px;
-    height: auto; /* Let the height adjust automatically based on content */
-    padding: 30px;
-    background-color: #ffffff;
-    border-radius: 8px;
-
-    display: relative;
-    margin: 50px;
-    margin-top: 100px;
-    line-height: 30px;
-    max-height: 600px;
-    overflow-y: auto;
-}
-
-        .event-details-container h4 {
-            margin-top: 0;
-        }
-
-        .event-details-container p {
-            margin: 5px 0;
-        }
-
-        .event-list {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .event-list li {
-            margin: 10px 0;
-        }
-
-        .calendar-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 5px;
-
-        }
-
-        #calendar {
-            max-width: 900px;
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: rgba(0, 0, 0, 0.15) 0px 15px 25px, rgba(0, 0, 0, 0.05) 0px 5px 10px;
-         
-        }
-
-        #noEventsMessage {
-            display: block;
-        }
-
-
-        .events-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-
-
-}
-
-.events-table th {
-    padding: 12px;
-    text-align: center;
-    border-radius: 1px;
-    word-wrap: break-word;
   
+  .event-details-container {
+        width: 500px;
+        height: auto; 
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 8px;
     
-}
-.events-table td{
-
-    padding: 15px;
-    text-align: center;
-    border-radius: 1px;
-    word-wrap: break-word;
-    font-size: 16px;
-}
-
-.events-table th {
-    background-color: #ffffff;
-    font-weight: bold;
-    position: relative;
-    box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
-    border-bottom: 5px double #d3d1d15c;
-    z-index: 1;
-  
-
-}
-/* .events-table td{
-    font-size: 25px;
-} */
-
-.events-table tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-.events-table tr:nth-child(odd) {
-    background-color: #ffffff;
-}
-
-.events-table td {
-    color: #333;
-}
-
-.events-table tr:hover {
-    background-color: #f1f1f1;
-    cursor: pointer;
-}
-
-/* .events-table td {
-    font-size: 13px;
-    color: #555;
-} */
-
-.events-table td a {
-    color: #4CAF50;
-    text-decoration: none;
-}
-
-.events-table td a:hover {
-    text-decoration: underline;
-}
-
-.events-table .description-cell {
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-@media screen and (max-width: 768px) {
-    .events-table {
-        width: 100%;
-        font-size: 12px;
+        display: relative;
+        margin: 50px;
+        margin-top: 100px;
+        line-height: 30px;
+        max-height: 600px;
+        overflow-y: auto;
     }
-
-    .events-table th, .events-table td {
-        padding: 8px 10px;
-    }
-}
-
-        /* Button styling */
-        .toggle-btns {
-            display: flex;
-            gap: 0px;
-            margin-bottom: 20px;
-        
-        }
-
-        .toggle-btn {
-            padding: 10px 20px;
-            border: none;
-            background-color: #e4e4e4;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 14px;
-
-        }
-
-        .toggle-btn.active {
-            background-color: #1b1963;
-            color: #fff;
-        }
-        .status {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 5px;
     
-}
-
-.status.Completed {
-    background-color: #28a745; /* Green */
-    color: white;
-}
-
-.status.Pending {
-    background-color: #ffc107; /* Yellow */
-    color: black;
-}
-
-.status.Cancelled {
-    background-color: #dc3545; /* Red */
-    color: white;
-}
-
-/* Pagination controls */
-.pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-.pagination button {
-    padding: 5px 10px;
-    margin: 0 5px;
-    cursor: pointer;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-}
-
-.pagination button:hover {
-    background-color: #f0f0f0;
-}
-
-
-.fc-day-selected {
-    background-color: #d5d5d8 !important;
-    color: white !important;
-}
-
-.fc-day:hover {
-    background-color: #d5d5d8 ;
-    color: white ;
-}
-
-.edit-btn{
-    background-color: #28a745   ;
-    padding: 10px 20px;
-    border-radius: 5px;
-    color: white;
-    border: none;
-    margin-bottom: 2px;
-    width: 80px;
-}
-
-.delete-btn{
-    background-color: #cc4141   ;
-    padding: 10px 20px;
-    border-radius: 5px;
-    color: white;
-    border: none;
-}
-
-.modal {
-    display: none; 
-    position: fixed; 
-    z-index: 11000; 
-    left: 0;
-    top: 0;
-    width: 100%; 
-    height: 100%;
-  
-    background-color: rgba(0, 0, 0, 0.5); /* Black with opacity */
-
-}
-
-.modal-content {
-    background-color: #fff;
-    margin: 1% auto;
-    padding: 20px;
-    height: 90vh;
-    border: 1px solid #888;
-    width: 50%;
-    max-width: 400px;
-    border-radius: 20px;
-    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-overflow-y: auto;
-}
-
-
-.close:hover,
-.close:focus {
-    color: rgb(255, 255, 255);
-    text-decoration: none;
-    cursor: pointer;
-    background-color: #730707;
-
-}
-
-.modal button {
-    background-color:#f44336;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.add-schedule-btn {
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.add-schedule-btn:hover {
-    background-color: #45a049;
-}
-
-label {
-    font-size: 16px;
-    color: #333;
-    font-weight: bold;
-    margin-bottom: 5px; /* Add space between label and input */
-    text-align: left;
-    width: 100%; /* Ensure label takes up full width */
-}
-
-input, select {
-    padding: 10px;
-    font-size: 14px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    outline: none;
-    transition: border-color 0.3s;
-    width: 90%; /* Make inputs fill the container */
-    max-width: 400px; /* Limit input width */
-    margin-bottom: 10px; /* Add spacing between inputs */
-}
-
-input:focus, select:focus {
-    border-color: #4CAF50;
-}
-
-input[type="datetime-local"] {
-    padding: 8px;
-}
-
-#editForm button[type="submit"],
-#addScheduleForm button[type="submit"] {
-    margin-top: 10px;
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-button.close {
-    margin-top: 10px;
-    background-color: #f44336;
-    color: white;
-    border-radius: 5px;
-    padding: 10px 20px;
-    cursor: pointer;
-}
-
-.cancel-btn:hover {
-    background-color:rgb(104, 20, 14);
-
-}
-
-
-
+            .event-details-container h4 {
+                margin-top: 0;
+            }
+    
+            .event-details-container p {
+                margin: 5px 0;
+            }
+    
+            .event-list {
+                list-style-type: none;
+                padding: 0;
+            }
+    
+            .event-list li {
+                margin: 10px 0;
+            }
 </style>
 <body>
     <?php
@@ -651,11 +313,18 @@ button.close {
             </thead>
             <tbody id="eventTableBody"></tbody>
         </table>
-        <div class="pagination-container">
+        <!-- <div class="pagination-container">
             <button class="pagination-btn" id="prevPageBtn">Previous</button>
             <span id="pageInfo"></span>
             <button class="pagination-btn" id="nextPageBtn">Next</button>
-        </div>
+        </div> -->
+        <div class="pagination-container">
+    <div class="pagination">
+        <button class="prev" id="prevPageBtn">◄</button> 
+        <div id="page-numbers" class="page-numbers"></div>
+        <button class="next" id="nextPageBtn">►</button>
+    </div>
+</div>
     </div>
     </div>
 
@@ -699,65 +368,142 @@ button.close {
                 $('#addScheduleModal').show();
             });
 
-            // Pagination variables
-            var currentPage = 1;
-            var rowsPerPage = 5;
-            
+            // // Pagination variables
+            // var currentPage = 1;
+            // var rowsPerPage = 5;
+            // Variables for pagination
+var currentPage = 1;
+var rowsPerPage = 5;
+var totalPages = 0;
             // Render table and update pagination
+            // function renderTable() {
+            //     $('#eventTableBody').empty();
+            //     var startIndex = (currentPage - 1) * rowsPerPage;
+            //     var endIndex = startIndex + rowsPerPage;
+            //     var pageData = eventsData.slice(startIndex, Math.min(endIndex, eventsData.length));
+                
+            //     pageData.forEach(function(event) {
+            //         var row = `<tr>
+            //             <td>${event.plateNo}</td>
+            //             <td>${event.date}</td>
+            //             <td>${event.driver}</td>
+            //             <td>${event.helper}</td>
+            //             <td>${event.containerNo}</td>
+            //             <td>${event.client}</td>
+            //             <td>${event.destination}</td>
+            //             <td>${event.shippingLine}</td>
+            //             <td>${event.consignee}</td>
+            //             <td>${event.size}</td>
+            //             <td>${event.cashAdvance}</td>
+            //             <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
+            //             <td>
+            //                 <button class="edit-btn" data-id="${event.id}">Edit</button>
+            //                 <button class="delete-btn" data-id="${event.id}">Delete</button>
+            //             </td>
+            //         </tr>`;
+            //         $('#eventTableBody').append(row);
+            //     });
+                
+            //     updatePagination();
+            // }
             function renderTable() {
-                $('#eventTableBody').empty();
-                var startIndex = (currentPage - 1) * rowsPerPage;
-                var endIndex = startIndex + rowsPerPage;
-                var pageData = eventsData.slice(startIndex, Math.min(endIndex, eventsData.length));
+    $('#eventTableBody').empty();
+    var startIndex = (currentPage - 1) * rowsPerPage;
+    var endIndex = startIndex + rowsPerPage;
+    var pageData = eventsData.slice(startIndex, Math.min(endIndex, eventsData.length));
+    
+    pageData.forEach(function(event) {
+        var row = `<tr>
+            <td>${event.plateNo}</td>
+            <td>${event.date}</td>
+            <td>${event.driver}</td>
+            <td>${event.helper}</td>
+            <td>${event.containerNo}</td>
+            <td>${event.client}</td>
+            <td>${event.destination}</td>
+            <td>${event.shippingLine}</td>
+            <td>${event.consignee}</td>
+            <td>${event.size}</td>
+            <td>${event.cashAdvance}</td>
+            <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
+            <td>
+                <button class="edit-btn" data-id="${event.id}">Edit</button>
+                <button class="delete-btn" data-id="${event.id}">Delete</button>
+            </td>
+        </tr>`;
+        $('#eventTableBody').append(row);
+    });
+    
+    updatePagination();
+}
+
+            // function updatePagination() {
+            //     var totalPages = Math.ceil(eventsData.length / rowsPerPage);
+            //     $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
                 
-                pageData.forEach(function(event) {
-                    var row = `<tr>
-                        <td>${event.plateNo}</td>
-                        <td>${event.date}</td>
-                        <td>${event.driver}</td>
-                        <td>${event.helper}</td>
-                        <td>${event.containerNo}</td>
-                        <td>${event.client}</td>
-                        <td>${event.destination}</td>
-                        <td>${event.shippingLine}</td>
-                        <td>${event.consignee}</td>
-                        <td>${event.size}</td>
-                        <td>${event.cashAdvance}</td>
-                        <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
-                        <td>
-                            <button class="edit-btn" data-id="${event.id}">Edit</button>
-                            <button class="delete-btn" data-id="${event.id}">Delete</button>
-                        </td>
-                    </tr>`;
-                    $('#eventTableBody').append(row);
-                });
-                
-                updatePagination();
-            }
+            //     $('#prevPageBtn').prop('disabled', currentPage === 1);
+            //     $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
+            // }
             
-            function updatePagination() {
-                var totalPages = Math.ceil(eventsData.length / rowsPerPage);
-                $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
-                
-                $('#prevPageBtn').prop('disabled', currentPage === 1);
-                $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
-            }
+            // $('#prevPageBtn').on('click', function() {
+            //     if (currentPage > 1) {
+            //         currentPage--;
+            //         renderTable();
+            //     }
+            // });
             
-            $('#prevPageBtn').on('click', function() {
-                if (currentPage > 1) {
-                    currentPage--;
-                    renderTable();
-                }
-            });
+            // $('#nextPageBtn').on('click', function() {
+            //     var totalPages = Math.ceil(eventsData.length / rowsPerPage);
+            //     if (currentPage < totalPages) {
+            //         currentPage++;
+            //         renderTable();
+            //     }
+            // });
             
-            $('#nextPageBtn').on('click', function() {
-                var totalPages = Math.ceil(eventsData.length / rowsPerPage);
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    renderTable();
-                }
-            });
-            
+// Update pagination function
+function updatePagination() {
+    totalPages = Math.ceil(eventsData.length / rowsPerPage);
+    
+    // Clear previous page numbers
+    $('#page-numbers').empty();
+    
+    // Add page numbers
+    for (var i = 1; i <= totalPages; i++) {
+        var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
+        $('#page-numbers').append(`<div class="${pageNumClass}" onclick="goToPage(${i})">${i}</div>`);
+    }
+    
+    // Enable/disable prev/next buttons
+    $('#prevPageBtn').prop('disabled', currentPage === 1);
+    $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
+}
+
+// Function to go to specific page
+function goToPage(page) {
+    currentPage = page;
+    renderTable();
+    updatePagination();
+}
+
+// Change page function (for prev/next buttons)
+function changePage(step) {
+    var newPage = currentPage + step;
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderTable();
+        updatePagination();
+    }
+}
+
+// Update event handlers for prev/next buttons
+$('#prevPageBtn').on('click', function() {
+    changePage(-1);
+});
+
+$('#nextPageBtn').on('click', function() {
+    changePage(1);
+});
+
             // Initialize Calendar
             $('#calendar').fullCalendar({
                 header: { 
