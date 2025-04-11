@@ -105,10 +105,10 @@ require_once 'include/handlers/dbhandler.php';
                     </table>
                     
                     <div class="pagination">
-                        <button class="prev" id="prevPageBtn">◄</button>
-                        <span id="pageInfo">Page 1 of 1</span>
-                        <button class="next" id="nextPageBtn">►</button>
-                    </div>
+    <button class="prev" id="prevPageBtn">◄</button>
+    <div id="page-numbers" class="page-numbers"></div>
+    <button class="next" id="nextPageBtn">►</button>
+</div>
                 </div>
             </div>
         </section>
@@ -209,28 +209,60 @@ require_once 'include/handlers/dbhandler.php';
             updatePagination();
         }
         
-        function updatePagination() {
-            var totalPages = Math.ceil(driversData.length / rowsPerPage);
-            $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
-            
-            $('#prevPageBtn').prop('disabled', currentPage === 1);
-            $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
-        }
-        
-        $('#prevPageBtn').on('click', function() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderTable();
-            }
+        let totalPages = 0;
+
+function updatePagination() {
+    totalPages = Math.ceil(driversData.length / rowsPerPage);
+    
+    // Clear previous page numbers
+    $('#page-numbers').empty();
+    
+    // Add page numbers
+    for (var i = 1; i <= totalPages; i++) {
+        var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
+        $('#page-numbers').append(`<div class="${pageNumClass}" data-page="${i}">${i}</div>`);
+    
+    pageNumberElement.on('click', function() {
+            var page = parseInt($(this).text());
+            goToPage(page);
         });
         
-        $('#nextPageBtn').on('click', function() {
-            var totalPages = Math.ceil(driversData.length / rowsPerPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderTable();
-            }
-        });
+        $('#page-numbers').append(pageNumberElement);
+    }
+    // Enable/disable prev/next buttons
+    $('#prevPageBtn').prop('disabled', currentPage === 1);
+    $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
+}
+
+
+function goToPage(page) {
+    currentPage = page;
+    renderTable();
+    $('.page-number').removeClass('active');
+    $(`.page-number:contains(${page})`).addClass('active');
+}
+
+function changePage(step) {
+    var newPage = currentPage + step;
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderTable();
+    }
+}
+
+// Update event handlers for page navigation
+$('#prevPageBtn').on('click', function() {
+    changePage(-1);
+});
+
+$('#nextPageBtn').on('click', function() {
+    changePage(1);
+});
+
+$(document).on('click', '.page-number', function() {
+    var page = parseInt($(this).data('page'));
+    goToPage(page);
+});
 
         function openModal(mode, driverId = null) {
             modalMode = mode;

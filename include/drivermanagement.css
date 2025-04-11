@@ -496,6 +496,32 @@ button[type="submit"]:hover {
     font-size: 14px;
 } */
 
+/* .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.pagination button {
+    background-color: #ffffff00; 
+    color: rgb(0, 0, 0);
+    border: none;
+    padding: 6px 12px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 10px;
+    margin: 0 5px;
+}
+
+.pagination .prev, .pagination .next {
+    font-size: 18px;
+}
+
+.pagination button:hover {
+    opacity: 0.7;
+} */
+
 .pagination {
     display: flex;
     justify-content: center;
@@ -504,7 +530,7 @@ button[type="submit"]:hover {
 }
 
 .pagination button {
-    background-color: #ffffff00; /* Blue */
+    background-color: #ffffff00;
     color: rgb(0, 0, 0);
     border: none;
     padding: 6px 12px;
@@ -527,3 +553,35 @@ button[type="submit"]:hover {
     gap: 5px;
     align-items: center;
 }
+
+.page-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    background-color: rgb(255, 255, 255);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.page-number:hover {
+    background-color: rgba(183, 181, 181, 0.95);
+    color: #fff;
+}
+
+.page-number.active {
+    background-color: rgba(255, 255, 255, 0.82);
+    color: black;
+    border-color: rgb(26, 97, 12);
+    border-width: 2px;
+}
+
+/* .page-numbers {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+} */
