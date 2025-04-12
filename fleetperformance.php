@@ -23,13 +23,12 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 <style>
 body {
     font-family: Arial, sans-serif;
-    margin: 100px;
+    margin: 80px;
     background-color: rgb(241, 241, 244);
 }
 
 .dashboard-section {
     display: flex;
-    gap: 20px;
     padding: 20px;
     flex-wrap: wrap;  /* Allow wrapping for smaller screen sizes */
 }
@@ -137,50 +136,66 @@ body {
 
     <!-- Trip Number -->
     <div class="card-large">
-        <h3>Trip Number</h3>
+        <h3>Number of Trips</h3>
         <div id="tripnumber"></div>
     </div>
 </div>
 
 <script>
-    var options = {
-        series: [44, 55, 41, 17, 15],
-        chart: {
-            width: 580,
-            type: 'donut',
-        },
-        plotOptions: {
-            pie: {
-                startAngle: -90,
-                endAngle: 270
+  var options = {
+    series: [44, 55, 41, 17, 15],
+    chart: {
+        width: 580,
+        type: 'donut',
+    },
+    labels: ['Fuel', 'Toll Gate', 'Food', 'Emergency', 'Others'],
+    plotOptions: {
+        pie: {
+            startAngle: -90,
+            endAngle: 270
+        }
+    },
+    dataLabels: {
+        enabled: false
+    },
+    fill: {
+        type: 'gradient',
+    },
+    legend: {
+        formatter: function (val, opts) {
+            let series = opts.w.globals.series;
+            let total = series.reduce((a, b) => a + b, 0);
+            let value = series[opts.seriesIndex];
+            let percent = ((value / total) * 100).toFixed(1);
+            return `${val} - ${percent}%`;
+        }
+    },
+    tooltip: {
+        y: {
+            formatter: function (value, opts) {
+                let series = opts.w.globals.series;
+                let total = series.reduce((a, b) => a + b, 0);
+                let percent = ((value / total) * 100).toFixed(1);
+                return `${percent}%`;
             }
-        },
-        dataLabels: {
-            enabled: false
-        },
-        fill: {
-            type: 'gradient',
-        },
-        legend: {
-            formatter: function (val, opts) {
-                return val + " - " + opts.w.globals.series[opts.seriesIndex]
+        }
+    },
+    title: {
+        text: 'Cost Trends'
+    },
+    responsive: [{
+        breakpoint: 480,
+        options: {
+            chart: {
+                width: 200
+            },
+            legend: {
+                position: 'bottom'
             }
-        },
-        title: {
-            text: 'Cost Trends'
-        },
-        responsive: [{
-            breakpoint: 480,
-            options: {
-                chart: {
-                    width: 200
-                },
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }]
-    };
+        }
+    }]
+};
+
 
     var costtrendchart = new ApexCharts(document.querySelector("#costtrendchart"), options);
     costtrendchart.render();
@@ -190,7 +205,7 @@ body {
             {
                 data: [
                     {
-                        x: 'Analysis',
+                        x: 'Trip to Jerusalem',
                         y: [
                             new Date('2019-02-27').getTime(),
                             new Date('2019-03-04').getTime()
@@ -198,7 +213,7 @@ body {
                         fillColor: '#008FFB'
                     },
                     {
-                        x: 'Design',
+                        x: 'To Batangas',
                         y: [
                             new Date('2019-03-04').getTime(),
                             new Date('2019-03-08').getTime()
@@ -206,7 +221,7 @@ body {
                         fillColor: '#00E396'
                     },
                     {
-                        x: 'Coding',
+                        x: 'To Pasay ',
                         y: [
                             new Date('2019-03-07').getTime(),
                             new Date('2019-03-10').getTime()
@@ -214,7 +229,7 @@ body {
                         fillColor: '#775DD0'
                     },
                     {
-                        x: 'Testing',
+                        x: 'To Paranaque',
                         y: [
                             new Date('2019-03-08').getTime(),
                             new Date('2019-03-12').getTime()
@@ -222,7 +237,7 @@ body {
                         fillColor: '#FEB019'
                     },
                     {
-                        x: 'Deployment',
+                        x: 'To El Nido',
                         y: [
                             new Date('2019-03-12').getTime(),
                             new Date('2019-03-17').getTime()
@@ -235,7 +250,7 @@ body {
         chart: {
             height: 350,
             type: 'rangeBar',
-            width: 500
+            width: 600
         },
         plotOptions: {
             bar: {
@@ -278,7 +293,7 @@ body {
 
     var options3 = {
         series: [{
-            name: "STOCK ABC",
+            name: "Number of Trips",
             data: [23, 45, 56, 67, 89, 23, 45]
         }],
         chart: {
@@ -294,14 +309,8 @@ body {
         stroke: {
             curve: 'straight'
         },
-        title: {
-            text: 'Fundamental Analysis of Stocks',
-            align: 'left'
-        },
-        subtitle: {
-            text: 'Price Movements',
-            align: 'left'
-        },
+      
+       
         labels: ['2020-01-01', '2020-02-01', '2020-03-01', '2020-04-01', '2020-05-01', '2020-06-01', '2020-07-01'],
         xaxis: {
             type: 'datetime',
@@ -385,19 +394,19 @@ body {
 
     var options = {
           series: [{
-          name: 'Marine Sprite',
+          name: 'Truck 1',
           data: [44, 55, 41, 37, 22, 43, 21]
         }, {
-          name: 'Striking Calf',
+          name: 'Truck 2',
           data: [53, 32, 33, 52, 13, 43, 32]
         }, {
-          name: 'Tank Picture',
+          name: 'Truck 3',
           data: [12, 17, 11, 9, 15, 11, 20]
         }, {
-          name: 'Bucket Slope',
+          name: 'Truck 4',
           data: [9, 7, 5, 8, 6, 9, 4]
         }, {
-          name: 'Reborn Kid',
+          name: 'Truck 5',
           data: [25, 12, 19, 32, 25, 24, 10]
         }],
           chart: {
@@ -424,14 +433,12 @@ body {
           width: 1,
           colors: ['#fff']
         },
-        title: {
-          text: 'Fiction Books Sales'
-        },
+    
         xaxis: {
-          categories: [2008, 2009, 2010, 2011, 2012, 2013, 2014],
+          categories: [2019,2020, 2021, 2022, 2023, 2024, 2025],
           labels: {
             formatter: function (val) {
-              return val + "K"
+              return val 
             }
           }
         },
@@ -443,7 +450,7 @@ body {
         tooltip: {
           y: {
             formatter: function (val) {
-              return val + "K"
+              return val 
             }
           }
         },
