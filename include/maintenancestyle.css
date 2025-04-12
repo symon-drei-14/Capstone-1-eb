@@ -238,7 +238,7 @@ th:nth-child(8), td:nth-child(8) {
 
 }
 
-.modal {
+/* .modal {
     display: none; 
     position: fixed; 
     z-index: 11000; 
@@ -259,6 +259,32 @@ th:nth-child(8), td:nth-child(8) {
     max-width: 400px;
     border-radius: 20px;
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+} */
+
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 11000; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; 
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%; 
+    max-width: 400px; 
+    border-radius: 20px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    overflow-x: auto; 
+    max-height: 80vh; 
+    overflow-y: auto; 
 }
 
 .modal-header {
@@ -359,11 +385,25 @@ button[type="submit"]:hover {
     font-size: 14px;
 }
 
+#remindersModal .modal-content {
+    width: 70%;
+    max-width: 600px;
+    overflow-x: auto;
+    max-height: 80vh;
+    overflow-y: auto;
+}
 
-#historyModal .modal-content {
+/* #historyModal .modal-content {
     width: 70%; 
     max-width: 400px;
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+} */
+
+#historyModal .modal-content {
+    width: 70%; 
+    max-width: 400px; 
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    overflow-x: auto; 
 }
 
 #historyModal .history-list {

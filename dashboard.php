@@ -1,12 +1,19 @@
 <?php
 session_start();
-// Check if user is logged in
+
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    // Not logged in, redirect to login page
+   
     header("Location: login.php");
     exit();
 }
-// User is logged in, continue with the page
+
+
+require_once 'include/handlers/get_driving_drivers.php';
+
+
+$drivingDrivers = getDrivingDrivers();
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,13 +26,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
  
-    <!-- Add jQuery -->
+   
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- FullCalendar CSS -->
+
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css" rel="stylesheet">
 
-<!-- FullCalendar JS -->
+
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
 
@@ -198,30 +205,24 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     </div>
     <div class="card-small">
         <h3>Driving Drivers</h3>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
-        <div class="performance">
-            <i class="fa fa-user icon-bg"></i>
-            <p>Enter Name Here - Destination: Los Angeles</p>
-        </div>
+        <?php
+        // Check if there are any drivers with pending status
+        if (count($drivingDrivers) > 0) {
+            // Loop through each driving driver and display them
+            foreach ($drivingDrivers as $driver) {
+                echo '<div class="performance">
+                        <i class="fa fa-user icon-bg"></i>
+                        <p>' . htmlspecialchars($driver['driver']) . ' - Destination: ' . htmlspecialchars($driver['destination']) . '</p>
+                      </div>';
+            }
+        } else {
+            // Display a message if no driving drivers are found
+            echo '<div class="performance">
+                    <i class="fa fa-info-circle icon-bg"></i>
+                    <p>No active drivers currently on duty</p>
+                  </div>';
+        }
+        ?>
     </div>
 </div>
 
