@@ -1,12 +1,12 @@
 <?php
 session_start();
-// Check if user is logged in
+
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    // Not logged in, redirect to login page
+   
     header("Location: login.php");
     exit();
 }
-// User is logged in, continue with the page
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -63,10 +63,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <?php
 
 
-    // Include database connection
+   
     require 'include/handlers/dbhandler.php';
     
-    // Fetch all trips from the database
+
     $sql = "SELECT * FROM assign";
     $result = $conn->query($sql);
     $eventsData = [];
@@ -90,7 +90,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             ];
         }
     }
-    // Convert to JSON for JavaScript use
+  
     $eventsDataJson = json_encode($eventsData);
     ?>
 
@@ -332,14 +332,14 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
     <script>
         $(document).ready(function() {
-            // Load events data from PHP
+     
             let now = new Date();
-            let formattedNow = now.toISOString().slice(0,16); // "YYYY-MM-DDTHH:MM"
+            let formattedNow = now.toISOString().slice(0,16); 
             $('#editEventDate').attr('min', formattedNow);
-            $('#addEventDate').attr('min', formattedNow); // Optional if you have a separate add form   
-            var eventsData = <?php echo $eventsDataJson; ?>;
+            $('#addEventDate').attr('min', formattedNow); 
+            var eventsData = <?php echo $eventsDataJson; ?>; //error?
             
-            // Format the data for fullCalendar
+            
             var calendarEvents = eventsData.map(function(event) {
                 return {
                     id: event.id,
@@ -359,7 +359,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 };
             });
 
-            // Modal handling
+       
             $('.close, .close-btn').on('click', function() {
                 $('.modal').hide();
             });
@@ -374,44 +374,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 $('#addScheduleModal').show();
             });
 
-            // // Pagination variables
-            // var currentPage = 1;
-            // var rowsPerPage = 5;
-            // Variables for pagination
+         
 var currentPage = 1;
 var rowsPerPage = 5;
 var totalPages = 0;
-            // Render table and update pagination
-            // function renderTable() {
-            //     $('#eventTableBody').empty();
-            //     var startIndex = (currentPage - 1) * rowsPerPage;
-            //     var endIndex = startIndex + rowsPerPage;
-            //     var pageData = eventsData.slice(startIndex, Math.min(endIndex, eventsData.length));
-                
-            //     pageData.forEach(function(event) {
-            //         var row = `<tr>
-            //             <td>${event.plateNo}</td>
-            //             <td>${event.date}</td>
-            //             <td>${event.driver}</td>
-            //             <td>${event.helper}</td>
-            //             <td>${event.containerNo}</td>
-            //             <td>${event.client}</td>
-            //             <td>${event.destination}</td>
-            //             <td>${event.shippingLine}</td>
-            //             <td>${event.consignee}</td>
-            //             <td>${event.size}</td>
-            //             <td>${event.cashAdvance}</td>
-            //             <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
-            //             <td>
-            //                 <button class="edit-btn" data-id="${event.id}">Edit</button>
-            //                 <button class="delete-btn" data-id="${event.id}">Delete</button>
-            //             </td>
-            //         </tr>`;
-            //         $('#eventTableBody').append(row);
-            //     });
-                
-            //     updatePagination();
-            // }
+           
             function renderTable() {
     $('#eventTableBody').empty();
     var startIndex = (currentPage - 1) * rowsPerPage;
@@ -419,10 +386,10 @@ var totalPages = 0;
     var pageData = eventsData.slice(startIndex, Math.min(endIndex, eventsData.length));
     
     pageData.forEach(function(event) {
-        // Format date and time properly
+      
         var dateObj = new Date(event.date);
         var formattedDate = dateObj.toLocaleDateString();
-        var formattedTime = moment(dateObj).format('h:mm A'); // Use moment.js for consistent formatting
+        var formattedTime = moment(dateObj).format('h:mm A');
         
         var row = `<tr>
             <td>${event.plateNo}</td>
@@ -449,55 +416,32 @@ var totalPages = 0;
     updatePagination();
 }
 
-            // function updatePagination() {
-            //     var totalPages = Math.ceil(eventsData.length / rowsPerPage);
-            //     $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
-                
-            //     $('#prevPageBtn').prop('disabled', currentPage === 1);
-            //     $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
-            // }
-            
-            // $('#prevPageBtn').on('click', function() {
-            //     if (currentPage > 1) {
-            //         currentPage--;
-            //         renderTable();
-            //     }
-            // });
-            
-            // $('#nextPageBtn').on('click', function() {
-            //     var totalPages = Math.ceil(eventsData.length / rowsPerPage);
-            //     if (currentPage < totalPages) {
-            //         currentPage++;
-            //         renderTable();
-            //     }
-            // });
-            
-// Update pagination function
+           
 function updatePagination() {
     totalPages = Math.ceil(eventsData.length / rowsPerPage);
     
-    // Clear previous page numbers
+   
     $('#page-numbers').empty();
     
-    // Add page numbers
+  
     for (var i = 1; i <= totalPages; i++) {
         var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
         $('#page-numbers').append(`<div class="${pageNumClass}" onclick="goToPage(${i})">${i}</div>`);
     }
     
-    // Enable/disable prev/next buttons
+  
     $('#prevPageBtn').prop('disabled', currentPage === 1);
     $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
 }
 
-// Function to go to specific page
+
 function goToPage(page) {
     currentPage = page;
     renderTable();
     updatePagination();
 }
 
-// Change page function (for prev/next buttons)
+
 function changePage(step) {
     var newPage = currentPage + step;
     if (newPage >= 1 && newPage <= totalPages) {
@@ -507,7 +451,7 @@ function changePage(step) {
     }
 }
 
-// Update event handlers for prev/next buttons
+
 $('#prevPageBtn').on('click', function() {
     changePage(-1);
 });
@@ -516,30 +460,7 @@ $('#nextPageBtn').on('click', function() {
     changePage(1);
 });
 
-            // Initialize Calendar
-//             $('#calendar').fullCalendar({
-//     header: { 
-//         left: 'prev,next today', 
-//         center: 'title', 
-//         right: 'month,agendaWeek,agendaDay' 
-//     },
-//     events: calendarEvents,
-//     eventRender: function(event, element) {
-//     element.find('.fc-title').css({
-//         'white-space': 'normal',
-//         'overflow': 'visible'
-//     });
-    
-//     // Format the time properly with AM/PM without any prefix
-//     var formattedTime = moment(event.start).format('h:mm A');
-    
-//     // Update event title to include properly formatted time
-//     element.find('.fc-title').html(formattedTime + ' ' + event.client + ' - ' + event.destination);
-    
-//     // Customize event rendering based on status
-//     var statusClass = event.status.toLowerCase();
-//     element.addClass(statusClass);
-// },
+           
 $('#calendar').fullCalendar({
     header: { 
         left: 'prev,next today', 
@@ -547,19 +468,19 @@ $('#calendar').fullCalendar({
         right: 'month,agendaWeek,agendaDay' 
     },
     events: calendarEvents,
-    timeFormat: 'h:mm A', // Explicitly define time format
-    displayEventTime: true, // Show the time
-    displayEventEnd: false, // Don't show end time
+    timeFormat: 'h:mm A', 
+    displayEventTime: true, 
+    displayEventEnd: false, 
     eventRender: function(event, element) {
         element.find('.fc-title').css({
             'white-space': 'normal',
             'overflow': 'visible'
         });
         
-        // Update event title WITHOUT adding the time (FullCalendar will handle time display)
+       
         element.find('.fc-title').html(event.client + ' - ' + event.destination);
         
-        // Customize event rendering based on status
+   
         var statusClass = event.status.toLowerCase();
         element.addClass(statusClass);
     },
@@ -573,7 +494,7 @@ $('#calendar').fullCalendar({
         return moment(event.start).isSame(date, 'day');
     });
     
-    // Update the heading to include the clicked date
+    
     var formattedDate = moment(date).format('MMMM D, YYYY');
     $('#eventDetails h4').text('Event Details - ' + formattedDate);
     
@@ -608,7 +529,7 @@ $('#calendar').fullCalendar({
 }
             });
             
-            // Toggle between Calendar and Table views
+          
             $('#calendarViewBtn').on('click', function() {
                 $(this).addClass('active');
                 $('#tableViewBtn').removeClass('active');
@@ -616,7 +537,7 @@ $('#calendar').fullCalendar({
                 $('#tableView').hide();
                 $('#eventDetails').show();
                 
-                // Refresh calendar
+              
                 $('#calendar').fullCalendar('render');
             });
             
@@ -627,12 +548,12 @@ $('#calendar').fullCalendar({
                 $('#tableView').show();
                 $('#eventDetails').hide();
                 
-                // Reset to first page
+                
                 currentPage = 1;
                 renderTable();
             });
             
-            // Edit event handler (for both table and calendar view)
+       
             $(document).on('click', '.edit-btn', function() {
                 var eventId = $(this).data('id');
                 var event = eventsData.find(function(e) { return e.id == eventId; });
@@ -656,16 +577,15 @@ $('#calendar').fullCalendar({
                 }
             });
             
-            // Delete event handler (for both table and calendar view)
+         
             $(document).on('click', '.delete-btn', function() {
                 var eventId = $(this).data('id');
                 $('#deleteEventId').val(eventId);
                 $('#deleteConfirmModal').show();
             });
             
-            // Form submissions
-            
-            // Add new schedule
+        
+          
             $('#addScheduleForm').on('submit', function(e) {
                 e.preventDefault();
                 
@@ -692,7 +612,7 @@ $('#calendar').fullCalendar({
                         if (response.success) {
                             alert('Trip added successfully!');
                             $('#addScheduleModal').hide();
-                            location.reload(); // Reload to refresh data
+                            location.reload();
                         } else {
                             alert('Error: ' + response.message);
                         }
@@ -703,7 +623,7 @@ $('#calendar').fullCalendar({
                 });
             });
             
-            // Edit schedule
+       
             $('#editForm').on('submit', function(e) {
                 e.preventDefault();
                 
@@ -731,7 +651,7 @@ $('#calendar').fullCalendar({
                         if (response.success) {
                             alert('Trip updated successfully!');
                             $('#editModal').hide();
-                            location.reload(); // Reload to refresh data
+                            location.reload(); 
                         } else {
                             alert('Error: ' + response.message);
                         }
@@ -742,7 +662,7 @@ $('#calendar').fullCalendar({
                 });
             });
             
-            // Delete confirmation
+         
             $('#confirmDeleteBtn').on('click', function() {
                 var eventId = $('#deleteEventId').val();
                 
@@ -758,7 +678,7 @@ $('#calendar').fullCalendar({
                         if (response.success) {
                             alert('Trip deleted successfully!');
                             $('#deleteConfirmModal').hide();
-                            location.reload(); // Reload to refresh data
+                            location.reload(); 
                         } else {
                             alert('Error: ' + response.message);
                         }

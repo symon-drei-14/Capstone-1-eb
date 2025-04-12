@@ -1,12 +1,12 @@
 <?php
 session_start();
-// Check if user is logged in
+
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    // Not logged in, redirect to login page
+  
     header("Location: login.php");
     exit();
 }
-// User is logged in, continue with the page
+
 ?>
 
 <!DOCTYPE html>
@@ -208,14 +208,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         let currentTruckId = 0;
         let isEditing = false;
         
-        // Load data when page loads
+       
         $(document).ready(function() {
             
             loadMaintenanceData();
         });
         
-        // Load maintenance records
-       // Load maintenance records
+       
 function loadMaintenanceData() {
     fetch('include/handlers/maintenance_handler.php?action=getRecords&page=' + currentPage)
         .then(response => {
@@ -225,7 +224,7 @@ function loadMaintenanceData() {
             return response.json();
         })
         .then(response => {
-            console.log("Response data:", response); // Add this for debugging
+            console.log("Response data:", response); 
             renderTable(response.records || []);
             totalPages = response.totalPages || 1;
             currentPage = response.currentPage || 1;
@@ -234,16 +233,16 @@ function loadMaintenanceData() {
         .catch(error => {
             console.error("Error loading data:", error);
             alert("Failed to load maintenance records: " + error.message);
-            // Show empty state in the table
+          
             const tableBody = document.querySelector("#maintenanceTable tbody");
             tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Error loading data. Please try again.</td></tr>';
         });
 }
 
-// Render table with maintenance data
+
 function renderTable(data) {
     const tableBody = document.querySelector("#maintenanceTable tbody");
-    tableBody.innerHTML = ""; // Clear existing rows
+    tableBody.innerHTML = ""; 
     
     if (data.length === 0) {
         const tr = document.createElement("tr");
@@ -271,14 +270,14 @@ function renderTable(data) {
         tableBody.appendChild(tr);
     });
 }
-        // Format date for display
+      
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             const date = new Date(dateString);
             return date.toISOString().split('T')[0];
         }
         
-        // Update pagination display
+      
         function updatePagination() {
     const pageNumbersContainer = document.getElementById("page-numbers");
     pageNumbersContainer.innerHTML = "";
@@ -307,21 +306,21 @@ function renderTable(data) {
         pageNumbersContainer.appendChild(ellipsis);
     };
 
-    // Always show first page
+   
     if (totalPages <= 7) {
-        // Show all pages if small number
+       
         for (let i = 1; i <= totalPages; i++) {
             createPageButton(i);
         }
     } else {
-        // Show first page
+       
         createPageButton(1);
 
         if (currentPage > 4) {
             addEllipsis();
         }
 
-        // Calculate range of middle buttons
+ 
         let startPage = Math.max(2, currentPage - 1);
         let endPage = Math.min(totalPages - 1, currentPage + 1);
 
@@ -333,12 +332,12 @@ function renderTable(data) {
             addEllipsis();
         }
 
-        // Show last page
+       
         createPageButton(totalPages);
     }
 }
         
-        // Change page
+       
         function changePage(direction) {
             const newPage = currentPage + direction;
             
@@ -350,7 +349,7 @@ function renderTable(data) {
             loadMaintenanceData();
         }
         
-        // Open modal for add/edit
+        
         function openModal(mode) {
             document.getElementById("maintenanceModal").style.display = "block";
             
@@ -360,14 +359,14 @@ function renderTable(data) {
     document.getElementById("maintenanceForm").reset();
     document.getElementById("maintenanceId").value = "";
     
-    // Set today's date as default and disable past dates
+  
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("date").value = today;
-    document.getElementById("date").setAttribute("min", today); // ✅ Disables past dates
+    document.getElementById("date").setAttribute("min", today); 
 }
         }
         
-        // Open edit modal with data
+       
         function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost) {
     isEditing = true;
     document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
@@ -382,12 +381,12 @@ function renderTable(data) {
     
     document.getElementById("maintenanceModal").style.display = "block";
 }
-        // Close the modal
+        
         function closeModal() {
             document.getElementById("maintenanceModal").style.display = "none";
         }
         
-        // Save maintenance record (add or update)
+       
         function saveMaintenanceRecord() {
     const form = document.getElementById("maintenanceForm");
     
@@ -431,7 +430,7 @@ function renderTable(data) {
     });
 }
         
-        // Delete maintenance record
+        
         function deleteMaintenance(id) {
             if (!confirm("Are you sure you want to delete this maintenance record?")) {
                 return;
@@ -456,7 +455,7 @@ function renderTable(data) {
             });
         }
         
-        // Open maintenance history modal
+        
         function openHistoryModal(truckId) {
             currentTruckId = truckId;
             
@@ -466,7 +465,7 @@ function renderTable(data) {
                 dataType: 'json',
                 success: function(response) {
                     const historyList = document.getElementById("historyList");
-                    historyList.innerHTML = ""; // Clear existing items
+                    historyList.innerHTML = ""; 
                     
                     if (response.history.length === 0) {
                         historyList.innerHTML = "<p>No maintenance history found for this truck.</p>";
@@ -495,12 +494,12 @@ function renderTable(data) {
             });
         }
         
-        // Close history modal
+        
         function closeHistoryModal() {
             document.getElementById("historyModal").style.display = "none";
         }
         
-        // Open reminders modal
+        
         function openRemindersModal() {
             $.ajax({
                 url: 'include/handlers/maintenance_handler.php?action=getReminders',
@@ -508,7 +507,7 @@ function renderTable(data) {
                 dataType: 'json',
                 success: function(response) {
                     const remindersList = document.getElementById("remindersList");
-                    remindersList.innerHTML = ""; // Clear existing items
+                    remindersList.innerHTML = ""; 
                     
                     if (response.reminders.length === 0) {
                         remindersList.innerHTML = "<p>No upcoming maintenance reminders.</p>";
@@ -551,12 +550,12 @@ function renderTable(data) {
             });
         }
         
-        // Close reminders modal
+        
         function closeRemindersModal() {
             document.getElementById("remindersModal").style.display = "none";
         }
 
-        let sortDateAsc = true; // default sorting order
+        let sortDateAsc = true; 
 
 function sortByDate() {
     const tableBody = document.querySelector("#maintenanceTable tbody");
@@ -569,14 +568,14 @@ function sortByDate() {
         return sortDateAsc ? dateA - dateB : dateB - dateA;
     });
 
-    // Toggle sort direction
+   
     sortDateAsc = !sortDateAsc;
 
-    // Update icon
+
     const icon = document.getElementById("dateSortIcon");
     icon.textContent = sortDateAsc ? '⬆' : '⬇';
 
-    // Replace rows with sorted ones
+
     tableBody.innerHTML = '';
     sortedRows.forEach(row => tableBody.appendChild(row));
 }

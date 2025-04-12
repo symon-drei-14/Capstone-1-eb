@@ -348,7 +348,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         if (data.success) {
             alert('Trip assigned successfully!');
             closeModal('tripModal');
-            fetchTrips(); // Reload the table
+            fetchTrips(); 
         } else {
             alert('Error: ' + data.message);
         }
@@ -356,14 +356,14 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     .catch(error => console.error('Error:', error));
 }
 
-// Fetch and display trips from database
+
 function fetchTrips() {
     fetch('include/handlers/get_trips.php')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                const tableBody = document.getElementById('fleetTableBody'); // Correct ID here
-                tableBody.innerHTML = ''; // Clear existing table data
+                const tableBody = document.getElementById('fleetTableBody'); 
+                tableBody.innerHTML = ''; 
 
                 data.trips.forEach(trip => {
                     const row = document.createElement('tr');
@@ -392,17 +392,17 @@ function fetchTrips() {
         .catch(error => console.error('Error:', error));
 }
 
-// Call this function when the page loads or after a new trip is added
+
 fetchTrips();
 
         function saveTruck() {
-            // Get form values
+          
             const truckId = document.getElementById('truckId').value;
             const driver = document.getElementById('truckDriver').value;
             const driverAssistant = document.getElementById('truckDriverAssistant').value;
             const status = document.getElementById('truckStatus').value;
            
-            // Create new truck object
+          
             const newTruck = {
                 id: trucksData.length + 1,
                 truckId: truckId,
@@ -411,18 +411,18 @@ fetchTrips();
                 status: status
             };
            
-            // Add to trucks data
+         
             trucksData.push(newTruck);
            
-            // Re-render trucks table
+            
             renderTrucksTable();
            
-            // Close modal and show success message
+          
             alert("Truck added successfully!");
             closeModal('truckModal');
         }
 
-        // Fleet data
+        
         const fleetData = [
             {id: 1, plateNumber: 'ABC-123', driver: 'Glen Diana', helper: 'Carlos Rodriguez', containerNo: 'CONT7890', client: 'ABC Corp', shippingLine: 'Maersk Line', consignee: 'Global Trading Ltd', size: '40ft', cashAdvance: 'Php 10,000', status: 'In Progress'},
             {id: 2, plateNumber: 'DEF-456', driver: 'Sarah Johnson', helper: 'Mike Lee', containerNo: 'CONT1234', client: 'XYZ Ltd', shippingLine: 'MSC', consignee: 'Retail Solutions Inc', size: '20ft', cashAdvance: 'Php 8,000', status: 'Completed'},
@@ -436,7 +436,7 @@ fetchTrips();
             {id: 10, plateNumber: 'BCD-890', driver: 'Olivia Pink', helper: 'William Moore', containerNo: 'CONT4567', client: 'YZA Inc', shippingLine: 'HMM', consignee: 'Global Logistics', size: '45ft', cashAdvance: 'Php 14,000', status: 'Pending'},
         ];
 
-        // Trucks data
+      
         const trucksData = [
             {id: 1, truckId: 'T-001', driver: 'Glen Diana', driverAssistant: 'Carlos Rodriguez', status: 'Available'},
             {id: 2, truckId: 'T-002', driver: 'Sarah Johnson', driverAssistant: 'Mike Lee', status: 'On Trip'},
@@ -450,19 +450,19 @@ fetchTrips();
             {id: 10, truckId: 'T-010', driver: 'Olivia Pink', driverAssistant: 'William Moore', status: 'On Trip'},
         ];
 
-        // Pagination variables
+        
         let currentPage = 1;
         let currentTruckPage = 1;
         const rowsPerPage = 5;
 
-        // Table rendering functions
+       
         function renderTable() {
             const start = (currentPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
             const pageData = fleetData.slice(start, end);
 
             const tableBody = document.querySelector("#fleetTable tbody");
-            tableBody.innerHTML = ""; // Clear existing rows
+            tableBody.innerHTML = ""; 
 
             pageData.forEach(row => {
                 const tr = document.createElement("tr");
@@ -499,7 +499,7 @@ fetchTrips();
         return;
     }
    
-    tableBody.innerHTML = ""; // Clear existing rows
+    tableBody.innerHTML = "";
 
     pageData.forEach(truck => {
         const tr = document.createElement("tr");
@@ -519,7 +519,7 @@ fetchTrips();
     document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage}`;
 }
 
-        // Pagination functions
+     
         function changePage(direction) {
             const totalPages = Math.ceil(fleetData.length / rowsPerPage);
             currentPage += direction;
@@ -546,7 +546,7 @@ fetchTrips();
             renderTrucksTable();
         }
 
-        // Record management functions
+        
         function deleteRecord(id) {
     const confirmDelete = confirm("Are you sure you want to delete this record?");
     if (confirmDelete) {
@@ -559,7 +559,7 @@ fetchTrips();
         .then(data => {
             if (data.success) {
                 alert('Trip deleted successfully!');
-                fetchTrips(); // Reload the table
+                fetchTrips(); 
             } else {
                 alert('Error: ' + data.message);
             }
@@ -580,17 +580,17 @@ fetchTrips();
         }
 
         function editTrip(id) {
-    // Fetch the trip data first
+
     fetch(`include/handlers/get_trip.php?id=${id}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 const trip = data.trip;
                 
-                // Open the modal
+              
                 openTripModal();
                 
-                // Add a hidden input for the ID
+               
                 let idInput = document.getElementById('tripId');
                 if (!idInput) {
                     idInput = document.createElement('input');
@@ -600,7 +600,7 @@ fetchTrips();
                 }
                 idInput.value = trip.id;
                 
-                // Populate the form fields
+          
                 document.getElementById('plateNumber').value = trip.plateNumber;
                 document.getElementById('driver').value = trip.driver;
                 document.getElementById('helper').value = trip.helper;
@@ -612,7 +612,7 @@ fetchTrips();
                 document.getElementById('cashAdvance').value = trip.cashAdvance;
                 document.getElementById('status').value = trip.status;
                 
-                // Change the save function to update instead of create
+               
                 document.querySelector('#tripModal .save-btn').onclick = function() { updateTrip(); };
             } else {
                 alert('Failed to fetch trip data: ' + data.message);
@@ -646,7 +646,7 @@ function updateTrip() {
         if (data.success) {
             alert('Trip updated successfully!');
             closeModal('tripModal');
-            fetchTrips(); // Reload the table
+            fetchTrips(); 
         } else {
             alert('Error: ' + data.message);
         }
@@ -656,13 +656,13 @@ function updateTrip() {
 
 
         function editTruck(id) {
-            // Find the truck
+         
             const truck = trucksData.find(t => t.id === id);
             if (truck) {
-                // Open the modal
+               
                 openTruckModal();
                
-                // Populate the form fields
+               
                 document.getElementById('truckId').value = truck.truckId;
                 document.getElementById('truckDriver').value = truck.driver;
                 document.getElementById('truckDriverAssistant').value = truck.driverAssistant;
@@ -670,14 +670,14 @@ function updateTrip() {
             }
         }
 
-        // Close modal when clicking outside of it
+     
         window.onclick = function(event) {
             if (event.target.className === 'modal') {
                 event.target.style.display = "none";
             }
         };
 
-        // Initialize tables when page loads
+        
         window.onload = function() {
             renderTable();
             renderTrucksTable();

@@ -1,13 +1,13 @@
 <?php
 session_start();
-// Check if user is logged in
+
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    // Not logged in, redirect to login page
+
     header("Location: login.php");
     exit();
 }
 require_once 'include/handlers/dbhandler.php';
-// User is logged in, continue with the page
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -153,12 +153,12 @@ require_once 'include/handlers/dbhandler.php';
         let currentDriverId = null;
         let modalMode = 'add';
         
-        // Pagination variables
+       
         let driversData = [];
         let currentPage = 1;
         let rowsPerPage = 5;
 
-        // Fetch all drivers when page loads
+      
         $(document).ready(function() {
             fetchDrivers();
         });
@@ -191,7 +191,7 @@ require_once 'include/handlers/dbhandler.php';
     
     if (pageData.length > 0) {
         pageData.forEach(function(driver) {
-            // Format the last login time
+        
             let formattedLastLogin = formatTime(driver.last_login);
             
             var row = "<tr>" +
@@ -220,12 +220,12 @@ function formatTime(dateString) {
     
     const date = new Date(dateString);
     
-    // Format the time to 12-hour AM/PM format
+  
     const options = {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        hour12: true,  // 12-hour format
+        hour12: true,  
     };
     
     return date.toLocaleString('en-US', options);
@@ -237,15 +237,16 @@ function formatTime(dateString) {
         function updatePagination() {
     totalPages = Math.ceil(driversData.length / rowsPerPage);
     
-    // Clear previous page numbers
+   
+    
     $('#page-numbers').empty();
     
-    // Add page numbers with circular styling
+    
     for (var i = 1; i <= totalPages; i++) {
         var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
         var pageNumberElement = $(`<div class="${pageNumClass}">${i}</div>`);
         
-        // Add click event to each page number
+     
         pageNumberElement.on('click', function() {
             var page = parseInt($(this).text());
             goToPage(page);
@@ -254,7 +255,8 @@ function formatTime(dateString) {
         $('#page-numbers').append(pageNumberElement);
     }
     
-    // Enable/disable prev/next buttons
+   
+    
     $('#prevPageBtn').prop('disabled', currentPage === 1);
     $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
 }
@@ -275,7 +277,7 @@ function changePage(step) {
     }
 }
 
-// Update event handlers for page navigation
+
 $('#prevPageBtn').on('click', function() {
     changePage(-1);
 });
@@ -299,7 +301,7 @@ $(document).on('click', '.page-number', function() {
                 document.getElementById("driverId").value = "";
             } else {
                 document.getElementById("modalTitle").textContent = "Edit Driver";
-                // The data will be populated in the editDriver function
+               
             }
             
             document.getElementById("driverModal").style.display = "block";
@@ -310,7 +312,7 @@ $(document).on('click', '.page-number', function() {
         }
 
         function editDriver(driverId) {
-            // Fetch driver data using AJAX
+          
             $.ajax({
                 url: 'include/handlers/get_driver.php?id=' + driverId,
                 type: 'GET',
@@ -319,17 +321,17 @@ $(document).on('click', '.page-number', function() {
                     if (data.success) {
                         const driver = data.driver;
                         
-                        // Populate the form with driver data
+                       
                         document.getElementById("driverId").value = driver.driver_id;
                         document.getElementById("driverName").value = driver.name;
                         document.getElementById("driverEmail").value = driver.email;
                         document.getElementById("firebaseUid").value = driver.firebase_uid || '';
-                        // Don't pre-fill password for security reasons
+                   
                         document.getElementById("password").value = '';
                         document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
                         document.getElementById("lastLogin").value = driver.last_login === 'NULL' ? '' : (driver.last_login || '');
                         
-                        // Open the modal in edit mode
+                      
                         openModal('edit', driverId);
                     } else {
                         alert("Error fetching driver data: " + data.message);
@@ -344,7 +346,7 @@ $(document).on('click', '.page-number', function() {
 
         function deleteDriver(driverId) {
             if (confirm("Are you sure you want to delete this driver?")) {
-                // Send AJAX request to delete the driver
+               
                 $.ajax({
                     url: 'include/handlers/delete_driver.php',
                     type: 'POST',
@@ -353,7 +355,7 @@ $(document).on('click', '.page-number', function() {
                     success: function(data) {
                         if (data.success) {
                             alert("Driver deleted successfully.");
-                            // Refresh the data without reloading the page
+                         
                             fetchDrivers();
                         } else {
                             alert("Error deleting driver: " + data.message);
@@ -367,7 +369,7 @@ $(document).on('click', '.page-number', function() {
             }
         }
 
-        // Event listener for the form submission
+       
         document.getElementById("driverForm").addEventListener("submit", function(e) {
             e.preventDefault();
             
@@ -382,7 +384,7 @@ $(document).on('click', '.page-number', function() {
                 mode: modalMode
             };
             
-            // Send AJAX request to save the driver
+           
             $.ajax({
                 url: 'include/handlers/save_driver.php',
                 type: 'POST',
@@ -391,7 +393,7 @@ $(document).on('click', '.page-number', function() {
                 success: function(data) {
                     if (data.success) {
                         alert(modalMode === 'add' ? "Driver added successfully." : "Driver updated successfully.");
-                        // Refresh the data without reloading the page
+                   
                         fetchDrivers();
                         closeModal();
                     } else {
@@ -405,7 +407,7 @@ $(document).on('click', '.page-number', function() {
             });
         });
 
-        // When the user clicks anywhere outside of the modal, close it
+     
         window.onclick = function(event) {
             const modal = document.getElementById("driverModal");
             if (event.target == modal) {
