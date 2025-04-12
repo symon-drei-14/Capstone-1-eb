@@ -419,14 +419,15 @@ var totalPages = 0;
     var pageData = eventsData.slice(startIndex, Math.min(endIndex, eventsData.length));
     
     pageData.forEach(function(event) {
-
-        //inadd for time
-        var time = new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
+        // Format date and time properly
+        var dateObj = new Date(event.date);
+        var formattedDate = dateObj.toLocaleDateString();
+        var formattedTime = moment(dateObj).format('h:mm A'); // Use moment.js for consistent formatting
+        
         var row = `<tr>
             <td>${event.plateNo}</td>
-            <td>${event.date}</td>
-             <td>${time}</td>
+            <td>${formattedDate}</td>
+            <td>${formattedTime}</td>
             <td>${event.driver}</td>
             <td>${event.helper}</td>
             <td>${event.containerNo}</td>
@@ -516,23 +517,53 @@ $('#nextPageBtn').on('click', function() {
 });
 
             // Initialize Calendar
-            $('#calendar').fullCalendar({
-                header: { 
-                    left: 'prev,next today', 
-                    center: 'title', 
-                    right: 'month,agendaWeek,agendaDay' 
-                },
-                events: calendarEvents,
-                eventRender: function(event, element) {
-                    element.find('.fc-title').css({
+//             $('#calendar').fullCalendar({
+//     header: { 
+//         left: 'prev,next today', 
+//         center: 'title', 
+//         right: 'month,agendaWeek,agendaDay' 
+//     },
+//     events: calendarEvents,
+//     eventRender: function(event, element) {
+//     element.find('.fc-title').css({
+//         'white-space': 'normal',
+//         'overflow': 'visible'
+//     });
+    
+//     // Format the time properly with AM/PM without any prefix
+//     var formattedTime = moment(event.start).format('h:mm A');
+    
+//     // Update event title to include properly formatted time
+//     element.find('.fc-title').html(formattedTime + ' ' + event.client + ' - ' + event.destination);
+    
+//     // Customize event rendering based on status
+//     var statusClass = event.status.toLowerCase();
+//     element.addClass(statusClass);
+// },
+$('#calendar').fullCalendar({
+    header: { 
+        left: 'prev,next today', 
+        center: 'title', 
+        right: 'month,agendaWeek,agendaDay' 
+    },
+    events: calendarEvents,
+    timeFormat: 'h:mm A', // Explicitly define time format
+    displayEventTime: true, // Show the time
+    displayEventEnd: false, // Don't show end time
+    eventRender: function(event, element) {
+        element.find('.fc-title').css({
             'white-space': 'normal',
             'overflow': 'visible'
         });
-                    // Customize event rendering
-                    var statusClass = event.status.toLowerCase();
-                    element.addClass(statusClass);
-                },
-                dayClick: function(date, jsEvent, view) {
+        
+        // Update event title WITHOUT adding the time (FullCalendar will handle time display)
+        element.find('.fc-title').html(event.client + ' - ' + event.destination);
+        
+        // Customize event rendering based on status
+        var statusClass = event.status.toLowerCase();
+        element.addClass(statusClass);
+    },
+    dayClick: function(date, jsEvent, view) {
     var clickedDay = $(this);
     
     $('.fc-day').removeClass('fc-day-selected');
@@ -555,6 +586,7 @@ $('#nextPageBtn').on('click', function() {
                 <li class="event-item">
                     <p><strong>Plate No:</strong> ${event.plateNo}</p>
                     <p><strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}</p>
+                    <p><strong>Time:</strong> ${moment(event.start).format('h:mm A')}</p>
                     <p><strong>Driver:</strong> ${event.driver}</p>
                     <p><strong>Helper:</strong> ${event.helper}</p>
                     <p><strong>Client:</strong> ${event.client}</p>
