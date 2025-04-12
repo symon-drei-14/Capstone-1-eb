@@ -210,6 +210,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         
         // Load data when page loads
         $(document).ready(function() {
+            
             loadMaintenanceData();
         });
         
@@ -354,14 +355,16 @@ function renderTable(data) {
             document.getElementById("maintenanceModal").style.display = "block";
             
             if (mode === 'add') {
-                isEditing = false;
-                document.getElementById("modalTitle").textContent = "Add Maintenance Schedule";
-                document.getElementById("maintenanceForm").reset();
-                document.getElementById("maintenanceId").value = "";
-                // Set today's date as default
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById("date").value = today;
-            }
+    isEditing = false;
+    document.getElementById("modalTitle").textContent = "Add Maintenance Schedule";
+    document.getElementById("maintenanceForm").reset();
+    document.getElementById("maintenanceId").value = "";
+    
+    // Set today's date as default and disable past dates
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("date").value = today;
+    document.getElementById("date").setAttribute("min", today); // ✅ Disables past dates
+}
         }
         
         // Open edit modal with data

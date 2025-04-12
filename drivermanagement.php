@@ -19,6 +19,9 @@ require_once 'include/handlers/dbhandler.php';
     <link rel="stylesheet" href="include/drivermanagement.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+<style>
+    
+    </style>
 <body>
 <header class="header">
         <div class="logo-container">
@@ -136,9 +139,9 @@ require_once 'include/handlers/dbhandler.php';
             
             <label for="assignedTruck">Assigned Truck ID</label>
             <input type="text" id="assignedTruck" name="assignedTruck">
-            
+
             <label for="lastLogin">Last Login</label>
-            <input type="text" id="lastLogin" name="lastLogin" placeholder="YYYY-MM-DD HH:MM:SS">
+            <input type="datetime-local" id="lastLogin" name="lastLogin">
 
             <button type="submit" id="saveButton">Save</button>
             <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
@@ -180,34 +183,54 @@ require_once 'include/handlers/dbhandler.php';
             });
         }
 
-        function renderTable() {
-            $('#driverTableBody').empty();
-            var startIndex = (currentPage - 1) * rowsPerPage;
-            var endIndex = startIndex + rowsPerPage;
-            var pageData = driversData.slice(startIndex, Math.min(endIndex, driversData.length));
+      function renderTable() {
+    $('#driverTableBody').empty();
+    var startIndex = (currentPage - 1) * rowsPerPage;
+    var endIndex = startIndex + rowsPerPage;
+    var pageData = driversData.slice(startIndex, Math.min(endIndex, driversData.length));
+    
+    if (pageData.length > 0) {
+        pageData.forEach(function(driver) {
+            // Format the last login time
+            let formattedLastLogin = formatTime(driver.last_login);
             
-            if (pageData.length > 0) {
-                pageData.forEach(function(driver) {
-                    var row = "<tr>" +
-                        "<td>" + driver.driver_id + "</td>" +
-                        "<td>" + driver.name + "</td>" +
-                        "<td>" + driver.email + "</td>" +
-                        "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
-                        "<td>" + driver.created_at + "</td>" +
-                        "<td>" + (driver.last_login || 'Never') + "</td>" +
-                        "<td class='actions'>" +
-                        "<button class='edit' onclick='editDriver(\"" + driver.driver_id + "\")'>Edit</button>" +
-                        "<button class='delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>Delete</button>" +
-                        "</td>" +
-                        "</tr>";
-                    $('#driverTableBody').append(row);
-                });
-            } else {
-                $('#driverTableBody').append("<tr><td colspan='7'>No drivers found</td></tr>");
-            }
-            
-            updatePagination();
-        }
+            var row = "<tr>" +
+                "<td>" + driver.driver_id + "</td>" +
+                "<td>" + driver.name + "</td>" +
+                "<td>" + driver.email + "</td>" +
+                "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
+                "<td>" + driver.created_at + "</td>" +
+                "<td>" + formattedLastLogin + "</td>" +
+                "<td class='actions'>" +
+                "<button class='edit' onclick='editDriver(\"" + driver.driver_id + "\")'>Edit</button>" +
+                "<button class='delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>Delete</button>" +
+                "</td>" +
+                "</tr>";
+            $('#driverTableBody').append(row);
+        });
+    } else {
+        $('#driverTableBody').append("<tr><td colspan='7'>No drivers found</td></tr>");
+    }
+    
+    updatePagination();
+}
+
+function formatTime(dateString) {
+    if (!dateString || dateString === 'NULL') return 'Never';
+    
+    const date = new Date(dateString);
+    
+    // Format the time to 12-hour AM/PM format
+    const options = {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,  // 12-hour format
+    };
+    
+    return date.toLocaleString('en-US', options);
+}
+
         
         let totalPages = 0;
 

@@ -185,9 +185,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <label for="editEventPlateNo">Plate No.:</label><br>
                 <input type="text" id="editEventPlateNo" name="eventPlateNo" required><br><br>
         
-                <label for="editEventDate">Date:</label><br>
-                <input type="date" id="editEventDate" name="eventDate" required><br><br>
-        
+                <label for="editEventDate">Date & Time:</label><br>
+                <input type="datetime-local" id="editEventDate" name="editEventDate" required><br><br>
+
                 <label for="editEventDriver">Driver:</label><br>
                 <input type="text" id="editEventDriver" name="eventDriver" required><br><br>
         
@@ -236,8 +236,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <label for="addEventPlateNo">Plate No.:</label><br>
                 <input type="text" id="addEventPlateNo" name="eventPlateNo" required><br><br>
         
-                <label for="addEventDate">Date:</label><br>
-                <input type="date" id="addEventDate" name="eventDate" required><br><br>
+                <label for="addEventDate">Date & Time:</label><br>
+                <input type="datetime-local" id="addEventDate" name="eventDate" required><br><br>
+
         
                 <label for="addEventDriver">Driver:</label><br>
                 <input type="text" id="addEventDriver" name="eventDriver" required><br><br>
@@ -298,6 +299,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <tr>
                     <th>Plate No.</th>
                     <th>Date</th>
+                    <th>Time</th>
                     <th>Driver</th>
                     <th>Helper</th>
                     <th>Container No.</th>
@@ -331,6 +333,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <script>
         $(document).ready(function() {
             // Load events data from PHP
+            let now = new Date();
+            let formattedNow = now.toISOString().slice(0,16); // "YYYY-MM-DDTHH:MM"
+            $('#editEventDate').attr('min', formattedNow);
+            $('#addEventDate').attr('min', formattedNow); // Optional if you have a separate add form   
             var eventsData = <?php echo $eventsDataJson; ?>;
             
             // Format the data for fullCalendar
@@ -413,9 +419,14 @@ var totalPages = 0;
     var pageData = eventsData.slice(startIndex, Math.min(endIndex, eventsData.length));
     
     pageData.forEach(function(event) {
+
+        //inadd for time
+        var time = new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
         var row = `<tr>
             <td>${event.plateNo}</td>
             <td>${event.date}</td>
+             <td>${time}</td>
             <td>${event.driver}</td>
             <td>${event.helper}</td>
             <td>${event.containerNo}</td>
@@ -729,6 +740,8 @@ $('#nextPageBtn').on('click', function() {
             // Initial render
             renderTable();
         });
+
+        
     </script>
 </body>
 </html>
