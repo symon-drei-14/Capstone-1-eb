@@ -248,9 +248,8 @@ margin-top:15px;
 /* Modal styles */
 .modal {
     display: none;
-    margin-top: 80px;
     position: fixed;
-    z-index: 1000;
+    z-index: 11000;
     left: 0;
     top: 0;
     width: 100%;
@@ -261,10 +260,9 @@ margin-top:15px;
 
 .modal-content {
     background-color: #fff;
-    
     margin: 30px auto;
     padding: 20px 30px;
-    width: 100%;
+    width: 50%;
     max-width: 500px;
     border-radius: 0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);

@@ -152,47 +152,41 @@ $drivingDrivers = getDrivingDrivers();
         <table>
             <tr>
                 <th></th>
-                <th> Vehicle ID</th>
+                <th>Plate No.</th>
                 <th>Driver</th>
-                <th>Starting Route</th>
+                <th>Helper</th>
+                <th>Client</th>
                 <th>Delivery Address</th>
-                <th>Current Progress</th>
+                <th>Actions</th>
             </tr>
             <tr>
                 <td><i class="fa fa-automobile icon-bg2"></i></td>
-                <td>V001</td>
-                <td>Si Driver</td>
-                <td>New York</td>
+                <td>678 QRS</td>
+                <td>Jennnifer Mikaela</td>
+                <td>Iggy Iglaea</td>
+                <td>Mastabushi</td>
                 <td>Los Angeles</td>
-                <td>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: 50%;">50%</div>
-                    </div>
+                <td><button class="location">View Location</button></td>
+                   
                 </td>
             </tr>
             <tr>
                 <td><i class="fa fa-automobile icon-bg2"></i></td>
-                <td>V002</td>
-                <td>Si Driver</td>
-                <td>Chicago</td>
-                <td>Houston</td>
-                <td>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: 70%;">70%</div>
-                    </div>
-                </td>
+                <td>345 lmj</td>
+                <td>Ranielle</td>
+                <td>Vinz Aguilar</td>
+                <td>Toyota</td>
+                <td>Divisoria</td>
+                <td><button class="location">View Location</button></td>
             </tr>
             <tr>
                 <td><i class="fa fa-automobile icon-bg2"></i></td>
-                <td>V003</td>
-                <td>Si Driver</td>
-                <td>San Francisco</td>
-                <td>Seattle</td>
-                <td>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: 30%;">30%</div>
-                    </div>
-                </td>
+                <td>123 ABC</td>
+                <td>Mario Luigi</td>
+                <td>Kirby Yoshi</td>
+                <td>Mastabushi</td>
+                <td>Paranque</td>
+                <td><button class="location">View Location</button></td>
             </tr>
         </table>
     </div>
@@ -204,7 +198,7 @@ $drivingDrivers = getDrivingDrivers();
         <div id="shipmentStatisticsChart"></div> <!-- Added for line chart -->
     </div>
     <div class="card-small">
-        <h3>Driving Drivers</h3>
+        <h3>Active Drivers</h3>
         <?php
         // Check if there are any drivers with pending status
         if (count($drivingDrivers) > 0) {
@@ -318,12 +312,12 @@ $drivingDrivers = getDrivingDrivers();
             defaultView: 'agendaWeek',      // Start with week view
             views: {
                 agendaWeek: {
-                    titleFormat: 'YYYY-MM-DD',  // Display only the week title
+                    titleFormat: 'MM-DD-YYYY',  // Display only the week title
                 }
             },
             // Custom day render to highlight today's date
             dayRender: function(date, cell) {
-                var today = moment().format('YYYY-MM-DD');
+                var today = moment().format('MM-DD-YYYY');
                 if (date.format('YYYY-MM-DD') === today) {
                     // Apply a gray background for today's date
                     cell.css("background-color", "#e0e0e0");

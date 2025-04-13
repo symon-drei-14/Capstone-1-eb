@@ -21,15 +21,13 @@ if (!isset($data['name']) || !isset($data['email'])) {
 try {
     if ($data['mode'] === 'add') {
         // Adding a new driver
-        $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, firebase_uid, password, assigned_truck_id, created_at, last_login) 
-                               VALUES (?, ?, ?, ?, ?, NOW(), ?)");
+        $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, password, assigned_truck_id, created_at) 
+                               VALUES (?, ?, ?, ?, NOW())");
         
-        $lastLogin = !empty($data['lastLogin']) ? $data['lastLogin'] : null;
         $assignedTruck = !empty($data['assignedTruck']) ? $data['assignedTruck'] : null;
-        $firebaseUid = !empty($data['firebaseUid']) ? $data['firebaseUid'] : null;
         $password = !empty($data['password']) ? $data['password'] : null;
         
-        $stmt->bind_param("ssssss", $data['name'], $data['email'], $firebaseUid, $password, $assignedTruck, $lastLogin);
+        $stmt->bind_param("ssss", $data['name'], $data['email'], $password, $assignedTruck);
         
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Driver added successfully"]);
@@ -55,12 +53,6 @@ try {
             $types .= "s";
         }
         
-        if (isset($data['firebaseUid'])) {
-            $updateFields[] = "firebase_uid = ?";
-            $params[] = $data['firebaseUid'] ?: null;
-            $types .= "s";
-        }
-        
         if (isset($data['password'])) {
             $updateFields[] = "password = ?";
             $params[] = $data['password'] ?: null;
@@ -70,12 +62,6 @@ try {
         if (isset($data['assignedTruck'])) {
             $updateFields[] = "assigned_truck_id = ?";
             $params[] = $data['assignedTruck'] ?: null;
-            $types .= "s";
-        }
-        
-        if (isset($data['lastLogin'])) {
-            $updateFields[] = "last_login = ?";
-            $params[] = $data['lastLogin'] ?: null;
             $types .= "s";
         }
         

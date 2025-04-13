@@ -73,6 +73,7 @@ body{
     
             .events-table {
         width: 100%;
+        /* table-layout: fixed; eto pinaltan */
         border-collapse: collapse;
         margin-top: 10px;
         margin-bottom: 20px;
@@ -96,7 +97,7 @@ body{
         text-align: center;
         border-radius: 1px;
         word-wrap: break-word;
-        font-size: 16px;
+        font-size: 15px;
     }
     
     .events-table th {
@@ -304,6 +305,17 @@ body{
         border: none;
         margin-bottom: 2px;
         width: 80px;
+    }
+
+    .edit-btn2{
+        background-color: #28a7a7   ;
+        padding: 10px 20px;
+        border-radius: 5px;
+        color: white;
+        border: none;
+        margin-bottom: 2px;
+        width: 80px;
+        font-size: 10px;
     }
     
     .delete-btn{

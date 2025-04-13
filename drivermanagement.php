@@ -131,17 +131,11 @@ require_once 'include/handlers/dbhandler.php';
             <label for="driverEmail">Email</label>
             <input type="email" id="driverEmail" name="driverEmail" required>
             
-            <label for="firebaseUid">Firebase UID</label>
-            <input type="text" id="firebaseUid" name="firebaseUid">
-            
             <label for="password">Password</label>
             <input type="password" id="password" name="password">
             
             <label for="assignedTruck">Assigned Truck ID</label>
             <input type="text" id="assignedTruck" name="assignedTruck">
-
-            <label for="lastLogin">Last Login</label>
-            <input type="datetime-local" id="lastLogin" name="lastLogin">
 
             <button type="submit" id="saveButton">Save</button>
             <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
@@ -325,13 +319,9 @@ $(document).on('click', '.page-number', function() {
                         document.getElementById("driverId").value = driver.driver_id;
                         document.getElementById("driverName").value = driver.name;
                         document.getElementById("driverEmail").value = driver.email;
-                        document.getElementById("firebaseUid").value = driver.firebase_uid || '';
-                   
                         document.getElementById("password").value = '';
                         document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
-                        document.getElementById("lastLogin").value = driver.last_login === 'NULL' ? '' : (driver.last_login || '');
                         
-                      
                         openModal('edit', driverId);
                     } else {
                         alert("Error fetching driver data: " + data.message);
@@ -377,10 +367,8 @@ $(document).on('click', '.page-number', function() {
                 driverId: document.getElementById("driverId").value,
                 name: document.getElementById("driverName").value,
                 email: document.getElementById("driverEmail").value,
-                firebaseUid: document.getElementById("firebaseUid").value,
                 password: document.getElementById("password").value,
                 assignedTruck: document.getElementById("assignedTruck").value,
-                lastLogin: document.getElementById("lastLogin").value,
                 mode: modalMode
             };
             

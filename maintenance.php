@@ -18,7 +18,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     
     <link rel="stylesheet" href="include/sidenav.css">
     <link rel="stylesheet" href="include/maintenancestyle.css">
-    <!-- Add jQuery -->
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <style>
