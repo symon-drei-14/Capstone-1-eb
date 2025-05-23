@@ -180,7 +180,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     </div>
 
 
-    <div id="editModal" class="modal">
+    <!-- <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h3>Edit Event</h3>
@@ -196,7 +196,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <label for="editEventDriver">Driver:</label><br>
                 <select id="editEventDriver" name="eventDriver" required>
                     <option value="">Select Driver</option>
-                    <!-- Drivers will be populated by JavaScript -->
+                   
                 </select><br><br>
         
                 <label for="editEventHelper">Helper:</label><br>
@@ -234,9 +234,100 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <button type="button" class="close-btn cancel-btn">Cancel</button>
             </form>
         </div>
-    </div>
+    </div> -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Edit Event</h3>
+        <form id="editForm">
+            <input type="hidden" id="editEventId" name="eventId">
+            
+            <label for="editEventPlateNo">Plate No.:</label><br>
+            <input type="text" id="editEventPlateNo" name="eventPlateNo" required><br><br>
     
-    <div id="addScheduleModal" class="modal">
+            <label for="editEventDate">Date & Time:</label><br>
+            <input type="datetime-local" id="editEventDate" name="editEventDate" required><br><br>
+
+            <label for="editEventDriver">Driver:</label><br>
+            <select id="editEventDriver" name="eventDriver" required>
+                <option value="">Select Driver</option>
+                <!-- Drivers will be populated by JavaScript -->
+            </select><br><br>
+    
+            <label for="editEventHelper">Helper:</label><br>
+            <input type="text" id="editEventHelper" name="eventHelper" required><br><br>
+    
+            <label for="editEventContainerNo">Container No.:</label><br>
+            <select id="editEventContainerNo" name="eventContainerNo" required>
+                <option value="">Select Container No.</option>
+                <option value="TCLU1234567">TCLU1234567</option>
+                <option value="TEMU9876543">TEMU9876543</option>
+                <option value="SEGU5678912">SEGU5678912</option>
+                <option value="CMAU3456789">CMAU3456789</option>
+                <option value="APHU8765432">APHU8765432</option>
+            </select><br><br>
+    
+            <label for="editEventClient">Client:</label><br>
+            <select id="editEventClient" name="eventClient" required>
+                <option value="">Select Client</option>
+                <option value="Maersk">Maersk</option>
+                <option value="MSC">MSC</option>
+                <option value="COSCO">COSCO</option>
+                <option value="CMA CGM">CMA CGM</option>
+                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+                <option value="Evergreen">Evergreen</option>
+            </select><br><br>
+    
+            <label for="editEventDestination">Destination:</label><br>
+            <select id="editEventDestination" name="eventDestination" required>
+                <option value="">Select Destination</option>
+                <option value="Manila Port">Manila Port</option>
+                <option value="Batangas Port">Batangas Port</option>
+                <option value="Subic Port">Subic Port</option>
+                <option value="Cebu Port">Cebu Port</option>
+                <option value="Davao Port">Davao Port</option>
+            </select><br><br>
+    
+            <label for="editEventShippingLine">Shipping Line:</label><br>
+            <select id="editEventShippingLine" name="eventShippingLine" required>
+                <option value="">Select Shipping Line</option>
+                <option value="Maersk Line">Maersk Line</option>
+                <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
+                <option value="COSCO Shipping">COSCO Shipping</option>
+                <option value="CMA CGM">CMA CGM</option>
+                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+            </select><br><br>
+    
+            <label for="editEventConsignee">Consignee:</label><br>
+            <input type="text" id="editEventConsignee" name="eventConsignee" required><br><br>
+    
+            <label for="editEventSize">Size:</label><br>
+            <select id="editEventSize" name="eventSize" required>
+                <option value="">Select Size</option>
+                <option value="20ft">20ft</option>
+                <option value="40ft">40ft</option>
+                <option value="40ft HC">40ft HC</option>
+                <option value="45ft">45ft</option>
+            </select><br><br>
+    
+            <label for="editEventCashAdvance">Cash Advance:</label><br>
+            <input type="text" id="editEventCashAdvance" name="eventCashAdvance" required><br><br>
+    
+            <label for="editEventStatus">Status:</label><br>
+            <select id="editEventStatus" name="eventStatus" required>
+                <option value="Completed">Completed</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancelled">Cancelled</option>
+            </select><br><br>
+    
+            <button type="submit">Save Changes</button>
+            <button type="button" class="close-btn cancel-btn">Cancel</button>
+        </form>
+    </div>
+</div>
+
+    
+    <!-- <div id="addScheduleModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Add Schedule</h2>
@@ -250,7 +341,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <label for="addEventDriver">Driver:</label><br>
                 <select id="addEventDriver" name="eventDriver" required>
                     <option value="">Select Driver</option>
-                    <!-- Drivers will be populated by JavaScript -->
+             
                 </select><br><br>
         
                 <label for="addEventHelper">Helper:</label><br>
@@ -284,12 +375,102 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     <option value="Cancelled">Cancelled</option>
                 </select><br><br>
         
-                <!-- Save and Cancel buttons -->
+           
                 <button type="submit">Save Schedule</button>
                 <button type="button" class="close-btn cancel-btn">Cancel</button>
             </form>
         </div>
+    </div> -->
+
+    <div id="addScheduleModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Add Schedule</h2>
+        <form id="addScheduleForm">
+            <label for="addEventPlateNo">Plate No.:</label><br>
+            <input type="text" id="addEventPlateNo" name="eventPlateNo" required><br><br>
+    
+            <label for="addEventDate">Date & Time:</label><br>
+            <input type="datetime-local" id="addEventDate" name="eventDate" required><br><br>
+
+            <label for="addEventDriver">Driver:</label><br>
+            <select id="addEventDriver" name="eventDriver" required>
+                <option value="">Select Driver</option>
+                <!-- Drivers will be populated by JavaScript -->
+            </select><br><br>
+    
+            <label for="addEventHelper">Helper:</label><br>
+            <input type="text" id="addEventHelper" name="eventHelper" required><br><br>
+    
+            <label for="addEventContainerNo">Container No.:</label><br>
+            <select id="addEventContainerNo" name="eventContainerNo" required>
+                <option value="">Select Container No.</option>
+                <option value="TCLU1234567">TCLU1234567</option>
+                <option value="TEMU9876543">TEMU9876543</option>
+                <option value="SEGU5678912">SEGU5678912</option>
+                <option value="CMAU3456789">CMAU3456789</option>
+                <option value="APHU8765432">APHU8765432</option>
+            </select><br><br>
+    
+            <label for="addEventClient">Client:</label><br>
+            <select id="addEventClient" name="eventClient" required>
+                <option value="">Select Client</option>
+                <option value="Maersk">Maersk</option>
+                <option value="MSC">MSC</option>
+                <option value="COSCO">COSCO</option>
+                <option value="CMA CGM">CMA CGM</option>
+                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+                <option value="Evergreen">Evergreen</option>
+            </select><br><br>
+    
+            <label for="addEventDestination">Destination:</label><br>
+            <select id="addEventDestination" name="eventDestination" required>
+                <option value="">Select Destination</option>
+                <option value="Manila Port">Manila Port</option>
+                <option value="Batangas Port">Batangas Port</option>
+                <option value="Subic Port">Subic Port</option>
+                <option value="Cebu Port">Cebu Port</option>
+                <option value="Davao Port">Davao Port</option>
+            </select><br><br>
+    
+            <label for="addEventShippingLine">Shipping Line:</label><br>
+            <select id="addEventShippingLine" name="eventShippingLine" required>
+                <option value="">Select Shipping Line</option>
+                <option value="Maersk Line">Maersk Line</option>
+                <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
+                <option value="COSCO Shipping">COSCO Shipping</option>
+                <option value="CMA CGM">CMA CGM</option>
+                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+            </select><br><br>
+    
+            <label for="addEventConsignee">Consignee:</label><br>
+            <input type="text" id="addEventConsignee" name="eventConsignee" required><br><br>
+    
+            <label for="addEventSize">Size:</label><br>
+            <select id="addEventSize" name="eventSize" required>
+                <option value="">Select Size</option>
+                <option value="20ft">20ft</option>
+                <option value="40ft">40ft</option>
+                <option value="40ft HC">40ft HC</option>
+                <option value="45ft">45ft</option>
+            </select><br><br>
+    
+            <label for="addEventCashAdvance">Cash Advance:</label><br>
+            <input type="text" id="addEventCashAdvance" name="eventCashAdvance" required><br><br>
+    
+            <label for="addEventStatus">Status:</label><br>
+            <select id="addEventStatus" name="eventStatus" required>
+                <option value="Completed">Completed</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancelled">Cancelled</option>
+            </select><br><br>
+    
+            <!-- Save and Cancel buttons -->
+            <button type="submit">Save Schedule</button>
+            <button type="button" class="close-btn cancel-btn">Cancel</button>
+        </form>
     </div>
+</div>
     
     <div id="deleteConfirmModal" class="modal">
         <div class="modal-content">
