@@ -29,7 +29,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         padding: 30px;
         background-color: #ffffff;
         border-radius: 8px;
-    
         display: relative;
         margin: 50px;
         margin-top: 100px;
@@ -53,6 +52,204 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     
     .event-list li {
         margin: 10px 0;
+    }
+
+    .event-item {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
+
+    .event-thumbnail {
+        cursor: pointer;
+        padding: 10px;
+        background-color: #f5f5f5;
+    }
+
+    .event-details {
+        padding: 10px;
+        border-top: 1px solid #ccc;
+        background-color: #fff;
+    }
+
+    .status {
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+
+    .status.completed {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status.pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .status.cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+        border-radius: 5px;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover {
+        color: black;
+    }
+
+    button {
+        padding: 8px 15px;
+        margin: 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    button.edit-btn {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    button.delete-btn {
+        background-color: #f44336;
+        color: white;
+    }
+
+    button.close-btn {
+        background-color: #ccc;
+    }
+
+    button.cancel-btn {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    button:hover {
+        opacity: 0.8;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .toggle-btns {
+        margin-bottom: 15px;
+    }
+
+    .toggle-btn {
+        padding: 8px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 5px;
+    }
+
+    .toggle-btn.active {
+        background-color: #0056b3;
+    }
+
+    .events-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .events-table th, .events-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    .events-table th {
+        background-color: #f2f2f2;
+    }
+
+    .events-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination {
+        display: flex;
+        align-items: center;
+    }
+
+    .page-numbers {
+        display: flex;
+        margin: 0 10px;
+    }
+
+    .page-number {
+        padding: 5px 10px;
+        margin: 0 2px;
+        cursor: pointer;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+    }
+
+    .page-number.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .prev, .next {
+        padding: 5px 10px;
+        cursor: pointer;
+        border: 1px solid #ddd;
+        background-color: #f8f9fa;
+    }
+
+    .prev:hover, .next:hover {
+        background-color: #e9ecef;
+    }
+
+    .prev:disabled, .next:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
     }
 </style>
 <body>
@@ -113,7 +310,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
             <div class="profile-name">
         <?php 
-        echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+        echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User ';
         ?>
     </div>
         </div>
@@ -179,62 +376,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         </section>
     </div>
 
-
-    <!-- <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Edit Event</h3>
-            <form id="editForm">
-                <input type="hidden" id="editEventId" name="eventId">
-                
-                <label for="editEventPlateNo">Plate No.:</label><br>
-                <input type="text" id="editEventPlateNo" name="eventPlateNo" required><br><br>
-        
-                <label for="editEventDate">Date & Time:</label><br>
-                <input type="datetime-local" id="editEventDate" name="editEventDate" required><br><br>
-
-                <label for="editEventDriver">Driver:</label><br>
-                <select id="editEventDriver" name="eventDriver" required>
-                    <option value="">Select Driver</option>
-                   
-                </select><br><br>
-        
-                <label for="editEventHelper">Helper:</label><br>
-                <input type="text" id="editEventHelper" name="eventHelper" required><br><br>
-        
-                <label for="editEventContainerNo">Container No.:</label><br>
-                <input type="text" id="editEventContainerNo" name="eventContainerNo" required><br><br>
-        
-                <label for="editEventClient">Client:</label><br>
-                <input type="text" id="editEventClient" name="eventClient" required><br><br>
-        
-                <label for="editEventDestination">Destination:</label><br>
-                <input type="text" id="editEventDestination" name="eventDestination" required><br><br>
-        
-                <label for="editEventShippingLine">Shipping Line:</label><br>
-                <input type="text" id="editEventShippingLine" name="eventShippingLine" required><br><br>
-        
-                <label for="editEventConsignee">Consignee:</label><br>
-                <input type="text" id="editEventConsignee" name="eventConsignee" required><br><br>
-        
-                <label for="editEventSize">Size:</label><br>
-                <input type="text" id="editEventSize" name="eventSize" required><br><br>
-        
-                <label for="editEventCashAdvance">Cash Advance:</label><br>
-                <input type="text" id="editEventCashAdvance" name="eventCashAdvance" required><br><br>
-        
-                <label for="editEventStatus">Status:</label><br>
-                <select id="editEventStatus" name="eventStatus" required>
-                    <option value="Completed">Completed</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select><br><br>
-        
-                <button type="submit">Save Changes</button>
-                <button type="button" class="close-btn cancel-btn">Cancel</button>
-            </form>
-        </div>
-    </div> -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
@@ -325,62 +466,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         </form>
     </div>
 </div>
-
-    
-    <!-- <div id="addScheduleModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Add Schedule</h2>
-            <form id="addScheduleForm">
-                <label for="addEventPlateNo">Plate No.:</label><br>
-                <input type="text" id="addEventPlateNo" name="eventPlateNo" required><br><br>
-        
-                <label for="addEventDate">Date & Time:</label><br>
-                <input type="datetime-local" id="addEventDate" name="eventDate" required><br><br>
-
-                <label for="addEventDriver">Driver:</label><br>
-                <select id="addEventDriver" name="eventDriver" required>
-                    <option value="">Select Driver</option>
-             
-                </select><br><br>
-        
-                <label for="addEventHelper">Helper:</label><br>
-                <input type="text" id="addEventHelper" name="eventHelper" required><br><br>
-        
-                <label for="addEventContainerNo">Container No.:</label><br>
-                <input type="text" id="addEventContainerNo" name="eventContainerNo" required><br><br>
-        
-                <label for="addEventClient">Client:</label><br>
-                <input type="text" id="addEventClient" name="eventClient" required><br><br>
-        
-                <label for="addEventDestination">Destination:</label><br>
-                <input type="text" id="addEventDestination" name="eventDestination" required><br><br>
-        
-                <label for="addEventShippingLine">Shipping Line:</label><br>
-                <input type="text" id="addEventShippingLine" name="eventShippingLine" required><br><br>
-        
-                <label for="addEventConsignee">Consignee:</label><br>
-                <input type="text" id="addEventConsignee" name="eventConsignee" required><br><br>
-        
-                <label for="addEventSize">Size:</label><br>
-                <input type="text" id="addEventSize" name="eventSize" required><br><br>
-        
-                <label for="addEventCashAdvance">Cash Advance:</label><br>
-                <input type="text" id="addEventCashAdvance" name="eventCashAdvance" required><br><br>
-        
-                <label for="addEventStatus">Status:</label><br>
-                <select id="addEventStatus" name="eventStatus" required>
-                    <option value="Completed">Completed</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select><br><br>
-        
-           
-                <button type="submit">Save Schedule</button>
-                <button type="button" class="close-btn cancel-btn">Cancel</button>
-            </form>
-        </div>
-    </div> -->
 
     <div id="addScheduleModal" class="modal">
     <div class="modal-content">
@@ -611,7 +696,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
                     <td>
                         <button class="edit-btn" data-id="${event.id}">Edit</button>
-                           <button class="edit-btn2" data-id="${event.id1}">Expense</button>
                         <button class="delete-btn" data-id="${event.id}">Delete</button>
                     </td>
                 </tr>`;
@@ -703,29 +787,38 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 
                 if (eventsOnDay.length > 0) {
                     eventsOnDay.forEach(function(event) {
-                        var eventDetailsHtml = `
+                        var eventItem = `
                             <li class="event-item">
-                                <p><strong>Plate No:</strong> ${event.plateNo}</p>
-                                <p><strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}</p>
-                                <p><strong>Time:</strong> ${moment(event.start).format('h:mm A')}</p>
-                                <p><strong>Driver:</strong> ${event.driver}</p>
-                                <p><strong>Helper:</strong> ${event.helper}</p>
-                                <p><strong>Client:</strong> ${event.client}</p>
-                                <p><strong>Destination:</strong> ${event.destination}</p>
-                                <p><strong>Container No.:</strong> ${event.containerNo}</p>
-                                <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
-                                <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
-                                <div class="event-actions">
-                                    <button class="edit-btn" data-id="${event.id}">Edit</button>
-                                    <button class="delete-btn" data-id="${event.id}">Delete</button>
+                                <div class="event-thumbnail">
+                                    <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
+                                    <strong>Plate No:</strong> ${event.plateNo}<br>
+                                    <strong>Destination:</strong> ${event.destination}
+                                </div>
+                                <div class="event-details" style="display: none;">
+                                    <p><strong>Driver:</strong> ${event.driver}</p>
+                                    <p><strong>Helper:</strong> ${event.helper}</p>
+                                    <p><strong>Client:</strong> ${event.client}</p>
+                                    <p><strong>Container No.:</strong> ${event.containerNo}</p>
+                                    <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
+                                    <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
+                                    <div class="event-actions">
+                                        <button class="edit-btn" data-id="${event.id}">Edit</button>
+                                        <button class="delete-btn" data-id="${event.id}">Delete</button>
+                                    </div>
                                 </div>
                             </li>
                         `;
-                        $('#eventList').append(eventDetailsHtml);
+                        $('#eventList').append(eventItem);
                     });
                 } else {
                     $('#noEventsMessage').show();
                 }
+
+                // Toggle event details on thumbnail click
+                $('.event-thumbnail').on('click', function() {
+                    $(this).next('.event-details').toggle();
+                    $(this).parent('.event-item').toggleClass('expanded');
+                });
             }
         });
         
@@ -859,38 +952,35 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             });
         });
             
-         
-            $('#confirmDeleteBtn').on('click', function() {
-                var eventId = $('#deleteEventId').val();
-                
-                $.ajax({
-                    url: 'include/handlers/trip_operations.php',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        action: 'delete',
-                        id: eventId
-                    }),
-                    success: function(response) {
-                        if (response.success) {
-                            alert('Trip deleted successfully!');
-                            $('#deleteConfirmModal').hide();
-                            location.reload(); 
-                        } else {
-                            alert('Error: ' + response.message);
-                        }
-                    },
-                    error: function() {
-                        alert('Server error occurred');
-                    }
-                });
-            });
+        $('#confirmDeleteBtn').on('click', function() {
+            var eventId = $('#deleteEventId').val();
             
-            // Initial render
-            renderTable();
+            $.ajax({
+                url: 'include/handlers/trip_operations.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'delete',
+                    id: eventId
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        alert('Trip deleted successfully!');
+                        $('#deleteConfirmModal').hide();
+                        location.reload(); 
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Server error occurred');
+                }
+            });
         });
-
         
-    </script>
+        // Initial render
+        renderTable();
+    });
+</script>
 </body>
 </html>
