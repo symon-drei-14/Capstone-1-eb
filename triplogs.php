@@ -54,202 +54,22 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         margin: 10px 0;
     }
 
-    .event-item {
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        margin-bottom: 10px;
-        overflow: hidden;
-    }
-
     .event-thumbnail {
         cursor: pointer;
         padding: 10px;
-        background-color: #f5f5f5;
+        border: 1px solid #ccc;
+         border-radius:  5px 5px 0px 0px;
+        margin-bottom: 10px;
     }
 
     .event-details {
-        padding: 10px;
-        border-top: 1px solid #ccc;
-        background-color: #fff;
-    }
-
-    .status {
-        padding: 3px 8px;
-        border-radius: 3px;
-        font-weight: bold;
-    }
-
-    .status.completed {
-        background-color: #d4edda;
-        color: #155724;
-    }
-
-    .status.pending {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-
-    .status.cancelled {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-
-    .modal {
         display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.4);
-    }
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: 10% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 50%;
-        border-radius: 5px;
-    }
-
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    .close:hover {
-        color: black;
-    }
-
-    button {
-        padding: 8px 15px;
-        margin: 5px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    button.edit-btn {
-        background-color: #4CAF50;
-        color: white;
-    }
-
-    button.delete-btn {
-        background-color: #f44336;
-        color: white;
-    }
-
-    button.close-btn {
-        background-color: #ccc;
-    }
-
-    button.cancel-btn {
-        background-color: #6c757d;
-        color: white;
-    }
-
-    button:hover {
-        opacity: 0.8;
-    }
-
-    input, select {
-        width: 100%;
-        padding: 8px;
-        margin: 5px 0;
-        display: inline-block;
+        padding: 10px;
+        border-top: 1px solid white;
         border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-    }
-
-    .toggle-btns {
-        margin-bottom: 15px;
-    }
-
-    .toggle-btn {
-        padding: 8px 15px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-right: 5px;
-    }
-
-    .toggle-btn.active {
-        background-color: #0056b3;
-    }
-
-    .events-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-
-    .events-table th, .events-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
-
-    .events-table th {
-        background-color: #f2f2f2;
-    }
-
-    .events-table tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-
-    .pagination-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-    }
-
-    .pagination {
-        display: flex;
-        align-items: center;
-    }
-
-    .page-numbers {
-        display: flex;
-        margin: 0 10px;
-    }
-
-    .page-number {
-        padding: 5px 10px;
-        margin: 0 2px;
-        cursor: pointer;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-    }
-
-    .page-number.active {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
-
-    .prev, .next {
-        padding: 5px 10px;
-        cursor: pointer;
-        border: 1px solid #ddd;
-        background-color: #f8f9fa;
-    }
-
-    .prev:hover, .next:hover {
-        background-color: #e9ecef;
-    }
-
-    .prev:disabled, .next:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
+        border-radius: 0px 0px 5px 5px;
+        margin-top: -11px;
+        margin-bottom:5px;
     }
 </style>
 <body>
@@ -787,28 +607,26 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 
                 if (eventsOnDay.length > 0) {
                     eventsOnDay.forEach(function(event) {
-                        var eventItem = `
-                            <li class="event-item">
-                                <div class="event-thumbnail">
-                                    <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
-                                    <strong>Plate No:</strong> ${event.plateNo}<br>
-                                    <strong>Destination:</strong> ${event.destination}
+                        var eventThumbnail = `
+                            <div class="event-thumbnail">
+                                <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
+                                <strong>Plate No:</strong> ${event.plateNo}<br>
+                                <strong>Destination:</strong> ${event.destination}
+                            </div>
+                            <div class="event-details">
+                                <p><strong>Driver:</strong> ${event.driver}</p>
+                                <p><strong>Helper:</strong> ${event.helper}</p>
+                                <p><strong>Client:</strong> ${event.client}</p>
+                                <p><strong>Container No.:</strong> ${event.containerNo}</p>
+                                <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
+                                <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
+                                <div class="event-actions">
+                                    <button class="edit-btn" data-id="${event.id}">Edit</button>
+                                    <button class="delete-btn" data-id="${event.id}">Delete</button>
                                 </div>
-                                <div class="event-details" style="display: none;">
-                                    <p><strong>Driver:</strong> ${event.driver}</p>
-                                    <p><strong>Helper:</strong> ${event.helper}</p>
-                                    <p><strong>Client:</strong> ${event.client}</p>
-                                    <p><strong>Container No.:</strong> ${event.containerNo}</p>
-                                    <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
-                                    <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
-                                    <div class="event-actions">
-                                        <button class="edit-btn" data-id="${event.id}">Edit</button>
-                                        <button class="delete-btn" data-id="${event.id}">Delete</button>
-                                    </div>
-                                </div>
-                            </li>
+                            </div>
                         `;
-                        $('#eventList').append(eventItem);
+                        $('#eventList').append(eventThumbnail);
                     });
                 } else {
                     $('#noEventsMessage').show();
@@ -817,7 +635,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 // Toggle event details on thumbnail click
                 $('.event-thumbnail').on('click', function() {
                     $(this).next('.event-details').toggle();
-                    $(this).parent('.event-item').toggleClass('expanded');
                 });
             }
         });
