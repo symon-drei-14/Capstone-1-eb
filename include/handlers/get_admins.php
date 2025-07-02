@@ -13,7 +13,7 @@ $totalRow = $countResult->fetch_assoc();
 $total = $totalRow['total'];
 
 // Get paginated data
-$query = "SELECT admin_id, username FROM login_admin LIMIT ? OFFSET ?";
+$query = "SELECT admin_id, username, role FROM login_admin LIMIT ? OFFSET ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("ii", $limit, $offset);
 $stmt->execute();

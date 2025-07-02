@@ -2,7 +2,6 @@
 session_start();
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-  
     header("Location: login.php");
     exit();
 }
@@ -30,7 +29,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
             <div class="profile-name">
         <?php 
-    
         echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
         ?>
     </div>
@@ -90,6 +88,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             <tr>
                                 <th>Admin ID</th>
                                 <th>Username</th>
+                                <th>Role</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -121,6 +120,15 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             </div>
 
             <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" name="role" class="form-control" required>
+                    <option value="Full Admin">Full Admin</option>
+                    <option value="Operations Manager">Operations Manager</option>
+                    <option value="Fleet Manager">Fleet Manager</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="password" id="passwordLabel">Password</label>
                 <input type="password" id="password" name="password" class="form-control" required>
                 <small id="passwordHelp" style="display: none; color: #666;">Leave blank to keep current password</small>
@@ -148,6 +156,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             document.getElementById('adminId').value = '';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
+            document.getElementById('role').value = 'Full Admin';
             document.getElementById('passwordHelp').style.display = 'none';
             document.getElementById('password').required = true;
             
@@ -187,6 +196,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     if (data.success) {
                         document.getElementById('adminId').value = data.admin.admin_id;
                         document.getElementById('username').value = data.admin.username;
+                        document.getElementById('role').value = data.admin.role || 'Full Admin';
                         // Password is not fetched for security reasons
                     } else {
                         alert('Error fetching admin details: ' + data.message);
@@ -206,6 +216,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 row.innerHTML = `
                     <td>${admin.admin_id}</td>
                     <td>${admin.username}</td>
+                    <td>${admin.role || 'Full Admin'}</td>
                     <td class="actions">
                         <button class="edit" onclick="openAdminModal(${admin.admin_id})">Edit</button>
                         <button class="delete" onclick="deleteAdmin(${admin.admin_id})">Delete</button>
@@ -219,6 +230,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         function saveAdmin() {
             const adminId = document.getElementById('adminId').value;
             const username = document.getElementById('username').value;
+            const role = document.getElementById('role').value;
             const password = document.getElementById('password').value;
             
             if (!username) {
@@ -234,6 +246,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             const adminData = {
                 admin_id: adminId,
                 username: username,
+                role: role,
                 password: password
             };
             
