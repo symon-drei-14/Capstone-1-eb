@@ -20,9 +20,72 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <link rel="stylesheet" href="include/sidenav.css">
     <link rel="stylesheet" href="include/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
 </head>
+<style>
+    body{
+    margin-top:50px;
+}
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+        position: absolute;
+        z-index: 999;
+        background-color: #fff;
+        width: 250px;
+        height: 100%;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    }
+
+    .sidebar.show {
+        display: block;
+    }
+}
+
+.toggle-sidebar-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    z-index: 1300;
+}
+
+
+.sidebar {
+    position: fixed;
+    top: 1rem;
+    left: 0;
+    width: 300px; 
+    height: 100%;
+    background-color: #edf1ed;
+    color: #161616 !important;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 1100;
+    border-right: 2px solid #16161627;
+    transform: translateX(-100%); 
+    transition: transform 0.3s ease;
+}
+
+
+.sidebar.expanded {
+    transform: translateX(0);
+}
+
+.sidebar.expanded .sidebar-item a,
+.sidebar.expanded .sidebar-item span {
+    visibility: visible;
+    opacity: 1;
+}
+</style>
 <body>
 <header class="header">
+      <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+  <i class="fa fa-bars"></i>
+</button>
         <div class="logo-container">
             <img src="include/img/logo.png" alt="Company Logo" class="logo">
             <img src="include/img/mansar.png" alt="Company Name" class="company">
@@ -112,5 +175,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="include/js/tracking.js"></script>
+     <script>
+    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
+        document.querySelector('.sidebar').classList.toggle('expanded');
+    });
+</script>
 </body>
 </html>

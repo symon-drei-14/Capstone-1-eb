@@ -71,6 +71,85 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         margin-top: -11px;
         margin-bottom:5px;
     }
+         .toggle-sidebar-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    margin-left: 1rem;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+        position: absolute;
+        z-index: 999;
+        background-color: #fff;
+        width: 250px;
+        height: 100%;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    }
+
+    .sidebar.show {
+        display: block;
+    }
+}
+
+.toggle-sidebar-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    z-index: 1300;
+}
+
+
+.sidebar {
+    position: fixed;
+    top: 1.7rem;
+    left: 0;
+    width: 300px; 
+    height: 100%;
+    background-color: #edf1ed;
+    color: #161616 !important;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 1100;
+    border-right: 2px solid #16161627;
+    transform: translateX(-100%); 
+    transition: transform 0.3s ease;
+}
+
+
+.sidebar.expanded {
+    transform: translateX(0);
+}
+
+.sidebar.expanded .sidebar-item a,
+.sidebar.expanded .sidebar-item span {
+    visibility: visible;
+    opacity: 1;
+}
+   .main-container{
+        background-color: rgb(255, 255, 255);
+        margin-left:10px;
+        margin-top:900px;
+        padding:10px;
+        border-radius:20px;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    }
+
+    body{
+    margin: 10px;
+    font-family: Arial, sans-serif;
+    background-color: rgb(241, 241, 244);
+    overflow-y: auto;
+    }
+    
 </style>
 <body>
     <?php
@@ -120,6 +199,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     ?>
 
 <header class="header">
+    <header class="header">
+    <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+  <i class="fa fa-bars"></i>
+</button>
         <div class="logo-container">
             <img src="include/img/logo.png" alt="Company Logo" class="logo">
             <img src="include/img/mansar.png" alt="Company Name" class="company">
@@ -797,6 +880,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         
         // Initial render
         renderTable();
+    });
+</script>
+ <script>
+    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
+        document.querySelector('.sidebar').classList.toggle('expanded');
     });
 </script>
 </body>

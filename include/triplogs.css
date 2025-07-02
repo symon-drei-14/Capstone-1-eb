@@ -1,17 +1,6 @@
-body{
-    margin: 100px;
-    font-family: Arial, sans-serif;
-    background-color: rgb(241, 241, 244);
-    }
+
     
-    .main-container{
-        background-color: rgb(255, 255, 255);
-        margin-left:10px;
-        padding:10px;
-        border-radius:20px;
-        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-    }
-    
+ 
     .event-item{
         padding:20px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);

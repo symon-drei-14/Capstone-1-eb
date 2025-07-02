@@ -35,11 +35,306 @@ $drivingDrivers = getDrivingDrivers();
 
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
+<style>
+    .toggle-sidebar-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    margin-left: 1rem;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+        position: absolute;
+        z-index: 999;
+        background-color: #fff;
+        width: 250px;
+        height: 100%;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    }
+
+    .sidebar.show {
+        display: block;
+    }
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f4f4f4;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    max-height: 40px;
+    top: 0;
+    left: 0;
+    z-index: 1200;
+
+}
+
+.logo-container {
+    display: flex;
+    align-content:left;
+}
+
+.logo {
+    height: 80px;
+}
+
+.company {
+    height: 80px;
+}
+
+/* .search-container {
+    display: flex;
+    justify-content: center;
+    flex-grow: 1;
+    align-items: center;
+}
+
+.search-bar {
+    padding: 8px;
+    width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: width 0.3s ease;
+}
+
+    .search-bar:focus {
+        width: 300px;
+    }
+*/
+.profile {
+    display: flex;
+    align-items: center;
+    position: relative;
+    right: 70px;
+}
+
+.profile-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.profile-name {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/*.sidebar {
+    position: fixed;
+  
+    top: 1rem;
+    left: 0;
+    width: 80px;
+    height: 100%;
+    background-color: #edf1ed;
+    color: #161616 !important;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: width 0.3s ease;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    z-index: 1100;
+    border-right: 2px solid #16161627;
+}
+
+    .sidebar:hover {
+        width: 300px;
+        box-shadow: 100px 0 100px rgba(0, 0, 0, 0.1);
+        transition: 0.5s ease;
+    }*/
+
+
+.sidebar-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-top: 1.7rem;
+    cursor: pointer;
+    opacity: 1;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+}
+
+    .sidebar-item:hover {
+        background-color: #ffffff;
+        border-color: #161616ac;
+        width: 300px;
+        border-top-left-radius: 40px;
+        border-bottom-left-radius: 40px;
+    }
+
+.icon {
+    margin-right: 10px;
+    color: black !important;
+}
+
+.icon2 {
+    margin-right: 10px;
+    /* font-size: 16px; */
+    opacity: 0.7; 
+    filter: grayscale(70%); 
+}
+
+/* .icon2 {
+    margin-right: 10px;
+    color: black; 
+    opacity: 1; 
+    filter: grayscale(100%) brightness(0);
+} */
+
+.sidebar-item span {
+    position: absolute;
+    left: 60px;
+    visibility: hidden;
+    opacity: 0;
+
+}
+
+.sidebar:hover .sidebar-item span {
+    visibility: visible;
+    opacity: 1;
+}
+
+.sidebar-item a:visited,
+.sidebar-item a:hover,
+.sidebar-item a:active {
+    text-decoration: none !important; 
+    color: inherit !important; /* Ensure color remains the same */
+}
+
+.sidebar-item a {
+    position: absolute;
+    left: 60px;
+    visibility: hidden;
+    opacity: 0;
+    text-decoration: none !important; /* Force remove underline */
+    color: inherit !important; /* Force inherit text color */
+}
+
+.sidebar:hover .sidebar-item a {
+    visibility: visible;
+    opacity: 1;
+    text-decoration: none; /* Ensures no underline on hover */
+    color: inherit; /* Keeps the same color on hover */
+}
+
+.sidebar:hover .logo-container-small {
+    display: none;
+}
+
+.sidebar:hover .logo-container {
+    display: block;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+}
+
+.main-content {
+    margin-top:20px;
+    margin-left: 75px; /* Same as the sidebar width */
+    transition: margin-left 0.3s ease;
+}
+
+.main-content2 {
+    margin-top: 40px;
+    /*margin-left: 85px;*/ /* Same as the sidebar width */
+    margin-left: 200px; /* Adjust based on your sidebar width */
+    margin-right: 40px; /* Increased right margin to prevent touching scrollbar */
+    width: calc(100% - 320px);
+    transition: margin-left 0.3s ease;
+    overflow-y: auto;
+}
+
+.main-content3 {
+    margin-top: 80px;
+    margin-left: 100px; /* Reduced left margin from 200px to 100px */
+    margin-right: 20px; /* Reduced right margin from 40px to 20px */
+    width: calc(100% - 140px); /* Adjusted width calculation based on new margins */
+    transition: margin-left 0.3s ease;
+    overflow-y: auto;
+}
+
+.main-content4 {
+    margin-top: 80px;
+    margin-left: 100px;
+    margin-right: 10px;
+    width: calc(100% - 110px);
+}
+
+.main-content5 {
+    margin-top: 30px;
+    margin-left: 100px;
+    margin-right: 10px;
+    width: calc(100% - 110px);
+    
+}
+
+/* Toggle Button Styles */
+.toggle-sidebar-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    z-index: 1300;
+}
+
+
+.sidebar {
+    position: fixed;
+    top: 1.7rem;
+    left: 0;
+    width: 300px; 
+    height: 100%;
+    background-color: #edf1ed;
+    color: #161616 !important;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 1100;
+    border-right: 2px solid #16161627;
+    transform: translateX(-100%); 
+    transition: transform 0.3s ease;
+}
+
+
+.sidebar.expanded {
+    transform: translateX(0);
+}
+
+.sidebar.expanded .sidebar-item a,
+.sidebar.expanded .sidebar-item span {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+</style>
 
 </head>
 
 <body>
 <header class="header">
+<button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+  <i class="fa fa-bars"></i>
+</button>
         <div class="logo-container">
             <img src="include/img/logo.png" alt="Company Logo" class="logo">
             <img src="include/img/mansar.png" alt="Company Name" class="company">
@@ -400,6 +695,16 @@ $drivingDrivers = getDrivingDrivers();
             ]
         });
     });
+  
+ 
 </script>
+
+<script>
+    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
+        document.querySelector('.sidebar').classList.toggle('expanded');
+    });
+</script>
+
+
 </body>
 </html>

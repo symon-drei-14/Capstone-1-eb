@@ -16,10 +16,94 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <title>Fleet Management</title>
     <link rel="stylesheet" href="include/sidenav.css">
     <link rel="stylesheet" href="include/fleetmanagement.css">
+       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <style>
+         .toggle-sidebar-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    margin-left: 1rem;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+        position: absolute;
+        z-index: 999;
+        background-color: #fff;
+        width: 250px;
+        height: 100%;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    }
+
+    .sidebar.show {
+        display: block;
+    }
+}
+
+.toggle-sidebar-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    z-index: 1300;
+}
+
+
+.sidebar {
+    position: fixed;
+    top: 1.7rem;
+    left: 0;
+    width: 300px; 
+    height: 100%;
+    background-color: #edf1ed;
+    color: #161616 !important;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 1100;
+    border-right: 2px solid #16161627;
+    transform: translateX(-100%); 
+    transition: transform 0.3s ease;
+}
+
+
+.sidebar.expanded {
+    transform: translateX(0);
+}
+
+.sidebar.expanded .sidebar-item a,
+.sidebar.expanded .sidebar-item span {
+    visibility: visible;
+    opacity: 1;
+}
+.main-content4 {
+    margin-top: 40px;
+    margin-left: 10px;
+    margin-right: 10px;
+    width: calc(100% - 110px);
+    width: 96vw;
+    height: 120vh;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    overflow-x: hidden;
+   overflow-y: hidden;
+}
+
+
+    </style>
  
 <header class="header">
+    <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+  <i class="fa fa-bars"></i>
+</button>
         <div class="logo-container">
             <img src="include/img/logo.png" alt="Company Logo" class="logo">
             <img src="include/img/mansar.png" alt="Company Name" class="company">
@@ -105,7 +189,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             </tr>
                         </thead>
                         <tbody id="fleetTableBody">
-                        <!-- Data will be populated by JavaScript -->
+                        <!- Data will be populated by JavaScript -->
                     </tbody>
                     </table>
                 </div>
@@ -116,7 +200,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 <button class="next" onclick="changePage(1)">►</button>
             </div>
         </section>
-    </div> -->
+    </div> 
 
     <div class="main-content4">
         <section class="content-2">
@@ -683,5 +767,10 @@ function updateTrip() {
             renderTrucksTable();
         };
     </script>
+    <script>
+    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
+        document.querySelector('.sidebar').classList.toggle('expanded');
+    });
+</script>
 </body>
 </html>
