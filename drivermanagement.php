@@ -1,11 +1,7 @@
 <?php
-session_start();
+require_once __DIR__ . '/include/check_access.php';
+checkAccess(); // No role needed—logic is handled internally
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-
-    header("Location: login.php");
-    exit();
-}
 require_once 'include/handlers/dbhandler.php';
 
 ?>

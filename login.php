@@ -6,10 +6,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link href="include/login.css" rel="stylesheet">
-
 </head>
 <style>
-
 </style>
 <body>
 <div class="login-box">

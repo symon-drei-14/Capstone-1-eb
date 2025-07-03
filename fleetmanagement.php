@@ -1,12 +1,6 @@
 <?php
-session_start();
-// Check if user is logged in
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    // Not logged in, redirect to login page
-    header("Location: login.php");
-    exit();
-}
-// User is logged in, continue with the page
+require_once __DIR__ . '/include/check_access.php';
+checkAccess(); // No role needed—logic is handled internally
 ?>
 <!DOCTYPE html>
 <html lang="en">

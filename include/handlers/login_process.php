@@ -15,8 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $username = $conn->real_escape_string($_POST['username']);
         $password = $_POST['password'];
         
-        // Query the database to find the user
-        $sql = "SELECT admin_id, username, password FROM login_admin WHERE username = '$username'";
+        // Query the database to find the user with role
+        $sql = "SELECT admin_id, username, password, role FROM login_admin WHERE username = '$username'";
         $result = $conn->query($sql);
         
         if ($result && $result->num_rows > 0) {
@@ -29,10 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Password is correct, set session variables
                 $_SESSION['admin_id'] = $user['admin_id'];
                 $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role']; // Store the role in session
                 $_SESSION['logged_in'] = true;
                 
                 $response['success'] = true;
                 $response['message'] = 'Login successful';
+                $response['role'] = $user['role']; // Optional: send role back to client
             } else {
                 $response['message'] = 'Invalid password';
             }
