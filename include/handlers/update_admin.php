@@ -25,9 +25,10 @@ $checkStmt->close();
 
 // Update admin
 if (!empty($data->password)) {
-    // Update username, role and password
+    // Hash the new password
+    $hashedPassword = password_hash($data->password, PASSWORD_DEFAULT);
     $stmt = $conn->prepare("UPDATE login_admin SET username = ?, role = ?, password = ? WHERE admin_id = ?");
-    $stmt->bind_param("sssi", $data->username, $data->role, $data->password, $data->admin_id);
+    $stmt->bind_param("sssi", $data->username, $data->role, $hashedPassword, $data->admin_id);
 } else {
     // Update username and role only
     $stmt = $conn->prepare("UPDATE login_admin SET username = ?, role = ? WHERE admin_id = ?");

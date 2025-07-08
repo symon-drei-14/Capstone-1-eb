@@ -24,9 +24,12 @@ if ($checkResult->num_rows > 0) {
 }
 $checkStmt->close();
 
-// Add new admin
+// Hash the password before storing
+$hashedPassword = password_hash($data->password, PASSWORD_DEFAULT);
+
+// Add new admin with hashed password
 $stmt = $conn->prepare("INSERT INTO login_admin (username, password, role) VALUES (?, ?, ?)");
-$stmt->bind_param("sss", $data->username, $data->password, $data->role);
+$stmt->bind_param("sss", $data->username, $hashedPassword, $data->role);
 
 if ($stmt->execute()) {
     echo json_encode(["success" => true]);
