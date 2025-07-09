@@ -587,9 +587,11 @@ body {
 <body>
     <?php
     require 'include/handlers/dbhandler.php';
-    
+    session_start();
     // Fetch trip assignments
-    $sql = "SELECT * FROM assign";
+  
+$sql = "SELECT *
+        FROM assign";
     $result = $conn->query($sql);
     $eventsData = [];
     
@@ -608,7 +610,9 @@ body {
                 'consignee' => $row['consignee'],
                 'size' => $row['size'],
                 'cashAdvance' => $row['cash_adv'],
-                'status' => $row['status']
+                'status' => $row['status'],
+                'modifiedby' => $row['last_modified_by'],
+                'modifiedat' => $row['last_modified_at']
             ];
         }
     }
@@ -921,6 +925,8 @@ body {
                     <th>Size</th>
                     <th>Cash Advance</th>
                     <th>Status</th>
+                    <th>Last Modified</th>
+                        
                     <th>Action</th>
                 </tr>
             </thead>
@@ -979,7 +985,9 @@ body {
                 consignee: event.consignee,
                 size: event.size,
                 cashAdvance: event.cashAdvance,
-                status: event.status
+                status: event.status,
+                 modifiedby: event.modifiedby, 
+                 modifiedat: event.modifiedat  
             };
         });
 
@@ -1003,6 +1011,11 @@ body {
         var rowsPerPage = 5;
         var totalPages = 0;
         
+        function formatDateTime(datetimeString) {
+    if (!datetimeString) return 'N/A';
+    const date = new Date(datetimeString);
+    return date.toLocaleString(); 
+}
         // Render table function   
         function renderTable() {
             $('#eventTableBody').empty();
@@ -1014,26 +1027,28 @@ body {
                 var dateObj = new Date(event.date);
                 var formattedDate = dateObj.toLocaleDateString();
                 var formattedTime = moment(dateObj).format('h:mm A');
+          
                 
-                var row = `<tr>
-                    <td>${event.plateNo}</td>
-                    <td>${formattedDate}</td>
-                    <td>${formattedTime}</td>
-                    <td>${event.driver}</td>
-                    <td>${event.helper}</td>
-                    <td>${event.containerNo}</td>
-                    <td>${event.client}</td>
-                    <td>${event.destination}</td>
-                    <td>${event.shippingLine}</td>
-                    <td>${event.consignee}</td>
-                    <td>${event.size}</td>
-                    <td>${event.cashAdvance}</td>
-                    <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
-                    <td>
-                        <button class="edit-btn" data-id="${event.id}">Edit</button>
-                        <button class="delete-btn" data-id="${event.id}">Delete</button>
-                    </td>
-                </tr>`;
+               var row = `<tr>
+    <td>${event.plateNo}</td>
+    <td>${formattedDate}</td>
+    <td>${formattedTime}</td>
+    <td>${event.driver}</td>
+    <td>${event.helper}</td>
+    <td>${event.containerNo}</td>
+    <td>${event.client}</td>
+    <td>${event.destination}</td>
+    <td>${event.shippingLine}</td>
+    <td>${event.consignee}</td>
+    <td>${event.size}</td>
+    <td>${event.cashAdvance}</td>
+    <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
+    <td>${event.modifiedby}<br>${formatDateTime(event.modifiedat)}</td>
+    <td>
+        <button class="edit-btn" data-id="${event.id}">Edit</button>
+        <button class="delete-btn" data-id="${event.id}">Delete</button>
+    </td>
+</tr>`;
                 $('#eventTableBody').append(row);
             });
             
@@ -1135,6 +1150,7 @@ body {
                                 <p><strong>Container No.:</strong> ${event.containerNo}</p>
                                 <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
                                 <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
+                                 <p><strong>Last modified by: </strong>${event.modifiedby}<br><strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
                                 <div class="event-actions">
                                     <button class="edit-btn" data-id="${event.id}">Edit</button>
                                     <button class="delete-btn" data-id="${event.id}">Delete</button>
@@ -1321,3 +1337,4 @@ body {
 </script>
 </body>
 </html>
+

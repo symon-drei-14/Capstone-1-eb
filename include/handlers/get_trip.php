@@ -19,7 +19,9 @@ $stmt = $conn->prepare("SELECT
     Consignee as consignee,
     Size as size,
     Cash_advance as cashAdvance,
-    Status as status
+    Status as status,
+    modifiedby as last_modified_by,
+    lastupdate as last_modified_at,
     FROM assign_trip2 WHERE Trip_id = ?");
     
 $stmt->bind_param("i", $id);

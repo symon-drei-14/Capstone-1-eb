@@ -83,6 +83,11 @@ checkAccess(); // No role needed—logic is handled internally
     transition: margin-left 0.3s ease;
     overflow-y: auto;
 }
+
+th:nth-child(9), td:nth-child(9) {
+ 
+    width: 5%; 
+}
 </style>
 <body>
 
@@ -169,6 +174,7 @@ checkAccess(); // No role needed—logic is handled internally
                                 <th>Status</th>
                                 <th>Supplier</th>
                                 <th>Cost</th>
+                                <th>Last Modified</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -302,25 +308,32 @@ checkAccess(); // No role needed—logic is handled internally
                 return;
             }
 
-            data.forEach(row => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${row.truck_id}</td>
-                    <td>${row.licence_plate || 'N/A'}</td>
-                    <td>${formatDate(row.date_mtnce)}</td>
-                    <td>${row.remarks}</td>
-                    <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-                    <td>${row.supplier || 'N/A'}</td>
-                    <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
-                    <td class="actions">
-                        <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost})">Edit</button>
-                        <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
-                        <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-        }
+          data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${row.truck_id}</td>
+            <td>${row.licence_plate || 'N/A'}</td>
+            <td>${formatDate(row.date_mtnce)}</td>
+            <td>${row.remarks}</td>
+            <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
+            <td>${row.supplier || 'N/A'}</td>
+            <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
+            <td>${row.last_modified_by}<br>${formatDateTime(row.last_modified_at)}</td>
+            <td class="actions">
+                <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost})">Edit</button>
+                <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
+                <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+function formatDateTime(datetimeString) {
+    if (!datetimeString) return 'N/A';
+    const date = new Date(datetimeString);
+    return date.toLocaleString(); 
+}
       
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
@@ -521,12 +534,13 @@ checkAccess(); // No role needed—logic is handled internally
                         response.history.forEach(item => {
                             const historyItem = document.createElement("div");
                             historyItem.className = "history-item";
-                            historyItem.innerHTML = `
+                           historyItem.innerHTML = `
                                 <strong>Date of Inspection:</strong> ${formatDate(item.date_mtnce)}<br>
                                 <strong>Remarks:</strong> ${item.remarks}<br>
                                 <strong>Status:</strong> ${item.status}<br>
                                 <strong>Supplier:</strong> ${item.supplier || 'N/A'}<br>
                                 <strong>Cost:</strong> ₱ ${parseFloat(item.cost).toFixed(2)}<br>
+                                <strong>Last Modified By:</strong> ${item.last_modified_by} on ${formatDateTime(item.last_modified_at)}<br>
                                 <hr>
                             `;
                             historyList.appendChild(historyItem);

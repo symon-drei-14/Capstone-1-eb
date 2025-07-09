@@ -77,6 +77,7 @@ th:nth-child(8), td:nth-child(8) {
     width: 5%; 
 }
 
+
 /* Status Colors */
 .status-completed {
     background-color: #4CAF50; /* Green */

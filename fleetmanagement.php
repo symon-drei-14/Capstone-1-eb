@@ -188,6 +188,7 @@ checkAccess();
                                 <th>Plate Number</th>
                                 <th>Capacity</th>
                                 <th>Status</th>
+                                <th>Last Modified</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -356,6 +357,7 @@ checkAccess();
                     <td>${truck.plate_no}</td>
                     <td>${truck.capacity}</td>
                     <td><span class="status-${truck.status.toLowerCase().replace(/\s+/g, "-")}">${truck.status}</span></td>
+                     <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
                     <td class="actions">
                         <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
                         <button class="delete" onclick="deleteTruck(${truck.truck_id})">Delete</button>
@@ -365,6 +367,12 @@ checkAccess();
             });
             document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage}`;
         }
+
+        function formatDateTime(datetimeString) {
+    if (!datetimeString) return 'N/A';
+    const date = new Date(datetimeString);
+    return date.toLocaleString(); // This will format based on user's locale
+}
 
         function changeTruckPage(direction) {
             const totalPages = Math.ceil(trucksData.length / rowsPerPage);

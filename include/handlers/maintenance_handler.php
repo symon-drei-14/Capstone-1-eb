@@ -1,5 +1,6 @@
 <?php
 header("Content-Type: application/json");
+session_start();
 require 'dbhandler.php';
 
 // Get all maintenance records with pagination
@@ -7,11 +8,11 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5) {
     $offset = ($page - 1) * $rowsPerPage;
     
     // Modified query to not depend on trucks table
-    $sql = "SELECT maintenance_id, truck_id, licence_plate, date_mtnce, 
-            remarks, status, supplier, cost 
-            FROM maintenance
-            ORDER BY maintenance_id DESC
-            LIMIT $offset, $rowsPerPage";
+ $sql = "SELECT maintenance_id, truck_id, licence_plate, date_mtnce, 
+        remarks, status, supplier, cost, last_modified_by, last_modified_at
+        FROM maintenance
+        ORDER BY maintenance_id DESC
+        LIMIT $offset, $rowsPerPage";
     
     $result = $conn->query($sql);
     
@@ -40,10 +41,11 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5) {
 
 // Get maintenance history for a specific truck
 function getMaintenanceHistory($conn, $truckId) {
-    $sql = "SELECT maintenance_id, date_mtnce, remarks, status, supplier, cost 
-            FROM maintenance
-            WHERE truck_id = ?
-            ORDER BY date_mtnce DESC";
+ $sql = "SELECT maintenance_id, date_mtnce, remarks, status, supplier, cost, 
+        last_modified_by, last_modified_at
+        FROM maintenance
+        WHERE truck_id = ?
+        ORDER BY date_mtnce DESC";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $truckId);
@@ -61,13 +63,13 @@ function getMaintenanceHistory($conn, $truckId) {
 // Get upcoming maintenance reminders
 function getMaintenanceReminders($conn) {
     // Modified query to not depend on trucks table
-    $sql = "SELECT maintenance_id, truck_id, licence_plate, date_mtnce, 
-            remarks, status, supplier, cost, 
-            DATEDIFF(date_mtnce, CURDATE()) as days_remaining
-            FROM maintenance
-            WHERE status != 'Completed' 
-            AND (DATEDIFF(date_mtnce, CURDATE()) <= 7)
-            ORDER BY days_remaining ASC";
+$sql = "SELECT maintenance_id, truck_id, licence_plate, date_mtnce, 
+        remarks, status, supplier, cost, last_modified_by, last_modified_at,
+        DATEDIFF(date_mtnce, CURDATE()) as days_remaining
+        FROM maintenance
+        WHERE status != 'Completed' 
+        AND (DATEDIFF(date_mtnce, CURDATE()) <= 7)
+        ORDER BY days_remaining ASC";
     
     $result = $conn->query($sql);
     
@@ -112,22 +114,25 @@ switch ($action) {
             echo json_encode(["success" => false, "message" => "Incomplete data"]);
             exit;
         }
+
+        $username = $_SESSION['username']; 
         
         $licensePlate = isset($data->licensePlate) ? $data->licensePlate : '';
         $supplier = isset($data->supplier) ? $data->supplier : '';
         $cost = isset($data->cost) ? $data->cost : 0;
         
-        $stmt = $conn->prepare("INSERT INTO maintenance (truck_id, licence_plate, date_mtnce, remarks, status, supplier, cost) 
-                               VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isssssd", 
-            $data->truckId,
-            $licensePlate,
-            $data->date, 
-            $data->remarks,
-            $data->status,
-            $supplier,
-            $cost
-        );
+     $stmt = $conn->prepare("INSERT INTO maintenance (truck_id, licence_plate, date_mtnce, remarks, status, supplier, cost, last_modified_by) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isssssds", 
+    $data->truckId,
+    $licensePlate,
+    $data->date, 
+    $data->remarks,
+    $data->status,
+    $supplier,
+    $cost,
+    $username,
+);
         
         if ($stmt->execute()) {
             echo json_encode(["success" => true]);
@@ -144,24 +149,26 @@ switch ($action) {
             echo json_encode(["success" => false, "message" => "Incomplete data"]);
             exit;
         }
+
+        $username = $_SESSION['username']; 
         
         $licensePlate = isset($data->licensePlate) ? $data->licensePlate : '';
         $supplier = isset($data->supplier) ? $data->supplier : '';
         $cost = isset($data->cost) ? $data->cost : 0;
         
-        $stmt = $conn->prepare("UPDATE maintenance SET truck_id = ?, licence_plate = ?, date_mtnce = ?, remarks = ?, 
-                               status = ?, supplier = ?, cost = ? WHERE maintenance_id = ?");
-        $stmt->bind_param("isssssdi", 
-            $data->truckId,
-            $licensePlate,
-            $data->date, 
-            $data->remarks,
-            $data->status,
-            $supplier,
-            $cost,
-            $data->maintenanceId
-        );
-        
+      $stmt = $conn->prepare("UPDATE maintenance SET truck_id = ?, licence_plate = ?, date_mtnce = ?, remarks = ?, 
+                       status = ?, supplier = ?, cost = ?, last_modified_by = ? WHERE maintenance_id = ?");
+    $stmt->bind_param("isssssdsi", 
+    $data->truckId,
+    $licensePlate,
+    $data->date, 
+    $data->remarks,
+    $data->status,
+    $supplier,
+    $cost,
+    $username,
+    $data->maintenanceId
+);
         if ($stmt->execute()) {
             echo json_encode(["success" => true]);
         } else {
