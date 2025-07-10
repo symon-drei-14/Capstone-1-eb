@@ -590,46 +590,54 @@ body {
     session_start();
     // Fetch trip assignments
   
-$sql = "SELECT *
-        FROM assign";
-    $result = $conn->query($sql);
-    $eventsData = [];
-    
-    if ($result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $eventsData[] = [
-                'id' => $row['trip_id'],
-                'plateNo' => $row['plate_no'],
-                'date' => $row['date'],
-                'driver' => $row['driver'],
-                'helper' => $row['helper'],
-                'containerNo' => $row['container_no'],
-                'client' => $row['client'],
-                'destination' => $row['destination'],
-                'shippingLine' => $row['shippine_line'],
-                'consignee' => $row['consignee'],
-                'size' => $row['size'],
-                'cashAdvance' => $row['cash_adv'],
-                'status' => $row['status'],
-                'modifiedby' => $row['last_modified_by'],
-                'modifiedat' => $row['last_modified_at']
-            ];
-        }
+$sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity
+        FROM assign a
+        LEFT JOIN drivers_table d ON a.driver = d.name
+        LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
+$result = $conn->query($sql);
+$eventsData = [];
+
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $eventsData[] = [
+            'id' => $row['trip_id'],
+            'plateNo' => $row['plate_no'],
+            'date' => $row['date'],
+            'driver' => $row['driver'],
+            'helper' => $row['helper'],
+            'containerNo' => $row['container_no'],
+            'client' => $row['client'],
+            'destination' => $row['destination'],
+            'shippingLine' => $row['shippine_line'],
+            'consignee' => $row['consignee'],
+            'size' => $row['size'],
+            'cashAdvance' => $row['cash_adv'],
+            'status' => $row['status'],
+            'modifiedby' => $row['last_modified_by'],
+            'modifiedat' => $row['last_modified_at'],
+            'truck_plate_no' => $row['truck_plate_no'],
+            'truck_capacity' => $row['truck_capacity']
+        ];
     }
-    
-    // Fetch drivers from drivers_table
-    $driverQuery = "SELECT driver_id, name FROM drivers_table";
-    $driverResult = $conn->query($driverQuery);
-    $driversData = [];
-    
-    if ($driverResult->num_rows > 0) {
-        while($driverRow = $driverResult->fetch_assoc()) {
-            $driversData[] = [
-                'id' => $driverRow['driver_id'],
-                'name' => $driverRow['name']
-            ];
-        }
+}
+
+// Fetch drivers with their assigned truck capacity
+$driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capacity 
+                FROM drivers_table d
+                LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
+$driverResult = $conn->query($driverQuery);
+$driversData = [];
+
+if ($driverResult->num_rows > 0) {
+    while($driverRow = $driverResult->fetch_assoc()) {
+        $driversData[] = [
+            'id' => $driverRow['driver_id'],
+            'name' => $driverRow['name'],
+            'capacity' => $driverRow['capacity'],
+            'truck_plate_no' => $driverRow['truck_plate_no'] // Add this line
+        ];
     }
+}
     
     $eventsDataJson = json_encode($eventsData);
     $driversDataJson = json_encode($driversData);
@@ -722,6 +730,15 @@ $sql = "SELECT *
         <form id="editForm">
             <input type="hidden" id="editEventId" name="eventId">
             
+  <label for="editEventSize">Shipment Size:</label><br>
+            <select id="editEventSize" name="eventSize" required>
+                <option value="">Select Size</option>
+                <option value="20ft">20ft</option>
+                <option value="40ft">40ft</option>
+                <option value="40ft HC">40ft HC</option>
+                <option value="45ft">45ft</option>
+            </select><br><br>
+
             <label for="editEventPlateNo">Plate No.:</label><br>
             <input type="text" id="editEventPlateNo" name="eventPlateNo" required><br><br>
     
@@ -781,14 +798,7 @@ $sql = "SELECT *
             <label for="editEventConsignee">Consignee:</label><br>
             <input type="text" id="editEventConsignee" name="eventConsignee" required><br><br>
     
-            <label for="editEventSize">Size:</label><br>
-            <select id="editEventSize" name="eventSize" required>
-                <option value="">Select Size</option>
-                <option value="20ft">20ft</option>
-                <option value="40ft">40ft</option>
-                <option value="40ft HC">40ft HC</option>
-                <option value="45ft">45ft</option>
-            </select><br><br>
+          
     
             <label for="editEventCashAdvance">Cash Advance:</label><br>
             <input type="text" id="editEventCashAdvance" name="eventCashAdvance" required><br><br>
@@ -798,6 +808,7 @@ $sql = "SELECT *
                 <option value="Completed">Completed</option>
                 <option value="Pending">Pending</option>
                 <option value="Cancelled">Cancelled</option>
+                  <option value="En Route">En Route</option>
             </select><br><br>
     
             <button type="submit">Save Changes</button>
@@ -811,6 +822,16 @@ $sql = "SELECT *
         <span class="close">&times;</span>
         <h2>Add Schedule</h2>
         <form id="addScheduleForm">
+
+  <label for="editEventSize">Shipment Size:</label><br>
+            <select id="editEventSize" name="eventSize" required>
+                <option value="">Select Size</option>
+                <option value="20ft">20ft</option>
+                <option value="40ft">40ft</option>
+                <option value="40ft HC">40ft HC</option>
+                <option value="45ft">45ft</option>
+            </select><br><br>
+
             <label for="addEventPlateNo">Plate No.:</label><br>
             <input type="text" id="addEventPlateNo" name="eventPlateNo" required><br><br>
     
@@ -870,14 +891,7 @@ $sql = "SELECT *
             <label for="addEventConsignee">Consignee:</label><br>
             <input type="text" id="addEventConsignee" name="eventConsignee" required><br><br>
     
-            <label for="addEventSize">Size:</label><br>
-            <select id="addEventSize" name="eventSize" required>
-                <option value="">Select Size</option>
-                <option value="20ft">20ft</option>
-                <option value="40ft">40ft</option>
-                <option value="40ft HC">40ft HC</option>
-                <option value="45ft">45ft</option>
-            </select><br><br>
+      
     
             <label for="addEventCashAdvance">Cash Advance:</label><br>
             <input type="text" id="addEventCashAdvance" name="eventCashAdvance" required><br><br>
@@ -887,6 +901,7 @@ $sql = "SELECT *
                 <option value="Completed">Completed</option>
                 <option value="Pending">Pending</option>
                 <option value="Cancelled">Cancelled</option>
+                  <option value="En Route">En Route</option>
             </select><br><br>
     
             <!-- Save and Cancel buttons -->
@@ -955,56 +970,122 @@ $sql = "SELECT *
         var driversData = <?php echo $driversDataJson; ?>;
         
         // Populate driver dropdowns
-        function populateDriverDropdowns() {
-            var driverOptions = '<option value="">Select Driver</option>';
-            
-            driversData.forEach(function(driver) {
-                driverOptions += `<option value="${driver.name}">${driver.name}</option>`;
-            });
-            
-            $('#editEventDriver').html(driverOptions);
-            $('#addEventDriver').html(driverOptions);
+   function populateDriverDropdowns(selectedSize = '') {
+    var driverOptions = '<option value="">Select Driver</option>';
+    
+    driversData.forEach(function(driver) {
+        // Filter drivers based on selected size
+        if (!selectedSize || !driver.capacity || 
+            (selectedSize.includes('20') && driver.capacity === '20') ||
+            (selectedSize.includes('40') && driver.capacity === '40')) {
+            // Include truck_plate_no as a data attribute
+            driverOptions += `<option value="${driver.name}" data-plate-no="${driver.truck_plate_no || ''}">${driver.name}</option>`;
         }
+    });
+    
+    $('#editEventDriver').html(driverOptions);
+    $('#addEventDriver').html(driverOptions);
+}
+
+ $(document).on('change', '#addEventDriver, #editEventDriver', function() {
+        var selectedOption = $(this).find('option:selected');
+        var plateNo = selectedOption.data('plate-no');
         
-        // Call this function to initialize dropdowns
-        populateDriverDropdowns();
+        // Determine which form we're in (add or edit)
+        var isAddForm = $(this).attr('id') === 'addEventDriver';
+        var plateNoField = isAddForm ? '#addEventPlateNo' : '#editEventPlateNo';
+        
+        $(plateNoField).val(plateNo || '');
+    });
+
+// Add event listener for size dropdown changes
+$('#addEventSize, #editEventSize').on('change', function() {
+    var selectedSize = $(this).val();
+    var isAddForm = $(this).attr('id') === 'addEventSize';
+    populateDriverDropdowns(selectedSize, isAddForm);
+});
+
+$(document).on('change', '#addEventDriver, #editEventDriver', function() {
+    var selectedDriverName = $(this).val();
+    var driver = driversData.find(function(d) { 
+        return d.name === selectedDriverName; 
+    });
+    
+    if (driver && driver.truck_plate_no) {
+        // Determine which form we're in (add or edit)
+        var isAddForm = $(this).attr('id') === 'addEventDriver';
+        var plateNoField = isAddForm ? '#addEventPlateNo' : '#editEventPlateNo';
+        
+        $(plateNoField).val(driver.truck_plate_no);
+    } else {
+        // Clear the plate number if driver has no assigned truck
+        var isAddForm = $(this).attr('id') === 'addEventDriver';
+        var plateNoField = isAddForm ? '#addEventPlateNo' : '#editEventPlateNo';
+        $(plateNoField).val('');
+    }
+});
         
         // Format events for calendar
-        var calendarEvents = eventsData.map(function(event) {
-            return {
-                id: event.id,
-                title: event.client + ' - ' + event.destination,
-                start: event.date,
-                plateNo: event.plateNo,
-                driver: event.driver,
-                helper: event.helper,
-                containerNo: event.containerNo,
-                client: event.client,
-                destination: event.destination,
-                shippingLine: event.shippingLine,
-                consignee: event.consignee,
-                size: event.size,
-                cashAdvance: event.cashAdvance,
-                status: event.status,
-                 modifiedby: event.modifiedby, 
-                 modifiedat: event.modifiedat  
-            };
-        });
+       var calendarEvents = eventsData.map(function(event) {
+    return {
+        id: event.id,
+        title: event.client + ' - ' + event.destination,
+        start: event.date,
+        plateNo: event.plateNo,
+        driver: event.driver,
+        helper: event.helper,
+        containerNo: event.containerNo,
+        client: event.client,
+        destination: event.destination,
+        shippingLine: event.shippingLine,
+        consignee: event.consignee,
+        size: event.size,
+        cashAdvance: event.cashAdvance,
+        status: event.status,
+        modifiedby: event.modifiedby,
+        modifiedat: event.modifiedat,
+        truck_plate_no: event.truck_plate_no,
+        truck_capacity: event.truck_capacity
+    };
+});
 
+function resetAddScheduleForm() {
+    $('#addEventPlateNo').val('');
+    $('#addEventDate').val('');
+    $('#addEventDriver').val('').trigger('change');
+    $('#addEventHelper').val('');
+    $('#addEventContainerNo').val('');
+    $('#addEventClient').val('');
+    $('#addEventDestination').val('');
+    $('#addEventShippingLine').val('');
+    $('#addEventConsignee').val('');
+    $('#addEventSize').val('');
+    $('#addEventCashAdvance').val('');
+    $('#addEventStatus').val('Pending'); // Set default status
+}
         // Close modal handlers
-        $('.close, .close-btn').on('click', function() {
-            $('.modal').hide();
-        });
+      $('.close, .close-btn.cancel-btn').on('click', function() {
+    $('.modal').hide();
+    if ($(this).closest('#addScheduleModal').length) {
+        resetAddScheduleForm();
+    }
+});
+
+// Also reset when clicking outside the modal
+$(window).on('click', function(event) {
+    if ($(event.target).hasClass('modal')) {
+        $('.modal').hide();
+        if ($(event.target).is('#addScheduleModal')) {
+            resetAddScheduleForm();
+        }
+    }
+});
         
-        $(window).on('click', function(event) {
-            if ($(event.target).hasClass('modal')) {
-                $('.modal').hide();
-            }
-        });
-        
-        $('#addScheduleBtnTable').on('click', function() {
-            $('#addScheduleModal').show();
-        });
+       $('#addScheduleBtnTable').on('click', function() {
+    resetAddScheduleForm(); // Clear the form first
+    populateDriverDropdowns(); // Repopulate drivers
+    $('#addScheduleModal').show();
+});
 
         // Table pagination variables
         var currentPage = 1;
@@ -1193,28 +1274,31 @@ $sql = "SELECT *
         });
         
         // Edit button click handler
-        $(document).on('click', '.edit-btn', function() {
-            var eventId = $(this).data('id');
-            var event = eventsData.find(function(e) { return e.id == eventId; });
-            
-            if (event) {
-                $('#editEventId').val(event.id);
-                $('#editEventPlateNo').val(event.plateNo);
-                $('#editEventDate').val(event.date);
-                $('#editEventDriver').val(event.driver);
-                $('#editEventHelper').val(event.helper);
-                $('#editEventContainerNo').val(event.containerNo);
-                $('#editEventClient').val(event.client);
-                $('#editEventDestination').val(event.destination);
-                $('#editEventShippingLine').val(event.shippingLine);
-                $('#editEventConsignee').val(event.consignee);
-                $('#editEventSize').val(event.size);
-                $('#editEventCashAdvance').val(event.cashAdvance);
-                $('#editEventStatus').val(event.status);
-                
-                $('#editModal').show();
-            }
-        });
+ $(document).on('click', '.edit-btn', function() {
+    var eventId = $(this).data('id');
+    var event = eventsData.find(function(e) { return e.id == eventId; });
+    
+    if (event) {
+        $('#editEventId').val(event.id);
+        $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
+        $('#editEventDate').val(event.date);
+        $('#editEventDriver').val(event.driver);
+        $('#editEventHelper').val(event.helper);
+        $('#editEventContainerNo').val(event.containerNo);
+        $('#editEventClient').val(event.client);
+        $('#editEventDestination').val(event.destination);
+        $('#editEventShippingLine').val(event.shippingLine);
+        $('#editEventConsignee').val(event.consignee);
+        $('#editEventSize').val(event.size);
+        $('#editEventCashAdvance').val(event.cashAdvance);
+        $('#editEventStatus').val(event.status);
+        
+        // Populate drivers based on selected size
+        populateDriverDropdowns(event.size);
+        
+        $('#editModal').show();
+    }
+});
         
         // Delete button click handler
         $(document).on('click', '.delete-btn', function() {
@@ -1224,81 +1308,91 @@ $sql = "SELECT *
         });
         
         // Add schedule form submit handler
-        $('#addScheduleForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            $.ajax({
-                url: 'include/handlers/trip_operations.php',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    action: 'add',
-                    plateNo: $('#addEventPlateNo').val(),
-                    date: $('#addEventDate').val(),
-                    driver: $('#addEventDriver').val(),
-                    helper: $('#addEventHelper').val(),
-                    containerNo: $('#addEventContainerNo').val(),
-                    client: $('#addEventClient').val(),
-                    destination: $('#addEventDestination').val(),
-                    shippingLine: $('#addEventShippingLine').val(),
-                    consignee: $('#addEventConsignee').val(),
-                    size: $('#addEventSize').val(),
-                    cashAdvance: $('#addEventCashAdvance').val(),
-                    status: $('#addEventStatus').val()
-                }),
-                success: function(response) {
-                    if (response.success) {
-                        alert('Trip added successfully!');
-                        $('#addScheduleModal').hide();
-                        location.reload();
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Server error occurred');
-                }
-            });
-        });
+       $('#addScheduleForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    // Get selected driver to find their assigned truck
+    var selectedDriver = $('#addEventDriver').val();
+    var driver = driversData.find(d => d.name === selectedDriver);
+    var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#addEventPlateNo').val();
+    
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'add',
+            plateNo: truckPlateNo,
+            date: $('#addEventDate').val(),
+            driver: selectedDriver,
+            helper: $('#addEventHelper').val(),
+            containerNo: $('#addEventContainerNo').val(),
+            client: $('#addEventClient').val(),
+            destination: $('#addEventDestination').val(),
+            shippingLine: $('#addEventShippingLine').val(),
+            consignee: $('#addEventConsignee').val(),
+            size: $('#addEventSize').val(),
+            cashAdvance: $('#addEventCashAdvance').val(),
+            status: $('#addEventStatus').val()
+        }),
+        success: function(response) {
+            if (response.success) {
+                alert('Trip added successfully!');
+                $('#addScheduleModal').hide();
+                location.reload();
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Server error occurred');
+        }
+    });
+});
         
         // Edit form submit handler
-        $('#editForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            $.ajax({
-                url: 'include/handlers/trip_operations.php',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    action: 'edit',
-                    id: $('#editEventId').val(),
-                    plateNo: $('#editEventPlateNo').val(),
-                    date: $('#editEventDate').val(),
-                    driver: $('#editEventDriver').val(),
-                    helper: $('#editEventHelper').val(),
-                    containerNo: $('#editEventContainerNo').val(),
-                    client: $('#editEventClient').val(),
-                    destination: $('#editEventDestination').val(),
-                    shippingLine: $('#editEventShippingLine').val(),
-                    consignee: $('#editEventConsignee').val(),
-                    size: $('#editEventSize').val(),
-                    cashAdvance: $('#editEventCashAdvance').val(),
-                    status: $('#editEventStatus').val()
-                }),
-                success: function(response) {
-                    if (response.success) {
-                        alert('Trip updated successfully!');
-                        $('#editModal').hide();
-                        location.reload(); 
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Server error occurred');
-                }
-            });
-        });
+       $('#editForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    // Get selected driver to find their assigned truck
+    var selectedDriver = $('#editEventDriver').val();
+    var driver = driversData.find(d => d.name === selectedDriver);
+    var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#editEventPlateNo').val();
+    
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'edit',
+            id: $('#editEventId').val(),
+            plateNo: truckPlateNo,
+            date: $('#editEventDate').val(),
+            driver: selectedDriver,
+            helper: $('#editEventHelper').val(),
+            containerNo: $('#editEventContainerNo').val(),
+            client: $('#editEventClient').val(),
+            destination: $('#editEventDestination').val(),
+            shippingLine: $('#editEventShippingLine').val(),
+            consignee: $('#editEventConsignee').val(),
+            size: $('#editEventSize').val(),
+            cashAdvance: $('#editEventCashAdvance').val(),
+            status: $('#editEventStatus').val()
+        }),
+        success: function(response) {
+            if (response.success) {
+                alert('Trip updated successfully!');
+                $('#editModal').hide();
+                location.reload(); 
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Server error occurred');
+        }
+    });
+});
             
         $('#confirmDeleteBtn').on('click', function() {
             var eventId = $('#deleteEventId').val();

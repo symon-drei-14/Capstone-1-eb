@@ -79,6 +79,20 @@ checkAccess();
             border-radius: 4px;
         }
 
+        .status-enroute {
+    background-color: #007bff; /* Blue */
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.status-pending {
+    background-color: #ffc107; /* Yellow */
+    color: black;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
         .status-in-repair {
             background-color: #f44336;
             color: white;
@@ -228,6 +242,7 @@ checkAccess();
                 <select id="status" name="status" class="form-control" required>
                     <option value="Good">Good</option>
                     <option value="In Repair">In Repair</option>
+                       <option value="Enroute">Enroute</option>
                 </select>
             </div>
             <div class="button-group">
@@ -343,30 +358,36 @@ checkAccess();
             .catch(error => console.error('Error:', error));
         }
 
-        function renderTrucksTable() {
-            const start = (currentTruckPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const pageData = trucksData.slice(start, end);
-            const tableBody = document.getElementById("trucksTableBody");
-            
-            tableBody.innerHTML = "";
-            pageData.forEach(truck => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${truck.truck_id}</td>
-                    <td>${truck.plate_no}</td>
-                    <td>${truck.capacity}</td>
-                    <td><span class="status-${truck.status.toLowerCase().replace(/\s+/g, "-")}">${truck.status}</span></td>
-                     <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
-                    <td class="actions">
-                        <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
-                        <button class="delete" onclick="deleteTruck(${truck.truck_id})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-            document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage}`;
-        }
+      function renderTrucksTable() {
+    const start = (currentTruckPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = trucksData.slice(start, Math.min(end, trucksData.length));
+    
+    const tableBody = document.getElementById("trucksTableBody");
+    tableBody.innerHTML = "";
+    
+    pageData.forEach(truck => {
+        const tr = document.createElement("tr");
+        
+        // Determine status class based on display_status
+        const statusClass = truck.display_status.toLowerCase().replace(/\s+/g, "-");
+        
+        tr.innerHTML = `
+            <td>${truck.truck_id}</td>
+            <td>${truck.plate_no}</td>
+            <td>${truck.capacity}</td>
+            <td><span class="status-${statusClass}">${truck.display_status}</span></td>
+            <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
+            <td class="actions">
+                <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
+                <button class="delete" onclick="deleteTruck(${truck.truck_id})">Delete</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+    
+    document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage}`;
+}
 
         function formatDateTime(datetimeString) {
     if (!datetimeString) return 'N/A';
@@ -382,19 +403,22 @@ checkAccess();
             renderTrucksTable();
         }
 
-        function fetchTrucks() {
-            fetch('include/handlers/truck_handler.php?action=getTrucks')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        trucksData = data.trucks;
-                        renderTrucksTable();
-                    } else {
-                        alert('Error fetching trucks: ' + data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
+   function fetchTrucks() {
+    fetch('include/handlers/truck_handler.php?action=getTrucks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                trucksData = data.trucks;
+                renderTrucksTable();
+                
+                // Add this to automatically refresh every 30 seconds
+                setTimeout(fetchTrucks, 30000);
+            } else {
+                alert('Error fetching trucks: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchTrucks();

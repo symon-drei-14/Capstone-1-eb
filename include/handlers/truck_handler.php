@@ -16,15 +16,20 @@ function validatePlateNumber($plateNo) {
 
 try {
     switch ($action) {
-        case 'getTrucks':
-            $stmt = $conn->prepare("SELECT truck_id, plate_no, capacity, status, 
-                                  last_modified_by, last_modified_at 
-                                  FROM truck_table ORDER BY truck_id");
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $trucks = $result->fetch_all(MYSQLI_ASSOC);
-            echo json_encode(['success' => true, 'trucks' => $trucks]);
-            break;
+    case 'getTrucks':
+    $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
+                           COALESCE(a.status, t.status) as display_status,
+                           t.last_modified_by, 
+                           t.last_modified_at
+                           FROM truck_table t
+                           LEFT JOIN assign a ON t.plate_no = a.plate_no 
+                           AND a.status IN ('En Route', 'Pending')
+                           ORDER BY t.truck_id");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $trucks = $result->fetch_all(MYSQLI_ASSOC);
+    echo json_encode(['success' => true, 'trucks' => $trucks]);
+    break;
 
         case 'addTruck':
             if (!validatePlateNumber($data['plate_no'])) {
