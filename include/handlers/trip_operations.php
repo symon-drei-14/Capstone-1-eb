@@ -13,26 +13,27 @@ $action = $data['action'] ?? '';
 try {
     switch ($action) {
         case 'add':
-            $stmt = $conn->prepare("INSERT INTO assign 
-                (plate_no, date, driver, helper, container_no, client, 
-                destination, shippine_line, consignee, size, cash_adv, status,
-                last_modified_by) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssssssssss",
-                $data['plateNo'],
-                $data['date'],
-                $data['driver'],
-                $data['helper'],
-                $data['containerNo'],
-                $data['client'],
-                $data['destination'],
-                $data['shippingLine'],
-                $data['consignee'],
-                $data['size'],
-                $data['cashAdvance'],
-                $data['status'],
-                $currentUser  
-            );
+        $stmt = $conn->prepare("INSERT INTO assign 
+    (plate_no, date, driver, helper, dispatcher, container_no, client, 
+    destination, shippine_line, consignee, size, cash_adv, status,
+    last_modified_by) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("ssssssssssssss",
+    $data['plateNo'],
+    $data['date'],
+    $data['driver'],
+    $data['helper'],
+    $data['dispatcher'],
+    $data['containerNo'],
+    $data['client'],
+    $data['destination'],
+    $data['shippingLine'],
+    $data['consignee'],
+    $data['size'],
+    $data['cashAdvance'],
+    $data['status'],
+    $currentUser  
+);
             $stmt->execute();
             
             // If status is "En Route", update truck status
@@ -52,27 +53,28 @@ try {
     $getCurrent->execute();
     $current = $getCurrent->get_result()->fetch_assoc();
     
-    $stmt = $conn->prepare("UPDATE assign SET 
-        plate_no=?, date=?, driver=?, helper=?, container_no=?, client=?, 
-        destination=?, shippine_line=?, consignee=?, size=?, cash_adv=?, status=?,
-        last_modified_by=?
-        WHERE trip_id=?");
-    $stmt->bind_param("sssssssssssssi",
-        $data['plateNo'],
-        $data['date'],
-        $data['driver'],
-        $data['helper'],
-        $data['containerNo'],
-        $data['client'],
-        $data['destination'],
-        $data['shippingLine'],
-        $data['consignee'],
-        $data['size'],
-        $data['cashAdvance'],
-        $data['status'],
-        $currentUser,  
-        $data['id']
-    );
+   $stmt = $conn->prepare("UPDATE assign SET 
+    plate_no=?, date=?, driver=?, helper=?, dispatcher=?, container_no=?, client=?, 
+    destination=?, shippine_line=?, consignee=?, size=?, cash_adv=?, status=?,
+    last_modified_by=?
+    WHERE trip_id=?");
+$stmt->bind_param("ssssssssssssssi",
+    $data['plateNo'],
+    $data['date'],
+    $data['driver'],
+    $data['helper'],
+    $data['dispatcher'],
+    $data['containerNo'],
+    $data['client'],
+    $data['destination'],
+    $data['shippingLine'],
+    $data['consignee'],
+    $data['size'],
+    $data['cashAdvance'],
+    $data['status'],
+    $currentUser,  
+    $data['id']
+);
     $stmt->execute();
     
     // Update truck status based on trip status

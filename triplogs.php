@@ -71,11 +71,33 @@ checkAccess(); // No role needed—logic is handled internally
             #noEventsMessage {
                 display: block;
             }
+
+            /* .events-table {
+    width: 100%;
+    table-layout: auto;
+    border-collapse: collapse;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    word-wrap: break-word;
+}
+
+.events-table th, .events-table td {
+    padding: 8px 10px;
+    text-align: center;
+    border-radius: 1px;
+    font-size: 14px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+} */
     
     
             .events-table {
         width: 100%;
-        /* table-layout: fixed; eto pinaltan */
+       
         border-collapse: collapse;
         margin-top: 10px;
         margin-bottom: 20px;
@@ -583,6 +605,7 @@ body {
     height: auto; /* allow content to grow */
 }
 
+
 </style>
 <body>
     <?php
@@ -605,6 +628,7 @@ if ($result->num_rows > 0) {
             'date' => $row['date'],
             'driver' => $row['driver'],
             'helper' => $row['helper'],
+             'dispatcher' => $row['dispatcher'],
             'containerNo' => $row['container_no'],
             'client' => $row['client'],
             'destination' => $row['destination'],
@@ -753,6 +777,11 @@ if ($driverResult->num_rows > 0) {
     
             <label for="editEventHelper">Helper:</label><br>
             <input type="text" id="editEventHelper" name="eventHelper" required><br><br>
+
+            <label for="editEventDispatcher">Dispatcher:</label><br>
+<input type="text" id="editEventDispatcher" name="eventDispatcher" required><br><br>
+
+
     
             <label for="editEventContainerNo">Container No.:</label><br>
             <select id="editEventContainerNo" name="eventContainerNo" required>
@@ -846,6 +875,9 @@ if ($driverResult->num_rows > 0) {
     
             <label for="addEventHelper">Helper:</label><br>
             <input type="text" id="addEventHelper" name="eventHelper" required><br><br>
+
+            <label for="addEventDispatcher">Dispatcher:</label><br>
+<input type="text" id="addEventDispatcher" name="eventDispatcher" required><br><br>
     
             <label for="addEventContainerNo">Container No.:</label><br>
             <select id="addEventContainerNo" name="eventContainerNo" required>
@@ -932,6 +964,7 @@ if ($driverResult->num_rows > 0) {
                     <th>Time</th>
                     <th>Driver</th>
                     <th>Helper</th>
+                      <th>Dispatcher</th>
                     <th>Container No.</th>
                     <th>Client</th>
                     <th>Destination</th>
@@ -1034,6 +1067,7 @@ $(document).on('change', '#addEventDriver, #editEventDriver', function() {
         plateNo: event.plateNo,
         driver: event.driver,
         helper: event.helper,
+            dispatcher: event.dispatcher,
         containerNo: event.containerNo,
         client: event.client,
         destination: event.destination,
@@ -1116,6 +1150,7 @@ $(window).on('click', function(event) {
     <td>${formattedTime}</td>
     <td>${event.driver}</td>
     <td>${event.helper}</td>
+        <td>${event.dispatcher || 'N/A'}</td>
     <td>${event.containerNo}</td>
     <td>${event.client}</td>
     <td>${event.destination}</td>
@@ -1227,6 +1262,7 @@ $(window).on('click', function(event) {
                             <div class="event-details">
                                 <p><strong>Driver:</strong> ${event.driver}</p>
                                 <p><strong>Helper:</strong> ${event.helper}</p>
+                                  <p><strong>Dispatcher:</strong> ${event.dispatcher || 'N/A'}</p>
                                 <p><strong>Client:</strong> ${event.client}</p>
                                 <p><strong>Container No.:</strong> ${event.containerNo}</p>
                                 <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
@@ -1284,6 +1320,7 @@ $(window).on('click', function(event) {
         $('#editEventDate').val(event.date);
         $('#editEventDriver').val(event.driver);
         $('#editEventHelper').val(event.helper);
+        $('#editEventDispatcher').val(event.dispatcher || '');
         $('#editEventContainerNo').val(event.containerNo);
         $('#editEventClient').val(event.client);
         $('#editEventDestination').val(event.destination);
@@ -1326,6 +1363,7 @@ $(window).on('click', function(event) {
             date: $('#addEventDate').val(),
             driver: selectedDriver,
             helper: $('#addEventHelper').val(),
+            dispatcher: $('#addEventDispatcher').val(),
             containerNo: $('#addEventContainerNo').val(),
             client: $('#addEventClient').val(),
             destination: $('#addEventDestination').val(),
@@ -1370,6 +1408,7 @@ $(window).on('click', function(event) {
             date: $('#editEventDate').val(),
             driver: selectedDriver,
             helper: $('#editEventHelper').val(),
+            dispatcher: $('#editEventDispatcher').val(),
             containerNo: $('#editEventContainerNo').val(),
             client: $('#editEventClient').val(),
             destination: $('#editEventDestination').val(),
