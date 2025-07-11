@@ -286,7 +286,7 @@ checkAccess(); // No role needed—logic is handled internally
             trucksList.forEach(truck => {
                 const option = document.createElement('option');
                 option.value = truck.truck_id;
-                option.textContent = truck.truck_id + ' - ' + truck.plate_no;
+                option.textContent = truck.truck_id ;
                 option.setAttribute('data-plate-no', truck.plate_no);
                 truckDropdown.appendChild(option);
             });
