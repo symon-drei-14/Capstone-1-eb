@@ -12,82 +12,80 @@ checkAccess(); // No role needed—logic is handled internally
     
     <link rel="stylesheet" href="include/sidenav.css">
     <link rel="stylesheet" href="include/maintenancestyle.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <style>
-<style>
     body{
-    margin-top:50px;
-}
-@media (max-width: 768px) {
+        margin-top:50px;
+    }
+    @media (max-width: 768px) {
+        .sidebar {
+            display: none;
+            position: absolute;
+            z-index: 999;
+            background-color: #fff;
+            width: 250px;
+            height: 100%;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        }
+
+        .sidebar.show {
+            display: block;
+        }
+    }
+
+    .toggle-sidebar-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #333;
+        z-index: 1300;
+    }
+
+
     .sidebar {
-        display: none;
-        position: absolute;
-        z-index: 999;
-        background-color: #fff;
-        width: 250px;
+        position: fixed;
+        top: 1rem;
+        left: 0;
+        width: 300px; 
         height: 100%;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        background-color: #edf1ed;
+        color: #161616 !important;
+        padding: 20px;
+        box-sizing: border-box;
+        overflow-x: hidden;
+        overflow-y: auto;
+        z-index: 1100;
+        border-right: 2px solid #16161627;
+        transform: translateX(-100%); 
+        transition: transform 0.3s ease;
     }
 
-    .sidebar.show {
-        display: block;
+
+    .sidebar.expanded {
+        transform: translateX(0);
     }
-}
 
-.toggle-sidebar-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #333;
-    z-index: 1300;
-}
+    .sidebar.expanded .sidebar-item a,
+    .sidebar.expanded .sidebar-item span {
+        visibility: visible;
+        opacity: 1;
+    }
+    .main-content3 {
+        margin-top: 80px;
+        margin-left: 10px; /* Reduced left margin from 200px to 100px */
+        margin-right: 20px; /* Reduced right margin from 40px to 20px */
+        width: calc(100% - 25px); /* Adjusted width calculation based on new margins */
+        transition: margin-left 0.3s ease;
+        overflow-y: auto;
+    }
 
-
-.sidebar {
-    position: fixed;
-    top: 1rem;
-    left: 0;
-    width: 300px; 
-    height: 100%;
-    background-color: #edf1ed;
-    color: #161616 !important;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1100;
-    border-right: 2px solid #16161627;
-    transform: translateX(-100%); 
-    transition: transform 0.3s ease;
-}
-
-
-.sidebar.expanded {
-    transform: translateX(0);
-}
-
-.sidebar.expanded .sidebar-item a,
-.sidebar.expanded .sidebar-item span {
-    visibility: visible;
-    opacity: 1;
-}
-.main-content3 {
-    margin-top: 80px;
-    margin-left: 10px; /* Reduced left margin from 200px to 100px */
-    margin-right: 20px; /* Reduced right margin from 40px to 20px */
-    width: calc(100% - 25px); /* Adjusted width calculation based on new margins */
-    transition: margin-left 0.3s ease;
-    overflow-y: auto;
-}
-
-th:nth-child(9), td:nth-child(9) {
- 
-    width: 5%; 
-}
+    th:nth-child(9), td:nth-child(9) {
+        width: 5%; 
+    }
 </style>
 <body>
 
@@ -202,19 +200,10 @@ th:nth-child(9), td:nth-child(9) {
                 
                 <label for="truckId">Truck ID:</label>
                 <select id="truckId" name="truckId" required>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
+                    <!-- Will be populated by JavaScript -->
                 </select><br><br>
                 <label for="licensePlate">License Plate:</label>
-                <input type="text" id="licensePlate" name="licensePlate" ><br><br>
+                <input type="text" id="licensePlate" name="licensePlate" readonly><br><br>
 
                 <label for="date">Date of Inspection:</label>
                 <input type="date" id="date" name="date" required><br><br>
@@ -269,10 +258,46 @@ th:nth-child(9), td:nth-child(9) {
         let totalPages = 1;
         let currentTruckId = 0;
         let isEditing = false;
+        let trucksList = []; // To store truck data for license plate lookup
         
         $(document).ready(function() {
             loadMaintenanceData();
+            fetchTrucksList(); // Load trucks data for license plate lookup
         });
+        
+        function fetchTrucksList() {
+            fetch('include/handlers/truck_handler.php?action=getTrucks')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        trucksList = data.trucks;
+                        populateTruckDropdown();
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading trucks:", error);
+                });
+        }
+        
+        function populateTruckDropdown() {
+            const truckDropdown = document.getElementById('truckId');
+            truckDropdown.innerHTML = '';
+            
+            trucksList.forEach(truck => {
+                const option = document.createElement('option');
+                option.value = truck.truck_id;
+                option.textContent = truck.truck_id + ' - ' + truck.plate_no;
+                option.setAttribute('data-plate-no', truck.plate_no);
+                truckDropdown.appendChild(option);
+            });
+            
+            // Add event listener for truck selection change
+            truckDropdown.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const plateNo = selectedOption.getAttribute('data-plate-no');
+                document.getElementById('licensePlate').value = plateNo || '';
+            });
+        }
         
         function loadMaintenanceData() {
             fetch('include/handlers/maintenance_handler.php?action=getRecords&page=' + currentPage)
@@ -308,32 +333,32 @@ th:nth-child(9), td:nth-child(9) {
                 return;
             }
 
-          data.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${row.truck_id}</td>
-            <td>${row.licence_plate || 'N/A'}</td>
-            <td>${formatDate(row.date_mtnce)}</td>
-            <td>${row.remarks}</td>
-            <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-            <td>${row.supplier || 'N/A'}</td>
-            <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
-            <td>${row.last_modified_by}<br>${formatDateTime(row.last_modified_at)}</td>
-            <td class="actions">
-                <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost})">Edit</button>
-                <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
-                <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
-            </td>
-        `;
-        tableBody.appendChild(tr);
-    });
-}
+            data.forEach(row => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${row.truck_id}</td>
+                    <td>${row.licence_plate || 'N/A'}</td>
+                    <td>${formatDate(row.date_mtnce)}</td>
+                    <td>${row.remarks}</td>
+                    <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
+                    <td>${row.supplier || 'N/A'}</td>
+                    <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
+                    <td>${row.last_modified_by}<br>${formatDateTime(row.last_modified_at)}</td>
+                    <td class="actions">
+                        <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost})">Edit</button>
+                        <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
+                        <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
 
-function formatDateTime(datetimeString) {
-    if (!datetimeString) return 'N/A';
-    const date = new Date(datetimeString);
-    return date.toLocaleString(); 
-}
+        function formatDateTime(datetimeString) {
+            if (!datetimeString) return 'N/A';
+            const date = new Date(datetimeString);
+            return date.toLocaleString(); 
+        }
       
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
