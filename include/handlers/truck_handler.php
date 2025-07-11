@@ -37,7 +37,7 @@ function updateTruckStatus($conn, $truckId, $plateNo) {
     }
     
     // Determine the new status based on the rules
-    $newStatus = 'Good'; // Default status
+    $newStatus = 'In Terminal'; // Default status
     
     if ($tripStatus === 'En Route') {
         $newStatus = 'Enroute';

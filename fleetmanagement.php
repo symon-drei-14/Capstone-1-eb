@@ -72,29 +72,36 @@ checkAccess();
             overflow-y: hidden;
         }
 
-        .status-good {
-            background-color: #4CAF50;
+        .status-enroute {
+            background-color: #007bff; /* Blue */
             color: white;
             padding: 3px 8px;
             border-radius: 4px;
         }
 
-        .status-enroute {
-    background-color: #007bff; /* Blue */
-    color: white;
-    padding: 3px 8px;
-    border-radius: 4px;
-}
-
-.status-pending {
-    background-color: #ffc107; /* Yellow */
-    color: black;
-    padding: 3px 8px;
-    border-radius: 4px;
-}
+        .status-pending {
+            background-color: #ffc107; /* Yellow */
+            color: black;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
 
         .status-in-repair {
-            background-color: #f44336;
+            background-color: #f44336; /* Red */
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .status-in-terminal {
+            background-color: #28a745; /* Green */
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .status-overdue {
+            background-color: #6c757d; /* Gray */
             color: white;
             padding: 3px 8px;
             border-radius: 4px;
@@ -240,9 +247,11 @@ checkAccess();
             <div class="form-group">
                 <label for="status">Status</label>
                 <select id="status" name="status" class="form-control" required>
-                    <option value="Good">Good</option>
+                    <option value="In Terminal">In Terminal</option>
+                    <option value="Enroute">Enroute</option>
                     <option value="In Repair">In Repair</option>
-                       <option value="Enroute">Enroute</option>
+                    <option value="Overdue">Overdue</option>
+                    <option value="Pending">Pending</option>
                 </select>
             </div>
             <div class="button-group">
@@ -277,7 +286,7 @@ checkAccess();
                     document.getElementById('truckIdHidden').value = truck.truck_id;
                     document.getElementById('plateNo').value = truck.plate_no;
                     document.getElementById('capacity').value = truck.capacity;
-                    document.getElementById('status').value = truck.status;
+                    document.getElementById('status').value = truck.display_status;
                 }
             } else {
                 document.getElementById('modalTitle').textContent = 'Add Truck';
@@ -289,7 +298,7 @@ checkAccess();
             document.getElementById('truckIdHidden').value = '';
             document.getElementById('plateNo').value = '';
             document.getElementById('capacity').value = '20';
-            document.getElementById('status').value = 'Good';
+            document.getElementById('status').value = 'In Terminal';
             isEditMode = false;
         }
 
@@ -358,42 +367,42 @@ checkAccess();
             .catch(error => console.error('Error:', error));
         }
 
-      function renderTrucksTable() {
-    const start = (currentTruckPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageData = trucksData.slice(start, Math.min(end, trucksData.length));
-    
-    const tableBody = document.getElementById("trucksTableBody");
-    tableBody.innerHTML = "";
-    
-    pageData.forEach(truck => {
-        const tr = document.createElement("tr");
-        
-        // Determine status class based on display_status
-        const statusClass = truck.display_status.toLowerCase().replace(/\s+/g, "-");
-        
-        tr.innerHTML = `
-            <td>${truck.truck_id}</td>
-            <td>${truck.plate_no}</td>
-            <td>${truck.capacity}</td>
-            <td><span class="status-${statusClass}">${truck.display_status}</span></td>
-            <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
-            <td class="actions">
-                <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
-                <button class="delete" onclick="deleteTruck(${truck.truck_id})">Delete</button>
-            </td>
-        `;
-        tableBody.appendChild(tr);
-    });
-    
-    document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage}`;
-}
+        function renderTrucksTable() {
+            const start = (currentTruckPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageData = trucksData.slice(start, Math.min(end, trucksData.length));
+            
+            const tableBody = document.getElementById("trucksTableBody");
+            tableBody.innerHTML = "";
+            
+            pageData.forEach(truck => {
+                const tr = document.createElement("tr");
+                
+                // Determine status class based on display_status
+                const statusClass = truck.display_status.toLowerCase().replace(/\s+/g, "-");
+                
+                tr.innerHTML = `
+                    <td>${truck.truck_id}</td>
+                    <td>${truck.plate_no}</td>
+                    <td>${truck.capacity}</td>
+                    <td><span class="status-${statusClass}">${truck.display_status}</span></td>
+                    <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
+                    <td class="actions">
+                        <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
+                        <button class="delete" onclick="deleteTruck(${truck.truck_id})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            
+            document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage}`;
+        }
 
         function formatDateTime(datetimeString) {
-    if (!datetimeString) return 'N/A';
-    const date = new Date(datetimeString);
-    return date.toLocaleString(); // This will format based on user's locale
-}
+            if (!datetimeString) return 'N/A';
+            const date = new Date(datetimeString);
+            return date.toLocaleString(); // This will format based on user's locale
+        }
 
         function changeTruckPage(direction) {
             const totalPages = Math.ceil(trucksData.length / rowsPerPage);
@@ -403,22 +412,22 @@ checkAccess();
             renderTrucksTable();
         }
 
-   function fetchTrucks() {
-    fetch('include/handlers/truck_handler.php?action=getTrucks')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                trucksData = data.trucks;
-                renderTrucksTable();
-                
-                // Add this to automatically refresh every 30 seconds
-                setTimeout(fetchTrucks, 30000);
-            } else {
-                alert('Error fetching trucks: ' + data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-}
+        function fetchTrucks() {
+            fetch('include/handlers/truck_handler.php?action=getTrucks')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        trucksData = data.trucks;
+                        renderTrucksTable();
+                        
+                        // Add this to automatically refresh every 30 seconds
+                        setTimeout(fetchTrucks, 30000);
+                    } else {
+                        alert('Error fetching trucks: ' + data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchTrucks();
