@@ -20,6 +20,7 @@ checkAccess(); // No role needed—logic is handled internally
 <style>
     
 
+
     .event-item{
         padding:20px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -60,12 +61,13 @@ checkAccess(); // No role needed—logic is handled internally
         
     
             #calendar {
-                width: 600px;
+                width: 700px;
                 background-color: #ffffff;
                 padding: 30px;
                 border-radius: 20px;
                 box-shadow: rgba(0, 0, 0, 0.15) 0px 15px 25px, rgba(0, 0, 0, 0.05) 0px 5px 10px;
-             height:30rem;
+             height:35rem;
+             overflow: hidden;
             }
     
             #noEventsMessage {
@@ -96,8 +98,8 @@ checkAccess(); // No role needed—logic is handled internally
     
     
             .events-table {
+        table-layout: fixed;        
         width: 100%;
-       
         border-collapse: collapse;
         margin-top: 10px;
         margin-bottom: 20px;
@@ -117,7 +119,7 @@ checkAccess(); // No role needed—logic is handled internally
     }
     .events-table td{
     
-        padding: 15px;
+        padding: 10px;
         text-align: center;
         border-radius: 1px;
         word-wrap: break-word;
@@ -134,10 +136,95 @@ checkAccess(); // No role needed—logic is handled internally
       
     
     }
-    /* .events-table td{
-        font-size: 25px;
-    } */
-    
+
+    .events-table th:nth-child(1), 
+    .events-table td:nth-child(1) { /* Plate No */
+        width: 1rem;
+    }
+
+    .events-table th:nth-child(2), 
+    .events-table td:nth-child(2) { /* Date */
+        width: 1.3rem;
+    }
+
+    .events-table th:nth-child(3), 
+    .events-table td:nth-child(3) { /* Time */
+        width: 1rem;
+    }
+
+    .events-table th:nth-child(4), 
+    .events-table td:nth-child(4) { /* Driver */
+        width: 1.2rem;
+    }
+
+    .events-table th:nth-child(5), 
+    .events-table td:nth-child(5) { /* Helper */
+        width: 1.2rem;
+    }
+
+    .events-table th:nth-child(6), 
+    .events-table td:nth-child(6) { /* Dispatcher */
+        width: 1.7rem;
+    }
+
+    .events-table th:nth-child(7), 
+    .events-table td:nth-child(7) { /* Container No */
+        width: 1.5rem;
+    }
+
+    .events-table th:nth-child(8), 
+    .events-table td:nth-child(8) { /* Client */
+        width: 1rem;
+    }
+
+    .events-table th:nth-child(9), 
+    .events-table td:nth-child(9) { /* Destination */
+        width: 1.2rem;
+    }
+
+    .events-table th:nth-child(10), 
+    .events-table td:nth-child(10) { /* Shipping Line */
+        width: 1.2rem;
+    }
+
+    .events-table th:nth-child(11), 
+    .events-table td:nth-child(11) { /* Consignee */
+        width: 1.7rem;
+    }
+
+    .events-table th:nth-child(12), 
+    .events-table td:nth-child(12) { /* Size */
+        width: 0.5rem;
+    }
+
+    .events-table th:nth-child(13), 
+    .events-table td:nth-child(13) { /* Cash Advance */
+        width: 0.8rem;
+    }
+
+    .events-table th:nth-child(14), 
+    .events-table td:nth-child(14) { /* Status */
+        width: 1rem;
+
+    }
+
+    .events-table th:nth-child(15), 
+    .events-table td:nth-child(15) { /* Last Modified */
+        width: 1.5rem;
+
+    }
+
+    .events-table th:nth-child(16), 
+    .events-table td:nth-child(16) { /* Action */
+        width: 1.2rem;
+    }
+
+    /* Ensure text wraps and doesn't overflow */
+    .events-table td {
+        word-wrap: break-word;
+        white-space: normal;
+    }
+
     .events-table tr:nth-child(even) {
         background-color: #f9f9f9;
     }
@@ -161,7 +248,7 @@ checkAccess(); // No role needed—logic is handled internally
     } */
     
     .events-table td a {
-        color: #4CAF50;
+        color: #000000ff;
         text-decoration: none;
     }
     
@@ -577,13 +664,12 @@ checkAccess(); // No role needed—logic is handled internally
    .main-container{
         background-color: rgb(255, 255, 255);
         margin-left:10px;
-        margin-top: 80px;
+        margin-top: 40px;
         padding:10px;
         border-radius:20px;
         box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-          width: calc(100% - 60px); 
+          width: calc(100% - 40px); 
     min-height: calc(100vh - 100px); 
-
         height: auto;
 
     }
@@ -953,7 +1039,7 @@ if ($driverResult->num_rows > 0) {
         </div>
     </div>
 
-    <div id="tableView" style="display: none;">
+    <div id="tableView" style="display: none; ">
         <h3>Event Table</h3>
 
         <table class="events-table" id="eventsTable"> 
@@ -1150,7 +1236,7 @@ $(window).on('click', function(event) {
     <td>${formattedTime}</td>
     <td>${event.driver}</td>
     <td>${event.helper}</td>
-        <td>${event.dispatcher || 'N/A'}</td>
+    <td>${event.dispatcher || 'N/A'}</td>
     <td>${event.containerNo}</td>
     <td>${event.client}</td>
     <td>${event.destination}</td>
