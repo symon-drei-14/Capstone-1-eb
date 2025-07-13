@@ -17,7 +17,10 @@ require_once 'include/handlers/dbhandler.php';
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <style>
-    
+    body{
+font-family: Arial, sans-serif;
+    }
+
     .main-content3 {
     width: 90vw;
     height: 120vh; 

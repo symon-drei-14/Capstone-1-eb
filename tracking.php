@@ -18,7 +18,7 @@ checkAccess(); // No role needed—logic is handled internally
 </head>
 <style>
     body{
-    margin-top:50px;
+font-family: Arial, sans-serif;
 }
 @media (max-width: 768px) {
     .sidebar {
@@ -74,20 +74,63 @@ checkAccess(); // No role needed—logic is handled internally
     visibility: visible;
     opacity: 1;
 }
+    .main-content {
+            margin-top:-0.5rem;
+            margin-left: -4rem;
+            margin-right: 10px;
+            width: calc(100% - 0px);
+            width: 96vw;
+            height: 105vh;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+
+        .header2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px;
+    background-color: #f4f4f4;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    max-height: 60px;
+    top: 0;
+    left: 0;
+    z-index: 1200;
+
+}
+.logo-container2{
+    
+    display: flex;
+    align-content:left;
+    margin-left:2.5em;
+}
+.profile2 {
+    display: flex;
+    align-items: center;
+    position: relative;
+    right: 2.1em;
+}
+
+
 </style>
 <body>
-<header class="header">
+<header class="header2">
       <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
   <i class="fa fa-bars"></i>
 </button>
-        <div class="logo-container">
+        <div class="logo-container2">
             <img src="include/img/logo.png" alt="Company Logo" class="logo">
             <img src="include/img/mansar.png" alt="Company Name" class="company">
         </div>
 
      
 
-        <div class="profile">
+        <div class="profile2">
             <i class="icon">✉</i>
             <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
             <div class="profile-name">
@@ -139,6 +182,7 @@ checkAccess(); // No role needed—logic is handled internally
     </div>
 </div>
 
+<div class="main-content">
     <div class="container mt-4">
         <div class="row mb-3">
             <div class="col">
@@ -163,6 +207,7 @@ checkAccess(); // No role needed—logic is handled internally
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

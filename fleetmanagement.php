@@ -12,6 +12,16 @@ checkAccess();
     <link rel="stylesheet" href="include/fleetmanagement.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        body{
+            font-family: Arial, sans-serif;
+        }
+        h3{
+            font-family: Arial, sans-serif;
+            margin-top:-10px;
+            margin-bottom:40px;
+            font-size:1.5rem;
+            text-transform:uppercase;
+        }
         .toggle-sidebar-btn {
             background: none;
             border: none;
@@ -59,12 +69,12 @@ checkAccess();
         }
 
         .main-content4 {
-            margin-top: 40px;
+            margin-top: 80px;
             margin-left: 10px;
             margin-right: 10px;
             width: calc(100% - 110px);
             width: 96vw;
-            height: 120vh;
+            height: 105vh;
             background-color: #ffffff;
             border-radius: 10px;
             box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;

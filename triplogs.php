@@ -298,22 +298,23 @@ checkAccess(); // No role needed—logic is handled internally
             }
             .status {
         display: inline-block;
-        padding: 5px 10px;
+        padding: 5px 5px;
         border-radius: 5px;
         
     }
     
-    .status.Completed {
+    .status.completed {
         background-color: #28a745; /* Green */
         color: white;
+        
     }
     
-    .status.Pending {
+    .status.pending {
         background-color: #ffc107; /* Yellow */
         color: black;
     }
     
-    .status.Cancelled {
+    .status.cancelled {
         background-color: #dc3545; /* Red */
         color: white;
     }
@@ -1245,7 +1246,7 @@ $(window).on('click', function(event) {
     <td>${event.size}</td>
     <td>${event.cashAdvance}</td>
     <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
-    <td>${event.modifiedby}<br>${formatDateTime(event.modifiedat)}</td>
+    <td><strong>${event.modifiedby}</strong><br>${formatDateTime(event.modifiedat)}</td>
     <td>
         <button class="edit-btn" data-id="${event.id}">Edit</button>
         <button class="delete-btn" data-id="${event.id}">Delete</button>

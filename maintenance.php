@@ -19,6 +19,7 @@ checkAccess(); // No role needed—logic is handled internally
 <style>
     body{
         margin-top:50px;
+        font-family: Arial, sans-serif;
     }
     @media (max-width: 768px) {
         .sidebar {
@@ -79,6 +80,8 @@ checkAccess(); // No role needed—logic is handled internally
         margin-left: 10px; /* Reduced left margin from 200px to 100px */
         margin-right: 20px; /* Reduced right margin from 40px to 20px */
         width: calc(100% - 25px); /* Adjusted width calculation based on new margins */
+        height: auto;
+        max-height: 110vh;
         transition: margin-left 0.3s ease;
         overflow-y: auto;
     }
@@ -343,7 +346,7 @@ checkAccess(); // No role needed—logic is handled internally
                     <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
                     <td>${row.supplier || 'N/A'}</td>
                     <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
-                    <td>${row.last_modified_by}<br>${formatDateTime(row.last_modified_at)}</td>
+                    <td><Strong>${row.last_modified_by}</strong><br>${formatDateTime(row.last_modified_at)}</td>
                     <td class="actions">
                         <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost})">Edit</button>
                         <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
