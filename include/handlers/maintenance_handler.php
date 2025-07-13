@@ -4,11 +4,21 @@ session_start();
 require 'dbhandler.php';
 
 // Get all maintenance records with pagination
-function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5) {
+function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 3) {
     $offset = ($page - 1) * $rowsPerPage;
     
-    $sql = "SELECT m.maintenance_id, m.truck_id, t.plate_no as licence_plate, m.date_mtnce, 
-            m.remarks, m.status, m.supplier, m.cost, m.last_modified_by, m.last_modified_at
+    $sql = "SELECT 
+            m.maintenance_id,
+            m.truck_id,
+            m.maintenance_type,
+            m.licence_plate,
+            m.date_mtnce,
+            m.remarks,
+            m.status,
+            m.supplier,
+            m.cost,
+            m.last_modified_by,
+            m.last_modified_at
             FROM maintenance m
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id
             ORDER BY m.maintenance_id DESC
@@ -140,7 +150,14 @@ switch ($action) {
     $data = json_decode(file_get_contents("php://input"));
     
     if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
-        echo json_encode(["success" => false, "message" => "Incomplete data"]);
+        $missing = [];
+        if (!isset($data->truckId)) $missing[] = 'truckId';
+        if (!isset($data->date)) $missing[] = 'date';
+        if (!isset($data->remarks)) $missing[] = 'remarks';
+        if (!isset($data->status)) $missing[] = 'status';
+        if (!isset($data->maintenanceType)) $missing[] = 'maintenanceType';
+        
+        echo json_encode(["success" => false, "message" => "Incomplete data. Missing: " . implode(', ', $missing)]);
         exit;
     }
 
@@ -213,8 +230,15 @@ switch ($action) {
    case 'edit':
     $data = json_decode(file_get_contents("php://input"));
     
-    if (!isset($data->maintenanceId, $data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
-        echo json_encode(["success" => false, "message" => "Incomplete data"]);
+    if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
+        $missing = [];
+        if (!isset($data->truckId)) $missing[] = 'truckId';
+        if (!isset($data->date)) $missing[] = 'date';
+        if (!isset($data->remarks)) $missing[] = 'remarks';
+        if (!isset($data->status)) $missing[] = 'status';
+        if (!isset($data->maintenanceType)) $missing[] = 'maintenanceType';
+        
+        echo json_encode(["success" => false, "message" => "Incomplete data. Missing: " . implode(', ', $missing)]);
         exit;
     }
 

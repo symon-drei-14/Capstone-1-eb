@@ -89,6 +89,16 @@ checkAccess(); // No role needed—logic is handled internally
     th:nth-child(9), td:nth-child(9) {
         width: 5%; 
     }
+
+    input:invalid, select:invalid {
+    border: 1px solid red;
+}
+
+.error-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}
 </style>
 <body>
 
@@ -268,10 +278,49 @@ checkAccess(); // No role needed—logic is handled internally
         let isEditing = false;
         let trucksList = []; // To store truck data for license plate lookup
         
-        $(document).ready(function() {
-            loadMaintenanceData();
-            fetchTrucksList(); // Load trucks data for license plate lookup
-        });
+    function getLocalDate() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000; // offset in milliseconds
+    const localISOTime = (new Date(now - offset)).toISOString().slice(0, 10);
+    return localISOTime;
+}
+
+$(document).ready(function() {
+    loadMaintenanceData();
+    fetchTrucksList();
+});
+
+        function validateMaintenanceForm() {
+    const requiredFields = [
+        {id: 'truckId', name: 'Truck ID'},
+        {id: 'date', name: 'Date of Inspection'},
+        {id: 'remarks', name: 'Remarks'},
+        {id: 'status', name: 'Status'},
+        {id: 'maintenanceType', name: 'Maintenance Type'}
+    ];
+    
+    for (const field of requiredFields) {
+        const element = document.getElementById(field.id);
+        if (!element.value) {
+            alert(`Please fill in the ${field.name} field`);
+            element.focus();
+            return false;
+        }
+    }
+    
+    // Additional validation - check if date is in the future for new records
+    if (!isEditing) {
+        const today = new Date();
+        const inspectionDate = new Date(document.getElementById('date').value);
+        if (inspectionDate < today) {
+            alert("Inspection date must be today or in the future");
+            document.getElementById('date').focus();
+            return false;
+        }
+    }
+    
+    return true;
+}
         
         function fetchTrucksList() {
             fetch('include/handlers/truck_handler.php?action=getTrucks')
@@ -341,7 +390,7 @@ checkAccess(); // No role needed—logic is handled internally
         return;
     }
 
-    data.forEach(row => {
+     data.forEach(row => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${row.truck_id}</td>
@@ -349,10 +398,10 @@ checkAccess(); // No role needed—logic is handled internally
             <td>${formatDate(row.date_mtnce)}</td>
             <td>${row.remarks}</td>
             <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-            <td>${row.maintenance_type === 'emergency' ? 'Emergency' : (row.maintenance_type === 'preventive' ? 'Preventive' : row.maintenance_type)}</td>
+       
             <td>${row.supplier || 'N/A'}</td>
             <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
-            <td><Strong>${row.last_modified_by}</strong><br>${formatDateTime(row.last_modified_at)}</td>
+            <td><strong>${row.last_modified_by}</strong><br>${formatDateTime(row.last_modified_at)}</td>
             <td class="actions">
                 <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost}, '${row.maintenance_type || 'preventive'}')">Edit</button>
                 <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
@@ -440,25 +489,23 @@ checkAccess(); // No role needed—logic is handled internally
             loadMaintenanceData();
         }
         
-        function openModal(mode) {
-            document.getElementById("maintenanceModal").style.display = "block";
-            
-            if (mode === 'add') {
-                isEditing = false;
-                document.getElementById("modalTitle").textContent = "Add Maintenance Schedule";
-                document.getElementById("maintenanceForm").reset();
-                document.getElementById("maintenanceId").value = "";
-                
-                // Set default values for add mode
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById("date").value = today;
-                document.getElementById("date").setAttribute("min", today);
-                
-                // Force status to "Pending" for new records
-                document.getElementById("status").value = "Pending";
-                document.getElementById("status").disabled = true;
-            }
-        }
+     function openModal(mode) {
+    document.getElementById("maintenanceModal").style.display = "block";
+    
+    if (mode === 'add') {
+        isEditing = false;
+        document.getElementById("modalTitle").textContent = "Add Maintenance Schedule";
+        document.getElementById("maintenanceForm").reset();
+        document.getElementById("maintenanceId").value = "";
+        
+        // Use the new getLocalDate() function here
+        document.getElementById("date").value = getLocalDate();
+        document.getElementById("date").setAttribute("min", getLocalDate());
+        
+        document.getElementById("status").value = "Pending";
+        document.getElementById("status").disabled = true;
+    }
+}
         
        function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost, maintenanceType) {
     isEditing = true;
@@ -486,13 +533,12 @@ checkAccess(); // No role needed—logic is handled internally
         }
         
         function saveMaintenanceRecord() {
-    const form = document.getElementById("maintenanceForm");
-    
-    if (!form.checkValidity()) {
-        form.reportValidity();
+    // First validate the form
+    if (!validateMaintenanceForm()) {
         return;
     }
     
+    const form = document.getElementById("maintenanceForm");
     const maintenanceId = document.getElementById("maintenanceId").value;
     const action = isEditing ? 'edit' : 'add';
     
@@ -505,8 +551,10 @@ checkAccess(); // No role needed—logic is handled internally
         status: document.getElementById("status").value,
         supplier: document.getElementById("supplier").value,
         cost: parseFloat(document.getElementById("cost").value || 0),
-        maintenanceType: document.getElementById("maintenanceType").value // Add this line
+        maintenanceType: document.getElementById("maintenanceType").value
     };
+    
+    console.log("Submitting form data:", formData); // For debugging
     
     $.ajax({
         url: 'include/handlers/maintenance_handler.php?action=' + action,
@@ -524,7 +572,7 @@ checkAccess(); // No role needed—logic is handled internally
         },
         error: function(xhr, status, error) {
             console.error("Error saving record: " + error);
-            alert("Failed to save maintenance record.");
+            alert("Failed to save maintenance record. Please check console for details.");
         }
     });
 }
