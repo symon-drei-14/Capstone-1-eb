@@ -19,6 +19,7 @@ require_once 'include/handlers/dbhandler.php';
 <style>
     body{
 font-family: Arial, sans-serif;
+    background-color: rgb(241, 241, 244);
     }
 
     .main-content3 {
