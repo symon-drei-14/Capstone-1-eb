@@ -137,78 +137,123 @@ switch ($action) {
         break;
         
     case 'add':
-        $data = json_decode(file_get_contents("php://input"));
-        
-        if (!isset($data->truckId, $data->date, $data->remarks, $data->status)) {
-            echo json_encode(["success" => false, "message" => "Incomplete data"]);
-            exit;
-        }
-
-        $username = $_SESSION['username']; 
-        
-        $licensePlate = isset($data->licensePlate) ? $data->licensePlate : '';
-        $supplier = isset($data->supplier) ? $data->supplier : '';
-        $cost = isset($data->cost) ? $data->cost : 0;
-        
-        $stmt = $conn->prepare("INSERT INTO maintenance (truck_id, licence_plate, date_mtnce, remarks, status, supplier, cost, last_modified_by) 
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isssssds", 
-            $data->truckId,
-            $licensePlate,
-            $data->date, 
-            $data->remarks,
-            $data->status,
-            $supplier,
-            $cost,
-            $username
-        );
-        
-        if ($stmt->execute()) {
-            // Update truck status based on maintenance status
-            updateTruckStatusFromMaintenance($conn, $data->truckId, $data->status);
-            echo json_encode(["success" => true]);
-        } else {
-            echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
-        }
-        $stmt->close();
-        break;
+    $data = json_decode(file_get_contents("php://input"));
     
-    case 'edit':
-        $data = json_decode(file_get_contents("php://input"));
-        
-        if (!isset($data->maintenanceId, $data->truckId, $data->date, $data->remarks, $data->status)) {
-            echo json_encode(["success" => false, "message" => "Incomplete data"]);
-            exit;
-        }
+    if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
+        echo json_encode(["success" => false, "message" => "Incomplete data"]);
+        exit;
+    }
 
-        $username = $_SESSION['username']; 
+    // Validate maintenance type
+    $validTypes = ['preventive', 'emergency'];
+    if (!in_array($data->maintenanceType, $validTypes)) {
+        echo json_encode(["success" => false, "message" => "Invalid maintenance type"]);
+        exit;
+    }
+
+    // Check for preventive maintenance frequency if not emergency
+    if ($data->maintenanceType === 'preventive') {
+        $checkStmt = $conn->prepare("SELECT date_mtnce FROM maintenance 
+                                    WHERE truck_id = ? AND status = 'Completed' 
+                                    AND maintenance_type = 'preventive'
+                                    ORDER BY date_mtnce DESC LIMIT 1");
+        $checkStmt->bind_param("i", $data->truckId);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
         
-        $licensePlate = isset($data->licensePlate) ? $data->licensePlate : '';
-        $supplier = isset($data->supplier) ? $data->supplier : '';
-        $cost = isset($data->cost) ? $data->cost : 0;
-        
-        $stmt = $conn->prepare("UPDATE maintenance SET truck_id = ?, licence_plate = ?, date_mtnce = ?, remarks = ?, 
-                               status = ?, supplier = ?, cost = ?, last_modified_by = ? WHERE maintenance_id = ?");
-        $stmt->bind_param("isssssdsi", 
-            $data->truckId,
-            $licensePlate,
-            $data->date, 
-            $data->remarks,
-            $data->status,
-            $supplier,
-            $cost,
-            $username,
-            $data->maintenanceId
-        );
-        if ($stmt->execute()) {
-            // Update truck status based on maintenance status
-            updateTruckStatusFromMaintenance($conn, $data->truckId, $data->status);
-            echo json_encode(["success" => true]);
-        } else {
-            echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+        if ($checkResult->num_rows > 0) {
+            $lastMaintenance = $checkResult->fetch_assoc()['date_mtnce'];
+            $lastDate = new DateTime($lastMaintenance);
+            $currentDate = new DateTime($data->date);
+            $interval = $lastDate->diff($currentDate);
+            
+            // Check if less than 6 months since last preventive maintenance
+            if ($interval->m < 6 && $interval->y == 0) {
+                echo json_encode([
+                    "success" => false, 
+                    "message" => "Preventive maintenance can only be scheduled every 6 months. Last maintenance was on " . 
+                                date('Y-m-d', strtotime($lastMaintenance)) . 
+                                ". Please mark as emergency repair if needed."
+                ]);
+                exit;
+            }
         }
-        $stmt->close();
-        break;
+    }
+
+    $username = $_SESSION['username']; 
+    
+    $licensePlate = isset($data->licensePlate) ? $data->licensePlate : '';
+    $supplier = isset($data->supplier) ? $data->supplier : '';
+    $cost = isset($data->cost) ? $data->cost : 0;
+    
+    $stmt = $conn->prepare("INSERT INTO maintenance (truck_id, licence_plate, date_mtnce, remarks, status, supplier, cost, last_modified_by, maintenance_type) 
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isssssdss", 
+        $data->truckId,
+        $licensePlate,
+        $data->date, 
+        $data->remarks,
+        $data->status,
+        $supplier,
+        $cost,
+        $username,
+        $data->maintenanceType
+    );
+    
+    if ($stmt->execute()) {
+        // Update truck status based on maintenance status
+        updateTruckStatusFromMaintenance($conn, $data->truckId, $data->status);
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+    }
+    $stmt->close();
+    break;
+    
+   case 'edit':
+    $data = json_decode(file_get_contents("php://input"));
+    
+    if (!isset($data->maintenanceId, $data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
+        echo json_encode(["success" => false, "message" => "Incomplete data"]);
+        exit;
+    }
+
+    // Validate maintenance type
+    $validTypes = ['preventive', 'emergency'];
+    if (!in_array($data->maintenanceType, $validTypes)) {
+        echo json_encode(["success" => false, "message" => "Invalid maintenance type"]);
+        exit;
+    }
+
+    $username = $_SESSION['username']; 
+    
+    $licensePlate = isset($data->licensePlate) ? $data->licensePlate : '';
+    $supplier = isset($data->supplier) ? $data->supplier : '';
+    $cost = isset($data->cost) ? $data->cost : 0;
+    
+    $stmt = $conn->prepare("UPDATE maintenance SET truck_id = ?, licence_plate = ?, date_mtnce = ?, remarks = ?, 
+                           status = ?, supplier = ?, cost = ?, last_modified_by = ?, maintenance_type = ? WHERE maintenance_id = ?");
+    $stmt->bind_param("isssssdssi", 
+        $data->truckId,
+        $licensePlate,
+        $data->date, 
+        $data->remarks,
+        $data->status,
+        $supplier,
+        $cost,
+        $username,
+        $data->maintenanceType,
+        $data->maintenanceId
+    );
+    if ($stmt->execute()) {
+        // Update truck status based on maintenance status
+        updateTruckStatusFromMaintenance($conn, $data->truckId, $data->status);
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+    }
+    $stmt->close();
+    break;
     
     case 'delete':
         $id = isset($_GET['id']) ? intval($_GET['id']) : 0;

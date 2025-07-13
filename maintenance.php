@@ -200,7 +200,12 @@ checkAccess(); // No role needed—logic is handled internally
             <h2 id="modalTitle">Add Maintenance Schedule</h2>
             <form id="maintenanceForm">
                 <input type="hidden" id="maintenanceId" name="maintenanceId">
-                
+                <label for="maintenanceType">Maintenance Type:</label>
+<select id="maintenanceType" name="maintenanceType" required>
+    <option value="preventive">Preventive Maintenance</option>
+    <option value="emergency">Emergency Repair</option>
+</select><br><br>
+
                 <label for="truckId">Truck ID:</label>
                 <select id="truckId" name="truckId" required>
                     <!-- Will be populated by JavaScript -->
@@ -325,37 +330,38 @@ checkAccess(); // No role needed—logic is handled internally
                 });
         }
 
-        function renderTable(data) {
-            const tableBody = document.querySelector("#maintenanceTable tbody");
-            tableBody.innerHTML = ""; 
-            
-            if (data.length === 0) {
-                const tr = document.createElement("tr");
-                tr.innerHTML = '<td colspan="8" class="text-center">No maintenance records found</td>';
-                tableBody.appendChild(tr);
-                return;
-            }
+       function renderTable(data) {
+    const tableBody = document.querySelector("#maintenanceTable tbody");
+    tableBody.innerHTML = ""; 
+    
+    if (data.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="9" class="text-center">No maintenance records found</td>';
+        tableBody.appendChild(tr);
+        return;
+    }
 
-            data.forEach(row => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${row.truck_id}</td>
-                    <td>${row.licence_plate || 'N/A'}</td>
-                    <td>${formatDate(row.date_mtnce)}</td>
-                    <td>${row.remarks}</td>
-                    <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-                    <td>${row.supplier || 'N/A'}</td>
-                    <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
-                    <td><Strong>${row.last_modified_by}</strong><br>${formatDateTime(row.last_modified_at)}</td>
-                    <td class="actions">
-                        <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost})">Edit</button>
-                        <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
-                        <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-        }
+    data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${row.truck_id}</td>
+            <td>${row.licence_plate || 'N/A'}</td>
+            <td>${formatDate(row.date_mtnce)}</td>
+            <td>${row.remarks}</td>
+            <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
+            <td>${row.maintenance_type === 'emergency' ? 'Emergency' : (row.maintenance_type === 'preventive' ? 'Preventive' : row.maintenance_type)}</td>
+            <td>${row.supplier || 'N/A'}</td>
+            <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
+            <td><Strong>${row.last_modified_by}</strong><br>${formatDateTime(row.last_modified_at)}</td>
+            <td class="actions">
+                <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost}, '${row.maintenance_type || 'preventive'}')">Edit</button>
+                <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
+                <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
 
         function formatDateTime(datetimeString) {
             if (!datetimeString) return 'N/A';
@@ -454,23 +460,24 @@ checkAccess(); // No role needed—logic is handled internally
             }
         }
         
-        function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost) {
-            isEditing = true;
-            document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
-            document.getElementById("maintenanceId").value = id;
-            document.getElementById("truckId").value = truckId;
-            document.getElementById("licensePlate").value = licensePlate || '';
-            document.getElementById("date").value = date;
-            document.getElementById("remarks").value = remarks;
-            document.getElementById("status").value = status;
-            document.getElementById("supplier").value = supplier;
-            document.getElementById("cost").value = cost;
-            
-            // Enable the status dropdown for editing
-            document.getElementById("status").disabled = false;
-            
-            document.getElementById("maintenanceModal").style.display = "block";
-        }
+       function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost, maintenanceType) {
+    isEditing = true;
+    document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
+    document.getElementById("maintenanceId").value = id;
+    document.getElementById("truckId").value = truckId;
+    document.getElementById("licensePlate").value = licensePlate || '';
+    document.getElementById("date").value = date;
+    document.getElementById("remarks").value = remarks;
+    document.getElementById("status").value = status;
+    document.getElementById("supplier").value = supplier;
+    document.getElementById("cost").value = cost;
+    document.getElementById("maintenanceType").value = maintenanceType || 'preventive';
+    
+    // Enable the status dropdown for editing
+    document.getElementById("status").disabled = false;
+    
+    document.getElementById("maintenanceModal").style.display = "block";
+}
         
         function closeModal() {
             document.getElementById("maintenanceModal").style.display = "none";
@@ -479,47 +486,48 @@ checkAccess(); // No role needed—logic is handled internally
         }
         
         function saveMaintenanceRecord() {
-            const form = document.getElementById("maintenanceForm");
-            
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
+    const form = document.getElementById("maintenanceForm");
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const maintenanceId = document.getElementById("maintenanceId").value;
+    const action = isEditing ? 'edit' : 'add';
+    
+    const formData = {
+        maintenanceId: maintenanceId ? parseInt(maintenanceId) : null,
+        truckId: parseInt(document.getElementById("truckId").value),
+        licensePlate: document.getElementById("licensePlate").value,
+        date: document.getElementById("date").value,
+        remarks: document.getElementById("remarks").value,
+        status: document.getElementById("status").value,
+        supplier: document.getElementById("supplier").value,
+        cost: parseFloat(document.getElementById("cost").value || 0),
+        maintenanceType: document.getElementById("maintenanceType").value // Add this line
+    };
+    
+    $.ajax({
+        url: 'include/handlers/maintenance_handler.php?action=' + action,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            if (response.success) {
+                closeModal();
+                loadMaintenanceData();
+                alert(isEditing ? "Maintenance record updated successfully!" : "Maintenance record added successfully!");
+            } else {
+                alert("Error: " + (response.message || "Unknown error"));
             }
-            
-            const maintenanceId = document.getElementById("maintenanceId").value;
-            const action = isEditing ? 'edit' : 'add';
-            
-            const formData = {
-                maintenanceId: maintenanceId ? parseInt(maintenanceId) : null,
-                truckId: parseInt(document.getElementById("truckId").value),
-                licensePlate: document.getElementById("licensePlate").value,
-                date: document.getElementById("date").value,
-                remarks: document.getElementById("remarks").value,
-                status: document.getElementById("status").value,
-                supplier: document.getElementById("supplier").value,
-                cost: parseFloat(document.getElementById("cost").value || 0)
-            };
-            
-            $.ajax({
-                url: 'include/handlers/maintenance_handler.php?action=' + action,
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                success: function(response) {
-                    if (response.success) {
-                        closeModal();
-                        loadMaintenanceData();
-                        alert(isEditing ? "Maintenance record updated successfully!" : "Maintenance record added successfully!");
-                    } else {
-                        alert("Error: " + (response.message || "Unknown error"));
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error saving record: " + error);
-                    alert("Failed to save maintenance record.");
-                }
-            });
+        },
+        error: function(xhr, status, error) {
+            console.error("Error saving record: " + error);
+            alert("Failed to save maintenance record.");
         }
+    });
+}
         
         function deleteMaintenance(id) {
             if (!confirm("Are you sure you want to delete this maintenance record?")) {
