@@ -19,6 +19,20 @@ checkAccess(); // No role needed—logic is handled internally
 </head>
 <style>
     
+#editReasonsModal {
+   align-items: left;
+    justify-content: center;
+    z-index: 99999; 
+}
+
+#editReasonsModal .modal-content {
+    position: relative;
+    z-index: 100000;
+    height:auto;    
+    max-height:30em;
+    width:30em;
+    margin-top:10em;
+}   
 
 
     .event-item{
@@ -692,6 +706,26 @@ body {
     height: auto; /* allow content to grow */
 }
 
+.edit-btn2.view-reasons-btn {
+    background-color: #5287bfff; 
+    color: white;
+    border: none;
+    padding: 5px 5px;
+    font-size: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  margin-top:5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.edit-btn2.view-reasons-btn:hover {
+    background-color: #0056b3;
+}
+
+.edit-btn2.view-reasons-btn:active {
+    transform: scale(0.98);
+    background-color: #004a99;
+}
 
 </style>
 <body>
@@ -700,7 +734,7 @@ body {
     session_start();
     // Fetch trip assignments
   
-$sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity
+$sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity, a.edit_reasons
         FROM assign a
         LEFT JOIN drivers_table d ON a.driver = d.name
         LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
@@ -727,7 +761,8 @@ if ($result->num_rows > 0) {
             'modifiedby' => $row['last_modified_by'],
             'modifiedat' => $row['last_modified_at'],
             'truck_plate_no' => $row['truck_plate_no'],
-            'truck_capacity' => $row['truck_capacity']
+            'truck_capacity' => $row['truck_capacity'],
+            'edit_reasons' => $row['edit_reasons'] 
         ];
     }
 }
@@ -926,6 +961,17 @@ if ($driverResult->num_rows > 0) {
                 <option value="Cancelled">Cancelled</option>
                   <option value="En Route">En Route</option>
             </select><br><br>
+<label>Reason for Edit (select all that apply):</label><br>
+<div style="border: 1px solid #ddd; padding: 5px; border-radius: 5px; margin-bottom: 15px;">
+    <label><input type="checkbox" name="editReason" value="Changed schedule as per client request"> Changed schedule as per client request</label><br>
+    <label><input type="checkbox" name="editReason" value="Updated driver assignment due to availability"> Updated driver assignment due to availability</label><br>
+    <label><input type="checkbox" name="editReason" value="Modified vehicle assignment for capacity requirements"> Modified vehicle assignment for capacity requirements</label><br>
+    <label><input type="checkbox" name="editReason" value="Adjusted destination based on new instructions"> Adjusted destination based on new instructions</label><br>
+    <label><input type="checkbox" name="editReason" value="Updated container details for accuracy"> Updated container details for accuracy</label><br>
+    <label><input type="checkbox" name="editReason" value="Other"> Other (please specify below)</label><br>
+    <label for="otherReasonText">Specify other reason:</label><br>
+    <input type="text" id="otherReasonText" name="otherReasonText" style="width: 90%;" placeholder="Enter specific reason for edit">
+</div>
     
             <button type="submit">Save Changes</button>
             <button type="button" class="close-btn cancel-btn">Cancel</button>
@@ -1022,6 +1068,8 @@ if ($driverResult->num_rows > 0) {
                 <option value="Cancelled">Cancelled</option>
                   <option value="En Route">En Route</option>
             </select><br><br>
+
+            
     
             <!-- Save and Cancel buttons -->
             <button type="submit">Save Schedule</button>
@@ -1075,6 +1123,17 @@ if ($driverResult->num_rows > 0) {
             </div>
         </div>
     </div>
+
+   <div id="editReasonsModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="close">&times;</span>
+        <h3>Edit Remarks</h3>
+        <div id="editReasonsContent">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+        <button type="button" class="close-btn cancel-btn" style="margin-top: 20px;">Close</button>
+    </div>
+</div>
 </div>
 
 <script>
@@ -1246,7 +1305,8 @@ $(window).on('click', function(event) {
     <td>${event.size}</td>
     <td>${event.cashAdvance}</td>
     <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
-    <td><strong>${event.modifiedby}</strong><br>${formatDateTime(event.modifiedat)}</td>
+       <td><strong>${event.modifiedby}</strong><br>${formatDateTime(event.modifiedat)}<br>
+        ${event.edit_reasons ? `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}">View Remarks</button>` : ''}
     <td>
         <button class="edit-btn" data-id="${event.id}">Edit</button>
         <button class="delete-btn" data-id="${event.id}">Delete</button>
@@ -1474,7 +1534,44 @@ $(window).on('click', function(event) {
         }
     });
 });
-        
+
+$(document).on('click', '.view-reasons-btn', function() {
+    var eventId = $(this).data('id');
+    var event = eventsData.find(function(e) { return e.id == eventId; });
+    
+    if (event && event.edit_reasons) {
+        try {
+            var reasons = JSON.parse(event.edit_reasons);
+            var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
+            html += '<ul style="list-style-type: none; padding-left: 5px;">';
+            
+            reasons.forEach(function(reason) {
+                // Format the reason with a bullet point and proper spacing
+                html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
+                html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
+                html += '</li>';
+            });
+            
+            html += '</ul>';
+            html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
+            html += 'Last modified by: ' + (event.modifiedby || 'System') + '<br>';
+            html += 'On: ' + formatDateTime(event.modifiedat);
+            html += '</p></div>';
+            
+            $('#editReasonsContent').html(html);
+            $('#editReasonsModal').show();
+        } catch (e) {
+            console.error('Error parsing edit reasons:', e);
+            $('#editReasonsContent').html('<div style="padding: 15px; background: #fff8f8; border: 1px solid #ffdddd;">'+
+                '<p>Error displaying edit history</p></div>');
+            $('#editReasonsModal').show();
+        }
+    } else {
+        $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
+            '<p>No edit remarks recorded for this trip</p></div>');
+        $('#editReasonsModal').show();
+    }
+});
         // Edit form submit handler
        $('#editForm').on('submit', function(e) {
     e.preventDefault();
@@ -1483,6 +1580,17 @@ $(window).on('click', function(event) {
     var selectedDriver = $('#editEventDriver').val();
     var driver = driversData.find(d => d.name === selectedDriver);
     var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#editEventPlateNo').val();
+
+     var editReasons = [];
+    $('input[name="editReason"]:checked').each(function() {
+        editReasons.push($(this).val());
+    });
+    
+    // Add other reason if specified
+    var otherReason = $('#otherReasonText').val();
+    if (otherReason && editReasons.includes('Other')) {
+        editReasons[editReasons.indexOf('Other')] = 'Other: ' + otherReason;
+    }
     
     $.ajax({
         url: 'include/handlers/trip_operations.php',
@@ -1503,7 +1611,8 @@ $(window).on('click', function(event) {
             consignee: $('#editEventConsignee').val(),
             size: $('#editEventSize').val(),
             cashAdvance: $('#editEventCashAdvance').val(),
-            status: $('#editEventStatus').val()
+            status: $('#editEventStatus').val(),
+            editReasons: editReasons
         }),
         success: function(response) {
             if (response.success) {
@@ -1549,6 +1658,10 @@ $(window).on('click', function(event) {
         // Initial render
         renderTable();
     });
+
+
+
+
 </script>
  <script>
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {

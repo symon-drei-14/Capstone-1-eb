@@ -17,6 +17,140 @@ checkAccess(); // No role needed—logic is handled internally
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <style>
+.edit-reasons-section {
+    display: none;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.reasons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reason-option {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    min-width: 1000000;
+}
+
+.reason-option label {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    margin: 0;
+    font-size: 14px;
+    justify-content: space-between;
+    gap: 15px; 
+    min-width: 0; 
+}
+
+
+
+.reason-option input[type="checkbox"] {
+    flex-shrink: 0; 
+    margin-left: 5em; 
+    transform: scale(1.2);
+}
+
+.other-reason {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.other-reason label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.other-reason textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 60px;
+}
+
+    .view-remarks-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    margin-top: 5px;
+    font-weight:bold;
+}
+
+
+
+.view-remarks-btn:hover {
+    background-color: #45a049;
+}
+
+.remarks-modal-content {
+    padding: 10px;
+    background: white;
+    border-radius: 5px;
+}
+
+.remarks-modal-content h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.remarks-modal-content ul {
+    padding-left: 0px;
+}
+
+.remarks-modal-content li {
+    margin-bottom: 8px;
+}
+
+.remarks-modal-content button {
+    background-color: #9f1515ff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%; 
+    max-width: 500px; 
+    border-radius: 20px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    overflow-x: auto; 
+    max-height: 80vh; 
+    overflow-y: auto; 
+}
+
+
+.remarks-modal-content button:hover {
+    background-color: #45a049;
+}
+
     body{
         margin-top:50px;
         font-family: Arial, sans-serif;
@@ -242,7 +376,64 @@ checkAccess(); // No role needed—logic is handled internally
 
                 <label for="cost">Cost:</label>
                 <input type="number" id="cost" name="cost" step="0.01"><br><br>
-
+                
+<div class="edit-reasons-section">
+    <label>Reason for Edit (select all that apply):</label>
+    <div class="reasons-container">
+        <div class="reason-option">
+            <label>
+                Changed maintenance schedule as per supplier availability
+                <input type="checkbox" name="editReason" value="Changed maintenance schedule as per supplier availability">
+            </label>
+        </div>
+        <div class="reason-option">
+            <label>
+                Updated maintenance type based on vehicle condition
+                <input type="checkbox" name="editReason" value="Updated maintenance type based on vehicle condition">
+            </label>
+        </div>
+        <div class="reason-option">
+            <label>
+                Adjusted date due to parts availability
+                <input type="checkbox" name="editReason" value="Adjusted date due to parts availability">
+            </label>
+        </div>
+        <div class="reason-option">
+            <label>
+                Updated cost estimate after inspection
+                <input type="checkbox" name="editReason" value="Updated cost estimate after inspection">
+            </label>
+        </div>
+        <div class="reason-option">
+            <label>
+                Changed status based on work progress
+                <input type="checkbox" name="editReason" value="Changed status based on work progress">
+            </label>
+        </div>
+        <div class="reason-option">
+            <label>
+                Updated supplier information
+                <input type="checkbox" name="editReason" value="Updated supplier information">
+            </label>
+        </div>
+        <div class="reason-option">
+            <label>
+                Corrected data entry error
+                <input type="checkbox" name="editReason" value="Corrected data entry error">
+            </label>
+        </div>
+        <div class="reason-option">
+            <label>
+                Other (please specify below)
+                <input type="checkbox" name="editReason" value="Other">
+            </label>
+        </div>
+        <div class="other-reason">
+            <label for="otherReasonText">Specify other reason:</label>
+            <textarea id="otherReasonText" name="otherReasonText" rows="3" placeholder="Enter specific reason for edit"></textarea>
+        </div>
+    </div>
+</div>
                 <button type="button" class="submitbtn" onclick="saveMaintenanceRecord()">Submit</button>
                 <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
             </form>
@@ -270,6 +461,12 @@ checkAccess(); // No role needed—logic is handled internally
             </div>
         </div>
     </div>
+
+    <div id="remarksModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div id="remarksModalContent"></div>
+    </div>
+</div>
 
     <script>
         let currentPage = 1;
@@ -379,7 +576,7 @@ $(document).ready(function() {
                 });
         }
 
-       function renderTable(data) {
+   function renderTable(data) {
     const tableBody = document.querySelector("#maintenanceTable tbody");
     tableBody.innerHTML = ""; 
     
@@ -390,7 +587,7 @@ $(document).ready(function() {
         return;
     }
 
-     data.forEach(row => {
+    data.forEach(row => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${row.truck_id}</td>
@@ -398,10 +595,13 @@ $(document).ready(function() {
             <td>${formatDate(row.date_mtnce)}</td>
             <td>${row.remarks}</td>
             <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-       
             <td>${row.supplier || 'N/A'}</td>
             <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
-            <td><strong>${row.last_modified_by}</strong><br>${formatDateTime(row.last_modified_at)}</td>
+            <td>
+                <strong>${row.last_modified_by}</strong><br>
+                ${formatDateTime(row.last_modified_at)}<br>
+                ${row.edit_reasons ? `<button class="view-remarks-btn" data-reasons='${row.edit_reasons}'>View Remarks</button>` : ''}
+            </td>
             <td class="actions">
                 <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost}, '${row.maintenance_type || 'preventive'}')">Edit</button>
                 <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
@@ -410,7 +610,15 @@ $(document).ready(function() {
         `;
         tableBody.appendChild(tr);
     });
+
+    // Add event listeners to all view remarks buttons
+    document.querySelectorAll('.view-remarks-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            showEditRemarks(this.getAttribute('data-reasons'));
+        });
+    });
 }
+
 
         function formatDateTime(datetimeString) {
             if (!datetimeString) return 'N/A';
@@ -489,7 +697,7 @@ $(document).ready(function() {
             loadMaintenanceData();
         }
         
-     function openModal(mode) {
+  function openModal(mode) {
     document.getElementById("maintenanceModal").style.display = "block";
     
     if (mode === 'add') {
@@ -504,10 +712,13 @@ $(document).ready(function() {
         
         document.getElementById("status").value = "Pending";
         document.getElementById("status").disabled = true;
+        
+        // Hide edit reasons section for add mode
+        document.querySelector('.edit-reasons-section').style.display = 'none';
     }
 }
-        
-       function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost, maintenanceType) {
+
+function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost, maintenanceType) {
     isEditing = true;
     document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
     document.getElementById("maintenanceId").value = id;
@@ -523,19 +734,71 @@ $(document).ready(function() {
     // Enable the status dropdown for editing
     document.getElementById("status").disabled = false;
     
+    // Show edit reasons section for edit mode
+    document.querySelector('.edit-reasons-section').style.display = 'block';
+    
+    // Reset checkboxes and textarea
+    document.querySelectorAll('input[name="editReason"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.getElementById('otherReasonText').value = '';
+    
     document.getElementById("maintenanceModal").style.display = "block";
 }
+
+function showEditRemarks(reasonsJson) {
+    try {
+        const reasons = JSON.parse(reasonsJson);
+        let html = '<div class="remarks-modal-content"><h3>Edit Remarks</h3><ul>';
         
-        function closeModal() {
-            document.getElementById("maintenanceModal").style.display = "none";
-            // Always enable the status dropdown when closing the modal
-            document.getElementById("status").disabled = false;
-        }
+        reasons.forEach(reason => {
+            html += `<li>${reason}</li>`;
+        });
         
-        function saveMaintenanceRecord() {
+        html += '</ul><button onclick="document.getElementById(\'remarksModal\').style.display=\'none\'">Close</button></div>';
+        
+        document.getElementById('remarksModalContent').innerHTML = html;
+        document.getElementById('remarksModal').style.display = 'block';
+    } catch (e) {
+        console.error('Error parsing edit reasons:', e);
+        document.getElementById('remarksModalContent').innerHTML = 
+            '<div class="remarks-modal-content"><p>Error displaying edit remarks</p></div>';
+        document.getElementById('remarksModal').style.display = 'block';
+    }
+}
+        
+     function closeModal() {
+    document.getElementById("maintenanceModal").style.display = "none";
+    // Always enable the status dropdown when closing the modal
+    document.getElementById("status").disabled = false;
+    // Hide edit reasons section when closing
+    document.querySelector('.edit-reasons-section').style.display = 'none';
+}
+        
+    function saveMaintenanceRecord() {
     // First validate the form
     if (!validateMaintenanceForm()) {
         return;
+    }
+
+    let editReasons = [];
+    if (isEditing) {
+        const checkboxes = document.querySelectorAll('input[name="editReason"]:checked');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.value === "Other") {
+                const otherReason = document.getElementById('otherReasonText').value.trim();
+                if (otherReason) {
+                    editReasons.push("Other: " + otherReason);
+                }
+            } else {
+                editReasons.push(checkbox.value);
+            }
+        });
+        
+        if (editReasons.length === 0) {
+            alert("Please select at least one reason for editing this record.");
+            return;
+        }
     }
     
     const form = document.getElementById("maintenanceForm");
@@ -551,10 +814,11 @@ $(document).ready(function() {
         status: document.getElementById("status").value,
         supplier: document.getElementById("supplier").value,
         cost: parseFloat(document.getElementById("cost").value || 0),
-        maintenanceType: document.getElementById("maintenanceType").value
+        maintenanceType: document.getElementById("maintenanceType").value,
+        editReasons: editReasons // Add this line to include edit reasons
     };
     
-    console.log("Submitting form data:", formData); // For debugging
+    console.log("Submitting form data:", formData);
     
     $.ajax({
         url: 'include/handlers/maintenance_handler.php?action=' + action,

@@ -18,7 +18,8 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 3) {
             m.supplier,
             m.cost,
             m.last_modified_by,
-            m.last_modified_at
+            m.last_modified_at,
+            m.edit_reasons 
             FROM maintenance m
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id
             ORDER BY m.maintenance_id DESC
@@ -227,7 +228,7 @@ switch ($action) {
     $stmt->close();
     break;
     
-   case 'edit':
+case 'edit':
     $data = json_decode(file_get_contents("php://input"));
     
     if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
@@ -254,10 +255,12 @@ switch ($action) {
     $licensePlate = isset($data->licensePlate) ? $data->licensePlate : '';
     $supplier = isset($data->supplier) ? $data->supplier : '';
     $cost = isset($data->cost) ? $data->cost : 0;
+    $editReasons = isset($data->editReasons) ? json_encode($data->editReasons) : null;
     
     $stmt = $conn->prepare("UPDATE maintenance SET truck_id = ?, licence_plate = ?, date_mtnce = ?, remarks = ?, 
-                           status = ?, supplier = ?, cost = ?, last_modified_by = ?, maintenance_type = ? WHERE maintenance_id = ?");
-    $stmt->bind_param("isssssdssi", 
+                           status = ?, supplier = ?, cost = ?, last_modified_by = ?, maintenance_type = ?, edit_reasons = ?
+                           WHERE maintenance_id = ?");
+    $stmt->bind_param("isssssdsssi", 
         $data->truckId,
         $licensePlate,
         $data->date, 
@@ -267,8 +270,10 @@ switch ($action) {
         $cost,
         $username,
         $data->maintenanceType,
+        $editReasons,
         $data->maintenanceId
     );
+    
     if ($stmt->execute()) {
         // Update truck status based on maintenance status
         updateTruckStatusFromMaintenance($conn, $data->truckId, $data->status);
