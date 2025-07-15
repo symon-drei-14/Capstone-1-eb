@@ -23,6 +23,7 @@ checkAccess(); // No role needed—logic is handled internally
    align-items: left;
     justify-content: center;
     z-index: 99999; 
+     overflow-x: hidden; 
 }
 
 #editReasonsModal .modal-content {
@@ -32,9 +33,81 @@ checkAccess(); // No role needed—logic is handled internally
     max-height:30em;
     width:30em;
     margin-top:10em;
+     overflow-x: hidden; 
+
 }   
 
+/* Add this to your existing CSS */
+#editForm .edit-reasons-section {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #ffffffff;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    width:23em;
+     overflow-x: hidden; 
+}
 
+#editForm .reasons-container {
+    display: flex;
+    flex-direction: column;
+
+}
+
+#editForm .reason-option {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    padding: 17px 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+
+}
+
+#editForm .reason-option input[type="checkbox"] {
+    margin-right: -20em;
+    left:13em;
+    flex-shrink: 0;
+   position:relative;
+   top:1em;
+   
+}
+.reason-option label {
+    display: block;
+    cursor: pointer;
+    margin: 0;
+    font-size: 14px;
+    flex-grow: 1;
+    word-break: break-word;
+    text-align:left;
+    margin-top:10px;
+    margin-bottom:-10px;
+    margin-left:-25px;
+}
+
+
+#editForm .other-reason {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+#editForm .other-reason label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#editForm .other-reason textarea {
+    width: 90%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 60px;
+}
     .event-item{
         padding:20px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -460,7 +533,7 @@ checkAccess(); // No role needed—logic is handled internally
         top: 0;
         width: 100%; 
         height: 100%;
-      
+       overflow-x: hidden; 
         background-color: rgba(0, 0, 0, 0.5); /* Black with opacity */
     
     }
@@ -961,16 +1034,38 @@ if ($driverResult->num_rows > 0) {
                 <option value="Cancelled">Cancelled</option>
                   <option value="En Route">En Route</option>
             </select><br><br>
-<label>Reason for Edit (select all that apply):</label><br>
-<div style="border: 1px solid #ddd; padding: 5px; border-radius: 5px; margin-bottom: 15px;">
-    <label><input type="checkbox" name="editReason" value="Changed schedule as per client request"> Changed schedule as per client request</label><br>
-    <label><input type="checkbox" name="editReason" value="Updated driver assignment due to availability"> Updated driver assignment due to availability</label><br>
-    <label><input type="checkbox" name="editReason" value="Modified vehicle assignment for capacity requirements"> Modified vehicle assignment for capacity requirements</label><br>
-    <label><input type="checkbox" name="editReason" value="Adjusted destination based on new instructions"> Adjusted destination based on new instructions</label><br>
-    <label><input type="checkbox" name="editReason" value="Updated container details for accuracy"> Updated container details for accuracy</label><br>
-    <label><input type="checkbox" name="editReason" value="Other"> Other (please specify below)</label><br>
-    <label for="otherReasonText">Specify other reason:</label><br>
-    <input type="text" id="otherReasonText" name="otherReasonText" style="width: 90%;" placeholder="Enter specific reason for edit">
+<div class="edit-reasons-section">
+    <label>Reason for Edit (select all that apply):</label>
+    <div class="reasons-container">
+        <div class="reason-option">
+            <input type="checkbox" name="editReason" value="Changed schedule as per client request" id="reason1">
+            <label for="reason1">Changed schedule as per client request</label>
+        </div>
+        <div class="reason-option">
+            <input type="checkbox" name="editReason" value="Updated driver assignment due to availability" id="reason2">
+            <label for="reason2">Updated driver assignment due to availability</label>
+        </div>
+        <div class="reason-option">
+            <input type="checkbox" name="editReason" value="Modified vehicle assignment for capacity requirements" id="reason3">
+            <label for="reason3">Modified vehicle assignment for capacity requirements</label>
+        </div>
+        <div class="reason-option">
+            <input type="checkbox" name="editReason" value="Adjusted destination based on new instructions" id="reason4">
+            <label for="reason4">Adjusted destination based on new instructions</label>
+        </div>
+        <div class="reason-option">
+            <input type="checkbox" name="editReason" value="Updated container details for accuracy" id="reason5">
+            <label for="reason5">Updated container details for accuracy</label>
+        </div>
+        <div class="reason-option">
+            <input type="checkbox" name="editReason" value="Other" id="reason6">
+            <label for="reason6">Other (please specify below)</label>
+        </div>
+        <div class="other-reason">
+            <label for="otherReasonText">Specify other reason:</label>
+            <textarea id="otherReasonText" name="otherReasonText" rows="3" placeholder="Enter specific reason for edit"></textarea>
+        </div>
+    </div>
 </div>
     
             <button type="submit">Save Changes</button>

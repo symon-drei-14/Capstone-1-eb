@@ -21,16 +21,20 @@ checkAccess(); // No role needed—logic is handled internally
     display: none;
     margin-top: 20px;
     padding: 15px;
-    background-color: #f5f5f5;
+
     border-radius: 5px;
     border: 1px solid #ddd;
+    margin-bottom:15px;
 }
+
+
 
 .reasons-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+
 }
+
 
 .reason-option {
     display: flex;
@@ -38,36 +42,36 @@ checkAccess(); // No role needed—logic is handled internally
     background-color: #fff;
     padding: 8px 12px;
     border-radius: 4px;
-    border: 1px solid #ccc;
-    min-width: 1000000;
+    border: 1px solid #ddd;
+
 }
 
 .reason-option label {
-    display: flex;
-    align-items: center;
-    width: 100%;
+    display: block;
     cursor: pointer;
     margin: 0;
     font-size: 14px;
-    justify-content: space-between;
-    gap: 15px; 
-    min-width: 0; 
+    flex-grow: 1;
+    word-break: break-word;
+    margin-top:10px;
+    margin-bottom:-10px;
 }
-
 
 
 .reason-option input[type="checkbox"] {
-    flex-shrink: 0; 
-    margin-left: 5em; 
-    transform: scale(1.2);
+    margin-right: 51em;
+    flex-shrink: 0;
+   position:relative;
+   top:-1em;
+   
+
 }
 
 .other-reason {
-    margin-top: 10px;
     padding: 10px;
     background-color: #fff;
     border-radius: 4px;
-    border: 1px solid #ccc;
+
 }
 
 .other-reason label {
@@ -77,16 +81,16 @@ checkAccess(); // No role needed—logic is handled internally
 }
 
 .other-reason textarea {
-    width: 100%;
+    width: 90%;
     padding: 8px;
-    border: 1px solid #ddd;
+
     border-radius: 4px;
     resize: vertical;
     min-height: 60px;
 }
 
     .view-remarks-btn {
-    background-color: #4CAF50;
+    background-color: #4b77deff;
     color: white;
     border: none;
     padding: 5px 10px;
@@ -141,9 +145,10 @@ checkAccess(); // No role needed—logic is handled internally
     max-width: 500px; 
     border-radius: 20px;
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-    overflow-x: auto; 
+    overflow-x: hidden; 
     max-height: 80vh; 
     overflow-y: auto; 
+
 }
 
 
