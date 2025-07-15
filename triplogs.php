@@ -841,7 +841,7 @@ if ($result->num_rows > 0) {
 }
 
 // Fetch drivers with their assigned truck capacity
-$driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capacity 
+$driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capacity, d.assigned_truck_id 
                 FROM drivers_table d
                 LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
 $driverResult = $conn->query($driverQuery);
@@ -853,7 +853,8 @@ if ($driverResult->num_rows > 0) {
             'id' => $driverRow['driver_id'],
             'name' => $driverRow['name'],
             'capacity' => $driverRow['capacity'],
-            'truck_plate_no' => $driverRow['truck_plate_no'] // Add this line
+            'truck_plate_no' => $driverRow['truck_plate_no'],
+            'assigned_truck_id' => $driverRow['assigned_truck_id']
         ];
     }
 }
@@ -1080,8 +1081,8 @@ if ($driverResult->num_rows > 0) {
         <h2>Add Schedule</h2>
         <form id="addScheduleForm">
 
-  <label for="editEventSize">Shipment Size:</label><br>
-            <select id="editEventSize" name="eventSize" required>
+  <label for="addEventSize">Shipment Size:</label><br>
+         <select id="addEventSize" name="eventSize" required>
                 <option value="">Select Size</option>
                 <option value="20ft">20ft</option>
                 <option value="40ft">40ft</option>
@@ -1244,19 +1245,62 @@ if ($driverResult->num_rows > 0) {
         var driversData = <?php echo $driversDataJson; ?>;
         
         // Populate driver dropdowns
-   function populateDriverDropdowns(selectedSize = '') {
-    var driverOptions = '<option value="">Select Driver</option>';
-    
+function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
+    // First get the list of all trucks with their statuses
+    $.ajax({
+        url: 'include/handlers/truck_handler.php?action=getTrucks',
+        type: 'GET',
+        async: false, // We need to wait for this response
+        success: function(truckResponse) {
+            if (truckResponse.success) {
+                // Identify unavailable trucks (In Repair or Overdue)
+                var unavailableTruckIds = truckResponse.trucks
+                    .filter(truck => truck.display_status === 'In Repair' || truck.display_status === 'Overdue')
+                    .map(truck => truck.truck_id.toString());
+                
+                var driverOptions = '<option value="">Select Driver</option>';
+                
     driversData.forEach(function(driver) {
-        // Filter drivers based on selected size
+                    // Skip drivers assigned to unavailable trucks
+                    if (driver.assigned_truck_id && unavailableTruckIds.includes(driver.assigned_truck_id.toString())) {
+                        return; // skip this driver
+                    }
+                    
+                    // Filter drivers based on selected size if specified
+                    if (!selectedSize || !driver.capacity || 
+                        (selectedSize.includes('20') && driver.capacity === '20') ||
+                        (selectedSize.includes('40') && driver.capacity === '40')) {
+                        // Include truck_plate_no as a data attribute
+                      var selectedAttr = (driver.name === currentDriver) ? ' selected' : '';
+        driverOptions += `<option value="${driver.name}" data-plate-no="${driver.truck_plate_no || ''}"${selectedAttr}>${driver.name}</option>`;
+    }});
+                
+                $('#editEventDriver').html(driverOptions);
+                $('#addEventDriver').html(driverOptions);
+            } else {
+                console.error('Error fetching truck data:', truckResponse.message);
+                // Fallback to showing all drivers
+                populateAllDrivers(selectedSize);
+            }
+        },
+        error: function() {
+            console.error('Error fetching truck data');
+            // Fallback to showing all drivers
+            populateAllDrivers(selectedSize);
+        }
+    });
+}
+
+// Helper function to populate all drivers (fallback)
+function populateAllDrivers(selectedSize = '') {
+    var driverOptions = '<option value="">Select Driver</option>';
+    driversData.forEach(function(driver) {
         if (!selectedSize || !driver.capacity || 
             (selectedSize.includes('20') && driver.capacity === '20') ||
             (selectedSize.includes('40') && driver.capacity === '40')) {
-            // Include truck_plate_no as a data attribute
             driverOptions += `<option value="${driver.name}" data-plate-no="${driver.truck_plate_no || ''}">${driver.name}</option>`;
         }
     });
-    
     $('#editEventDriver').html(driverOptions);
     $('#addEventDriver').html(driverOptions);
 }
@@ -1300,7 +1344,7 @@ $(document).on('change', '#addEventDriver, #editEventDriver', function() {
 });
         
         // Format events for calendar
-       var calendarEvents = eventsData.map(function(event) {
+            var calendarEvents = eventsData.map(function(event) {
     return {
         id: event.id,
         title: event.client + ' - ' + event.destination,
@@ -1552,15 +1596,28 @@ $(window).on('click', function(event) {
         });
         
         // Edit button click handler
- $(document).on('click', '.edit-btn', function() {
+$(document).on('click', '.edit-btn', function() {
     var eventId = $(this).data('id');
     var event = eventsData.find(function(e) { return e.id == eventId; });
     
     if (event) {
         $('#editEventId').val(event.id);
         $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
-        $('#editEventDate').val(event.date);
-        $('#editEventDriver').val(event.driver);
+        
+        // Format date for datetime-local input (remove seconds if present)
+        var eventDate = event.date.includes(':00.') 
+            ? event.date.replace(/:00\.\d+Z$/, '') 
+            : event.date;
+        $('#editEventDate').val(eventDate);
+        
+        // Populate drivers based on selected size first
+        populateDriverDropdowns(event.size);
+        
+        // Then set the driver value after a small delay to ensure dropdown is populated
+        setTimeout(() => {
+            $('#editEventDriver').val(event.driver);
+        }, 100);
+        
         $('#editEventHelper').val(event.helper);
         $('#editEventDispatcher').val(event.dispatcher || '');
         $('#editEventContainerNo').val(event.containerNo);
@@ -1571,9 +1628,6 @@ $(window).on('click', function(event) {
         $('#editEventSize').val(event.size);
         $('#editEventCashAdvance').val(event.cashAdvance);
         $('#editEventStatus').val(event.status);
-        
-        // Populate drivers based on selected size
-        populateDriverDropdowns(event.size);
         
         $('#editModal').show();
     }
