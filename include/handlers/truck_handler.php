@@ -59,14 +59,19 @@ function updateTruckStatus($conn, $truckId, $plateNo) {
 try {
     switch ($action) {
         case 'getTrucks':
-            $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
-                                   COALESCE(a.status, t.status) as display_status,
-                                   t.last_modified_by, 
-                                   t.last_modified_at
-                                   FROM truck_table t
-                                   LEFT JOIN assign a ON t.plate_no = a.plate_no 
-                                   AND a.status IN ('En Route', 'Pending')
-                                   ORDER BY t.truck_id");
+          $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
+                       COALESCE(
+                           (SELECT a.status FROM assign a 
+                            WHERE a.plate_no = t.plate_no 
+                            AND a.status IN ('En Route', 'Pending')
+                            ORDER BY a.date DESC LIMIT 1
+                           ), 
+                           t.status
+                       ) as display_status,
+                       t.last_modified_by, 
+                       t.last_modified_at
+                       FROM truck_table t
+                       ORDER BY t.truck_id");
             $stmt->execute();
             $result = $stmt->get_result();
             $trucks = $result->fetch_all(MYSQLI_ASSOC);

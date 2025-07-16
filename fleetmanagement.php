@@ -274,7 +274,7 @@ checkAccess();
     <script>
         let trucksData = [];
         let currentTruckPage = 1;
-        const rowsPerPage = 10;
+        const rowsPerPage = 5;
         let isEditMode = false;
 
         // Modal functions
