@@ -405,6 +405,11 @@ checkAccess(); // No role needed—logic is handled internally
         background-color: #dc3545; /* Red */
         color: white;
     }
+
+    .status.en-route {
+    background-color: #007bff; /* Blue */
+    color: white;
+}
     
     /* Pagination controls */
     /* .pagination {

@@ -109,6 +109,13 @@ checkAccess();
             padding: 3px 8px;
             border-radius: 4px;
         }
+
+        .status-en-route {
+    background-color: #007bff; /* Blue */
+    color: white;
+     padding: 3px 8px;
+            border-radius: 4px;
+}
         
         .status-overdue {
             background-color: #6c757d; /* Gray */
