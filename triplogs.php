@@ -828,7 +828,7 @@ body {
     session_start();
     // Fetch trip assignments
   
-$sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity, a.edit_reasons
+$sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity, a.edit_reasons,d.driver_id
         FROM assign a
         LEFT JOIN drivers_table d ON a.driver = d.name
         LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
@@ -842,6 +842,7 @@ if ($result->num_rows > 0) {
             'plateNo' => $row['plate_no'],
             'date' => $row['date'],
             'driver' => $row['driver'],
+            'driver_id' => $row['driver_id'], // eto yung driver_id
             'helper' => $row['helper'],
              'dispatcher' => $row['dispatcher'],
             'containerNo' => $row['container_no'],
@@ -1372,6 +1373,7 @@ $(document).on('change', '#addEventDriver, #editEventDriver', function() {
         start: event.date,
         plateNo: event.plateNo,
         driver: event.driver,
+          driver_id: event.driver_id, // eto yung driver_id
         helper: event.helper,
             dispatcher: event.dispatcher,
         containerNo: event.containerNo,
