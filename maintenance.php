@@ -68,11 +68,10 @@ checkAccess(); // No role needed—logic is handled internally
 }
 
 .other-reason {
-    padding: 10px;
-    background-color: #fff;
-    border-radius: 4px;
+    margin-top: 10px;
+    padding-left: 20px;
 
-}
+}   
 
 .other-reason label {
     display: block;
@@ -474,6 +473,20 @@ checkAccess(); // No role needed—logic is handled internally
 </div>
 
     <script>
+    
+document.getElementById('otherReasonText').addEventListener('input', function() {
+    const otherCheckbox = document.querySelector('input[name="editReason"][value="Other"]');
+    if (this.value.trim() !== '') {
+        otherCheckbox.checked = true;
+    }
+});
+
+
+document.querySelector('input[name="editReason"][value="Other"]').addEventListener('change', function() {
+    if (!this.checked) {
+        document.getElementById('otherReasonText').value = '';
+    }
+});
         let currentPage = 1;
         let totalPages = 1;
         let currentTruckId = 0;

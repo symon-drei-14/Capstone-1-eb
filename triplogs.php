@@ -800,6 +800,27 @@ body {
     background-color: #004a99;
 }
 
+.event-details .view-reasons-btn {
+    background-color: #5287bfff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.event-details .view-reasons-btn:hover {
+    background-color: #3a6ea5;
+}
+
+.event-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
 </style>
 <body>
     <?php
@@ -1364,7 +1385,8 @@ $(document).on('change', '#addEventDriver, #editEventDriver', function() {
         modifiedby: event.modifiedby,
         modifiedat: event.modifiedat,
         truck_plate_no: event.truck_plate_no,
-        truck_capacity: event.truck_capacity
+        truck_capacity: event.truck_capacity,
+           edit_reasons: event.edit_reasons 
     };
 });
 
@@ -1521,56 +1543,63 @@ $(window).on('click', function(event) {
                 var statusClass = event.status.toLowerCase();
                 element.addClass(statusClass);
             },
-            dayClick: function(date, jsEvent, view) {
-                var clickedDay = $(this);
-                
-                $('.fc-day').removeClass('fc-day-selected');
-                clickedDay.addClass('fc-day-selected');
-                
-                var eventsOnDay = $('#calendar').fullCalendar('clientEvents', function(event) {
-                    return moment(event.start).isSame(date, 'day');
-                });
-                
-                var formattedDate = moment(date).format('MMMM D, YYYY');
-                $('#eventDetails h4').text('Event Details - ' + formattedDate);
-                
-                $('#eventList').empty();
-                $('#noEventsMessage').hide();
-                
-                if (eventsOnDay.length > 0) {
-                    eventsOnDay.forEach(function(event) {
-                        var eventThumbnail = `
-                            <div class="event-thumbnail">
-                                <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
-                                <strong>Plate No:</strong> ${event.plateNo}<br>
-                                <strong>Destination:</strong> ${event.destination}
-                            </div>
-                            <div class="event-details">
-                                <p><strong>Driver:</strong> ${event.driver}</p>
-                                <p><strong>Helper:</strong> ${event.helper}</p>
-                                  <p><strong>Dispatcher:</strong> ${event.dispatcher || 'N/A'}</p>
-                                <p><strong>Client:</strong> ${event.client}</p>
-                                <p><strong>Container No.:</strong> ${event.containerNo}</p>
-                                <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
-                                <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
-                                 <p><strong>Last modified by: </strong>${event.modifiedby}<br><strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
-                                <div class="event-actions">
-                                    <button class="edit-btn" data-id="${event.id}">Edit</button>
-                                    <button class="delete-btn" data-id="${event.id}">Delete</button>
-                                </div>
-                            </div>
-                        `;
-                        $('#eventList').append(eventThumbnail);
-                    });
-                } else {
-                    $('#noEventsMessage').show();
-                }
+    dayClick: function(date, jsEvent, view) {
+    var clickedDay = $(this);
+    
+    $('.fc-day').removeClass('fc-day-selected');
+    clickedDay.addClass('fc-day-selected');
+    
+    var eventsOnDay = $('#calendar').fullCalendar('clientEvents', function(event) {
+        return moment(event.start).isSame(date, 'day');
+    });
+    
+    var formattedDate = moment(date).format('MMMM D, YYYY');
+    $('#eventDetails h4').text('Event Details - ' + formattedDate);
+    
+    $('#eventList').empty();
+    $('#noEventsMessage').hide();
+    
+    if (eventsOnDay.length > 0) {
+        eventsOnDay.forEach(function(event) {
+            var hasEditReasons = event.edit_reasons && event.edit_reasons !== 'null' && event.edit_reasons !== '';
+            var viewRemarksButton = hasEditReasons ? 
+                `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}" style="margin-top: 10px;">View Remarks</button>` : 
+                '';
+            
+            var eventThumbnail = `
+                <div class="event-thumbnail">
+                    <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
+                    <strong>Plate No:</strong> ${event.plateNo}<br>
+                    <strong>Destination:</strong> ${event.destination}
+                </div>
+                <div class="event-details">
+                    <p><strong>Driver:</strong> ${event.driver}</p>
+                    <p><strong>Helper:</strong> ${event.helper}</p>
+                    <p><strong>Dispatcher:</strong> ${event.dispatcher || 'N/A'}</p>
+                    <p><strong>Client:</strong> ${event.client}</p>
+                    <p><strong>Container No.:</strong> ${event.containerNo}</p>
+                    <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
+                    <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
+                    <p><strong>Last modified by: </strong>${event.modifiedby}<br>
+                    <strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
+                    ${viewRemarksButton}
+                    <div class="event-actions" style="margin-top: 15px;">
+                        <button class="edit-btn" data-id="${event.id}">Edit</button>
+                        <button class="delete-btn" data-id="${event.id}">Delete</button>
+                    </div>
+                </div>
+            `;
+            $('#eventList').append(eventThumbnail);
+        });
+    } else {
+        $('#noEventsMessage').show();
+    }
 
-                // Toggle event details on thumbnail click
-                $('.event-thumbnail').on('click', function() {
-                    $(this).next('.event-details').toggle();
-                });
-            }
+    // Toggle event details on thumbnail click
+    $('.event-thumbnail').on('click', function() {
+        $(this).next('.event-details').toggle();
+    });
+}
         });
         
         // View toggle buttons
@@ -1668,6 +1697,7 @@ $(document).on('click', '.edit-btn', function() {
             size: $('#addEventSize').val(),
             cashAdvance: $('#addEventCashAdvance').val(),
             status: $('#addEventStatus').val()
+            
         }),
         success: function(response) {
             if (response.success) {
@@ -1816,6 +1846,19 @@ $(document).on('click', '.view-reasons-btn', function() {
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
+
+    $('#otherReasonText').on('input', function() {
+    if ($(this).val().trim() !== '') {
+        $('#reason6').prop('checked', true);
+    }
+});
+
+
+$('#reason6').on('change', function() {
+    if (!$(this).is(':checked')) {
+        $('#otherReasonText').val('');
+    }
+});
 </script>
 </body>
 </html>
