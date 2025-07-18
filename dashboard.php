@@ -31,6 +31,39 @@ $drivingDrivers = getDrivingDrivers();
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
 <style>
+
+    .pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.pagination-btn {
+    padding: 5px 10px;
+    background-color: #1b1963;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #2a277a;
+}
+
+.pagination-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.page-info {
+    font-size: 14px;
+    color: #555;
+}
+
     .toggle-sidebar-btn {
     background: none;
     border: none;
@@ -434,7 +467,7 @@ $drivingDrivers = getDrivingDrivers();
     </div>
 </div>
 
-
+<!-- On going vehicles -->
 
 <div class="card-large">
     <div class="table-container">
@@ -449,38 +482,11 @@ $drivingDrivers = getDrivingDrivers();
                 <th>Delivery Address</th>
                 <th>Actions</th>
             </tr>
-            <tr>
-                <td><i class="fa fa-automobile icon-bg2"></i></td>
-                <td>678 QRS</td>
-                <td>Jennnifer Mikaela</td>
-                <td>Iggy Iglaea</td>
-                <td>Mastabushi</td>
-                <td>Los Angeles</td>
-                <td><button class="location">View Location</button></td>
-                   
-                </td>
-            </tr>
-            <tr>
-                <td><i class="fa fa-automobile icon-bg2"></i></td>
-                <td>345 lmj</td>
-                <td>Ranielle</td>
-                <td>Vinz Aguilar</td>
-                <td>Toyota</td>
-                <td>Divisoria</td>
-                <td><button class="location">View Location</button></td>
-            </tr>
-            <tr>
-                <td><i class="fa fa-automobile icon-bg2"></i></td>
-                <td>123 ABC</td>
-                <td>Mario Luigi</td>
-                <td>Kirby Yoshi</td>
-                <td>Mastabushi</td>
-                <td>Paranque</td>
-                <td><button class="location">View Location</button></td>
-            </tr>
+           
         </table>
     </div>
 </div>
+
 <div class="dashboard-section">
     <div class="card-large">
         <h3>Shipment Statistics</h3>
@@ -698,6 +704,99 @@ $drivingDrivers = getDrivingDrivers();
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
+</script>
+
+<script>
+$(document).ready(function() {
+    let currentPage = 1;
+    
+    // Function to load trips for a specific page
+    function loadTrips(page) {
+        $.ajax({
+            url: 'include/handlers/dashboard_handler.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'get_ongoing_trips',
+                page: page
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // Clear existing table rows (except header)
+                    $('.table-container table tr:not(:first)').remove();
+                    
+                    // Add new rows for each ongoing trip
+                    if (response.trips.length > 0) {
+                        response.trips.forEach(function(trip) {
+                            var row = `
+                                <tr>
+                                    <td><i class="fa fa-automobile icon-bg2"></i></td>
+                                    <td>${trip.plate_no}</td>
+                                    <td>${trip.driver}</td>
+                                    <td>${trip.helper}</td>
+                                    <td>${trip.client}</td>
+                                    <td>${trip.destination}</td>
+                                    <td><button class="location">View Location</button></td>
+                                </tr>
+                            `;
+                            $('.table-container table').append(row);
+                        });
+                    } else {
+                        $('.table-container table').append(`
+                            <tr>
+                                <td colspan="7" style="text-align: center;">No ongoing trips found</td>
+                            </tr>
+                        `);
+                    }
+                    
+                    // Update pagination controls
+                    updatePaginationControls(response.pagination);
+                    currentPage = page;
+                }
+            },
+            error: function() {
+                console.error('Error fetching ongoing trips');
+            }
+        });
+    }
+    
+    // Function to update pagination controls
+    function updatePaginationControls(pagination) {
+        // Remove existing pagination controls if they exist
+        $('.pagination-controls').remove();
+        
+        // Create new pagination controls
+        var controls = `
+            <div class="pagination-controls" style="margin-top: 10px; text-align: center;">
+                <button class="pagination-btn prev" ${pagination.currentPage <= 1 ? 'disabled' : ''}>
+                    <i class="fa fa-chevron-left"></i> Previous
+                </button>
+                <span class="page-info">
+                    Page ${pagination.currentPage} of ${pagination.totalPages}
+                </span>
+                <button class="pagination-btn next" ${pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}>
+                    Next <i class="fa fa-chevron-right"></i>
+                </button>
+            </div>
+        `;
+        
+        $('.table-container').append(controls);
+    }
+    
+    // Initial load
+    loadTrips(currentPage);
+    
+    // Pagination button click handlers
+    $(document).on('click', '.pagination-btn.prev', function() {
+        if (currentPage > 1) {
+            loadTrips(currentPage - 1);
+        }
+    });
+    
+    $(document).on('click', '.pagination-btn.next', function() {
+        loadTrips(currentPage + 1);
+    });
+});
 </script>
 
 

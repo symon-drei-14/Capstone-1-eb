@@ -268,7 +268,7 @@ checkAccess();
                     <option value="Enroute">Enroute</option>
                     <option value="In Repair">In Repair</option>
                     <option value="Overdue">Overdue</option>
-                    <option value="Pending">Pending</option>
+                    
                 </select>
             </div>
             <div class="button-group">

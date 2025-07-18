@@ -45,10 +45,8 @@ function updateTruckStatus($conn, $truckId, $plateNo) {
         $newStatus = 'In Repair';
     } elseif ($maintenanceStatus === 'Overdue') {
         $newStatus = 'Overdue';
-    } elseif (($maintenanceStatus === 'Pending' || $maintenanceStatus === 'Completed') && 
-              ($tripStatus === 'Pending' || $tripStatus === 'Completed' || $tripStatus === null)) {
-        $newStatus = 'In Terminal';
     }
+    // For all other cases (Pending, Completed, or null), status remains 'In Terminal'
     
     // Update the truck status
     $updateStmt = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
@@ -63,7 +61,7 @@ try {
                        COALESCE(
                            (SELECT a.status FROM assign a 
                             WHERE a.plate_no = t.plate_no 
-                            AND a.status IN ('En Route', 'Pending')
+                      AND a.status = 'En Route'
                             ORDER BY a.date DESC LIMIT 1
                            ), 
                            t.status

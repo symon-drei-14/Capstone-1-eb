@@ -406,8 +406,8 @@ checkAccess(); // No role needed—logic is handled internally
         color: white;
     }
 
-    .status.en-route {
-    background-color: #007bff; /* Blue */
+.status.en\ route {
+    background-color: #007bff;
     color: white;
 }
     
@@ -1189,7 +1189,7 @@ if ($driverResult->num_rows > 0) {
                 <option value="Completed">Completed</option>
                 <option value="Pending">Pending</option>
                 <option value="Cancelled">Cancelled</option>
-                  <option value="En Route">En Route</option>
+                <option value="En Route">En Route</option>
             </select><br><br>
 
             
@@ -1547,7 +1547,9 @@ $(window).on('click', function(event) {
                 
                 element.find('.fc-title').html(event.client + ' - ' + event.destination);
                 
-                var statusClass = event.status.toLowerCase();
+      var statusClass = event.status.toLowerCase().replace(/\s+/g, function(match) {
+    return match === ' ' ? ' ' : '-';
+});
                 element.addClass(statusClass);
             },
     dayClick: function(date, jsEvent, view) {
