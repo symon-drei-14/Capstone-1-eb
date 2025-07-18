@@ -389,26 +389,29 @@ checkAccess(); // No role needed—logic is handled internally
         border-radius: 5px;
         
     }
-    
     .status.completed {
-        background-color: #28a745; /* Green */
-        color: white;
-        
-    }
-    
-    .status.pending {
-        background-color: #ffc107; /* Yellow */
-        color: black;
-    }
-    
-    .status.cancelled {
-        background-color: #dc3545; /* Red */
-        color: white;
-    }
-
-.status.en\ route {
-    background-color: #007bff;
+    background-color: #28a745; /* Green */
     color: white;
+
+}
+
+.status.pending {
+    background-color: #ffc107; /* Yellow */
+    color: black;
+
+}
+
+.status.cancelled {
+    background-color: #dc3545; /* Red */
+    color: white;
+  
+}
+
+.status.enroute, 
+.status.en-route {
+    background-color: #007bff; /* Blue */
+    color: white;
+ 
 }
     
     /* Pagination controls */
@@ -491,6 +494,38 @@ checkAccess(); // No role needed—logic is handled internally
 
     /* pagination */
     
+.fc-event {
+    max-width: 120px !important; /* Narrower width */
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 2px 4px !important;
+    margin: 1px 0 !important;
+    font-size: 0.85em !important;
+    line-height: 1.2;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    display: inline-block;
+}
+
+.fc-event .fc-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.fc-event .fc-time {
+    font-weight: bold;
+    margin-right: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fc-event .fc-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
     .fc-day-selected {
         background-color: #d5d5d8 !important;
         color: white !important;
@@ -1472,7 +1507,7 @@ $(window).on('click', function(event) {
     <td>${event.consignee}</td>
     <td>${event.size}</td>
     <td>${event.cashAdvance}</td>
-    <td><span class="status ${event.status.toLowerCase()}">${event.status}</span></td>
+      <td><span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></td>
        <td><strong>${event.modifiedby}</strong><br>${formatDateTime(event.modifiedat)}<br>
         ${event.edit_reasons ? `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}">View Remarks</button>` : ''}
     <td>
@@ -1547,9 +1582,7 @@ $(window).on('click', function(event) {
                 
                 element.find('.fc-title').html(event.client + ' - ' + event.destination);
                 
-      var statusClass = event.status.toLowerCase().replace(/\s+/g, function(match) {
-    return match === ' ' ? ' ' : '-';
-});
+     var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
                 element.addClass(statusClass);
             },
     dayClick: function(date, jsEvent, view) {
@@ -1587,7 +1620,7 @@ $(window).on('click', function(event) {
                     <p><strong>Dispatcher:</strong> ${event.dispatcher || 'N/A'}</p>
                     <p><strong>Client:</strong> ${event.client}</p>
                     <p><strong>Container No.:</strong> ${event.containerNo}</p>
-                    <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase()}">${event.status}</span></p>
+                     <td><span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></td> 
                     <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
                     <p><strong>Last modified by: </strong>${event.modifiedby}<br>
                     <strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
