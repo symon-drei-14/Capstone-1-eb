@@ -1620,7 +1620,8 @@ $(window).on('click', function(event) {
                     <p><strong>Dispatcher:</strong> ${event.dispatcher || 'N/A'}</p>
                     <p><strong>Client:</strong> ${event.client}</p>
                     <p><strong>Container No.:</strong> ${event.containerNo}</p>
-                     <td><span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></td> 
+                     <td> <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></p>
+                       </td> 
                     <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
                     <p><strong>Last modified by: </strong>${event.modifiedby}<br>
                     <strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
