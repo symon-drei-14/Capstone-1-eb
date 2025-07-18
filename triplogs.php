@@ -1676,11 +1676,9 @@ $(document).on('click', '.edit-btn', function() {
             $('#deleteConfirmModal').show();
         });
         
-        // Add schedule form submit handler
-       $('#addScheduleForm').on('submit', function(e) {
+      $('#addScheduleForm').on('submit', function(e) {
     e.preventDefault();
-    
-    // Get selected driver to find their assigned truck
+
     var selectedDriver = $('#addEventDriver').val();
     var driver = driversData.find(d => d.name === selectedDriver);
     var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#addEventPlateNo').val();
@@ -1704,9 +1702,9 @@ $(document).on('click', '.edit-btn', function() {
             size: $('#addEventSize').val(),
             cashAdvance: $('#addEventCashAdvance').val(),
             status: $('#addEventStatus').val()
-            
         }),
         success: function(response) {
+            console.log('Raw response:', response);
             if (response.success) {
                 alert('Trip added successfully!');
                 $('#addScheduleModal').hide();
@@ -1715,8 +1713,12 @@ $(document).on('click', '.edit-btn', function() {
                 alert('Error: ' + response.message);
             }
         },
-        error: function() {
-            alert('Server error occurred');
+        error: function(xhr, status, error) {
+            console.log('XHR:', xhr);
+            console.log('Status:', status);
+            console.log('Error:', error);
+            console.log('Response Text:', xhr.responseText);
+            alert('Server error occurred. Check console for details.');
         }
     });
 });
