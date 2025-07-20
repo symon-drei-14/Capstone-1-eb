@@ -310,7 +310,7 @@ checkAccess();
         let currentStatusFilter = 'all';
         let trucksData = [];
         let currentTruckPage = 1;
-        const rowsPerPage = 5;
+        const rowsPerPage = 4;
         let isEditMode = false;
 
         function filterTrucksByStatus() {
