@@ -39,7 +39,7 @@ function updateTruckStatus($conn, $truckId, $plateNo) {
     // Determine the new status based on the rules
     $newStatus = 'In Terminal'; // Default status
     
-    if ($tripStatus === 'En Route') {
+    if ($tripStatus === 'Enroute') {
         $newStatus = 'Enroute';
     } elseif ($maintenanceStatus === 'In Progress') {
         $newStatus = 'In Repair';
@@ -56,37 +56,33 @@ function updateTruckStatus($conn, $truckId, $plateNo) {
 
 try {
     switch ($action) {
-        case 'getTrucks':
-          $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
-                       COALESCE(
-                           (SELECT a.status FROM assign a 
-                            WHERE a.plate_no = t.plate_no 
-                      AND a.status = 'En Route'
-                            ORDER BY a.date DESC LIMIT 1
-                           ), 
-                           t.status
-                       ) as display_status,
-                       t.last_modified_by, 
-                       t.last_modified_at
-                       FROM truck_table t
-                       ORDER BY t.truck_id");
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $trucks = $result->fetch_all(MYSQLI_ASSOC);
-            
-            // Update status for each truck based on maintenance and trip logs
-            foreach ($trucks as &$truck) {
-                updateTruckStatus($conn, $truck['truck_id'], $truck['plate_no']);
-            }
-            
-            // Re-fetch to get updated statuses
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $trucks = $result->fetch_all(MYSQLI_ASSOC);
-            
-            echo json_encode(['success' => true, 'trucks' => $trucks]);
-            break;
-
+    case 'getTrucks':
+    $statusFilter = $_GET['status'] ?? 'all';
+    
+    if ($statusFilter === 'all') {
+        $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
+                               t.status as display_status,
+                               t.last_modified_by, 
+                               t.last_modified_at
+                               FROM truck_table t
+                               ORDER BY t.truck_id");
+    } else {
+        $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
+                               t.status as display_status,
+                               t.last_modified_by, 
+                               t.last_modified_at
+                               FROM truck_table t
+                               WHERE t.status = ?
+                               ORDER BY t.truck_id");
+        $stmt->bind_param("s", $statusFilter);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $trucks = $result->fetch_all(MYSQLI_ASSOC);
+    
+    echo json_encode(['success' => true, 'trucks' => $trucks]);
+    break;
         case 'addTruck':
             if (!validatePlateNumber($data['plate_no'])) {
                 throw new Exception("Invalid plate number format. Use format like ABC123 or ABC-1234");
@@ -106,28 +102,32 @@ try {
             break;
 
         case 'updateTruck':
-            if (!validatePlateNumber($data['plate_no'])) {
-                throw new Exception("Invalid plate number format. Use format like ABC123 or ABC-1234");
-            }
+    if (!validatePlateNumber($data['plate_no'])) {
+        throw new Exception("Invalid plate number format. Use format like ABC123 or ABC-1234");
+    }
 
-            $stmt = $conn->prepare("UPDATE truck_table 
-                                  SET plate_no=?, capacity=?, status=?, 
-                                  last_modified_by=? 
-                                  WHERE truck_id=?");
-            $stmt->bind_param("ssssi", 
-                $data['plate_no'], 
-                $data['capacity'], 
-                $data['status'],
-                $currentUser,
-                $data['truck_id']
-            );
-            $stmt->execute();
-            
-            // Update truck status based on maintenance and trip logs
-            updateTruckStatus($conn, $data['truck_id'], $data['plate_no']);
-            
-            echo json_encode(['success' => true]);
-            break;
+    // Validate status
+    $validStatuses = ['In Terminal', 'Enroute', 'In Repair', 'Overdue'];
+    if (!in_array($data['status'], $validStatuses)) {
+        throw new Exception("Invalid status value");
+    }
+
+    $stmt = $conn->prepare("UPDATE truck_table 
+                          SET plate_no=?, capacity=?, status=?, 
+                          last_modified_by=?, last_modified_at=NOW()
+                          WHERE truck_id=?");
+    $stmt->bind_param("ssssi", 
+        $data['plate_no'], 
+        $data['capacity'], 
+        $data['status'],
+        $currentUser,
+        $data['truck_id']
+    );
+    $stmt->execute();
+    
+    
+    echo json_encode(['success' => true]);
+    break;
 
   case 'deleteTruck':
     // Start transaction

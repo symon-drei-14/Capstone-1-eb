@@ -97,7 +97,7 @@ checkAccess();
         }
 
         .status-in-repair {
-            background-color: #f44336; /* Red */
+            background-color: #ef9e2eff; /* Red */
             color: white;
             padding: 3px 8px;
             border-radius: 4px;
@@ -118,7 +118,7 @@ checkAccess();
 }
         
         .status-overdue {
-            background-color: #6c757d; /* Gray */
+            background-color: #c60909ff; /* Gray */
             color: white;
             padding: 3px 8px;
             border-radius: 4px;
@@ -150,6 +150,24 @@ checkAccess();
             width: 50%;
             border-radius: 5px;
         }
+        .status-filter {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-filter label {
+    font-weight: bold;
+}
+
+.status-filter select {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+}
     </style>
 </head>
 <body>
@@ -218,6 +236,16 @@ checkAccess();
                 </div>
                 <br>
                 <h3>List of Trucks</h3>
+                <div class="status-filter">
+    <label for="statusFilter">Filter by Status:</label>
+    <select id="statusFilter" onchange="filterTrucksByStatus()">
+        <option value="all">All Statuses</option>
+        <option value="In Terminal">In Terminal</option>
+        <option value="Enroute">Enroute</option>
+        <option value="In Repair">In Repair</option>
+        <option value="Overdue">Overdue</option>
+    </select>
+</div>
                 <div class="table-container">
                     <table id="trucksTable">
                         <thead>
@@ -279,12 +307,34 @@ checkAccess();
     </div>
 
     <script>
+        let currentStatusFilter = 'all';
         let trucksData = [];
         let currentTruckPage = 1;
         const rowsPerPage = 5;
         let isEditMode = false;
 
+        function filterTrucksByStatus() {
+    currentStatusFilter = document.getElementById('statusFilter').value;
+    renderTrucksTable();
+}
+
+function fetchTrucks() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    fetch(`include/handlers/truck_handler.php?action=getTrucks&status=${statusFilter}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                trucksData = data.trucks;
+                renderTrucksTable();
+                setTimeout(fetchTrucks, 30000);
+            } else {
+                alert('Error fetching trucks: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
         // Modal functions
+        
         function openModal(modalId) {
             document.getElementById(modalId).style.display = "block";
         }
@@ -295,22 +345,22 @@ checkAccess();
         }
 
         function openTruckModal(editMode = false, truckId = null) {
-            isEditMode = editMode;
-            if (editMode) {
-                document.getElementById('modalTitle').textContent = 'Edit Truck';
-                const truck = trucksData.find(t => t.truck_id == truckId);
-                if (truck) {
-                    document.getElementById('truckIdHidden').value = truck.truck_id;
-                    document.getElementById('plateNo').value = truck.plate_no;
-                    document.getElementById('capacity').value = truck.capacity;
-                    document.getElementById('status').value = truck.display_status;
-                }
-            } else {
-                document.getElementById('modalTitle').textContent = 'Add Truck';
-            }
-            openModal('truckModal');
+    isEditMode = editMode;
+    if (editMode) {
+        document.getElementById('modalTitle').textContent = 'Edit Truck';
+        const truck = trucksData.find(t => t.truck_id == truckId);
+        if (truck) {
+            document.getElementById('truckIdHidden').value = truck.truck_id;
+            document.getElementById('plateNo').value = truck.plate_no;
+            document.getElementById('capacity').value = truck.capacity;
+            // Make sure this matches the actual status field name
+            document.getElementById('status').value = truck.status || truck.display_status;
         }
-
+    } else {
+        document.getElementById('modalTitle').textContent = 'Add Truck';
+    }
+    openModal('truckModal');
+}
         function resetForm() {
             document.getElementById('truckIdHidden').value = '';
             document.getElementById('plateNo').value = '';
@@ -384,36 +434,63 @@ checkAccess();
             .catch(error => console.error('Error:', error));
         }
 
-        function renderTrucksTable() {
-            const start = (currentTruckPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const pageData = trucksData.slice(start, Math.min(end, trucksData.length));
-            
-            const tableBody = document.getElementById("trucksTableBody");
-            tableBody.innerHTML = "";
-            
-            pageData.forEach(truck => {
-                const tr = document.createElement("tr");
-                
-                // Determine status class based on display_status
-                const statusClass = truck.display_status.toLowerCase().replace(/\s+/g, "-");
-                
-                tr.innerHTML = `
-                    <td>${truck.truck_id}</td>
-                    <td>${truck.plate_no}</td>
-                    <td>${truck.capacity}</td>
-                    <td><span class="status-${statusClass}">${truck.display_status}</span></td>
-                    <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
-                    <td class="actions">
-                        <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
-                        <button class="delete" onclick="deleteTruck(${truck.truck_id})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-            
-            document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage}`;
-        }
+      function renderTrucksTable() {
+    const start = (currentTruckPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    
+    // Filter trucks based on status
+    let filteredTrucks = trucksData;
+    if (currentStatusFilter !== 'all') {
+        filteredTrucks = trucksData.filter(truck => 
+            truck.display_status === currentStatusFilter || 
+            truck.status === currentStatusFilter
+        );
+    }
+    
+    const pageData = filteredTrucks.slice(start, Math.min(end, filteredTrucks.length));
+    
+    const tableBody = document.getElementById("trucksTableBody");
+    tableBody.innerHTML = "";
+    
+    pageData.forEach(truck => {
+        const tr = document.createElement("tr");
+        
+        // Determine status class based on display_status
+        const statusClass = truck.display_status.toLowerCase().replace(/\s+/g, "-");
+        
+        tr.innerHTML = `
+            <td>${truck.truck_id}</td>
+            <td>${truck.plate_no}</td>
+            <td>${truck.capacity}</td>
+            <td><span class="status-${statusClass}">${truck.display_status}</span></td>
+            <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
+            <td class="actions">
+                <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
+                <button class="delete" onclick="deleteTruck(${truck.truck_id})">Delete</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+    
+    document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
+}
+
+// Update changeTruckPage function to work with filtered data
+function changeTruckPage(direction) {
+    let filteredTrucks = trucksData;
+    if (currentStatusFilter !== 'all') {
+        filteredTrucks = trucksData.filter(truck => 
+            truck.display_status === currentStatusFilter || 
+            truck.status === currentStatusFilter
+        );
+    }
+    
+    const totalPages = Math.ceil(filteredTrucks.length / rowsPerPage);
+    currentTruckPage += direction;
+    if (currentTruckPage < 1) currentTruckPage = 1;
+    if (currentTruckPage > totalPages) currentTruckPage = totalPages;
+    renderTrucksTable();
+}
 
         function formatDateTime(datetimeString) {
             if (!datetimeString) return 'N/A';

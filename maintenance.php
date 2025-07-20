@@ -215,13 +215,14 @@ checkAccess(); // No role needed—logic is handled internally
     }
     .main-content3 {
         margin-top: 80px;
-        margin-left: 10px; /* Reduced left margin from 200px to 100px */
-        margin-right: 20px; /* Reduced right margin from 40px to 20px */
-        width: calc(100% - 25px); /* Adjusted width calculation based on new margins */
+        margin-left: 10px; 
+        margin-right: 20px; 
+        width: calc(100% - 25px); 
         height: auto;
-        max-height: 110vh;
+        max-height: 150vh;
+        min-height:150vh;
         transition: margin-left 0.3s ease;
-        overflow-y: auto;
+        overflow-y: hidden;
     }
 
     th:nth-child(9), td:nth-child(9) {
@@ -236,6 +237,31 @@ checkAccess(); // No role needed—logic is handled internally
     color: red;
     font-size: 12px;
     margin-top: 5px;
+}
+
+.status-filter-container {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-filter-container label {
+    font-weight: bold;
+    color: #333;
+}
+
+.status-filter-container select {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+}
+
+.status-filter-container select:focus {
+    outline: none;
+    border-color: #4b77de;
 }
 </style>
 <body>
@@ -308,6 +334,18 @@ checkAccess(); // No role needed—logic is handled internally
                     <button class="add_sched" onclick="openModal('add')">Add Maintenance Schedule</button>
                     <button class="reminder_btn" onclick="openRemindersModal()">Maintenance Reminders</button>
                 </div>
+
+                <div class="status-filter-container">
+    <label for="statusFilter">Show:</label>
+    <select id="statusFilter" onchange="filterTableByStatus()">
+        <option value="all">All Statuses</option>
+        <option value="Pending">Pending</option>
+        <option value="Completed">Completed</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Overdue">Overdue</option>
+    </select>
+</div>
+<br />
                 <br />
 
                 <div class="table-container">
@@ -570,31 +608,48 @@ $(document).ready(function() {
                 document.getElementById('licensePlate').value = plateNo || '';
             });
         }
-        
-        function loadMaintenanceData() {
-            fetch('include/handlers/maintenance_handler.php?action=getRecords&page=' + currentPage)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok: ' + response.statusText);
-                    }
-                    return response.json();
-                })
-                .then(response => {
-                    console.log("Response data:", response); 
-                    renderTable(response.records || []);
-                    totalPages = response.totalPages || 1;
-                    currentPage = response.currentPage || 1;
-                    updatePagination();
-                })
-                .catch(error => {
-                    console.error("Error loading data:", error);
-                    alert("Failed to load maintenance records: " + error.message);
-                    const tableBody = document.querySelector("#maintenanceTable tbody");
-                    tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Error loading data. Please try again.</td></tr>';
-                });
-        }
 
-   function renderTable(data) {
+        let currentStatusFilter = 'all';
+
+function filterTableByStatus() {
+    currentStatusFilter = document.getElementById('statusFilter').value;
+    currentPage = 1; 
+    loadMaintenanceData();
+}
+
+
+   function loadMaintenanceData() {
+    let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}`;
+    
+   
+    if (currentStatusFilter !== 'all') {
+        url += `&status=${encodeURIComponent(currentStatusFilter)}`;
+    }
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(response => {
+            console.log("Response data:", response); 
+            renderTable(response.records || []);
+            totalPages = response.totalPages || 1;
+            currentPage = response.currentPage || 1;
+            updatePagination();
+        
+        })
+        .catch(error => {
+            console.error("Error loading data:", error);
+            alert("Failed to load maintenance records: " + error.message);
+            const tableBody = document.querySelector("#maintenanceTable tbody");
+            tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading data. Please try again.</td></tr>';
+        });
+}
+
+function renderTable(data) {
     const tableBody = document.querySelector("#maintenanceTable tbody");
     tableBody.innerHTML = ""; 
     
@@ -607,6 +662,7 @@ $(document).ready(function() {
 
     data.forEach(row => {
         const tr = document.createElement("tr");
+        tr.setAttribute('data-status', row.status); // Add data attribute for status
         tr.innerHTML = `
             <td>${row.truck_id}</td>
             <td>${row.licence_plate || 'N/A'}</td>

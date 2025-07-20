@@ -4,7 +4,7 @@ session_start();
 require 'dbhandler.php';
 
 // Get all maintenance records with pagination
-function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 3) {
+function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all') {
     $offset = ($page - 1) * $rowsPerPage;
     
     $sql = "SELECT 
@@ -21,26 +21,47 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 3) {
             m.last_modified_at,
             m.edit_reasons 
             FROM maintenance m
-            LEFT JOIN truck_table t ON m.truck_id = t.truck_id
-            ORDER BY m.maintenance_id DESC
-            LIMIT $offset, $rowsPerPage";
+            LEFT JOIN truck_table t ON m.truck_id = t.truck_id";
     
-    $result = $conn->query($sql);
-    
-    $records = [];
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $records[] = $row;
-        }
-    } else {
-        // Log error for debugging
-        error_log("Query error: " . $conn->error);
+    // Add status filter if not 'all'
+    if ($statusFilter !== 'all') {
+        $sql .= " WHERE m.status = ?";
     }
     
-    // Get total count for pagination
-    $countSql = "SELECT COUNT(*) as total FROM maintenance";
-    $countResult = $conn->query($countSql);
-    $totalRows = $countResult ? $countResult->fetch_assoc()['total'] : 0;
+    $sql .= " ORDER BY m.maintenance_id DESC
+            LIMIT ?, ?";
+    
+    $stmt = $conn->prepare($sql);
+    
+    if ($statusFilter !== 'all') {
+        $stmt->bind_param("sii", $statusFilter, $offset, $rowsPerPage);
+    } else {
+        $stmt->bind_param("ii", $offset, $rowsPerPage);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $records = [];
+    while ($row = $result->fetch_assoc()) {
+        $records[] = $row;
+    }
+    
+    // Get total count for pagination with the same filter
+    $countSql = "SELECT COUNT(*) as total FROM maintenance m";
+    if ($statusFilter !== 'all') {
+        $countSql .= " WHERE m.status = ?";
+    }
+    
+    $countStmt = $conn->prepare($countSql);
+    
+    if ($statusFilter !== 'all') {
+        $countStmt->bind_param("s", $statusFilter);
+    }
+    
+    $countStmt->execute();
+    $countResult = $countStmt->get_result();
+    $totalRows = $countResult->fetch_assoc()['total'];
     $totalPages = ceil($totalRows / $rowsPerPage);
     
     return [
@@ -49,6 +70,8 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 3) {
         "currentPage" => $page
     ];
 }
+
+
 
 // Get maintenance history for a specific truck
 function getMaintenanceHistory($conn, $truckId) {
@@ -130,12 +153,13 @@ function updateTruckStatusFromMaintenance($conn, $truckId, $status) {
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 switch ($action) {
-    case 'getRecords':
-        $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-        $data = getMaintenanceRecords($conn, $page);
-        echo json_encode($data);
-        break;
-        
+case 'getRecords':
+    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+    $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
+    $data = getMaintenanceRecords($conn, $page, 5, $statusFilter);
+    echo json_encode($data);
+    break;
+
     case 'getHistory':
         $truckId = isset($_GET['truckId']) ? intval($_GET['truckId']) : 0;
         $history = getMaintenanceHistory($conn, $truckId);
@@ -146,6 +170,9 @@ switch ($action) {
         $reminders = getMaintenanceReminders($conn);
         echo json_encode(["reminders" => $reminders]);
         break;
+
+
+
         
     case 'add':
     $data = json_decode(file_get_contents("php://input"));

@@ -861,6 +861,38 @@ body {
     margin-top: 15px;
 }
 
+.filter-row {
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.status-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-filter-container label {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.status-filter-container select {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+}
+
+.status-filter-container select:focus {
+    outline: none;
+    border-color: #4b77de;
+}
+
 </style>
 <body>
     <?php
@@ -1249,6 +1281,20 @@ if ($driverResult->num_rows > 0) {
     <div id="tableView" style="display: none; ">
         <h3>Event Table</h3>
 
+         <div class="filter-row" style="margin-bottom: 15px;">
+        <div class="status-filter-container">
+            <label for="statusFilter">Filter by Status:</label>
+           <select id="statusFilter">
+                <option value="all">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="En Route">En Route</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+    </div>
+
+
         <table class="events-table" id="eventsTable"> 
             <thead>
                 <tr>
@@ -1296,9 +1342,13 @@ if ($driverResult->num_rows > 0) {
 
 <script>
     $(document).ready(function() {
+
+
         // Set minimum date to current date/time
         let now = new Date();
         let formattedNow = now.toISOString().slice(0,16); 
+                let currentStatusFilter = 'all';
+                  $('#statusFilter').on('change', filterTableByStatus);
         $('#editEventDate').attr('min', formattedNow);
         $('#addEventDate').attr('min', formattedNow); 
         
@@ -1480,46 +1530,70 @@ $(window).on('click', function(event) {
     const date = new Date(datetimeString);
     return date.toLocaleString(); 
 }
-        // Render table function   
-        function renderTable() {
-            $('#eventTableBody').empty();
-            var startIndex = (currentPage - 1) * rowsPerPage;
-            var endIndex = startIndex + rowsPerPage;
-            var pageData = eventsData.slice(startIndex, Math.min(endIndex, eventsData.length));
-            
-            pageData.forEach(function(event) {
-                var dateObj = new Date(event.date);
-                var formattedDate = dateObj.toLocaleDateString();
-                var formattedTime = moment(dateObj).format('h:mm A');
-          
-                
-               var row = `<tr>
-    <td>${event.plateNo}</td>
-    <td>${formattedDate}</td>
-    <td>${formattedTime}</td>
-    <td>${event.driver}</td>
-    <td>${event.helper}</td>
-    <td>${event.dispatcher || 'N/A'}</td>
-    <td>${event.containerNo}</td>
-    <td>${event.client}</td>
-    <td>${event.destination}</td>
-    <td>${event.shippingLine}</td>
-    <td>${event.consignee}</td>
-    <td>${event.size}</td>
-    <td>${event.cashAdvance}</td>
-      <td><span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></td>
-       <td><strong>${event.modifiedby}</strong><br>${formatDateTime(event.modifiedat)}<br>
-        ${event.edit_reasons ? `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}">View Remarks</button>` : ''}
-    <td>
-        <button class="edit-btn" data-id="${event.id}">Edit</button>
-        <button class="delete-btn" data-id="${event.id}">Delete</button>
-    </td>
-</tr>`;
-                $('#eventTableBody').append(row);
-            });
-            
-            updatePagination();
-        }
+
+
+
+function filterTableByStatus() {
+    currentStatusFilter = document.getElementById('statusFilter').value;
+    currentPage = 1; // Reset to first page when changing filter
+    renderTable();
+}
+function filterTableByStatus() {
+    currentStatusFilter = document.getElementById('statusFilter').value;
+    currentPage = 1; // Reset to first page when changing filter
+    renderTable();
+}
+
+// Updated render function
+function renderTable() {
+    $('#eventTableBody').empty();
+
+    let filteredEvents = eventsData;
+    if (currentStatusFilter !== 'all') {
+        filteredEvents = eventsData.filter(event => 
+            event.status.toLowerCase() === currentStatusFilter.toLowerCase()
+        );
+    }
+    
+    console.log("Filtering by:", currentStatusFilter, "Found:", filteredEvents.length, "events");
+    
+    var startIndex = (currentPage - 1) * rowsPerPage;
+    var endIndex = startIndex + rowsPerPage;
+    var pageData = filteredEvents.slice(startIndex, Math.min(endIndex, filteredEvents.length));
+    
+    pageData.forEach(function(event) {
+        var dateObj = new Date(event.date);
+        var formattedDate = dateObj.toLocaleDateString();
+        var formattedTime = moment(dateObj).format('h:mm A');
+        
+        var row = `<tr>
+            <td>${event.plateNo}</td>
+            <td>${formattedDate}</td>
+            <td>${formattedTime}</td>
+            <td>${event.driver}</td>
+            <td>${event.helper}</td>
+            <td>${event.dispatcher || 'N/A'}</td>
+            <td>${event.containerNo}</td>
+            <td>${event.client}</td>
+            <td>${event.destination}</td>
+            <td>${event.shippingLine}</td>
+            <td>${event.consignee}</td>
+            <td>${event.size}</td>
+            <td>${event.cashAdvance}</td>
+            <td><span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></td>
+            <td><strong>${event.modifiedby}</strong><br>${formatDateTime(event.modifiedat)}<br>
+            ${event.edit_reasons ? `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}">View Remarks</button>` : ''}
+            <td>
+                <button class="edit-btn" data-id="${event.id}">Edit</button>
+                <button class="delete-btn" data-id="${event.id}">Delete</button>
+            </td>
+        </tr>`;
+        $('#eventTableBody').append(row);
+    });
+    
+    totalPages = Math.ceil(filteredEvents.length / rowsPerPage);
+    updatePagination();
+}
 
         // Update pagination function
         function updatePagination() {
@@ -1904,6 +1978,8 @@ $('#reason6').on('change', function() {
         $('#otherReasonText').val('');
     }
 });
+
+console.log("Filtering by:", currentStatusFilter, "Found:", filteredEvents.length, "events");
 </script>
 </body>
 </html>
