@@ -168,6 +168,20 @@ checkAccess();
     background-color: white;
     cursor: pointer;
 }
+
+th[onclick] {
+    cursor: pointer;
+    user-select: none;
+}
+
+th[onclick]:hover {
+    background-color: #f5f5f5;
+}
+
+#sortIndicator {
+    margin-left: 5px;
+    font-size: 1.2em;
+}
     </style>
 </head>
 <body>
@@ -250,7 +264,7 @@ checkAccess();
                     <table id="trucksTable">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th onclick="sortTrucks('truck_id')">ID <span id="sortIndicator">↑</span></th>
                                 <th>Plate Number</th>
                                 <th>Capacity</th>
                                 <th>Status</th>
@@ -312,6 +326,7 @@ checkAccess();
         let currentTruckPage = 1;
         const rowsPerPage = 4;
         let isEditMode = false;
+        let currentSortOrder = 'asc';
 
         function filterTrucksByStatus() {
     currentStatusFilter = document.getElementById('statusFilter').value;
@@ -447,6 +462,9 @@ function fetchTrucks() {
         );
     }
     
+
+
+    
     const pageData = filteredTrucks.slice(start, Math.min(end, filteredTrucks.length));
     
     const tableBody = document.getElementById("trucksTableBody");
@@ -475,6 +493,30 @@ function fetchTrucks() {
     document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
 }
 
+function sortTrucks(sortBy) {
+    // Toggle sort order if clicking the same column
+    if (sortBy === 'truck_id') {
+        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+    }
+    
+    trucksData.sort((a, b) => {
+        if (sortBy === 'truck_id') {
+            return currentSortOrder === 'asc' 
+                ? a.truck_id - b.truck_id 
+                : b.truck_id - a.truck_id;
+        }
+        return 0;
+    });
+    
+    // Update sort indicator
+    document.getElementById('sortIndicator').textContent = 
+        currentSortOrder === 'asc' ? '↑' : '↓';
+    
+    // Reset to first page and render
+    currentTruckPage = 1;
+    renderTrucksTable();
+}
+
 // Update changeTruckPage function to work with filtered data
 function changeTruckPage(direction) {
     let filteredTrucks = trucksData;
@@ -498,13 +540,7 @@ function changeTruckPage(direction) {
             return date.toLocaleString(); // This will format based on user's locale
         }
 
-        function changeTruckPage(direction) {
-            const totalPages = Math.ceil(trucksData.length / rowsPerPage);
-            currentTruckPage += direction;
-            if (currentTruckPage < 1) currentTruckPage = 1;
-            if (currentTruckPage > totalPages) currentTruckPage = totalPages;
-            renderTrucksTable();
-        }
+  
 
         function fetchTrucks() {
             fetch('include/handlers/truck_handler.php?action=getTrucks')
