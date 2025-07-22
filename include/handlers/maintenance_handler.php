@@ -143,7 +143,7 @@ function getMaintenanceReminders($conn) {
 
 // Function to update truck status based on maintenance status
 function updateTruckStatusFromMaintenance($conn, $truckId, $status) {
-    $newStatus = 'Good'; // Default
+    $newStatus = 'In Terminal'; // Default
     
     if ($status === 'In Progress') {
         $newStatus = 'In Repair';
