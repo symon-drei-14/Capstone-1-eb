@@ -339,36 +339,71 @@ case 'edit':
         echo json_encode(["success" => false, "message" => "Invalid ID"]);
         exit;
     }
+
+    // Get the truck ID first
+    $getTruck = $conn->prepare("SELECT t.truck_id FROM maintenance m 
+                               JOIN truck_table t ON m.truck_id = t.truck_id 
+                               WHERE m.maintenance_id = ?");
+    $getTruck->bind_param("i", $id);
+    $getTruck->execute();
+    $truck = $getTruck->get_result()->fetch_assoc();
     
-    // Soft delete with reason
-    $stmt = $conn->prepare("UPDATE maintenance SET is_deleted = 1, delete_reason = ? WHERE maintenance_id = ?");
-    $stmt->bind_param("si", $deleteReason, $id);
+    // Then soft delete the maintenance record
+    $stmt = $conn->prepare("UPDATE maintenance SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE maintenance_id = ?");
+    $stmt->bind_param("ssi", 
+        $deleteReason,
+        $_SESSION['username'],
+        $id
+    );
     
     if ($stmt->execute()) {
-        echo json_encode(["success" => true]);
+        // Update truck status to In Terminal if maintenance was deleted
+        if ($truck) {
+            $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'In Terminal' WHERE truck_id = ?");
+            $updateTruck->bind_param("i", $truck['truck_id']);
+            $updateTruck->execute();
+        }
+        
+        echo json_encode(['success' => true]);
     } else {
-        echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $stmt->error]);
     }
-    $stmt->close();
     break;
 
-    case 'restore':
+case 'restore':
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     
     if ($id <= 0) {
         echo json_encode(["success" => false, "message" => "Invalid ID"]);
         exit;
     }
+
+    // First get the maintenance record to restore
+    $getMaintenance = $conn->prepare("SELECT truck_id, status FROM maintenance WHERE maintenance_id = ?");
+    $getMaintenance->bind_param("i", $id);
+    $getMaintenance->execute();
+    $maintenance = $getMaintenance->get_result()->fetch_assoc();
     
+    if (!$maintenance) {
+        echo json_encode(["success" => false, "message" => "Maintenance record not found"]);
+        exit;
+    }
+
+    // Restore the maintenance record
     $stmt = $conn->prepare("UPDATE maintenance SET is_deleted = 0, delete_reason = NULL WHERE maintenance_id = ?");
     $stmt->bind_param("i", $id);
     
     if ($stmt->execute()) {
+        // If the maintenance status was "In Progress", set truck back to "In Repair"
+        if ($maintenance['status'] === 'In Progress') {
+            $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'In Repair' WHERE truck_id = ?");
+            $updateTruck->bind_param("i", $maintenance['truck_id']);
+            $updateTruck->execute();
+        }
         echo json_encode(["success" => true]);
     } else {
         echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
     }
-    $stmt->close();
     break;
         
     default:

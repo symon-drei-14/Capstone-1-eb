@@ -145,9 +145,9 @@ try {
     }
     break;
 
-   case 'softDeleteTruck':
+case 'softDeleteTruck':
     $stmt = $conn->prepare("UPDATE truck_table 
-                          SET is_deleted=1, delete_reason=?, 
+                          SET is_deleted=1, status='Deleted', delete_reason=?, 
                           last_modified_by=?, last_modified_at=NOW()
                           WHERE truck_id=?");
     $stmt->bind_param("ssi", 

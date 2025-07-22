@@ -1365,16 +1365,21 @@ function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
         async: false, // We need to wait for this response
         success: function(truckResponse) {
             if (truckResponse.success) {
-                // Identify unavailable trucks (In Repair or Overdue)
+                // Identify unavailable trucks (In Repair, Overdue, or Deleted)
                 var unavailableTruckIds = truckResponse.trucks
-                    .filter(truck => truck.display_status === 'In Repair' || truck.display_status === 'Overdue')
+                    .filter(truck => 
+                        truck.display_status === 'In Repair' || 
+                        truck.display_status === 'Overdue' ||
+                        truck.is_deleted == 1
+                    )
                     .map(truck => truck.truck_id.toString());
                 
                 var driverOptions = '<option value="">Select Driver</option>';
                 
-    driversData.forEach(function(driver) {
+                driversData.forEach(function(driver) {
                     // Skip drivers assigned to unavailable trucks
-                    if (driver.assigned_truck_id && unavailableTruckIds.includes(driver.assigned_truck_id.toString())) {
+                    if (driver.assigned_truck_id && 
+                        unavailableTruckIds.includes(driver.assigned_truck_id.toString())) {
                         return; // skip this driver
                     }
                     
@@ -1382,35 +1387,88 @@ function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
                     if (!selectedSize || !driver.capacity || 
                         (selectedSize.includes('20') && driver.capacity === '20') ||
                         (selectedSize.includes('40') && driver.capacity === '40')) {
+                        
+                        // Check if this is the current driver being edited
+                        var selectedAttr = (driver.name === currentDriver) ? ' selected' : '';
+                        
                         // Include truck_plate_no as a data attribute
-                      var selectedAttr = (driver.name === currentDriver) ? ' selected' : '';
-        driverOptions += `<option value="${driver.name}" data-plate-no="${driver.truck_plate_no || ''}"${selectedAttr}>${driver.name}</option>`;
-    }});
+                        driverOptions += `
+                            <option 
+                                value="${driver.name}" 
+                                data-plate-no="${driver.truck_plate_no || ''}"
+                                data-driver-id="${driver.id || ''}"
+                                ${selectedAttr}
+                            >
+                                ${driver.name}
+                                ${driver.truck_plate_no ? ` (${driver.truck_plate_no})` : ''}
+                                ${driver.capacity ? ` [${driver.capacity}ft]` : ''}
+                            </option>
+                        `;
+                    }
+                });
+                
+                // Add a disabled option for unavailable drivers if any were filtered out
+                var unavailableDrivers = driversData.filter(driver => 
+                    driver.assigned_truck_id && 
+                    unavailableTruckIds.includes(driver.assigned_truck_id.toString())
+                );
+                
+                if (unavailableDrivers.length > 0) {
+                    driverOptions += '<optgroup label="Unavailable Drivers">';
+                    unavailableDrivers.forEach(function(driver) {
+                        var status = truckResponse.trucks.find(t => 
+                            t.truck_id.toString() === driver.assigned_truck_id.toString()
+                        ).display_status;
+                        
+                        driverOptions += `
+                            <option 
+                                disabled
+                                title="Assigned truck is ${status === 'Deleted' ? 'deleted' : status.toLowerCase()}"
+                            >
+                                ${driver.name} (Unavailable)
+                            </option>
+                        `;
+                    });
+                    driverOptions += '</optgroup>';
+                }
                 
                 $('#editEventDriver').html(driverOptions);
                 $('#addEventDriver').html(driverOptions);
             } else {
                 console.error('Error fetching truck data:', truckResponse.message);
                 // Fallback to showing all drivers
-                populateAllDrivers(selectedSize);
+                populateAllDrivers(selectedSize, currentDriver);
             }
         },
         error: function() {
             console.error('Error fetching truck data');
             // Fallback to showing all drivers
-            populateAllDrivers(selectedSize);
+            populateAllDrivers(selectedSize, currentDriver);
         }
     });
 }
 
-// Helper function to populate all drivers (fallback)
-function populateAllDrivers(selectedSize = '') {
+// Fallback function to show all drivers
+function populateAllDrivers(selectedSize = '', currentDriver = '') {
     var driverOptions = '<option value="">Select Driver</option>';
     driversData.forEach(function(driver) {
         if (!selectedSize || !driver.capacity || 
             (selectedSize.includes('20') && driver.capacity === '20') ||
             (selectedSize.includes('40') && driver.capacity === '40')) {
-            driverOptions += `<option value="${driver.name}" data-plate-no="${driver.truck_plate_no || ''}">${driver.name}</option>`;
+            
+            var selectedAttr = (driver.name === currentDriver) ? ' selected' : '';
+            driverOptions += `
+                <option 
+                    value="${driver.name}" 
+                    data-plate-no="${driver.truck_plate_no || ''}"
+                    data-driver-id="${driver.id || ''}"
+                    ${selectedAttr}
+                >
+                    ${driver.name}
+                    ${driver.truck_plate_no ? ` (${driver.truck_plate_no})` : ''}
+                    ${driver.capacity ? ` [${driver.capacity}ft]` : ''}
+                </option>
+            `;
         }
     });
     $('#editEventDriver').html(driverOptions);
