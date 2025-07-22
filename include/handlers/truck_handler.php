@@ -56,27 +56,13 @@ function updateTruckStatus($conn, $truckId, $plateNo) {
 
 try {
     switch ($action) {
-    case 'getTrucks':
-    $statusFilter = $_GET['status'] ?? 'all';
-    
-    if ($statusFilter === 'all') {
-        $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
-                               t.status as display_status,
-                               t.last_modified_by, 
-                               t.last_modified_at
-                               FROM truck_table t
-                               ORDER BY t.truck_id");
-    } else {
-        $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
-                               t.status as display_status,
-                               t.last_modified_by, 
-                               t.last_modified_at
-                               FROM truck_table t
-                               WHERE t.status = ?
-                               ORDER BY t.truck_id");
-        $stmt->bind_param("s", $statusFilter);
-    }
-    
+ case 'getTrucks':
+    $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
+                          t.status as display_status, t.is_deleted,
+                          t.last_modified_by, t.delete_reason,
+                          t.last_modified_at
+                          FROM truck_table t
+                          ORDER BY t.truck_id");
     $stmt->execute();
     $result = $stmt->get_result();
     $trucks = $result->fetch_all(MYSQLI_ASSOC);
@@ -157,6 +143,33 @@ try {
         $conn->rollback();
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
+    break;
+
+   case 'softDeleteTruck':
+    $stmt = $conn->prepare("UPDATE truck_table 
+                          SET is_deleted=1, delete_reason=?, 
+                          last_modified_by=?, last_modified_at=NOW()
+                          WHERE truck_id=?");
+    $stmt->bind_param("ssi", 
+        $data['delete_reason'],
+        $currentUser,
+        $data['truck_id']
+    );
+    $stmt->execute();
+    echo json_encode(['success' => true]);
+    break;
+
+    case 'restoreTruck':
+    $stmt = $conn->prepare("UPDATE truck_table 
+                          SET is_deleted=0, delete_reason=NULL, 
+                          last_modified_by=?, last_modified_at=NOW()
+                          WHERE truck_id=?");
+    $stmt->bind_param("si", 
+        $currentUser,
+        $data['truck_id']
+    );
+    $stmt->execute();
+    echo json_encode(['success' => true]);
     break;
 
         default:

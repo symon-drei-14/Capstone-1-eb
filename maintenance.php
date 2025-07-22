@@ -263,6 +263,53 @@ checkAccess(); // No role needed—logic is handled internally
     outline: none;
     border-color: #4b77de;
 }
+
+/* Remove the deleted label styles and adjust table columns */
+#maintenanceTable th:nth-child(8), 
+#maintenanceTable td:nth-child(8) {
+    width: 15%;
+}
+
+#maintenanceTable th:nth-child(9), 
+#maintenanceTable td:nth-child(9) {
+    width: 15%;
+}
+
+.remarks-modal-content h4 {
+    margin-top: 15px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.deleted-row {
+    background-color: #ffeeee;
+}
+
+.deleted-row td {
+    opacity: 0.7;
+}
+
+.deleted-row .status-pending,
+.deleted-row .status-completed,
+.deleted-row .status-in-progress,
+.deleted-row .status-overdue {
+    text-decoration: line-through;
+}
+
+.restore {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.restore:hover {
+    background-color: #45a049;
+}
 </style>
 <body>
 
@@ -335,7 +382,7 @@ checkAccess(); // No role needed—logic is handled internally
                     <button class="reminder_btn" onclick="openRemindersModal()">Maintenance Reminders</button>
                 </div>
 
-                <div class="status-filter-container">
+               <div class="status-filter-container">
     <label for="statusFilter">Show:</label>
     <select id="statusFilter" onchange="filterTableByStatus()">
         <option value="all">All Statuses</option>
@@ -343,6 +390,7 @@ checkAccess(); // No role needed—logic is handled internally
         <option value="Completed">Completed</option>
         <option value="In Progress">In Progress</option>
         <option value="Overdue">Overdue</option>
+        <option value="Deleted">Deleted</option>
     </select>
 </div>
 <br />
@@ -617,7 +665,6 @@ function filterTableByStatus() {
     loadMaintenanceData();
 }
 
-
    function loadMaintenanceData() {
     let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}`;
     
@@ -660,9 +707,21 @@ function renderTable(data) {
         return;
     }
 
+
     data.forEach(row => {
         const tr = document.createElement("tr");
-        tr.setAttribute('data-status', row.status); // Add data attribute for status
+        tr.setAttribute('data-status', row.status);
+        if (row.is_deleted) {
+            tr.classList.add('deleted-row');
+        }   
+        const actionsCell = row.is_deleted 
+            ? `<button class="restore" onclick="restoreMaintenance(${row.maintenance_id})">Restore</button>`
+            : `
+                <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost}, '${row.maintenance_type || 'preventive'}')">Edit</button>
+                <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
+                <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
+              `;
+        
         tr.innerHTML = `
             <td>${row.truck_id}</td>
             <td>${row.licence_plate || 'N/A'}</td>
@@ -674,18 +733,20 @@ function renderTable(data) {
             <td>
                 <strong>${row.last_modified_by}</strong><br>
                 ${formatDateTime(row.last_modified_at)}<br>
-                ${row.edit_reasons ? `<button class="view-remarks-btn" data-reasons='${row.edit_reasons}'>View Remarks</button>` : ''}
+                ${(row.edit_reasons || row.delete_reason) ? 
+                  `<button class="view-remarks-btn" 
+                    data-reasons='${JSON.stringify({
+                        editReasons: row.edit_reasons ? JSON.parse(row.edit_reasons) : null,
+                        deleteReason: row.delete_reason
+                    })}'>View Remarks</button>` : ''}
             </td>
             <td class="actions">
-                <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost}, '${row.maintenance_type || 'preventive'}')">Edit</button>
-                <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
-                <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
+                ${actionsCell}
             </td>
         `;
         tableBody.appendChild(tr);
     });
 
-    // Add event listeners to all view remarks buttons
     document.querySelectorAll('.view-remarks-btn').forEach(button => {
         button.addEventListener('click', function() {
             showEditRemarks(this.getAttribute('data-reasons'));
@@ -819,28 +880,35 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
     
     document.getElementById("maintenanceModal").style.display = "block";
 }
-
 function showEditRemarks(reasonsJson) {
     try {
         const reasons = JSON.parse(reasonsJson);
-        let html = '<div class="remarks-modal-content"><h3>Edit Remarks</h3><ul>';
+        let html = '<div class="remarks-modal-content"><h3>Record Details</h3>';
         
-        reasons.forEach(reason => {
-            html += `<li>${reason}</li>`;
-        });
+        if (reasons.editReasons && reasons.editReasons.length > 0) {
+            html += '<h4>Edit Reasons:</h4><ul>';
+            reasons.editReasons.forEach(reason => {
+                html += `<li>${reason}</li>`;
+            });
+            html += '</ul>';
+        }
         
-        html += '</ul><button onclick="document.getElementById(\'remarksModal\').style.display=\'none\'">Close</button></div>';
+        if (reasons.deleteReason) {
+            html += '<h4>Delete Reason:</h4>';
+            html += `<p>${reasons.deleteReason}</p>`;
+        }
+        
+        html += '<button onclick="document.getElementById(\'remarksModal\').style.display=\'none\'">Close</button></div>';
         
         document.getElementById('remarksModalContent').innerHTML = html;
         document.getElementById('remarksModal').style.display = 'block';
     } catch (e) {
-        console.error('Error parsing edit reasons:', e);
+        console.error('Error parsing remarks:', e);
         document.getElementById('remarksModalContent').innerHTML = 
-            '<div class="remarks-modal-content"><p>Error displaying edit remarks</p></div>';
+            '<div class="remarks-modal-content"><p>Error displaying remarks</p></div>';
         document.getElementById('remarksModal').style.display = 'block';
     }
-}
-        
+}     
      function closeModal() {
     document.getElementById("maintenanceModal").style.display = "none";
     // Always enable the status dropdown when closing the modal
@@ -915,30 +983,37 @@ function showEditRemarks(reasonsJson) {
     });
 }
         
-        function deleteMaintenance(id) {
-            if (!confirm("Are you sure you want to delete this maintenance record?")) {
-                return;
+function deleteMaintenance(id) {
+    if (!confirm("Are you sure you want to delete this maintenance record?")) {
+        return;
+    }
+    
+    const deleteReason = prompt("Please enter the reason for deleting this record:");
+    if (deleteReason === null) return; // User cancelled
+    if (deleteReason.trim() === "") {
+        alert("You must provide a reason for deletion.");
+        return;
+    }
+    
+    $.ajax({
+        url: `include/handlers/maintenance_handler.php?action=delete&id=${id}&reason=${encodeURIComponent(deleteReason)}`,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                loadMaintenanceData();
+                alert("Maintenance record deleted successfully!");
+            } else {
+                alert("Error: " + (response.message || "Unknown error"));
             }
-            
-            $.ajax({
-                url: 'include/handlers/maintenance_handler.php?action=delete&id=' + id,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        loadMaintenanceData();
-                        alert("Maintenance record deleted successfully!");
-                    } else {
-                        alert("Error: " + (response.message || "Unknown error"));
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error deleting record: " + error);
-                    alert("Failed to delete maintenance record.");
-                }
-            });
+        },
+        error: function(xhr, status, error) {
+            console.error("Error deleting record: " + error);
+            alert("Failed to delete maintenance record.");
         }
-        
+    });
+}
+
         function openHistoryModal(truckId) {
             currentTruckId = truckId;
             
@@ -1057,6 +1132,30 @@ function showEditRemarks(reasonsJson) {
             tableBody.innerHTML = '';
             sortedRows.forEach(row => tableBody.appendChild(row));
         }
+
+        function restoreMaintenance(id) {
+    if (!confirm("Are you sure you want to restore this maintenance record?")) {
+        return;
+    }
+    
+    $.ajax({
+        url: `include/handlers/maintenance_handler.php?action=restore&id=${id}`,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                loadMaintenanceData();
+                alert("Maintenance record restored successfully!");
+            } else {
+                alert("Error: " + (response.message || "Unknown error"));
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error restoring record: " + error);
+            alert("Failed to restore maintenance record.");
+        }
+    });
+}
     </script>
       <script>
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {

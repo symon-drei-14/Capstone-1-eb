@@ -182,6 +182,61 @@ th[onclick]:hover {
     margin-left: 5px;
     font-size: 1.2em;
 }
+
+.status-deleted {
+    background-color: #6c757d; /* Gray */
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.show-deleted-filter {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.show-deleted-filter label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.show-deleted-filter input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.restore {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.restore:hover {
+    background-color: #218838;
+}
+
+.view-reason {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.view-reason:hover {
+    background-color: #138496;
+}
+
     </style>
 </head>
 <body>
@@ -258,7 +313,14 @@ th[onclick]:hover {
         <option value="Enroute">Enroute</option>
         <option value="In Repair">In Repair</option>
         <option value="Overdue">Overdue</option>
+
     </select>
+</div>
+<div class="show-deleted-filter">
+    <label>
+        <input type="checkbox" id="showDeleted" onchange="toggleDeletedTrucks()">
+        Show Deleted Trucks
+    </label>
 </div>
                 <div class="table-container">
                     <table id="trucksTable">
@@ -320,6 +382,35 @@ th[onclick]:hover {
         </div>
     </div>
 
+    <div id="deleteModal" class="modal">
+    <div class="modal-content" style="width: 40%;">
+        <span class="close" onclick="closeModal('deleteModal')">&times;</span>
+        <h2>Delete Truck</h2>
+        <input type="hidden" id="deleteTruckId">
+        <div class="form-group">
+            <label for="deleteReason">Reason for deletion:</label>
+            <textarea id="deleteReason" name="deleteReason" class="form-control" rows="4" required></textarea>
+        </div>
+        <div class="button-group">
+            <button type="button" class="save-btn" onclick="performSoftDelete()">Confirm Delete</button>
+            <button type="button" class="cancel-btn" onclick="closeModal('deleteModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="reasonModal" class="modal">
+    <div class="modal-content" style="width: 40%;">
+        <span class="close" onclick="closeModal('reasonModal')">&times;</span>
+        <h2>Deletion Reason</h2>
+        <div class="form-group">
+            <p id="deletionReasonText" style="padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></p>
+        </div>
+        <div class="button-group">
+            <button type="button" class="cancel-btn" onclick="closeModal('reasonModal')">Close</button>
+        </div>
+    </div>
+</div>
+
     <script>
         let currentStatusFilter = 'all';
         let trucksData = [];
@@ -327,10 +418,30 @@ th[onclick]:hover {
         const rowsPerPage = 4;
         let isEditMode = false;
         let currentSortOrder = 'asc';
+ let showDeleted = false;
 
-        function filterTrucksByStatus() {
-    currentStatusFilter = document.getElementById('statusFilter').value;
+function toggleDeletedTrucks() {
+    showDeleted = document.getElementById('showDeleted').checked;
+    // Reset to first page when toggling
+    currentTruckPage = 1;
     renderTrucksTable();
+}
+
+function viewDeletionReason(truckId) {
+    // Find the truck in our data
+    const truck = trucksData.find(t => t.truck_id == truckId);
+    if (truck) {
+        document.getElementById('deletionReasonText').textContent = 
+            truck.delete_reason || 'No reason provided';
+        openModal('reasonModal');
+    }
+}
+
+
+     function filterTrucksByStatus() {
+    currentStatusFilter = document.getElementById('statusFilter').value;
+    currentTruckPage = 1; // Reset to first page when filtering
+    fetchTrucks(); // This will fetch fresh data with the new filter
 }
 
 function fetchTrucks() {
@@ -341,14 +452,14 @@ function fetchTrucks() {
             if (data.success) {
                 trucksData = data.trucks;
                 renderTrucksTable();
-                setTimeout(fetchTrucks, 30000);
+               
             } else {
                 alert('Error fetching trucks: ' + data.message);
             }
         })
         .catch(error => console.error('Error:', error));
 }
-        // Modal functions
+       
         
         function openModal(modalId) {
             document.getElementById(modalId).style.display = "block";
@@ -368,7 +479,6 @@ function fetchTrucks() {
             document.getElementById('truckIdHidden').value = truck.truck_id;
             document.getElementById('plateNo').value = truck.plate_no;
             document.getElementById('capacity').value = truck.capacity;
-            // Make sure this matches the actual status field name
             document.getElementById('status').value = truck.status || truck.display_status;
         }
     } else {
@@ -429,42 +539,61 @@ function fetchTrucks() {
             });
         }
 
-        function deleteTruck(truckId) {
-            if (!confirm("Are you sure you want to delete this truck?")) return;
-            
-            fetch('include/handlers/truck_handler.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'deleteTruck', truck_id: truckId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Truck deleted successfully!');
-                    fetchTrucks();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
+       function deleteTruck(truckId) {
+    document.getElementById('deleteTruckId').value = truckId;
+    document.getElementById('deleteReason').value = '';
+    openModal('deleteModal');
+}
+     
 
-      function renderTrucksTable() {
+function performSoftDelete() {
+    const truckId = document.getElementById('deleteTruckId').value;
+    const deleteReason = document.getElementById('deleteReason').value;
+    
+    if (!deleteReason) {
+        alert("Please provide a reason for deletion");
+        return;
+    }
+
+    fetch('include/handlers/truck_handler.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            action: 'softDeleteTruck', 
+            truck_id: truckId,
+            delete_reason: deleteReason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Truck has been deleted successfully!');
+            closeModal('deleteModal');
+            fetchTrucks();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function renderTrucksTable() {
     const start = (currentTruckPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     
-    // Filter trucks based on status
-    let filteredTrucks = trucksData;
-    if (currentStatusFilter !== 'all') {
-        filteredTrucks = trucksData.filter(truck => 
+    // Filter trucks based on the showDeleted flag
+    let filteredTrucks = trucksData.filter(truck => {
+        return showDeleted ? truck.is_deleted == 1 : truck.is_deleted == 0;
+    });
+
+    // Apply status filter only when not showing deleted trucks
+    if (!showDeleted && currentStatusFilter !== 'all') {
+        filteredTrucks = filteredTrucks.filter(truck => 
             truck.display_status === currentStatusFilter || 
             truck.status === currentStatusFilter
         );
     }
-    
 
-
-    
     const pageData = filteredTrucks.slice(start, Math.min(end, filteredTrucks.length));
     
     const tableBody = document.getElementById("trucksTableBody");
@@ -473,25 +602,60 @@ function fetchTrucks() {
     pageData.forEach(truck => {
         const tr = document.createElement("tr");
         
-        // Determine status class based on display_status
-        const statusClass = truck.display_status.toLowerCase().replace(/\s+/g, "-");
+        let statusClass, statusText;
+        if (truck.is_deleted == 1) {
+            statusClass = 'deleted';
+            statusText = 'Deleted';
+        } else {
+            statusClass = truck.display_status.toLowerCase().replace(/\s+/g, "-");
+            statusText = truck.display_status;
+        }
         
         tr.innerHTML = `
-            <td>${truck.truck_id}</td>
-            <td>${truck.plate_no}</td>
-            <td>${truck.capacity}</td>
-            <td><span class="status-${statusClass}">${truck.display_status}</span></td>
-            <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
-            <td class="actions">
+        <td>${truck.truck_id}</td>
+        <td>${truck.plate_no}</td>
+        <td>${truck.capacity}</td>
+        <td><span class="status-${statusClass}">${statusText}</span></td>
+        <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
+        <td class="actions">
+            ${truck.is_deleted == 1 ? `
+                <button class="restore" onclick="restoreTruck(${truck.truck_id})">Restore</button>
+                <button class="view-reason" onclick="viewDeletionReason(${truck.truck_id})">View Reason</button>
+            ` : `
                 <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
                 <button class="delete" onclick="deleteTruck(${truck.truck_id})">Delete</button>
-            </td>
-        `;
+            `}
+        </td>
+    `;
         tableBody.appendChild(tr);
     });
     
     document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
 }
+
+function restoreTruck(truckId) {
+    if (confirm("Are you sure you want to restore this truck?")) {
+        fetch('include/handlers/truck_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'restoreTruck', 
+                truck_id: truckId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Truck has been restored successfully!');
+                fetchTrucks();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
+
 
 function sortTrucks(sortBy) {
     // Toggle sort order if clicking the same column
@@ -521,10 +685,17 @@ function sortTrucks(sortBy) {
 function changeTruckPage(direction) {
     let filteredTrucks = trucksData;
     if (currentStatusFilter !== 'all') {
-        filteredTrucks = trucksData.filter(truck => 
-            truck.display_status === currentStatusFilter || 
-            truck.status === currentStatusFilter
-        );
+        if (currentStatusFilter === 'deleted') {
+            filteredTrucks = trucksData.filter(truck => truck.is_deleted == 1);
+        } else {
+            filteredTrucks = trucksData.filter(truck => 
+                (truck.display_status === currentStatusFilter || 
+                 truck.status === currentStatusFilter) &&
+                truck.is_deleted == 0
+            );
+        }
+    } else {
+        filteredTrucks = trucksData.filter(truck => truck.is_deleted == 0);
     }
     
     const totalPages = Math.ceil(filteredTrucks.length / rowsPerPage);
@@ -550,8 +721,7 @@ function changeTruckPage(direction) {
                         trucksData = data.trucks;
                         renderTrucksTable();
                         
-                        // Add this to automatically refresh every 30 seconds
-                        setTimeout(fetchTrucks, 30000);
+                       
                     } else {
                         alert('Error fetching trucks: ' + data.message);
                     }
@@ -565,6 +735,30 @@ function changeTruckPage(direction) {
                 document.querySelector('.sidebar').classList.toggle('expanded');
             });
         });
+
+
+        function restoreTruck(truckId) {
+    if (confirm("Are you sure you want to restore this truck?")) {
+        fetch('include/handlers/truck_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'restoreTruck', 
+                truck_id: truckId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Truck has been restored successfully!');
+                fetchTrucks();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
     </script>
 </body>
 </html>

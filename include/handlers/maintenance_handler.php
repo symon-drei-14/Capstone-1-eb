@@ -19,24 +19,35 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
             m.cost,
             m.last_modified_by,
             m.last_modified_at,
-            m.edit_reasons 
+            m.edit_reasons,
+            m.is_deleted,
+            m.delete_reason
             FROM maintenance m
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id";
     
-    // Add status filter if not 'all'
-    if ($statusFilter !== 'all') {
-        $sql .= " WHERE m.status = ?";
+    $params = [];
+    $types = '';
+    
+    // Add status filter
+    if ($statusFilter === 'Deleted') {
+        $sql .= " WHERE m.is_deleted = 1";
+    } elseif ($statusFilter !== 'all') {
+        $sql .= " WHERE m.status = ? AND m.is_deleted = 0";
+        $params[] = $statusFilter;
+        $types .= "s";
+    } else {
+        $sql .= " WHERE m.is_deleted = 0";
     }
     
-    $sql .= " ORDER BY m.maintenance_id DESC
-            LIMIT ?, ?";
+    $sql .= " ORDER BY m.maintenance_id DESC LIMIT ?, ?";
+    $params[] = $offset;
+    $params[] = $rowsPerPage;
+    $types .= "ii";
     
     $stmt = $conn->prepare($sql);
     
-    if ($statusFilter !== 'all') {
-        $stmt->bind_param("sii", $statusFilter, $offset, $rowsPerPage);
-    } else {
-        $stmt->bind_param("ii", $offset, $rowsPerPage);
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
     }
     
     $stmt->execute();
@@ -49,14 +60,23 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     
     // Get total count for pagination with the same filter
     $countSql = "SELECT COUNT(*) as total FROM maintenance m";
-    if ($statusFilter !== 'all') {
-        $countSql .= " WHERE m.status = ?";
+    $countParams = [];
+    $countTypes = '';
+    
+    if ($statusFilter === 'Deleted') {
+        $countSql .= " WHERE m.is_deleted = 1";
+    } elseif ($statusFilter !== 'all') {
+        $countSql .= " WHERE m.status = ? AND m.is_deleted = 0";
+        $countParams[] = $statusFilter;
+        $countTypes .= "s";
+    } else {
+        $countSql .= " WHERE m.is_deleted = 0";
     }
     
     $countStmt = $conn->prepare($countSql);
     
-    if ($statusFilter !== 'all') {
-        $countStmt->bind_param("s", $statusFilter);
+    if (!empty($countParams)) {
+        $countStmt->bind_param($countTypes, ...$countParams);
     }
     
     $countStmt->execute();
@@ -311,33 +331,45 @@ case 'edit':
     $stmt->close();
     break;
     
-    case 'delete':
-        $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-        
-        if ($id <= 0) {
-            echo json_encode(["success" => false, "message" => "Invalid ID"]);
-            exit;
-        }
-        
-        // Get truck ID before deleting
-        $truckQuery = $conn->prepare("SELECT truck_id FROM maintenance WHERE maintenance_id = ?");
-        $truckQuery->bind_param("i", $id);
-        $truckQuery->execute();
-        $truckResult = $truckQuery->get_result();
-        $truckId = $truckResult->fetch_assoc()['truck_id'];
-        
-        $stmt = $conn->prepare("DELETE FROM maintenance WHERE maintenance_id = ?");
-        $stmt->bind_param("i", $id);
-        
-        if ($stmt->execute()) {
-            // Update truck status after deletion
-            updateTruckStatusFromMaintenance($conn, $truckId, null);
-            echo json_encode(["success" => true]);
-        } else {
-            echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
-        }
-        $stmt->close();
-        break;
+ case 'delete':
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    $deleteReason = isset($_GET['reason']) ? $_GET['reason'] : '';
+    
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid ID"]);
+        exit;
+    }
+    
+    // Soft delete with reason
+    $stmt = $conn->prepare("UPDATE maintenance SET is_deleted = 1, delete_reason = ? WHERE maintenance_id = ?");
+    $stmt->bind_param("si", $deleteReason, $id);
+    
+    if ($stmt->execute()) {
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+    }
+    $stmt->close();
+    break;
+
+    case 'restore':
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid ID"]);
+        exit;
+    }
+    
+    $stmt = $conn->prepare("UPDATE maintenance SET is_deleted = 0, delete_reason = NULL WHERE maintenance_id = ?");
+    $stmt->bind_param("i", $id);
+    
+    if ($stmt->execute()) {
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+    }
+    $stmt->close();
+    break;
         
     default:
         echo json_encode(["success" => false, "message" => "Invalid action"]);
