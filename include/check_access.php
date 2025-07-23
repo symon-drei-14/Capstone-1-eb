@@ -8,6 +8,9 @@ function checkAccess($requiredRole = null) {
         exit();
     }
 
+    // Store user role in a JavaScript-accessible variable
+    echo '<script>window.userRole = "' . ($_SESSION['role'] ?? '') . '";</script>';
+
     // Full Admin bypasses all checks
     if ($_SESSION['role'] === 'Full Admin') {
         return true;
@@ -31,5 +34,13 @@ function checkAccess($requiredRole = null) {
         header("Location: dashboard.php");
         exit();
     }
+
+    // Additional specific role checks if needed
+    if ($requiredRole !== null && $_SESSION['role'] !== $requiredRole) {
+        header("Location: dashboard.php");
+        exit();
+    }
+
+    return true;
 }
 ?>

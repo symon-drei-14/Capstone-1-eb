@@ -145,6 +145,36 @@ try {
     }
     break;
 
+    case 'fullDeleteTruck':
+    // Start transaction
+    $conn->begin_transaction();
+    
+    try {
+        // First delete the truck
+        $stmt = $conn->prepare("DELETE FROM truck_table WHERE truck_id=?");
+        $stmt->bind_param("i", $data['truck_id']);
+        $stmt->execute();
+        
+        // Get the maximum remaining truck_id
+        $maxIdResult = $conn->query("SELECT MAX(truck_id) as max_id FROM truck_table");
+        $maxId = $maxIdResult->fetch_assoc()['max_id'];
+        
+        // Set the auto-increment to max_id + 1
+        if ($maxId) {
+            $conn->query("ALTER TABLE truck_table AUTO_INCREMENT = " . ($maxId + 1));
+        } else {
+            // If no trucks left, reset to 1
+            $conn->query("ALTER TABLE truck_table AUTO_INCREMENT = 1");
+        }
+        
+        $conn->commit();
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    break;
+
 case 'softDeleteTruck':
     $stmt = $conn->prepare("UPDATE truck_table 
                           SET is_deleted=1, status='Deleted', delete_reason=?, 

@@ -237,6 +237,20 @@ th[onclick]:hover {
     background-color: #138496;
 }
 
+.full-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.full-delete:hover {
+    background-color: #c82333;
+}
+
     </style>
 </head>
 <body>
@@ -620,6 +634,8 @@ function renderTrucksTable() {
         <td class="actions">
             ${truck.is_deleted == 1 ? `
                 <button class="restore" onclick="restoreTruck(${truck.truck_id})">Restore</button>
+                ${window.userRole === 'Full Admin' ? 
+                  `<button class="full-delete" onclick="fullDeleteTruck(${truck.truck_id})">Full Delete</button>` : ''}
                 <button class="view-reason" onclick="viewDeletionReason(${truck.truck_id})">View Reason</button>
             ` : `
                 <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
@@ -631,6 +647,30 @@ function renderTrucksTable() {
     });
     
     document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
+}
+
+// Add this new function for full delete
+function fullDeleteTruck(truckId) {
+    if (confirm("Are you sure you want to PERMANENTLY delete this truck? This cannot be undone!")) {
+        fetch('include/handlers/truck_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'fullDeleteTruck', 
+                truck_id: truckId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Truck has been permanently deleted!');
+                fetchTrucks();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
 }
 
 function restoreTruck(truckId) {

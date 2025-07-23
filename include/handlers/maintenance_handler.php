@@ -274,6 +274,25 @@ case 'getRecords':
     }
     $stmt->close();
     break;
+
+    case 'fullDelete':
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid ID"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("DELETE FROM maintenance WHERE maintenance_id = ?");
+    $stmt->bind_param("i", $id);
+    
+    if ($stmt->execute()) {
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+    }
+    break;
+
     
 case 'edit':
     $data = json_decode(file_get_contents("php://input"));
