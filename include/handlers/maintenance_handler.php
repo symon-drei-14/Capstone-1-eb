@@ -99,7 +99,7 @@ function getMaintenanceHistory($conn, $truckId) {
             m.last_modified_by, m.last_modified_at, t.plate_no as licence_plate
             FROM maintenance m
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id
-            WHERE m.truck_id = ?
+           WHERE m.truck_id = ? AND t.is_deleted = 0
             ORDER BY m.date_mtnce DESC";
     
     $stmt = $conn->prepare($sql);
