@@ -211,8 +211,19 @@ case 'getRecords':
 
 
         
-    case 'add':
+  case 'add':
     $data = json_decode(file_get_contents("php://input"));
+    
+    // First check if the truck exists and isn't deleted
+    $truckCheck = $conn->prepare("SELECT truck_id FROM truck_table WHERE truck_id = ? AND is_deleted = 0");
+    $truckCheck->bind_param("i", $data->truckId);
+    $truckCheck->execute();
+    $truckResult = $truckCheck->get_result();
+    
+    if ($truckResult->num_rows === 0) {
+        echo json_encode(["success" => false, "message" => "Truck not found or has been deleted"]);
+        exit;
+    }
     
     if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
         $missing = [];
@@ -313,6 +324,17 @@ case 'getRecords':
     
 case 'edit':
     $data = json_decode(file_get_contents("php://input"));
+    
+    // Check if truck exists and isn't deleted
+    $truckCheck = $conn->prepare("SELECT truck_id FROM truck_table WHERE truck_id = ? AND is_deleted = 0");
+    $truckCheck->bind_param("i", $data->truckId);
+    $truckCheck->execute();
+    $truckResult = $truckCheck->get_result();
+    
+    if ($truckResult->num_rows === 0) {
+        echo json_encode(["success" => false, "message" => "Cannot edit - truck has been deleted"]);
+        exit;
+    }
     
     if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
         $missing = [];

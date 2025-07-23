@@ -639,19 +639,19 @@ $(document).ready(function() {
     return true;
 }
         
-        function fetchTrucksList() {
-            fetch('include/handlers/truck_handler.php?action=getTrucks')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        trucksList = data.trucks;
-                        populateTruckDropdown();
-                    }
-                })
-                .catch(error => {
-                    console.error("Error loading trucks:", error);
-                });
-        }
+      function fetchTrucksList() {
+    fetch('include/handlers/truck_handler.php?action=getActiveTrucks') // Changed endpoint
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                trucksList = data.trucks;
+                populateTruckDropdown();
+            }
+        })
+        .catch(error => {
+            console.error("Error loading trucks:", error);
+        });
+}
         
         function populateTruckDropdown() {
             const truckDropdown = document.getElementById('truckId');

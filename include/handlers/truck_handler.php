@@ -14,6 +14,8 @@ function validatePlateNumber($plateNo) {
     return preg_match("/^[A-Za-z]{2,3}-?\d{3,4}$/", $plateNo);
 }
 
+
+
 // Function to update truck status based on maintenance and trip logs
 function updateTruckStatus($conn, $truckId, $plateNo) {
     // Check maintenance status
@@ -143,6 +145,19 @@ try {
         $conn->rollback();
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
+    break;
+
+    case 'getActiveTrucks':
+    $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
+                          t.status as display_status
+                          FROM truck_table t
+                          WHERE t.is_deleted = 0
+                          ORDER BY t.truck_id");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $trucks = $result->fetch_all(MYSQLI_ASSOC);
+    
+    echo json_encode(['success' => true, 'trucks' => $trucks]);
     break;
 
     case 'fullDeleteTruck':
