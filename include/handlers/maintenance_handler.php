@@ -115,8 +115,11 @@ function getMaintenanceHistory($conn, $truckId) {
     return $history;
 }
 
-// Get upcoming maintenance reminders
+
+
+
 function getMaintenanceReminders($conn) {
+    // First get all maintenance records that are due soon or overdue
     $sql = "SELECT m.maintenance_id, m.truck_id, t.plate_no as licence_plate, m.date_mtnce, 
             m.remarks, m.status, m.supplier, m.cost, m.last_modified_by, m.last_modified_at,
             DATEDIFF(m.date_mtnce, CURDATE()) as days_remaining
@@ -131,10 +134,24 @@ function getMaintenanceReminders($conn) {
     $reminders = [];
     if ($result) {
         while ($row = $result->fetch_assoc()) {
+            // Check if this record is overdue (days_remaining < 0)
+            if ($row['days_remaining'] < 0 && $row['status'] != 'Overdue') {
+                // Update the status to Overdue
+                $updateStmt = $conn->prepare("UPDATE maintenance SET status = 'Overdue' WHERE maintenance_id = ?");
+                $updateStmt->bind_param("i", $row['maintenance_id']);
+                $updateStmt->execute();
+                
+                // Update the truck status
+                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Overdue' WHERE truck_id = ?");
+                $updateTruck->bind_param("i", $row['truck_id']);
+                $updateTruck->execute();
+                
+                // Update the status in our result
+                $row['status'] = 'Overdue';
+            }
             $reminders[] = $row;
         }
     } else {
-        // Log error for debugging
         error_log("Reminders query error: " . $conn->error);
     }
     
