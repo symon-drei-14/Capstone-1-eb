@@ -5,6 +5,27 @@ require 'dbhandler.php';
 
 // Get all maintenance records with pagination
 function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all') {
+    // First, update any pending records that are now overdue
+    $updateOverdue = $conn->prepare("UPDATE maintenance SET status = 'Overdue' 
+                                   WHERE status IN ('Pending', 'In Progress') 
+                                   AND date_mtnce < CURDATE()");
+    $updateOverdue->execute();
+    
+    // Then update truck statuses for any newly overdue maintenance
+    $getOverdueTrucks = $conn->query("SELECT DISTINCT m.truck_id, t.plate_no 
+                                    FROM maintenance m
+                                    JOIN truck_table t ON m.truck_id = t.truck_id
+                                    WHERE m.status = 'Overdue' 
+                                    AND m.is_deleted = 0
+                                    AND t.is_deleted = 0");
+    while ($row = $getOverdueTrucks->fetch_assoc()) {
+        // Update truck status to Overdue
+        $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Overdue' 
+                                     WHERE truck_id = ?");
+        $updateTruck->bind_param("i", $row['truck_id']);
+        $updateTruck->execute();
+    }
+    
     $offset = ($page - 1) * $rowsPerPage;
     
     $sql = "SELECT 
