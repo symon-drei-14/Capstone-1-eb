@@ -969,7 +969,80 @@ body {
 .filter-row {
     display: none; /* Hide by default */
 }
+#deleteConfirmModal .modal-content2 {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    text-align: center;
+}
 
+#deleteConfirmModal h3 {
+    color: #dc3545;
+    margin-top: 0;
+    font-size: 24px;
+}
+
+#deleteConfirmModal p {
+    margin: 20px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+#deleteConfirmModal label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    text-align: left;
+}
+
+#deleteConfirmModal textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    resize: vertical;
+    min-height: 100px;
+    margin-bottom: 20px;
+}
+
+#deleteConfirmModal button {
+    padding: 10px 25px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+#confirmDeleteBtn {
+    background-color: #dc3545;
+    color: white;
+}
+
+#confirmDeleteBtn:hover {
+    background-color: #c82333;
+}
+
+#deleteConfirmModal .cancel-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+#deleteConfirmModal .cancel-btn:hover {
+    background-color: #5a6268;
+}
+
+#deleteConfirmModal .button-group {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
 </style>
 <body>
     <?php
@@ -1347,7 +1420,7 @@ if ($driverResult->num_rows > 0) {
 </div>
     
    <div id="deleteConfirmModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content2">
         <h3>Confirm Delete</h3>
         <p>Are you sure you want to delete this trip?</p>
         <input type="hidden" id="deleteEventId">
