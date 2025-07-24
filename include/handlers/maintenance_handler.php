@@ -398,16 +398,19 @@ case 'edit':
         exit;
     }
 
-    // Get the truck ID first
-    $getTruck = $conn->prepare("SELECT t.truck_id FROM maintenance m 
-                               JOIN truck_table t ON m.truck_id = t.truck_id 
-                               WHERE m.maintenance_id = ?");
-    $getTruck->bind_param("i", $id);
-    $getTruck->execute();
-    $truck = $getTruck->get_result()->fetch_assoc();
+    // Get the truck ID and maintenance status first
+    $getMaintenance = $conn->prepare("SELECT m.truck_id, m.status, t.plate_no 
+                                    FROM maintenance m
+                                    JOIN truck_table t ON m.truck_id = t.truck_id
+                                    WHERE m.maintenance_id = ?");
+    $getMaintenance->bind_param("i", $id);
+    $getMaintenance->execute();
+    $maintenance = $getMaintenance->get_result()->fetch_assoc();
     
     // Then soft delete the maintenance record
-    $stmt = $conn->prepare("UPDATE maintenance SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE maintenance_id = ?");
+    $stmt = $conn->prepare("UPDATE maintenance SET is_deleted = 1, delete_reason = ?, 
+                          last_modified_by = ?, last_modified_at = NOW() 
+                          WHERE maintenance_id = ?");
     $stmt->bind_param("ssi", 
         $deleteReason,
         $_SESSION['username'],
@@ -415,12 +418,40 @@ case 'edit':
     );
     
     if ($stmt->execute()) {
-        // Update truck status to In Terminal if maintenance was deleted
-        if ($truck) {
-            $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'In Terminal' WHERE truck_id = ?");
-            $updateTruck->bind_param("i", $truck['truck_id']);
-            $updateTruck->execute();
+        // Update truck status based on other active maintenance records
+        $checkActiveMaintenance = $conn->prepare("SELECT status FROM maintenance 
+                                                WHERE truck_id = ? AND is_deleted = 0
+                                                ORDER BY date_mtnce DESC LIMIT 1");
+        $checkActiveMaintenance->bind_param("i", $maintenance['truck_id']);
+        $checkActiveMaintenance->execute();
+        $activeMaintenance = $checkActiveMaintenance->get_result()->fetch_assoc();
+        
+        $newTruckStatus = 'In Terminal'; // Default
+        
+        if ($activeMaintenance) {
+            // If there are other active maintenance records, use their status
+            if ($activeMaintenance['status'] === 'In Progress') {
+                $newTruckStatus = 'In Repair';
+            } elseif ($activeMaintenance['status'] === 'Overdue') {
+                $newTruckStatus = 'Overdue';
+            }
         }
+        
+        // Also check trip status
+        $checkTrip = $conn->prepare("SELECT status FROM assign 
+                                   WHERE plate_no = ? 
+                                   ORDER BY date DESC LIMIT 1");
+        $checkTrip->bind_param("s", $maintenance['plate_no']);
+        $checkTrip->execute();
+        $tripStatus = $checkTrip->get_result()->fetch_assoc();
+        
+        if ($tripStatus && $tripStatus['status'] === 'Enroute') {
+            $newTruckStatus = 'Enroute';
+        }
+        
+        $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
+        $updateTruck->bind_param("si", $newTruckStatus, $maintenance['truck_id']);
+        $updateTruck->execute();
         
         echo json_encode(['success' => true]);
     } else {
