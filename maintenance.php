@@ -416,7 +416,9 @@ checkAccess(); // No role needed—logic is handled internally
                     <table id="maintenanceTable">
                         <thead>
                             <tr>
-                                <th>Truck ID</th>
+                              <th onclick="sortByTruckId()" style="cursor:pointer;">
+    Truck ID <span id="truckIdSortIcon">⬍</span>
+</th>
                                 <th>License Plate</th>
                                 <th onclick="sortByDate()" style="cursor:pointer;">
                              Date of <br /> Inspection <span id="dateSortIcon">⬍</span>
@@ -593,7 +595,8 @@ document.querySelector('input[name="editReason"][value="Other"]').addEventListen
         let totalPages = 1;
         let currentTruckId = 0;
         let isEditing = false;
-        let trucksList = []; // To store truck data for license plate lookup
+        let trucksList = [];
+        let sortTruckIdAsc = true; 
         
     function getLocalDate() {
     const now = new Date();
@@ -638,6 +641,8 @@ $(document).ready(function() {
     
     return true;
 }
+
+
         
       function fetchTrucksList() {
     fetch('include/handlers/truck_handler.php?action=getActiveTrucks') // Changed endpoint
@@ -1172,6 +1177,26 @@ function deleteMaintenance(id) {
             tableBody.innerHTML = '';
             sortedRows.forEach(row => tableBody.appendChild(row));
         }
+
+        function sortByTruckId() {
+    const tableBody = document.querySelector("#maintenanceTable tbody");
+    const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+    const sortedRows = rows.sort((a, b) => {
+        const truckIdA = parseInt(a.children[0].textContent.trim());
+        const truckIdB = parseInt(b.children[0].textContent.trim());
+
+        return sortTruckIdAsc ? truckIdA - truckIdB : truckIdB - truckIdA;
+    });
+
+    sortTruckIdAsc = !sortTruckIdAsc;
+
+    const icon = document.getElementById("truckIdSortIcon");
+    icon.textContent = sortTruckIdAsc ? '⬆' : '⬇';
+
+    tableBody.innerHTML = '';
+    sortedRows.forEach(row => tableBody.appendChild(row));
+}
 
         function restoreMaintenance(id) {
     if (!confirm("Are you sure you want to restore this maintenance record?")) {
