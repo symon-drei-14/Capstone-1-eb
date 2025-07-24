@@ -310,6 +310,22 @@ checkAccess(); // No role needed—logic is handled internally
 .restore:hover {
     background-color: #45a049;
 }
+
+.full-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+.full-delete:hover {
+    background-color: #c82333;
+}
 </style>
 <body>
 
@@ -623,19 +639,19 @@ $(document).ready(function() {
     return true;
 }
         
-        function fetchTrucksList() {
-            fetch('include/handlers/truck_handler.php?action=getTrucks')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        trucksList = data.trucks;
-                        populateTruckDropdown();
-                    }
-                })
-                .catch(error => {
-                    console.error("Error loading trucks:", error);
-                });
-        }
+      function fetchTrucksList() {
+    fetch('include/handlers/truck_handler.php?action=getActiveTrucks') // Changed endpoint
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                trucksList = data.trucks;
+                populateTruckDropdown();
+            }
+        })
+        .catch(error => {
+            console.error("Error loading trucks:", error);
+        });
+}
         
         function populateTruckDropdown() {
             const truckDropdown = document.getElementById('truckId');
@@ -707,7 +723,6 @@ function renderTable(data) {
         return;
     }
 
-
     data.forEach(row => {
         const tr = document.createElement("tr");
         tr.setAttribute('data-status', row.status);
@@ -715,7 +730,12 @@ function renderTable(data) {
             tr.classList.add('deleted-row');
         }   
         const actionsCell = row.is_deleted 
-            ? `<button class="restore" onclick="restoreMaintenance(${row.maintenance_id})">Restore</button>`
+            ? `
+                <button class="restore" onclick="restoreMaintenance(${row.maintenance_id})">Restore</button>
+                ${window.userRole === 'Full Admin' ? 
+                  `<button class="full-delete" onclick="fullDeleteMaintenance(${row.maintenance_id})">Full Delete</button>` : ''}
+                <button class="history" onclick="openHistoryModal(${row.truck_id})">View History</button>
+              `
             : `
                 <button class="edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost}, '${row.maintenance_type || 'preventive'}')">Edit</button>
                 <button class="delete" onclick="deleteMaintenance(${row.maintenance_id})">Delete</button>
@@ -752,6 +772,26 @@ function renderTable(data) {
             showEditRemarks(this.getAttribute('data-reasons'));
         });
     });
+}
+
+// Add this new function for full delete
+function fullDeleteMaintenance(id) {
+    if (confirm("Are you sure you want to PERMANENTLY delete this maintenance record? This cannot be undone!")) {
+        fetch(`include/handlers/maintenance_handler.php?action=fullDelete&id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Maintenance record permanently deleted!");
+                loadMaintenanceData();
+            } else {
+                alert("Error: " + (data.message || "Unknown error"));
+            }
+        })
+        .catch(error => {
+            console.error("Error deleting record: " + error);
+            alert("Failed to delete maintenance record.");
+        });
+    }
 }
 
 

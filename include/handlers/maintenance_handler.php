@@ -99,7 +99,7 @@ function getMaintenanceHistory($conn, $truckId) {
             m.last_modified_by, m.last_modified_at, t.plate_no as licence_plate
             FROM maintenance m
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id
-            WHERE m.truck_id = ?
+           WHERE m.truck_id = ? AND t.is_deleted = 0
             ORDER BY m.date_mtnce DESC";
     
     $stmt = $conn->prepare($sql);
@@ -115,8 +115,11 @@ function getMaintenanceHistory($conn, $truckId) {
     return $history;
 }
 
-// Get upcoming maintenance reminders
+
+
+
 function getMaintenanceReminders($conn) {
+    // First get all maintenance records that are due soon or overdue
     $sql = "SELECT m.maintenance_id, m.truck_id, t.plate_no as licence_plate, m.date_mtnce, 
             m.remarks, m.status, m.supplier, m.cost, m.last_modified_by, m.last_modified_at,
             DATEDIFF(m.date_mtnce, CURDATE()) as days_remaining
@@ -131,10 +134,24 @@ function getMaintenanceReminders($conn) {
     $reminders = [];
     if ($result) {
         while ($row = $result->fetch_assoc()) {
+            // Check if this record is overdue (days_remaining < 0)
+            if ($row['days_remaining'] < 0 && $row['status'] != 'Overdue') {
+                // Update the status to Overdue
+                $updateStmt = $conn->prepare("UPDATE maintenance SET status = 'Overdue' WHERE maintenance_id = ?");
+                $updateStmt->bind_param("i", $row['maintenance_id']);
+                $updateStmt->execute();
+                
+                // Update the truck status
+                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Overdue' WHERE truck_id = ?");
+                $updateTruck->bind_param("i", $row['truck_id']);
+                $updateTruck->execute();
+                
+                // Update the status in our result
+                $row['status'] = 'Overdue';
+            }
             $reminders[] = $row;
         }
     } else {
-        // Log error for debugging
         error_log("Reminders query error: " . $conn->error);
     }
     
@@ -194,8 +211,19 @@ case 'getRecords':
 
 
         
-    case 'add':
+  case 'add':
     $data = json_decode(file_get_contents("php://input"));
+    
+    // First check if the truck exists and isn't deleted
+    $truckCheck = $conn->prepare("SELECT truck_id FROM truck_table WHERE truck_id = ? AND is_deleted = 0");
+    $truckCheck->bind_param("i", $data->truckId);
+    $truckCheck->execute();
+    $truckResult = $truckCheck->get_result();
+    
+    if ($truckResult->num_rows === 0) {
+        echo json_encode(["success" => false, "message" => "Truck not found or has been deleted"]);
+        exit;
+    }
     
     if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
         $missing = [];
@@ -274,9 +302,39 @@ case 'getRecords':
     }
     $stmt->close();
     break;
+
+    case 'fullDelete':
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid ID"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("DELETE FROM maintenance WHERE maintenance_id = ?");
+    $stmt->bind_param("i", $id);
+    
+    if ($stmt->execute()) {
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+    }
+    break;
+
     
 case 'edit':
     $data = json_decode(file_get_contents("php://input"));
+    
+    // Check if truck exists and isn't deleted
+    $truckCheck = $conn->prepare("SELECT truck_id FROM truck_table WHERE truck_id = ? AND is_deleted = 0");
+    $truckCheck->bind_param("i", $data->truckId);
+    $truckCheck->execute();
+    $truckResult = $truckCheck->get_result();
+    
+    if ($truckResult->num_rows === 0) {
+        echo json_encode(["success" => false, "message" => "Cannot edit - truck has been deleted"]);
+        exit;
+    }
     
     if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
         $missing = [];

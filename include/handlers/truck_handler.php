@@ -14,6 +14,8 @@ function validatePlateNumber($plateNo) {
     return preg_match("/^[A-Za-z]{2,3}-?\d{3,4}$/", $plateNo);
 }
 
+
+
 // Function to update truck status based on maintenance and trip logs
 function updateTruckStatus($conn, $truckId, $plateNo) {
     // Check maintenance status
@@ -116,6 +118,49 @@ try {
     break;
 
   case 'deleteTruck':
+    // Start transaction
+    $conn->begin_transaction();
+    
+    try {
+        // First delete the truck
+        $stmt = $conn->prepare("DELETE FROM truck_table WHERE truck_id=?");
+        $stmt->bind_param("i", $data['truck_id']);
+        $stmt->execute();
+        
+        // Get the maximum remaining truck_id
+        $maxIdResult = $conn->query("SELECT MAX(truck_id) as max_id FROM truck_table");
+        $maxId = $maxIdResult->fetch_assoc()['max_id'];
+        
+        // Set the auto-increment to max_id + 1
+        if ($maxId) {
+            $conn->query("ALTER TABLE truck_table AUTO_INCREMENT = " . ($maxId + 1));
+        } else {
+            // If no trucks left, reset to 1
+            $conn->query("ALTER TABLE truck_table AUTO_INCREMENT = 1");
+        }
+        
+        $conn->commit();
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    break;
+
+    case 'getActiveTrucks':
+    $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
+                          t.status as display_status
+                          FROM truck_table t
+                          WHERE t.is_deleted = 0
+                          ORDER BY t.truck_id");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $trucks = $result->fetch_all(MYSQLI_ASSOC);
+    
+    echo json_encode(['success' => true, 'trucks' => $trucks]);
+    break;
+
+    case 'fullDeleteTruck':
     // Start transaction
     $conn->begin_transaction();
     
