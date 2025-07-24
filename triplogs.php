@@ -864,7 +864,7 @@ body {
 .filter-row {
     display: flex;
     justify-content: flex-start;
-    gap: 15px;
+    gap: 1px;
     margin-bottom: 15px;
     align-items: center;
 }
@@ -886,11 +886,88 @@ body {
     border: 1px solid #ddd;
     background-color: white;
     cursor: pointer;
+    margin-left:-95em;
+    
 }
 
 .status-filter-container select:focus {
     outline: none;
     border-color: #4b77de;
+}
+
+#deletedTripsTable tr {
+    opacity: 0.7;
+    background-color: #ffecec !important;
+}
+
+#deletedTripsTable tr:hover {
+    opacity: 1;
+    background-color: #ffdddd !important;
+}
+
+.restore-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.restore-btn:hover {
+    background-color: #45a049;
+}
+
+.show-deleted-container {
+    display: flex;
+    align-items: left;
+    margin-left: -100em;
+    gap: 8px;
+    width:350px;
+}
+
+.show-deleted-container label {
+    margin-bottom: 0;
+     margin-left: -100px;
+    font-weight: normal;
+    cursor: pointer;
+    order: 2; 
+}
+
+.show-deleted-container input[type="checkbox"] {
+    order: 1; 
+    margin: 0; 
+    cursor: pointer;
+}
+#eventsTable, #eventTableBody, .pagination-container {
+    display: none;
+}
+
+.deleted-row {
+    opacity: 0.7;
+    background-color: #ffecec !important;
+}
+
+.deleted-row:hover {
+    opacity: 1;
+    background-color: #ffdddd !important;
+}
+
+.restore-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.restore-btn:hover {
+    background-color: #45a049;
+}
+
+.filter-row {
+    display: none; /* Hide by default */
 }
 
 </style>
@@ -903,7 +980,8 @@ body {
 $sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity, a.edit_reasons,d.driver_id
         FROM assign a
         LEFT JOIN drivers_table d ON a.driver = d.name
-        LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
+        LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id
+        WHERE a.is_deleted = 0"; // Add this WHERE clause
 $result = $conn->query($sql);
 $eventsData = [];
 
@@ -1268,31 +1346,35 @@ if ($driverResult->num_rows > 0) {
     </div>
 </div>
     
-    <div id="deleteConfirmModal" class="modal">
-        <div class="modal-content">
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this trip?</p>
-            <input type="hidden" id="deleteEventId">
-            <button id="confirmDeleteBtn">Yes, Delete</button>
-            <button type="button" class="close-btn cancel-btn">Cancel</button>
-        </div>
+   <div id="deleteConfirmModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete this trip?</p>
+        <input type="hidden" id="deleteEventId">
+        <label for="deleteReason">Reason for deletion:</label>
+        <textarea id="deleteReason" rows="4" style="width: 100%; margin: 10px 0;"></textarea>
+        <button id="confirmDeleteBtn">Yes, Delete</button>
+        <button type="button" class="close-btn cancel-btn">Cancel</button>
     </div>
+</div>
 
-    <div id="tableView" style="display: none; ">
-        <h3>Event Table</h3>
-
-         <div class="filter-row" style="margin-bottom: 15px;">
-        <div class="status-filter-container">
-            <label for="statusFilter">Filter by Status:</label>
-           <select id="statusFilter">
-                <option value="all">All Statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="En Route">En Route</option>
-                <option value="Completed">Completed</option>
-                <option value="Cancelled">Cancelled</option>
-            </select>
-        </div>
+ 
+        <div class="filter-row" style="margin-bottom: 15px;">
+    <div class="status-filter-container">
+        <label for="statusFilter">Filter by Status:</label>
+        <select id="statusFilter">
+            <option value="all">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="En Route">En Route</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
     </div>
+    <div class="show-deleted-container" style="margin-left: 20px;">
+        <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedTrucks()">
+        <label for="showDeletedCheckbox">Show Deleted Trips</label>
+    </div>
+</div>
 
 
         <table class="events-table" id="eventsTable"> 
@@ -1340,22 +1422,132 @@ if ($driverResult->num_rows > 0) {
 </div>
 </div>
 
+
+
 <script>
     $(document).ready(function() {
 
-
-        // Set minimum date to current date/time
-        let now = new Date();
+     var currentPage = 1;
+        var rowsPerPage = 5;
+        var totalPages = 0;
+        
+         let now = new Date();
         let formattedNow = now.toISOString().slice(0,16); 
                 let currentStatusFilter = 'all';
                   $('#statusFilter').on('change', filterTableByStatus);
         $('#editEventDate').attr('min', formattedNow);
         $('#addEventDate').attr('min', formattedNow); 
+
+function renderTable() {
+    $('#eventTableBody').empty();
+
+    const showDeleted = $('#showDeletedCheckbox').is(':checked');
+    
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        data: JSON.stringify({ 
+            action: showDeleted ? 'get_deleted_trips' : 'get_active_trips',
+            statusFilter: currentStatusFilter
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.success) {
+                const trips = response.trips;
+                
+                if (trips.length === 0) {
+                    $('#eventTableBody').html('<tr><td colspan="17">No trips found</td></tr>');
+                    $('#page-numbers').empty();
+                    return;
+                }
+
+                // Calculate pagination
+                totalPages = Math.ceil(trips.length / rowsPerPage);
+                updatePagination();
+                
+                // Get trips for current page
+                const startIndex = (currentPage - 1) * rowsPerPage;
+                const endIndex = Math.min(startIndex + rowsPerPage, trips.length);
+                const paginatedTrips = trips.slice(startIndex, endIndex);
+
+                // Render the trips
+                renderTripRows(paginatedTrips, showDeleted);
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Server error occurred while loading trips');
+        }
+    });
+}
+
+
+function renderTripRows(trips, showDeleted) {
+    trips.forEach(function(trip) {
+        const dateObj = new Date(trip.date);
+        const formattedDate = dateObj.toLocaleDateString();
+        const formattedTime = moment(dateObj).format('h:mm A');
         
-        // Get events data
+        let statusCell = '';
+        let actionCell = '';
+        
+        if (showDeleted) {
+            statusCell = `<td><span class="status cancelled">Deleted</span></td>`;
+            actionCell = `
+                <td>
+                    <button class="restore-btn" data-id="${trip.trip_id}">Restore</button>
+                </td>
+            `;
+        } else {
+            statusCell = `<td><span class="status ${trip.status.toLowerCase().replace(/\s+/g, '')}">${trip.status}</span></td>`;
+            actionCell = `
+                <td>
+                    <button class="edit-btn" data-id="${trip.trip_id}">Edit</button>
+                    <button class="delete-btn" data-id="${trip.trip_id}">Delete</button>
+                </td>
+            `;
+        }
+
+        const row = `
+            <tr class="${showDeleted ? 'deleted-row' : ''}">
+                <td>${trip.plate_no || 'N/A'}</td>
+                <td>${formattedDate}</td>
+                <td>${formattedTime}</td>
+                <td>${trip.driver || 'N/A'}</td>
+                <td>${trip.helper || 'N/A'}</td>
+                <td>${trip.dispatcher || 'N/A'}</td>
+                <td>${trip.container_no || 'N/A'}</td>
+                <td>${trip.client || 'N/A'}</td>
+                <td>${trip.destination || 'N/A'}</td>
+                <td>${trip.shippine_line || 'N/A'}</td>
+                <td>${trip.consignee || 'N/A'}</td>
+                <td>${trip.size || 'N/A'}</td>
+                <td>${trip.cash_adv || 'N/A'}</td>
+                ${statusCell}
+                <td>
+                    <strong>${trip.last_modified_by || 'System'}</strong><br>
+                    ${formatDateTime(trip.last_modified_at)}
+                </td>
+                ${actionCell}
+            </tr>
+        `;
+        $('#eventTableBody').append(row);
+    });
+} 
+
+
+$('#showDeletedCheckbox').on('change', function() {
+    currentPage = 1; 
+    renderTable(); 
+});
+
         var eventsData = <?php echo $eventsDataJson; ?>;
         var driversData = <?php echo $driversDataJson; ?>;
         
+
+
+
         // Populate driver dropdowns
 function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
     // First get the list of all trucks with their statuses
@@ -1493,6 +1685,42 @@ $('#addEventSize, #editEventSize').on('change', function() {
     populateDriverDropdowns(selectedSize, isAddForm);
 });
 
+
+$('#viewDeletedBtn').on('click', function() {
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        data: JSON.stringify({ action: 'get_deleted_trips' }),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.success) {
+                $('#deletedTripsBody').empty();
+                response.trips.forEach(function(trip) {
+                    var row = `
+                        <tr>
+                            <td>${trip.plate_no}</td>
+                            <td>${formatDateTime(trip.date)}</td>
+                            <td>${trip.driver}</td>
+                            <td>${trip.destination}</td>
+                            <td>${trip.last_modified_by}</td>
+                            <td>${formatDateTime(trip.last_modified_at)}</td>
+                            <td>${trip.delete_reason || 'No reason provided'}</td>
+                        </tr>
+                    `;
+                    $('#deletedTripsBody').append(row);
+                });
+                $('#deletedTripsModal').show();
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Server error occurred');
+        }
+    });
+});
+
+
 $(document).on('change', '#addEventDriver, #editEventDriver', function() {
     var selectedDriverName = $(this).val();
     var driver = driversData.find(function(d) { 
@@ -1579,10 +1807,7 @@ $(window).on('click', function(event) {
 });
 
         // Table pagination variables
-        var currentPage = 1;
-        var rowsPerPage = 5;
-        var totalPages = 0;
-        
+   
         function formatDateTime(datetimeString) {
     if (!datetimeString) return 'N/A';
     const date = new Date(datetimeString);
@@ -1591,82 +1816,31 @@ $(window).on('click', function(event) {
 
 
 
-function filterTableByStatus() {
+
+        function filterTableByStatus() {
     currentStatusFilter = document.getElementById('statusFilter').value;
-    currentPage = 1; // Reset to first page when changing filter
-    renderTable();
-}
-function filterTableByStatus() {
-    currentStatusFilter = document.getElementById('statusFilter').value;
-    currentPage = 1; // Reset to first page when changing filter
+    currentPage = 1;
     renderTable();
 }
 
 // Updated render function
-function renderTable() {
-    $('#eventTableBody').empty();
 
-    let filteredEvents = eventsData;
-    if (currentStatusFilter !== 'all') {
-        filteredEvents = eventsData.filter(event => 
-            event.status.toLowerCase() === currentStatusFilter.toLowerCase()
-        );
+
+
+// Update pagination function
+      function updatePagination() {
+    $('#page-numbers').empty();
+    
+    for (let i = 1; i <= totalPages; i++) {
+        const pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
+        $('#page-numbers').append(`<div class="${pageNumClass}" data-page="${i}">${i}</div>`);
     }
     
-    console.log("Filtering by:", currentStatusFilter, "Found:", filteredEvents.length, "events");
-    
-    var startIndex = (currentPage - 1) * rowsPerPage;
-    var endIndex = startIndex + rowsPerPage;
-    var pageData = filteredEvents.slice(startIndex, Math.min(endIndex, filteredEvents.length));
-    
-    pageData.forEach(function(event) {
-        var dateObj = new Date(event.date);
-        var formattedDate = dateObj.toLocaleDateString();
-        var formattedTime = moment(dateObj).format('h:mm A');
-        
-        var row = `<tr>
-            <td>${event.plateNo}</td>
-            <td>${formattedDate}</td>
-            <td>${formattedTime}</td>
-            <td>${event.driver}</td>
-            <td>${event.helper}</td>
-            <td>${event.dispatcher || 'N/A'}</td>
-            <td>${event.containerNo}</td>
-            <td>${event.client}</td>
-            <td>${event.destination}</td>
-            <td>${event.shippingLine}</td>
-            <td>${event.consignee}</td>
-            <td>${event.size}</td>
-            <td>${event.cashAdvance}</td>
-            <td><span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></td>
-            <td><strong>${event.modifiedby}</strong><br>${formatDateTime(event.modifiedat)}<br>
-            ${event.edit_reasons ? `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}">View Remarks</button>` : ''}
-            <td>
-                <button class="edit-btn" data-id="${event.id}">Edit</button>
-                <button class="delete-btn" data-id="${event.id}">Delete</button>
-            </td>
-        </tr>`;
-        $('#eventTableBody').append(row);
-    });
-    
-    totalPages = Math.ceil(filteredEvents.length / rowsPerPage);
-    updatePagination();
+    // Update button states
+    $('#prevPageBtn').prop('disabled', currentPage === 1);
+    $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
 }
 
-        // Update pagination function
-        function updatePagination() {
-            totalPages = Math.ceil(eventsData.length / rowsPerPage);
-            
-            $('#page-numbers').empty();
-            
-            for (var i = 1; i <= totalPages; i++) {
-                var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
-                $('#page-numbers').append(`<div class="${pageNumClass}" data-page="${i}">${i}</div>`);
-            }
-            
-            $('#prevPageBtn').prop('disabled', currentPage === 1);
-            $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
-        }
 
         // Event handler for page number clicks
         $(document).on('click', '.page-number', function() {
@@ -1778,26 +1952,24 @@ function renderTable() {
         });
         
         // View toggle buttons
-        $('#calendarViewBtn').on('click', function() {
-            $(this).addClass('active');
-            $('#tableViewBtn').removeClass('active');
-            $('#calendar').show();
-            $('#tableView').hide();
-            $('#eventDetails').show();
-            
-            $('#calendar').fullCalendar('render');
-        });
-        
-        $('#tableViewBtn').on('click', function() {
-            $(this).addClass('active');
-            $('#calendarViewBtn').removeClass('active');
-            $('#calendar').hide();
-            $('#tableView').show();
-            $('#eventDetails').hide();
-            
-            currentPage = 1;
-            renderTable();
-        });
+  $('#calendarViewBtn').on('click', function() {
+    $(this).addClass('active');
+    $('#tableViewBtn').removeClass('active');
+    $('#calendar').show();
+    $('#eventDetails').show();
+    $('#eventsTable, #eventTableBody, .pagination-container, .filter-row').hide();
+    $('#calendar').fullCalendar('render');
+});
+
+$('#tableViewBtn').on('click', function() {
+    $(this).addClass('active');
+    $('#calendarViewBtn').removeClass('active');
+    $('#calendar').hide();
+    $('#eventDetails').hide();
+    $('#eventsTable, #eventTableBody, .pagination-container, .filter-row').show(); 
+    currentPage = 1;
+    renderTable();
+});
         
         // Edit button click handler
 $(document).on('click', '.edit-btn', function() {
@@ -1837,7 +2009,7 @@ $(document).on('click', '.edit-btn', function() {
     }
 });
         
-        // Delete button click handler
+
         $(document).on('click', '.delete-btn', function() {
             var eventId = $(this).data('id');
             $('#deleteEventId').val(eventId);
@@ -1985,41 +2157,42 @@ $(document).on('click', '.view-reasons-btn', function() {
     });
 });
             
-        $('#confirmDeleteBtn').on('click', function() {
-            var eventId = $('#deleteEventId').val();
-            
-            $.ajax({
-                url: 'include/handlers/trip_operations.php',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    action: 'delete',
-                    id: eventId
-                }),
-                success: function(response) {
-                    if (response.success) {
-                        alert('Trip deleted successfully!');
-                        $('#deleteConfirmModal').hide();
-                        location.reload(); 
-                    } else {
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Server error occurred');
-                }
-            });
-        });
-        
+      $('#confirmDeleteBtn').on('click', function() {
+    var eventId = $('#deleteEventId').val();
+    var deleteReason = $('#deleteReason').val();
+    
+    if (!deleteReason) {
+        alert('Please provide a reason for deletion');
+        return;
+    }
+    
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'delete',
+            id: eventId,
+            reason: deleteReason
+        }),
+        success: function(response) {
+            if (response.success) {
+                alert('Trip marked as deleted successfully!');
+                $('#deleteConfirmModal').hide();
+                location.reload(); 
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Server error occurred');
+        }
+    });
+});
         // Initial render
         renderTable();
     });
 
-
-
-
-</script>
- <script>
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
@@ -2036,6 +2209,80 @@ $('#reason6').on('change', function() {
         $('#otherReasonText').val('');
     }
 });
+
+
+
+
+function loadDeletedTrips() {
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        data: JSON.stringify({ action: 'get_deleted_trips' }),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.success) {
+                $('#deletedTripsBody').empty();
+                response.trips.forEach(function(trip) {
+                    var row = `
+                        <tr>
+                            <td>${trip.plate_no || 'N/A'}</td>
+                            <td>${formatDateTime(trip.date)}</td>
+                            <td>${trip.driver || 'N/A'}</td>
+                            <td>${trip.helper || 'N/A'}</td>
+                            <td>${trip.dispatcher || 'N/A'}</td>
+                            <td>${trip.container_no || 'N/A'}</td>
+                            <td>${trip.client || 'N/A'}</td>
+                            <td>${trip.destination || 'N/A'}</td>
+                            <td>${trip.shippine_line || 'N/A'}</td>
+                            <td>${trip.consignee || 'N/A'}</td>
+                            <td>${trip.size || 'N/A'}</td>
+                            <td>${trip.cash_adv || 'N/A'}</td>
+                            <td><span class="status ${trip.status ? trip.status.toLowerCase().replace(/\s+/g, '') : ''}">${trip.status || 'N/A'}</span></td>
+                            <td>${trip.last_modified_by || 'System'}</td>
+                            <td>${formatDateTime(trip.last_modified_at)}</td>
+                            <td>${trip.delete_reason || 'No reason provided'}</td>
+                            <td><button class="restore-btn" data-id="${trip.trip_id}">Restore</button></td>
+                        </tr>
+                    `;
+                    $('#deletedTripsBody').append(row);
+                });
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Server error occurred while loading deleted trips');
+        }
+    });
+}
+
+$(document).on('click', '.restore-btn', function() {
+    const tripId = $(this).data('id');
+    if (confirm('Are you sure you want to restore this trip?')) {
+        $.ajax({
+            url: 'include/handlers/trip_operations.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'restore',
+                id: tripId
+            }),
+            success: function(response) {
+                if (response.success) {
+                    alert('Trip restored successfully!');
+                    renderTable(); 
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Server error occurred');
+            }
+        });
+    }
+});
+
+
 
 console.log("Filtering by:", currentStatusFilter, "Found:", filteredEvents.length, "events");
 </script>

@@ -131,8 +131,18 @@ try {
     $getPlate->execute();
     $trip = $getPlate->get_result()->fetch_assoc();
     
-    $stmt = $conn->prepare("DELETE FROM assign WHERE trip_id=?");
-    $stmt->bind_param("i", $data['id']);
+    // Soft delete instead of hard delete
+    $stmt = $conn->prepare("UPDATE assign SET 
+        is_deleted = 1,
+        delete_reason = ?,
+        last_modified_by = ?,
+        last_modified_at = NOW()
+        WHERE trip_id = ?");
+    $stmt->bind_param("ssi", 
+        $data['reason'],
+        $currentUser,
+        $data['id']
+    );
     $stmt->execute();
     
     if ($trip) {
@@ -192,6 +202,80 @@ try {
             
             echo json_encode(['success' => true, 'updated_records' => $affectedRows]);
             break;
+
+// Update the 'get_active_trips' and 'get_deleted_trips' cases to include status filtering
+case 'get_active_trips':
+    $statusFilter = $data['statusFilter'] ?? 'all';
+    $query = "SELECT * FROM assign WHERE is_deleted = 0";
+    
+    if ($statusFilter !== 'all') {
+        $query .= " AND status = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("s", $statusFilter);
+    } else {
+        $stmt = $conn->prepare($query);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $trips = [];
+    while ($row = $result->fetch_assoc()) {
+        $trips[] = $row;
+    }
+    
+    echo json_encode(['success' => true, 'trips' => $trips]);
+    break;
+
+case 'get_deleted_trips':
+    $statusFilter = $data['statusFilter'] ?? 'all';
+    $query = "SELECT * FROM assign WHERE is_deleted = 1";
+    
+    if ($statusFilter !== 'all') {
+        $query .= " AND status = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("s", $statusFilter);
+    } else {
+        $stmt = $conn->prepare($query);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $trips = [];
+    while ($row = $result->fetch_assoc()) {
+        $trips[] = $row;
+    }
+    
+    echo json_encode(['success' => true, 'trips' => $trips]);
+    break;
+    
+
+case 'restore':
+    $getTrip = $conn->prepare("SELECT plate_no, status FROM assign WHERE trip_id = ?");
+    $getTrip->bind_param("i", $data['id']);
+    $getTrip->execute();
+    $trip = $getTrip->get_result()->fetch_assoc();
+    
+
+    $stmt = $conn->prepare("UPDATE assign SET 
+        is_deleted = 0,
+        delete_reason = NULL,
+        last_modified_by = ?,
+        last_modified_at = NOW()
+        WHERE trip_id = ?");
+    $stmt->bind_param("si", $currentUser, $data['id']);
+    $stmt->execute();
+    
+    // Update truck status if needed
+    if ($trip && $trip['status'] === 'En Route') {
+        $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE plate_no = ?");
+        $updateTruck->bind_param("s", $trip['plate_no']);
+        $updateTruck->execute();
+    }
+    
+    echo json_encode(['success' => true]);
+    break;
 
         default:
             throw new Exception("Invalid action");

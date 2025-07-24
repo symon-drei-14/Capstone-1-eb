@@ -1,6 +1,7 @@
 <?php
+session_start();
 require_once __DIR__ . '/include/check_access.php';
-checkAccess(); // No role needed—logic is handled internally
+checkAccess();
 ?>
 
 <!DOCTYPE html>
@@ -75,6 +76,52 @@ checkAccess(); // No role needed—logic is handled internally
     margin-right: 10px;
     width: calc(100% - 110px);
 }
+.deleted-row {
+    background-color: #f9f9f9ff;
+    color: #5f5f5fff;
+}
+
+
+
+.filter-controls {
+    margin-top: 10px;
+
+    padding: 10px;
+
+    border-radius: 4px;
+}
+
+button.restore {
+    background-color: #4CAF50;
+    color: white;
+}
+
+button.restore:hover {
+    background-color: #45a049;
+}
+
+/* Replace the existing .deleted-only and related styles with: */
+.deleted-only {
+    display: none;
+}
+
+.show-deleted .deleted-only {
+    display: table-cell;
+}
+
+.show-deleted .non-deleted-row {
+    display: none;
+}
+
+.deleted-row {
+    background-color: #ffffffff;
+ 
+}
+
+/* .deleted-row td {
+    opacity: 0.9;
+} */
+
 </style>
 
 <body>
@@ -144,6 +191,13 @@ checkAccess(); // No role needed—logic is handled internally
                 <div class="button-row">
                     <button class="add_trip" onclick="openAdminModal()">Add Admin</button>
                 </div>
+                <div class="filter-controls">
+    <label>
+        <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedAdmins()">
+        Show Deleted Admins
+    </label>
+</div>
+
                 <br />
                 <h3>List of Admins</h3>
                 <div class="table-container">
@@ -153,6 +207,10 @@ checkAccess(); // No role needed—logic is handled internally
                                 <th>Admin ID</th>
                                 <th>Username</th>
                                 <th>Role</th>
+                                <th>Status</th>
+                                <th class="deleted-only">Deleted By</th>
+                                <th class="deleted-only">Deleted At</th>
+                                <th class="deleted-only">Reason</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -271,25 +329,59 @@ checkAccess(); // No role needed—logic is handled internally
         }
 
         // Render admins table
-        function renderAdminsTable(admins) {
-            const tableBody = document.getElementById('adminTableBody');
-            tableBody.innerHTML = '';
-            
-            admins.forEach(admin => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${admin.admin_id}</td>
-                    <td>${admin.username}</td>
-                    <td>${admin.role || 'Full Admin'}</td>
-                    <td class="actions">
-                        <button class="edit" onclick="openAdminModal(${admin.admin_id})">Edit</button>
-                        <button class="delete" onclick="deleteAdmin(${admin.admin_id})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
+function renderAdminsTable(admins) {
+    const tableBody = document.getElementById('adminTableBody');
+    tableBody.innerHTML = '';
+    
+    const showDeleted = document.getElementById('showDeletedCheckbox').checked;
+    
+    admins.forEach(admin => {
+        const row = document.createElement('tr');
+        
+        if (admin.is_deleted) {
+            row.classList.add('deleted-row');
+        } else {
+            row.classList.add('non-deleted-row');
+            if (showDeleted) {
+                row.style.display = 'none';
+            }
         }
+        
+        // Format deleted_at date if it exists
+        const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
+        
+        row.innerHTML = `
+            <td>${admin.admin_id}</td>
+            <td>${admin.username}</td>
+            <td>${admin.role || 'Full Admin'}</td>
+            <td>${admin.is_deleted ? 'Deleted' : 'Active'}</td>
+        <td class="deleted-only">${admin.deleted_by || ''}</td>
+            <td class="deleted-only">${deletedAt}</td>
+            <td class="deleted-only">${admin.delete_reason || ''}</td>
+            <td class="actions">
+                ${admin.is_deleted ? '' : `<button class="edit" onclick="openAdminModal(${admin.admin_id})">Edit</button>`}
+                ${admin.is_deleted ? '' : `<button class="delete" onclick="confirmDeleteAdmin(${admin.admin_id})">Delete</button>`}
+                ${admin.is_deleted ? `<button class="restore" onclick="restoreAdmin(${admin.admin_id})">Restore</button>` : ''}
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
 
+// Add confirm delete function with reason prompt
+function confirmDeleteAdmin(adminId) {
+    const reason = prompt('Please enter the reason for deleting this admin:');
+    if (reason === null) return; // User cancelled
+    
+    if (reason.trim() === '') {
+        alert('Please provide a reason for deletion');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to delete this admin?')) {
+        deleteAdmin(adminId, reason);
+    }
+}
         // Save admin (create or update)
         function saveAdmin() {
             const adminId = document.getElementById('adminId').value;
@@ -334,26 +426,48 @@ checkAccess(); // No role needed—logic is handled internally
             .catch(error => console.error('Error:', error));
         }
 
-        // Delete admin
-        function deleteAdmin(adminId) {
-            if (confirm('Are you sure you want to delete this admin?')) {
-                fetch('include/handlers/delete_admin.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: adminId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Admin deleted successfully!');
-                        fetchAdminsPaginated();
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            }
+      function deleteAdmin(adminId, reason) {
+    fetch('include/handlers/delete_admin.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            admin_id: adminId,
+            delete_reason: reason 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Admin deleted successfully!');
+            fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
+        } else {
+            alert('Error: ' + data.message);
         }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Add restore function
+function restoreAdmin(adminId) {
+    if (confirm('Are you sure you want to restore this admin?')) {
+        fetch('include/handlers/restore_admin.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admin_id: adminId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Admin restored successfully!');
+                fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
+
 
         // Pagination variables
         let currentAdminPage = 1;
@@ -374,23 +488,49 @@ checkAccess(); // No role needed—logic is handled internally
             fetchAdminsPaginated();
         }
 
+   function toggleDeletedAdmins() {
+    const showDeleted = document.getElementById('showDeletedCheckbox').checked;
+    const table = document.getElementById('adminsTable');
+    
+    // Fetch admins with the correct filter
+    fetchAdminsPaginated(showDeleted);
+    
+    // Toggle the table classes for styling
+    if (showDeleted) {
+        table.classList.add('show-deleted');
+    } else {
+        table.classList.remove('show-deleted');
+    }
+}
+
         // Fetch admins with pagination
-        function fetchAdminsPaginated() {
-            fetch(`include/handlers/get_admins.php?page=${currentAdminPage}&limit=${rowsPerPage}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        renderAdminsTable(data.admins);
-                        totalAdmins = data.total;
-                        
-                        const totalPages = Math.ceil(totalAdmins / rowsPerPage);
-                        document.getElementById("admin-page-info").textContent = `Page ${currentAdminPage} of ${totalPages || 1}`;
-                    } else {
-                        alert('Error fetching admins: ' + data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
+function fetchAdminsPaginated(showDeleted = false) {
+    fetch(`include/handlers/get_admins.php?page=${currentAdminPage}&limit=${rowsPerPage}&show_deleted=${showDeleted}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                renderAdminsTable(data.admins);
+                totalAdmins = data.total;
+                
+                const totalPages = Math.ceil(totalAdmins / rowsPerPage);
+                document.getElementById("admin-page-info").textContent = `Page ${currentAdminPage} of ${totalPages || 1}`;
+                
+                // Update the checkbox state to match the current view
+                document.getElementById('showDeletedCheckbox').checked = showDeleted;
+            } else {
+                alert('Error fetching admins: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to fetch admins. Please try again.');
+        });
+}
 
         // Close modal when clicking outside of it
         window.onclick = function(event) {
@@ -401,6 +541,8 @@ checkAccess(); // No role needed—logic is handled internally
 
         // Initialize when page loads
         window.onload = function() {
+            // Add this to your window.onload or DOMContentLoaded
+document.getElementById('showDeletedCheckbox').addEventListener('change', toggleDeletedAdmins);
             fetchAdminsPaginated();
         };
     </script>
