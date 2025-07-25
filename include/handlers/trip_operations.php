@@ -206,10 +206,16 @@ try {
 // Update the 'get_active_trips' and 'get_deleted_trips' cases to include status filtering
 case 'get_active_trips':
     $statusFilter = $data['statusFilter'] ?? 'all';
+    $sortOrder = $data['sortOrder'] ?? 'desc';
     $query = "SELECT * FROM assign WHERE is_deleted = 0";
     
     if ($statusFilter !== 'all') {
         $query .= " AND status = ?";
+    }
+    
+    $query .= " ORDER BY date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
+    
+    if ($statusFilter !== 'all') {
         $stmt = $conn->prepare($query);
         $stmt->bind_param("s", $statusFilter);
     } else {
@@ -229,10 +235,16 @@ case 'get_active_trips':
 
 case 'get_deleted_trips':
     $statusFilter = $data['statusFilter'] ?? 'all';
+    $sortOrder = $data['sortOrder'] ?? 'desc';
     $query = "SELECT * FROM assign WHERE is_deleted = 1";
     
     if ($statusFilter !== 'all') {
         $query .= " AND status = ?";
+    }
+    
+    $query .= " ORDER BY date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
+    
+    if ($statusFilter !== 'all') {
         $stmt = $conn->prepare($query);
         $stmt->bind_param("s", $statusFilter);
     } else {

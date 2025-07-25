@@ -1454,7 +1454,12 @@ if ($driverResult->num_rows > 0) {
             <thead>
                 <tr>
                     <th>Plate No.</th>
-                    <th>Date</th>
+                   <th>
+            Date 
+            <button id="dateSortBtn" style="background: none; border: none; cursor: pointer;">
+                <i class="fa fa-sort"></i>
+            </button>
+        </th>
                     <th>Time</th>
                     <th>Driver</th>
                     <th>Helper</th>
@@ -1521,7 +1526,8 @@ function renderTable() {
         type: 'POST',
         data: JSON.stringify({ 
             action: showDeleted ? 'get_deleted_trips' : 'get_active_trips',
-            statusFilter: currentStatusFilter
+            statusFilter: currentStatusFilter,
+            sortOrder: dateSortOrder // Add this parameter
         }),
         contentType: 'application/json',
         success: function(response) {
@@ -1532,6 +1538,14 @@ function renderTable() {
                     $('#eventTableBody').html('<tr><td colspan="17">No trips found</td></tr>');
                     $('#page-numbers').empty();
                     return;
+                }
+
+                // Update the sort button icon
+                $('#dateSortBtn i').removeClass('fa-sort fa-sort-up fa-sort-down');
+                if (dateSortOrder === 'asc') {
+                    $('#dateSortBtn i').addClass('fa-sort-up');
+                } else {
+                    $('#dateSortBtn i').addClass('fa-sort-down');
                 }
 
                 // Calculate pagination
@@ -1712,6 +1726,14 @@ function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
         }
     });
 }
+
+let dateSortOrder = 'desc'; // Default sort order
+
+
+$('#dateSortBtn').on('click', function() {
+    dateSortOrder = dateSortOrder === 'desc' ? 'asc' : 'desc';
+    renderTable();
+});
 
 // Fallback function to show all drivers
 function populateAllDrivers(selectedSize = '', currentDriver = '') {
