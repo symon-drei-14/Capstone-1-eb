@@ -102,6 +102,33 @@ font-family: Arial, sans-serif;
     visibility: visible;
     opacity: 1;
 }
+
+.search-container {
+    position: relative;
+    display: inline-block;
+}
+
+.search-container input {
+    padding: 8px 10px 8px 30px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.search-container .fa-search {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+.highlight {
+    background-color: yellow;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+}
     </style>
 <body>
 <header class="header">
@@ -171,7 +198,11 @@ font-family: Arial, sans-serif;
             <div class="container">
                 <h2>Driver Management</h2>
                 <div class="button-row">
-                    <!-- <button class="add_driver" onclick="openModal('add')">Add Driver</button> -->
+                    <br>
+                <div class="search-container" style="float: left; margin-top: 10px; margin-left: 20px;">
+    <i class="fas fa-search"></i>
+    <input type="text" id="driverSearch" placeholder="Search drivers..." onkeyup="searchDrivers()">
+</div>
                 </div>
                 <br />
 
@@ -264,6 +295,11 @@ font-family: Arial, sans-serif;
         }
 
       function renderTable() {
+
+         document.querySelectorAll('.highlight').forEach(el => {
+        el.outerHTML = el.innerHTML;
+    });
+    
     $('#driverTableBody').empty();
     var startIndex = (currentPage - 1) * rowsPerPage;
     var endIndex = startIndex + rowsPerPage;
@@ -481,7 +517,71 @@ $(document).on('click', '.page-number', function() {
             });
         });
 
-     
+     function searchDrivers() {
+    const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
+    
+    if (searchTerm === '') {
+        // Remove any existing highlights
+        document.querySelectorAll('.highlight').forEach(el => {
+            el.outerHTML = el.innerHTML;
+        });
+        fetchDrivers();
+        return;
+    }
+
+    // Filter drivers based on search term
+    const filteredDrivers = driversData.filter(driver => {
+        return (
+            String(driver.driver_id).toLowerCase().includes(searchTerm) ||
+            String(driver.name).toLowerCase().includes(searchTerm) ||
+            String(driver.email).toLowerCase().includes(searchTerm) ||
+            String(driver.assigned_truck_id || 'None').toLowerCase().includes(searchTerm) ||
+            String(driver.created_at).toLowerCase().includes(searchTerm) ||
+            String(formatTime(driver.last_login)).toLowerCase().includes(searchTerm)
+        );
+    });
+
+    renderFilteredDrivers(filteredDrivers, searchTerm);
+}
+
+function renderFilteredDrivers(filteredDrivers, searchTerm) {
+    $('#driverTableBody').empty();
+    
+    if (filteredDrivers.length > 0) {
+        filteredDrivers.forEach(function(driver) {
+            let formattedLastLogin = formatTime(driver.last_login);
+            
+            const highlightText = (text) => {
+                if (!searchTerm || !text) return text;
+                const str = String(text);
+                const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                return str.replace(regex, '<span class="highlight">$1</span>');
+            };
+            
+            var row = "<tr>" +
+                "<td>" + highlightText(driver.driver_id) + "</td>" +
+                "<td>" + highlightText(driver.name) + "</td>" +
+                "<td>" + highlightText(driver.email) + "</td>" +
+                "<td>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
+                "<td>" + highlightText(driver.created_at) + "</td>" +
+                "<td>" + highlightText(formattedLastLogin) + "</td>" +
+                "<td class='actions'>" +
+                "<button class='edit' onclick='editDriver(\"" + driver.driver_id + "\")'>Edit</button>" +
+                "<button class='delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>Delete</button>" +
+                "</td>" +
+                "</tr>";
+            $('#driverTableBody').append(row);
+        });
+    } else {
+        $('#driverTableBody').append("<tr><td colspan='7'>No matching drivers found</td></tr>");
+    }
+    
+    // Update pagination info to show filtered results
+    $('#page-numbers').empty();
+    $('#page-numbers').append(`<div>Showing ${filteredDrivers.length} result(s)</div>`);
+    $('#prevPageBtn').prop('disabled', true);
+    $('#nextPageBtn').prop('disabled', true);
+}
         window.onclick = function(event) {
             const modal = document.getElementById("driverModal");
             if (event.target == modal) {

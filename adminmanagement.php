@@ -71,10 +71,10 @@ checkAccess();
 }
 
 .main-content4 {
-    margin-top: 80px;
+    margin-top: 30px;
     margin-left: 50px;
     margin-right: 10px;
-    width: calc(100% - 110px);
+    width: calc(100% - 100px);
 }
 .deleted-row {
     background-color: #f9f9f9ff;
@@ -100,7 +100,6 @@ button.restore:hover {
     background-color: #45a049;
 }
 
-/* Replace the existing .deleted-only and related styles with: */
 .deleted-only {
     display: none;
 }
@@ -122,6 +121,32 @@ button.restore:hover {
     opacity: 0.9;
 } */
 
+    .search-container {
+    position: relative;
+    display: inline-block;
+}
+
+.search-container input {
+    padding: 8px 10px 8px 30px; 
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.search-container .fa-search {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+.highlight {
+    background-color: yellow;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+    }
 </style>
 
 <body>
@@ -196,6 +221,12 @@ button.restore:hover {
         <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedAdmins()">
         Show Deleted Admins
     </label>
+
+     <div class="search-container" style="float: left; margin-top: 10px;">
+          <i class="fas fa-search"></i>
+        <input type="text" id="adminSearch" placeholder="Search admins..." onkeyup="searchAdmins()">
+      
+    </div>
 </div>
 
                 <br />
@@ -329,11 +360,21 @@ button.restore:hover {
         }
 
         // Render admins table
-function renderAdminsTable(admins) {
+function renderAdminsTable(admins, isSearchResult = false) {
     const tableBody = document.getElementById('adminTableBody');
     tableBody.innerHTML = '';
     
     const showDeleted = document.getElementById('showDeletedCheckbox').checked;
+    const searchTerm = document.getElementById('adminSearch').value.toLowerCase();
+    
+    // Function to highlight matching text
+    const highlightText = (text) => {
+        if (!searchTerm || !text) return text;
+        
+        const str = String(text);
+        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return str.replace(regex, '<span class="highlight">$1</span>');
+    };
     
     admins.forEach(admin => {
         const row = document.createElement('tr');
@@ -351,13 +392,13 @@ function renderAdminsTable(admins) {
         const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
         
         row.innerHTML = `
-            <td>${admin.admin_id}</td>
-            <td>${admin.username}</td>
-            <td>${admin.role || 'Full Admin'}</td>
-            <td>${admin.is_deleted ? 'Deleted' : 'Active'}</td>
-        <td class="deleted-only">${admin.deleted_by || ''}</td>
-            <td class="deleted-only">${deletedAt}</td>
-            <td class="deleted-only">${admin.delete_reason || ''}</td>
+            <td>${highlightText(admin.admin_id)}</td>
+            <td>${highlightText(admin.username)}</td>
+            <td>${highlightText(admin.role || 'Full Admin')}</td>
+            <td>${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
+            <td class="deleted-only">${highlightText(admin.deleted_by || '')}</td>
+            <td class="deleted-only">${highlightText(deletedAt)}</td>
+            <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
             <td class="actions">
                 ${admin.is_deleted ? '' : `<button class="edit" onclick="openAdminModal(${admin.admin_id})">Edit</button>`}
                 ${admin.is_deleted ? '' : `<button class="delete" onclick="confirmDeleteAdmin(${admin.admin_id})">Delete</button>`}
@@ -366,12 +407,17 @@ function renderAdminsTable(admins) {
         `;
         tableBody.appendChild(row);
     });
+    
+    if (!isSearchResult) {
+        const totalPages = Math.ceil(totalAdmins / rowsPerPage);
+        document.getElementById("admin-page-info").textContent = `Page ${currentAdminPage} of ${totalPages || 1}`;
+    }
 }
 
-// Add confirm delete function with reason prompt
+
 function confirmDeleteAdmin(adminId) {
     const reason = prompt('Please enter the reason for deleting this admin:');
-    if (reason === null) return; // User cancelled
+    if (reason === null) return; 
     
     if (reason.trim() === '') {
         alert('Please provide a reason for deletion');
@@ -492,10 +538,8 @@ function restoreAdmin(adminId) {
     const showDeleted = document.getElementById('showDeletedCheckbox').checked;
     const table = document.getElementById('adminsTable');
     
-    // Fetch admins with the correct filter
     fetchAdminsPaginated(showDeleted);
     
-    // Toggle the table classes for styling
     if (showDeleted) {
         table.classList.add('show-deleted');
     } else {
@@ -531,7 +575,46 @@ function fetchAdminsPaginated(showDeleted = false) {
             alert('Failed to fetch admins. Please try again.');
         });
 }
+function searchAdmins() {
+    const searchTerm = document.getElementById('adminSearch').value.toLowerCase();
+    const showDeleted = document.getElementById('showDeletedCheckbox').checked;
+    
+    if (searchTerm === '') {
 
+          document.querySelectorAll('.highlight').forEach(el => {
+            el.outerHTML = el.innerHTML;
+        });
+       
+        fetchAdminsPaginated(showDeleted);
+        return;
+    }
+
+    fetch('include/handlers/get_admins.php?show_deleted=' + showDeleted)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const filteredAdmins = data.admins.filter(admin => {
+                    return (
+                        String(admin.admin_id).toLowerCase().includes(searchTerm) ||
+                        String(admin.username).toLowerCase().includes(searchTerm) ||
+                        String(admin.role || 'Full Admin').toLowerCase().includes(searchTerm) ||
+                        String(admin.is_deleted ? 'Deleted' : 'Active').toLowerCase().includes(searchTerm) ||
+                        String(admin.deleted_by || '').toLowerCase().includes(searchTerm) ||
+                        String(admin.delete_reason || '').toLowerCase().includes(searchTerm) ||
+                        (admin.deleted_at && new Date(admin.deleted_at).toLocaleString().toLowerCase().includes(searchTerm))
+        )});
+                
+                renderAdminsTable(filteredAdmins, true);
+                
+                // Update pagination info to show filtered results
+                document.getElementById("admin-page-info").textContent = 
+                    `Showing ${filteredAdmins.length} result(s)`;
+            } else {
+                alert('Error fetching admins: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
         // Close modal when clicking outside of it
         window.onclick = function(event) {
             if (event.target.className === 'modal') {
@@ -545,6 +628,10 @@ function fetchAdminsPaginated(showDeleted = false) {
 document.getElementById('showDeletedCheckbox').addEventListener('change', toggleDeletedAdmins);
             fetchAdminsPaginated();
         };
+
+        
+
+        
     </script>
 
      <script>
