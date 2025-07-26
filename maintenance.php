@@ -326,6 +326,57 @@ checkAccess(); // No role needed—logic is handled internally
 .full-delete:hover {
     background-color: #c82333;
 }
+
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.status-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-filter-container label {
+    font-weight: bold;
+    color: #333;
+}
+
+.status-filter-container select {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-container .fa-search {
+    position: absolute;
+    left: 10px;
+    color: #aaa;
+    pointer-events: none;
+}
+
+#searchInput {
+    padding: 5px 10px 5px 30px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    width: 200px;
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: #4b77de;
+}
 </style>
 <body>
 
@@ -398,16 +449,23 @@ checkAccess(); // No role needed—logic is handled internally
                     <button class="reminder_btn" onclick="openRemindersModal()">Maintenance Reminders</button>
                 </div>
 
-               <div class="status-filter-container">
-    <label for="statusFilter">Show:</label>
-    <select id="statusFilter" onchange="filterTableByStatus()">
-        <option value="all">All Statuses</option>
-        <option value="Pending">Pending</option>
-        <option value="Completed">Completed</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Overdue">Overdue</option>
-        <option value="Deleted">Deleted</option>
-    </select>
+         <div class="filter-controls">
+    <div class="status-filter-container">
+        <label for="statusFilter">Show:</label>
+        <select id="statusFilter" onchange="filterTableByStatus()">
+            <option value="all">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Overdue">Overdue</option>
+            <option value="Deleted">Deleted</option>
+        </select>
+    </div>
+    
+    <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search..." onkeyup="searchMaintenance()">
+    </div>
 </div>
 <br />
                 <br />
@@ -693,7 +751,7 @@ function filterTableByStatus() {
     if (currentStatusFilter !== 'all') {
         url += `&status=${encodeURIComponent(currentStatusFilter)}`;
     }
-    
+    document.getElementById('searchInput').value = '';
     fetch(url)
         .then(response => {
             if (!response.ok) {
@@ -1026,6 +1084,33 @@ function showEditRemarks(reasonsJson) {
             alert("Failed to save maintenance record. Please check console for details.");
         }
     });
+}
+
+function searchMaintenance() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const table = document.getElementById('maintenanceTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    // Skip the header row (index 0)
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        let found = false;
+        
+        // Check each cell in the row (skip the last one which has actions)
+        for (let j = 0; j < row.cells.length - 1; j++) {
+            const cell = row.cells[j];
+            if (cell.textContent.toLowerCase().includes(searchTerm)) {
+                found = true;
+                break;
+            }
+        }
+        
+        if (found || searchTerm === '') {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    }
 }
         
 function deleteMaintenance(id) {

@@ -864,7 +864,7 @@ body {
 .filter-row {
     display: flex;
     justify-content: flex-start;
-    gap: 1px;
+    gap: 0px;
     margin-bottom: 15px;
     align-items: center;
 }
@@ -872,7 +872,7 @@ body {
 .status-filter-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
 }
 
 .status-filter-container label {
@@ -1042,6 +1042,33 @@ body {
     display: flex;
     justify-content: center;
     gap: 15px;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-container .fa-search {
+    position: absolute;
+    left: 10px;
+      top: 35%; /* Reduced from 50% to move it up */
+    transform: translateY(-50%);
+    color: #aaa;
+    pointer-events: none;
+}
+
+#searchInput {
+    padding: 5px 10px 5px 30px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    width: 200px;
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: #4b77de;
 }
 </style>
 <body>
@@ -1442,13 +1469,20 @@ if ($driverResult->num_rows > 0) {
             <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
         </select>
+    
+
+ <div class="search-container" style="margin-left: 20px;">
+        <i class="fa fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()">
     </div>
+    
+
     <div class="show-deleted-container" style="margin-left: 20px;">
         <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedTrucks()">
         <label for="showDeletedCheckbox">Show Deleted Trips</label>
     </div>
 </div>
-
+</div>
 
         <table class="events-table" id="eventsTable"> 
             <thead>
@@ -1517,9 +1551,15 @@ if ($driverResult->num_rows > 0) {
         $('#addEventDate').attr('min', formattedNow); 
 
 function renderTable() {
+    
     $('#eventTableBody').empty();
+    
+    
+    document.getElementById('searchInput').value = '';
+    
 
     const showDeleted = $('#showDeletedCheckbox').is(':checked');
+    
     
     $.ajax({
         url: 'include/handlers/trip_operations.php',
@@ -1527,20 +1567,21 @@ function renderTable() {
         data: JSON.stringify({ 
             action: showDeleted ? 'get_deleted_trips' : 'get_active_trips',
             statusFilter: currentStatusFilter,
-            sortOrder: dateSortOrder // Add this parameter
+            sortOrder: dateSortOrder
         }),
         contentType: 'application/json',
         success: function(response) {
             if (response.success) {
                 const trips = response.trips;
                 
+               
                 if (trips.length === 0) {
                     $('#eventTableBody').html('<tr><td colspan="17">No trips found</td></tr>');
                     $('#page-numbers').empty();
                     return;
                 }
 
-                // Update the sort button icon
+                
                 $('#dateSortBtn i').removeClass('fa-sort fa-sort-up fa-sort-down');
                 if (dateSortOrder === 'asc') {
                     $('#dateSortBtn i').addClass('fa-sort-up');
@@ -1548,16 +1589,16 @@ function renderTable() {
                     $('#dateSortBtn i').addClass('fa-sort-down');
                 }
 
-                // Calculate pagination
+               
                 totalPages = Math.ceil(trips.length / rowsPerPage);
                 updatePagination();
                 
-                // Get trips for current page
+              
                 const startIndex = (currentPage - 1) * rowsPerPage;
                 const endIndex = Math.min(startIndex + rowsPerPage, trips.length);
                 const paginatedTrips = trips.slice(startIndex, endIndex);
 
-                // Render the trips
+                
                 renderTripRows(paginatedTrips, showDeleted);
             } else {
                 alert('Error: ' + response.message);
@@ -2305,7 +2346,32 @@ $('#reason6').on('change', function() {
     }
 });
 
-
+function searchTrips() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const table = document.getElementById('eventsTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    // Skip the header row (index 0)
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        let found = false;
+        
+        // Check each cell in the row (skip the last one which has actions)
+        for (let j = 0; j < row.cells.length - 1; j++) {
+            const cell = row.cells[j];
+            if (cell.textContent.toLowerCase().includes(searchTerm)) {
+                found = true;
+                break;
+            }
+        }
+        
+        if (found || searchTerm === '') {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    }
+}
 
 
 function loadDeletedTrips() {
