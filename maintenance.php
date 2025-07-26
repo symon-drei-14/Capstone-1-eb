@@ -744,14 +744,14 @@ function filterTableByStatus() {
     loadMaintenanceData();
 }
 
-   function loadMaintenanceData() {
+   
+function loadMaintenanceData() {
     let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}`;
     
-   
     if (currentStatusFilter !== 'all') {
         url += `&status=${encodeURIComponent(currentStatusFilter)}`;
     }
-    document.getElementById('searchInput').value = '';
+    
     fetch(url)
         .then(response => {
             if (!response.ok) {
@@ -760,18 +760,32 @@ function filterTableByStatus() {
             return response.json();
         })
         .then(response => {
-            console.log("Response data:", response); 
             renderTable(response.records || []);
             totalPages = response.totalPages || 1;
             currentPage = response.currentPage || 1;
             updatePagination();
-        
         })
         .catch(error => {
             console.error("Error loading data:", error);
             alert("Failed to load maintenance records: " + error.message);
             const tableBody = document.querySelector("#maintenanceTable tbody");
             tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading data. Please try again.</td></tr>';
+        });
+}
+
+function fetchAllRecordsForSearch() {
+    let url = `include/handlers/maintenance_handler.php?action=getAllRecordsForSearch`;
+    
+    if (currentStatusFilter !== 'all') {
+        url += `&status=${encodeURIComponent(currentStatusFilter)}`;
+    }
+    
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
         });
 }
 
@@ -1088,29 +1102,37 @@ function showEditRemarks(reasonsJson) {
 
 function searchMaintenance() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const table = document.getElementById('maintenanceTable');
-    const rows = table.getElementsByTagName('tr');
     
-    // Skip the header row (index 0)
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        let found = false;
-        
-        // Check each cell in the row (skip the last one which has actions)
-        for (let j = 0; j < row.cells.length - 1; j++) {
-            const cell = row.cells[j];
-            if (cell.textContent.toLowerCase().includes(searchTerm)) {
-                found = true;
-                break;
-            }
-        }
-        
-        if (found || searchTerm === '') {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
+    if (searchTerm.trim() === '') {
+        // If search is empty, reload normal paginated data
+        currentPage = 1;
+        loadMaintenanceData();
+        return;
     }
+    
+    // Fetch all records for searching
+    fetchAllRecordsForSearch()
+        .then(data => {
+            const filteredRecords = data.records.filter(record => {
+                return (
+                    String(record.truck_id).toLowerCase().includes(searchTerm) ||
+                    (record.licence_plate && record.licence_plate.toLowerCase().includes(searchTerm)) ||
+                    (record.date_mtnce && formatDate(record.date_mtnce).toLowerCase().includes(searchTerm)) ||
+                    (record.remarks && record.remarks.toLowerCase().includes(searchTerm)) ||
+                    (record.status && record.status.toLowerCase().includes(searchTerm)) ||
+                    (record.supplier && record.supplier.toLowerCase().includes(searchTerm)) ||
+                    (record.cost && String(record.cost).toLowerCase().includes(searchTerm))
+                );
+            });
+            
+            renderTable(filteredRecords);
+            // Hide pagination during search
+            document.querySelector('.pagination').style.display = 'none';
+        })
+        .catch(error => {
+            console.error("Error searching records:", error);
+            alert("Failed to search maintenance records.");
+        });
 }
         
 function deleteMaintenance(id) {

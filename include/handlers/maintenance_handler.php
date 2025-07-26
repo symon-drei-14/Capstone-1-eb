@@ -214,7 +214,7 @@ switch ($action) {
 case 'getRecords':
     $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
     $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
-    $data = getMaintenanceRecords($conn, $page, 5, $statusFilter);
+    $data = getMaintenanceRecords($conn, $page, 5, $statusFilter); // Hardcoded to 5 rows
     echo json_encode($data);
     break;
 
@@ -229,7 +229,55 @@ case 'getRecords':
         echo json_encode(["reminders" => $reminders]);
         break;
 
-
+case 'getAllRecordsForSearch':
+    $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
+    
+    $sql = "SELECT 
+            m.maintenance_id,
+            m.truck_id,
+            m.maintenance_type,
+            m.licence_plate,
+            m.date_mtnce,
+            m.remarks,
+            m.status,
+            m.supplier,
+            m.cost,
+            m.last_modified_by,
+            m.last_modified_at,
+            m.edit_reasons,
+            m.is_deleted,
+            m.delete_reason
+            FROM maintenance m
+            LEFT JOIN truck_table t ON m.truck_id = t.truck_id";
+    
+    if ($statusFilter === 'Deleted') {
+        $sql .= " WHERE m.is_deleted = 1";
+    } elseif ($statusFilter !== 'all') {
+        $sql .= " WHERE m.status = ? AND m.is_deleted = 0";
+        $params[] = $statusFilter;
+        $types .= "s";
+    } else {
+        $sql .= " WHERE m.is_deleted = 0";
+    }
+    
+    $sql .= " ORDER BY m.maintenance_id DESC";
+    
+    $stmt = $conn->prepare($sql);
+    
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $records = [];
+    while ($row = $result->fetch_assoc()) {
+        $records[] = $row;
+    }
+    
+    echo json_encode(["records" => $records]);
+    break;
 
         
   case 'add':
