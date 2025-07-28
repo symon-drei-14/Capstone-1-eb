@@ -1251,15 +1251,8 @@ if ($driverResult->num_rows > 0) {
 
 
     
-            <label for="editEventContainerNo">Container No.:</label><br>
-            <select id="editEventContainerNo" name="eventContainerNo" required>
-                <option value="">Select Container No.</option>
-                <option value="TCLU1234567">TCLU1234567</option>
-                <option value="TEMU9876543">TEMU9876543</option>
-                <option value="SEGU5678912">SEGU5678912</option>
-                <option value="CMAU3456789">CMAU3456789</option>
-                <option value="APHU8765432">APHU8765432</option>
-            </select><br><br>
+           <label for="editEventContainerNo">Container No.:</label><br>
+<input type="text" id="editEventContainerNo" name="eventContainerNo" required><br><br>
     
             <label for="editEventClient">Client:</label><br>
             <select id="editEventClient" name="eventClient" required>
@@ -1381,14 +1374,7 @@ if ($driverResult->num_rows > 0) {
 <input type="text" id="addEventDispatcher" name="eventDispatcher" required><br><br>
     
             <label for="addEventContainerNo">Container No.:</label><br>
-            <select id="addEventContainerNo" name="eventContainerNo" required>
-                <option value="">Select Container No.</option>
-                <option value="TCLU1234567">TCLU1234567</option>
-                <option value="TEMU9876543">TEMU9876543</option>
-                <option value="SEGU5678912">SEGU5678912</option>
-                <option value="CMAU3456789">CMAU3456789</option>
-                <option value="APHU8765432">APHU8765432</option>
-            </select><br><br>
+<input type="text" id="addEventContainerNo" name="eventContainerNo" required><br><br>
     
             <label for="addEventClient">Client:</label><br>
             <select id="addEventClient" name="eventClient" required>
