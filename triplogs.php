@@ -15,9 +15,33 @@ checkAccess(); // No role needed—logic is handled internally
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css">
+
 </head>
 <style>
+    .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #B82132;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    max-height: 40px;
+    top: 0;
+    left: 0;
+    z-index: 1200;
+
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    position: relative;
+    right: 70px;
+    color: #FAF7F3;
+}
     
 #editReasonsModal {
    align-items: left;
@@ -303,7 +327,8 @@ checkAccess(); // No role needed—logic is handled internally
 
     .events-table th:nth-child(16), 
     .events-table td:nth-child(16) { /* Action */
-        width: 1.2rem;
+        width: 1.5rem;
+          white-space: nowrap; /* Keep buttons on one line */
     }
 
     /* Ensure text wraps and doesn't overflow */
@@ -411,6 +436,7 @@ checkAccess(); // No role needed—logic is handled internally
 .status.en-route {
     background-color: #007bff; /* Blue */
     color: white;
+    width:70px;
  
 }
     
@@ -732,7 +758,7 @@ checkAccess(); // No role needed—logic is handled internally
     font-size: 24px;
     cursor: pointer;
     margin-left: 1rem;
-    color: #333;
+    color: white;
 }
 
 @media (max-width: 768px) {
@@ -751,14 +777,6 @@ checkAccess(); // No role needed—logic is handled internally
     }
 }
 
-.toggle-sidebar-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #333;
-    z-index: 1300;
-}
 
 
 .sidebar {
@@ -814,7 +832,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
-    background-color: rgb(241, 241, 244);
+     background-color:#FCFAEE;
     overflow-y: auto; /* or just remove this; auto is default */
     height: auto; /* allow content to grow */
 }
@@ -864,15 +882,19 @@ body {
 .filter-row {
     display: flex;
     justify-content: flex-start;
-    gap: 0px;
+    gap: 10px;
     margin-bottom: 15px;
     align-items: center;
+     flex-wrap: wrap; 
+    
 }
 
 .status-filter-container {
     display: flex;
     align-items: center;
     gap: 5px;
+    margin-right: 10px; /* Add some spacing between filter and search */
+    
 }
 
 .status-filter-container label {
@@ -887,6 +909,7 @@ body {
     background-color: white;
     cursor: pointer;
     margin-left:-95em;
+    width:120px;
     
 }
 
@@ -921,17 +944,18 @@ body {
 .show-deleted-container {
     display: flex;
     align-items: left;
-    margin-left: -100em;
+    margin-bottom:10px;
     gap: 8px;
-    width:350px;
+    width:auto;
 }
 
 .show-deleted-container label {
     margin-bottom: 0;
-     margin-left: -100px;
+     margin-left: 5px;
     font-weight: normal;
     cursor: pointer;
     order: 2; 
+    
 }
 
 .show-deleted-container input[type="checkbox"] {
@@ -944,8 +968,8 @@ body {
 }
 
 .deleted-row {
-    opacity: 0.7;
-    background-color: #ffecec !important;
+    opacity: 0.9;
+    background-color: #ffffffff !important;
 }
 
 .deleted-row:hover {
@@ -967,7 +991,7 @@ body {
 }
 
 .filter-row {
-    display: none; /* Hide by default */
+    display: none; 
 }
 #deleteConfirmModal .modal-content2 {
     background-color: #fff;
@@ -1048,6 +1072,7 @@ body {
     position: relative;
     display: flex;
     align-items: center;
+      margin-right: 10px; /* Reduced from 20px */
 }
 
 .search-container .fa-search {
@@ -1069,6 +1094,57 @@ body {
 #searchInput:focus {
     outline: none;
     border-color: #4b77de;
+}
+
+
+.actions {
+    display: flex;
+    flex-wrap: nowrap; 
+    gap: 5px; 
+    justify-content: center;
+    align-items: center;
+margin:20px
+}
+
+
+.icon-btn {
+    background: none;
+    border: none;
+    padding: 5px;
+    margin: 0;
+    cursor: pointer;
+    font-size: 16px;
+    color: #555;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; 
+    height: 24px; 
+    border-radius: 4px;
+   
+}
+
+.icon-btn:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+/* Specific icon colors */
+.icon-btn.edit {
+     color: rgba(8, 89, 18, 1);
+}
+
+.icon-btn.delete {
+    color: #dc3545;
+}
+
+.icon-btn.restore {
+    color: #28a745;
+}
+
+.icon-btn.view-reasons {
+    color: #17a2b8;
 }
 </style>
 <body>
@@ -1197,7 +1273,7 @@ if ($driverResult->num_rows > 0) {
 <div class="main-container">
     <div class="calendar-container">
         <section class="calendar-section">
-            <h3>Trip Management</h3>
+            <h2>Trip Management</h2>
             <div class="toggle-btns">
                 <button id="calendarViewBtn" class="toggle-btn active"> <i class="fa fa-calendar"> Calendar</i></button>
                 <button id="tableViewBtn" class="toggle-btn">  <i class="fa fa-tasks"> Table</i></button>
@@ -1445,7 +1521,7 @@ if ($driverResult->num_rows > 0) {
 </div>
 
  
-        <div class="filter-row" style="margin-bottom: 15px;">
+    <div class="filter-row" style="margin-bottom: 15px;">
     <div class="status-filter-container">
         <label for="statusFilter">Filter by Status:</label>
         <select id="statusFilter">
@@ -1467,7 +1543,6 @@ if ($driverResult->num_rows > 0) {
         <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedTrucks()">
         <label for="showDeletedCheckbox">Show Deleted Trips</label>
     </div>
-</div>
 </div>
 
         <table class="events-table" id="eventsTable"> 
@@ -1609,17 +1684,23 @@ function renderTripRows(trips, showDeleted) {
         if (showDeleted) {
             statusCell = `<td><span class="status cancelled">Deleted</span></td>`;
             actionCell = `
-                <td>
-                    <button class="restore-btn" data-id="${trip.trip_id}">Restore</button>
+                <td class="actions">
+                    <button class="icon-btn restore" title="Restore" data-id="${trip.trip_id}">
+                       <i class="fas fa-trash-restore"></i>
+                    </button>
                 </td>
             `;
         } else {
             statusCell = `<td><span class="status ${trip.status.toLowerCase().replace(/\s+/g, '')}">${trip.status}</span></td>`;
             actionCell = `
-                <td>
-                    <button class="edit-btn" data-id="${trip.trip_id}">Edit</button>
-                    <button class="delete-btn" data-id="${trip.trip_id}">Delete</button>
-                </td>
+              <td class="actions">
+    <button class="icon-btn edit" title="Edit" data-id="${trip.trip_id}"><i class="fas fa-edit"></i></button>
+    <button class="icon-btn delete" title="Delete" data-id="${trip.trip_id}"><i class="fas fa-trash-alt"></i></button>
+    ${trip.edit_reasons && trip.edit_reasons !== 'null' && trip.edit_reasons !== '' ? 
+        `<button class="icon-btn view-reasons" title="View Edit History" data-id="${trip.trip_id}">
+            <i class="fas fa-history"></i>
+        </button>` : ''}
+        </td>
             `;
         }
 
@@ -1648,7 +1729,7 @@ function renderTripRows(trips, showDeleted) {
         `;
         $('#eventTableBody').append(row);
     });
-} 
+}
 
 
 $('#showDeletedCheckbox').on('change', function() {
@@ -2035,8 +2116,8 @@ $(window).on('click', function(event) {
             var viewRemarksButton = hasEditReasons ? 
                 `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}" style="margin-top: 10px;">View Remarks</button>` : 
                 '';
-            
-            var eventThumbnail = `
+                        
+                        var eventThumbnail = `
                 <div class="event-thumbnail">
                     <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
                     <strong>Plate No:</strong> ${event.plateNo}<br>
@@ -2048,15 +2129,21 @@ $(window).on('click', function(event) {
                     <p><strong>Dispatcher:</strong> ${event.dispatcher || 'N/A'}</p>
                     <p><strong>Client:</strong> ${event.client}</p>
                     <p><strong>Container No.:</strong> ${event.containerNo}</p>
-                     <td> <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></p>
-                       </td> 
+                    <td> <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></p></td> 
                     <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
                     <p><strong>Last modified by: </strong>${event.modifiedby}<br>
                     <strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
-                    ${viewRemarksButton}
                     <div class="event-actions" style="margin-top: 15px;">
-                        <button class="edit-btn" data-id="${event.id}">Edit</button>
-                        <button class="delete-btn" data-id="${event.id}">Delete</button>
+                        <button class="icon-btn edit" title="Edit" data-id="${event.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="icon-btn delete" title="Delete" data-id="${event.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ${hasEditReasons ? 
+                            `<button class="icon-btn view-reasons" title="View Edit History" data-id="${event.id}">
+                                <i class="fas fa-history"></i>
+                            </button>` : ''}
                     </div>
                 </div>
             `;
@@ -2094,7 +2181,7 @@ $('#tableViewBtn').on('click', function() {
 });
         
         // Edit button click handler
-$(document).on('click', '.edit-btn', function() {
+$(document).on('click', '.icon-btn.edit', function() {
     var eventId = $(this).data('id');
     var event = eventsData.find(function(e) { return e.id == eventId; });
     
@@ -2132,7 +2219,7 @@ $(document).on('click', '.edit-btn', function() {
 });
         
 
-        $(document).on('click', '.delete-btn', function() {
+        $(document).on('click', '.icon-btn.delete', function() {
             var eventId = $(this).data('id');
             $('#deleteEventId').val(eventId);
             $('#deleteConfirmModal').show();
@@ -2185,7 +2272,7 @@ $(document).on('click', '.edit-btn', function() {
     });
 });
 
-$(document).on('click', '.view-reasons-btn', function() {
+$(document).on('click', '.icon-btn.view-reasons', function() {
     var eventId = $(this).data('id');
     var event = eventsData.find(function(e) { return e.id == eventId; });
     
@@ -2403,7 +2490,7 @@ function loadDeletedTrips() {
     });
 }
 
-$(document).on('click', '.restore-btn', function() {
+$(document).on('click', 'icon-btn.restore', function() {
     const tripId = $(this).data('id');
     if (confirm('Are you sure you want to restore this trip?')) {
         $.ajax({

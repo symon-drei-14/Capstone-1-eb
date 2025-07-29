@@ -19,6 +19,7 @@ checkAccess(); // No role needed—logic is handled internally
 <style>
     body{
 font-family: Arial, sans-serif;
+ background-color:#FCFAEE;
 }
 @media (max-width: 768px) {
     .sidebar {
@@ -41,7 +42,7 @@ font-family: Arial, sans-serif;
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #333;
+    color: white;
     z-index: 1300;
 }
 
@@ -93,7 +94,7 @@ font-family: Arial, sans-serif;
     justify-content: space-between;
     align-items: center;
     padding: 20px 20px;
-    background-color: #f4f4f4;
+     background-color: #B82132;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: fixed;
     width: 100%;
@@ -114,6 +115,7 @@ font-family: Arial, sans-serif;
     align-items: center;
     position: relative;
     right: 2.1em;
+    color:white;
 }
 
 
@@ -186,7 +188,7 @@ font-family: Arial, sans-serif;
     <div class="container mt-4">
         <div class="row mb-3">
             <div class="col">
-                <h2>Live Tracking</h2>
+                <h2>Tracking</h2>
             </div>
         </div>
 

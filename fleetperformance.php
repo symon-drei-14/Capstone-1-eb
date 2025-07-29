@@ -18,9 +18,32 @@ checkAccess(); // No role needed—logic is handled internally
 body {
     font-family: Arial, sans-serif;
     margin: 80px;
-    background-color: rgb(241, 241, 244);
+    background-color:#FCFAEE;
 }
 
+ .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #B82132;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    max-height: 40px;
+    top: 0;
+    left: 0;
+    z-index: 1200;
+
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    position: relative;
+    right: 70px;
+    color: #FAF7F3;
+}
 .dashboard-section {
     display: flex;
     padding: 20px;
@@ -61,7 +84,7 @@ body {
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #333;
+    color: white;
     z-index: 1300;
 }
 

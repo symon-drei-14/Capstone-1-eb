@@ -89,21 +89,7 @@ $drivingDrivers = getDrivingDrivers();
     }
 }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #f4f4f4;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    width: 100%;
-    max-height: 40px;
-    top: 0;
-    left: 0;
-    z-index: 1200;
 
-}
 
 .logo-container {
     display: flex;
@@ -143,6 +129,7 @@ $drivingDrivers = getDrivingDrivers();
     align-items: center;
     position: relative;
     right: 70px;
+    color: #FAF7F3;
 }
 
 .profile-icon {
@@ -150,11 +137,14 @@ $drivingDrivers = getDrivingDrivers();
     height: 40px;
     border-radius: 50%;
     margin-right: 10px;
+    
 }
 
 .profile-name {
     font-size: 14px;
     font-weight: bold;
+    
+    
 }
 
 /*.sidebar {
@@ -205,14 +195,14 @@ $drivingDrivers = getDrivingDrivers();
 
 .icon {
     margin-right: 10px;
-    color: black !important;
+    color: white !important;
 }
 
 .icon2 {
     margin-right: 10px;
     /* font-size: 16px; */
-    opacity: 0.7; 
-    filter: grayscale(70%); 
+    filter: grayscale(0%); 
+    height:1.5em;
 }
 
 /* .icon2 {
@@ -319,8 +309,8 @@ $drivingDrivers = getDrivingDrivers();
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #333;
     z-index: 1300;
+       color: #F6F0F0;
 }
 
 
@@ -351,6 +341,129 @@ $drivingDrivers = getDrivingDrivers();
 .sidebar.expanded .sidebar-item span {
     visibility: visible;
     opacity: 1;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #B82132;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    max-height: 40px;
+    top: 0;
+    left: 0;
+    z-index: 1200;
+
+}
+
+body{
+   background-color:#FCFAEE;
+}
+
+/* Footer Styles */
+.site-footer {
+    background-color: #B82132;
+    color: white;
+    padding: 30px 0 0;
+    margin-top: 40px;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px;
+    margin-bottom: 30px;
+    padding: 0 15px;
+}
+
+.footer-section h4 {
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 18px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 50px;
+    height: 2px;
+    background-color: #fff;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 10px;
+}
+
+.footer-section ul li a {
+    color: #ddd;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-section ul li a:hover {
+    color: #fff;
+}
+
+.footer-section p {
+    color: #ddd;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.footer-section p i {
+    margin-right: 10px;
+}
+
+.social-icons {
+    display: flex;
+    gap: 15px;
+}
+
+.social-icons a {
+    color: #fff;
+    font-size: 20px;
+    transition: color 0.3s;
+}
+
+.social-icons a:hover {
+    color: #ddd;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding: 15px 0;
+    background-color: rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.footer-bottom p {
+    margin: 0;
+    color: #ddd;
+    font-size: 14px;
 }
 
 
@@ -428,7 +541,7 @@ $drivingDrivers = getDrivingDrivers();
         <div class="content">
             <p>On Going Deliveries</p>
             <h2>42,420</h2>
-            <p class="trend">+18.2% than last week</p>
+           
         </div>
         <div class="icon-container">
             <i class="fa fa-truck"></i>
@@ -438,7 +551,7 @@ $drivingDrivers = getDrivingDrivers();
         <div class="content2">
             <p>Damaged Vehicles</p>
             <h2>890</h2>
-            <p class="trend">-8.7% than last week</p>
+         
         </div>
         <div class="icon-container2">
             <i class="fa fa-wrench"></i>
@@ -448,7 +561,7 @@ $drivingDrivers = getDrivingDrivers();
         <div class="content3">
             <p>Late Deliveries</p>
             <h2>13,890</h2>
-            <p class="trend">-2.5% than last week</p>
+          
         </div>
         <div class="icon-container3">
             <i class="fa fa-hourglass-end"></i>
@@ -459,7 +572,7 @@ $drivingDrivers = getDrivingDrivers();
         <div class="content4">
             <p>Unchecked Vehicles</p>
             <h2>27,711</h2>
-            <p class="trend">+4.3% than last week</p>
+           
         </div>
         <div class="icon-container4">
             <i class="fa fa-cogs"></i>
@@ -800,5 +913,46 @@ $(document).ready(function() {
 </script>
 
 
+
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="dashboard.php">Home</a></li>
+                <li><a href="drivermanagement.php">Driver Management</a></li>
+                <li><a href="fleetmanagement.php">Fleet Management</a></li>
+                <li><a href="triplogs.php">Trip Logs</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Company</h4>
+            <ul>
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Contact</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Contact Us</h4>
+            <p><i class="fas fa-map-marker-alt"></i> 123 Logistics St, City</p>
+            <p><i class="fas fa-phone"></i> (123) 456-7890</p>
+            <p><i class="fas fa-envelope"></i> info@mansarlogistics.com</p>
+        </div>
+        <div class="footer-section">
+            <h4>Follow Us</h4>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; <?php echo date("Y"); ?> Mansar Logistics. All rights reserved.</p>
+    </div>
+</footer>
 </body>
 </html>

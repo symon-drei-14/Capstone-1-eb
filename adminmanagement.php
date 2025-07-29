@@ -31,15 +31,23 @@ checkAccess();
     }
 }
 
+.profile {
+    display: flex;
+    align-items: center;
+    position: relative;
+    right: 70px;
+    color: #FAF7F3;
+}
+
+
 .toggle-sidebar-btn {
     background: none;
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #333;
+    color: white;
     z-index: 1300;
 }
-
 
 .sidebar {
     position: fixed;
@@ -84,11 +92,66 @@ checkAccess();
 
 
 .filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
     margin-top: 10px;
-
     padding: 10px;
+}
 
-    border-radius: 4px;
+.search-container {
+    position: relative;
+    display: inline-block;
+    flex-grow: 1;
+    max-width: 220px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkmark {
+    position: relative;
+    height: 18px;
+    width: 18px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    margin-right: 8px;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: #46d40eff;
+
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.checkbox-container .checkmark:after {
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
 }
 
 button.restore {
@@ -117,14 +180,6 @@ button.restore:hover {
  
 }
 
-/* .deleted-row td {
-    opacity: 0.9;
-} */
-
-    .search-container {
-    position: relative;
-    display: inline-block;
-}
 
 .search-container input {
     padding: 8px 10px 8px 30px; 
@@ -147,6 +202,87 @@ button.restore:hover {
     padding: 0 2px;
     border-radius: 2px;
     }
+
+  .actions {
+     display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 0px;
+    justify-content: center;
+    align-items: center;
+    padding: 2px;
+    margin: 20;
+    flex-direction:row;
+}
+.actions button {
+    padding: 6px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 7px;
+    margin: 0 5px;
+    transition: background-color 0.3s, color 0.3s;
+    width: 80px; 
+    white-space: nowrap; 
+    margin-bottom: 10px;
+    margin-left:40px;
+}
+
+
+
+.actions button.edit {
+    background-color:transparent;
+      color: rgba(8, 89, 18, 1);
+       margin-right: -20px;
+              
+}
+
+.actions button.delete {
+    background-color:transparent;
+     color: rgba(189, 13, 31, 1);
+    margin-left: -30px;    
+
+}
+
+.actions button.restore {
+    background-color:transparent;
+    color: #4CAF50;
+      margin-left: 10px;    
+
+}
+
+.actions button:hover {
+transform:scale(1.2);
+}
+.fa-solid.fa-circle-user{
+    font-size:30px;
+}
+h3{
+    text-align:left;
+}
+
+ .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #B82132;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    max-height: 40px;
+    top: 0;
+    left: 0;
+    z-index: 1200;
+
+}
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+     background-color:#FCFAEE;
+    overflow-y: auto; /* or just remove this; auto is default */
+    height: auto; /* allow content to grow */
+}
 </style>
 
 <body>
@@ -213,28 +349,32 @@ button.restore:hover {
     <div class="main-content4">
         <section class="content-2">
             <div class="container">
+                 <h2>Admin Management</h2>
+
                 <div class="button-row">
-                    <button class="add_trip" onclick="openAdminModal()">Add Admin</button>
+                    <button class="add_trip" onclick="openAdminModal()">
+                    <i class="fas fa-plus"></i> Add Admin
+                    </button>
                 </div>
-                <div class="filter-controls">
-    <label>
+               <div class="filter-controls">
+    <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="adminSearch" placeholder="Search admins..." onkeyup="searchAdmins()">
+    </div>
+    <label class="checkbox-container">
         <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedAdmins()">
+        <span class="checkmark"></span>
         Show Deleted Admins
     </label>
-
-     <div class="search-container" style="float: left; margin-top: 10px;">
-          <i class="fas fa-search"></i>
-        <input type="text" id="adminSearch" placeholder="Search admins..." onkeyup="searchAdmins()">
-      
-    </div>
 </div>
 
                 <br />
-                <h3>List of Admins</h3>
+               
                 <div class="table-container">
                     <table id="adminsTable">
                         <thead>
                             <tr>
+                                <th></th>
                                 <th>Admin ID</th>
                                 <th>Username</th>
                                 <th>Role</th>
@@ -367,7 +507,6 @@ function renderAdminsTable(admins, isSearchResult = false) {
     const showDeleted = document.getElementById('showDeletedCheckbox').checked;
     const searchTerm = document.getElementById('adminSearch').value.toLowerCase();
     
-    // Function to highlight matching text
     const highlightText = (text) => {
         if (!searchTerm || !text) return text;
         
@@ -388,10 +527,10 @@ function renderAdminsTable(admins, isSearchResult = false) {
             }
         }
         
-        // Format deleted_at date if it exists
         const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
         
         row.innerHTML = `
+            <td><i class="fa-solid fa-circle-user"></i></td>
             <td>${highlightText(admin.admin_id)}</td>
             <td>${highlightText(admin.username)}</td>
             <td>${highlightText(admin.role || 'Full Admin')}</td>
@@ -400,9 +539,9 @@ function renderAdminsTable(admins, isSearchResult = false) {
             <td class="deleted-only">${highlightText(deletedAt)}</td>
             <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
             <td class="actions">
-                ${admin.is_deleted ? '' : `<button class="edit" onclick="openAdminModal(${admin.admin_id})">Edit</button>`}
-                ${admin.is_deleted ? '' : `<button class="delete" onclick="confirmDeleteAdmin(${admin.admin_id})">Delete</button>`}
-                ${admin.is_deleted ? `<button class="restore" onclick="restoreAdmin(${admin.admin_id})">Restore</button>` : ''}
+                ${admin.is_deleted ? '' : `<button class="edit" onclick="openAdminModal(${admin.admin_id})" title="Edit"><i class="fas fa-edit"></i></button>`}
+                ${admin.is_deleted ? '' : `<button class="delete" onclick="confirmDeleteAdmin(${admin.admin_id})" title="Delete"><i class="fas fa-trash-alt"></i></button>`}
+                ${admin.is_deleted ? `<button class="restore" onclick="restoreAdmin(${admin.admin_id})" title="Restore"><i class="fas fa-trash-restore"></i></button>` : ''}
             </td>
         `;
         tableBody.appendChild(row);
@@ -413,7 +552,6 @@ function renderAdminsTable(admins, isSearchResult = false) {
         document.getElementById("admin-page-info").textContent = `Page ${currentAdminPage} of ${totalPages || 1}`;
     }
 }
-
 
 function confirmDeleteAdmin(adminId) {
     const reason = prompt('Please enter the reason for deleting this admin:');

@@ -4,7 +4,7 @@ session_start();
 require 'dbhandler.php';
 
 // Get all maintenance records with pagination
-function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all') {
+function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all', $showDeleted = false) {
     // First, update any pending records that are now overdue
     $updateOverdue = $conn->prepare("UPDATE maintenance SET status = 'Overdue' 
                                    WHERE status IN ('Pending', 'In Progress') 
@@ -50,14 +50,23 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     $types = '';
     
     // Add status filter
-    if ($statusFilter === 'Deleted') {
-        $sql .= " WHERE m.is_deleted = 1";
-    } elseif ($statusFilter !== 'all') {
-        $sql .= " WHERE m.status = ? AND m.is_deleted = 0";
+    $whereClauses = [];
+    
+    if ($statusFilter !== 'all') {
+        $whereClauses[] = "m.status = ?";
         $params[] = $statusFilter;
         $types .= "s";
+    }
+    
+    // Handle deleted records filter
+    if ($showDeleted) {
+        $whereClauses[] = "m.is_deleted = 1";
     } else {
-        $sql .= " WHERE m.is_deleted = 0";
+        $whereClauses[] = "m.is_deleted = 0";
+    }
+    
+    if (!empty($whereClauses)) {
+        $sql .= " WHERE " . implode(" AND ", $whereClauses);
     }
     
     $sql .= " ORDER BY m.maintenance_id DESC LIMIT ?, ?";
@@ -84,14 +93,22 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     $countParams = [];
     $countTypes = '';
     
-    if ($statusFilter === 'Deleted') {
-        $countSql .= " WHERE m.is_deleted = 1";
-    } elseif ($statusFilter !== 'all') {
-        $countSql .= " WHERE m.status = ? AND m.is_deleted = 0";
+    $countWhereClauses = [];
+    
+    if ($statusFilter !== 'all') {
+        $countWhereClauses[] = "m.status = ?";
         $countParams[] = $statusFilter;
         $countTypes .= "s";
+    }
+    
+    if ($showDeleted) {
+        $countWhereClauses[] = "m.is_deleted = 1";
     } else {
-        $countSql .= " WHERE m.is_deleted = 0";
+        $countWhereClauses[] = "m.is_deleted = 0";
+    }
+    
+    if (!empty($countWhereClauses)) {
+        $countSql .= " WHERE " . implode(" AND ", $countWhereClauses);
     }
     
     $countStmt = $conn->prepare($countSql);
@@ -214,7 +231,8 @@ switch ($action) {
 case 'getRecords':
     $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
     $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
-    $data = getMaintenanceRecords($conn, $page, 5, $statusFilter); // Hardcoded to 5 rows
+    $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
+    $data = getMaintenanceRecords($conn, $page, 5, $statusFilter, $showDeleted);
     echo json_encode($data);
     break;
 
@@ -231,6 +249,7 @@ case 'getRecords':
 
 case 'getAllRecordsForSearch':
     $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
+    $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
     
     $sql = "SELECT 
             m.maintenance_id,
@@ -250,14 +269,24 @@ case 'getAllRecordsForSearch':
             FROM maintenance m
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id";
     
-    if ($statusFilter === 'Deleted') {
-        $sql .= " WHERE m.is_deleted = 1";
-    } elseif ($statusFilter !== 'all') {
-        $sql .= " WHERE m.status = ? AND m.is_deleted = 0";
+    $params = [];
+    $types = '';
+    $whereClauses = [];
+    
+    if ($statusFilter !== 'all') {
+        $whereClauses[] = "m.status = ?";
         $params[] = $statusFilter;
         $types .= "s";
+    }
+    
+    if ($showDeleted) {
+        $whereClauses[] = "m.is_deleted = 1";
     } else {
-        $sql .= " WHERE m.is_deleted = 0";
+        $whereClauses[] = "m.is_deleted = 0";
+    }
+    
+    if (!empty($whereClauses)) {
+        $sql .= " WHERE " . implode(" AND ", $whereClauses);
     }
     
     $sql .= " ORDER BY m.maintenance_id DESC";

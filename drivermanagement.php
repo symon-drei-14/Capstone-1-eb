@@ -14,145 +14,246 @@ require_once 'include/handlers/dbhandler.php';
     <link rel="stylesheet" href="include/sidenav.css">
     <link rel="stylesheet" href="include/drivermanagement.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <style>
-    body{
-font-family: Arial, sans-serif;
-    background-color: rgb(241, 241, 244);
+    body {
+        font-family: Arial, sans-serif;
+       background-color:#FCFAEE;
+    }
+
+    .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #B82132;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    max-height: 40px;
+    top: 0;
+    left: 0;
+    z-index: 1200;
+
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    position: relative;
+    right: 70px;
+    color: #FAF7F3;
+}
+
+    .main-content3 {
+        width: 90vw;
+        height: 120vh; 
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+        overflow-x: hidden;
+        overflow-y: hidden;
+    }
+    
+    .toggle-sidebar-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        margin-left: 1rem;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            display: none;
+            position: absolute;
+            z-index: 999;
+            background-color: #fff;
+            width: 250px;
+            height: 100%;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        }
+
+        .sidebar.show {
+            display: block;
+        }
+    }
+    
+    /* Toggle Button Styles */
+    
+
+    .sidebar {
+        position: fixed;
+        top: 1.7rem;
+        left: 0;
+        width: 300px; 
+        height: 100%;
+        background-color: #edf1ed;
+        color: #161616 !important;
+        padding: 20px;
+        box-sizing: border-box;
+        overflow-x: hidden;
+        overflow-y: auto;
+        z-index: 1100;
+        border-right: 2px solid #16161627;
+        transform: translateX(-100%); 
+        transition: transform 0.3s ease;
     }
 
     .main-content3 {
-    width: 90vw;
-    height: 120vh; 
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-    overflow-x: hidden;
-    overflow-y: hidden;
-}
-     .toggle-sidebar-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    margin-left: 1rem;
-    color: #333;
-}
+        margin-top: 80px;
+        margin-left: 20px;
+        margin-right: 20px;
+        width: calc(100% - 25px);
+        transition: margin-left 0.3s ease;
+        overflow-y: auto;
+    }
 
-@media (max-width: 768px) {
-    .sidebar {
-        display: none;
+    .sidebar.expanded {
+        transform: translateX(0);
+    }
+
+    .sidebar.expanded .sidebar-item a,
+    .sidebar.expanded .sidebar-item span {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .search-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .search-container input {
+        padding: 8px 10px 8px 30px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .search-container .fa-search {
         position: absolute;
-        z-index: 999;
-        background-color: #fff;
-        width: 250px;
-        height: 100%;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
     }
 
-    .sidebar.show {
-        display: block;
+    .highlight {
+        background-color: yellow;
+        font-weight: bold;
+        padding: 0 2px;
+        border-radius: 2px;
     }
-}
-/* Toggle Button Styles */
-.toggle-sidebar-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
+    
+    .actions button {
+    padding: 6px 0px;
+    font-size: 18px;
     cursor: pointer;
-    color: #333;
-    z-index: 1300;
+    border: none;
+    border-radius: 7px;
+    margin: 0 5px;
+    transition: background-color 0.3s, color 0.3s;
+    width: 30px; 
+    white-space: nowrap; 
+    margin-bottom: 10px;
+    background-color:transparent;
+     color: inherit;
 }
 
 
-.sidebar {
-    position: fixed;
-    top: 1.7rem;
-    left: 0;
-    width: 300px; 
-    height: 100%;
-    background-color: #edf1ed;
-    color: #161616 !important;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1100;
-    border-right: 2px solid #16161627;
-    transform: translateX(-100%); 
-    transition: transform 0.3s ease;
+td.actions {
+    text-align: center;
+
 }
 
-.main-content3 {
-    margin-top: 80px;
-    margin-left: 20px; /* Reduced left margin from 200px to 100px */
-    margin-right: 20px; /* Reduced right margin from 40px to 20px */
-    width: calc(100% - 25px); /* Adjusted width calculation based on new margins */
-    transition: margin-left 0.3s ease;
-    overflow-y: auto;
+.actions-container {
+    display: flex;
+    justify-content: center;
+    gap: 5px; /* Reduced from 10px */
+    padding: 5px 5px;
 }
 
-.sidebar.expanded {
-    transform: translateX(0);
+.fas.fa-edit {
+   color: rgba(8, 89, 18, 1);
 }
 
-.sidebar.expanded .sidebar-item a,
-.sidebar.expanded .sidebar-item span {
-    visibility: visible;
-    opacity: 1;
+.fas.fa-trash-alt{
+     color: rgba(189, 13, 31, 1);
+    margin-left: 0; 
+}
+.actions button:hover {
+transform:scale(1.5);
+}
+.action-btn i {
+    color: inherit;
+}
+   .profile-icon {
+    font-size: 30px;
+    color: #555;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    padding: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+    th:nth-child(1), td:nth-child(1) {
+    width: 10%; 
 }
 
-.search-container {
-    position: relative;
-    display: inline-block;
+th:nth-child(2), td:nth-child(2) {
+    width: 7%; 
 }
 
-.search-container input {
-    padding: 8px 10px 8px 30px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+th:nth-child(3), td:nth-child(3) {
+    width: 12%; 
 }
 
-.search-container .fa-search {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #999;
+th:nth-child(4), td:nth-child(4) {
+    width: 10%;
 }
 
-.highlight {
-    background-color: yellow;
-    font-weight: bold;
-    padding: 0 2px;
-    border-radius: 2px;
+th:nth-child(5), td:nth-child(5) {
+    width: 5%;
 }
-    </style>
+
+th:nth-child(6), td:nth-child(6) {
+    width: 10%; 
+}
+
+th:nth-child(7), td:nth-child(7) {
+    width: 10%; 
+}
+th:nth-child(8), td:nth-child(8) {
+     width: 5%; 
+    text-align: center;
+}
+</style>
 <body>
 <header class="header">
-<button id="toggleSidebarBtn" class="toggle-sidebar-btn">
-  <i class="fa fa-bars"></i>
-</button>
-        <div class="logo-container">
-            <img src="include/img/logo.png" alt="Company Logo" class="logo">
-            <img src="include/img/mansar.png" alt="Company Name" class="company">
-        </div>
-
-     
-
-        <div class="profile">
-            <i class="icon">✉</i>
-            <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
-            <div class="profile-name">
-        <?php 
-    
-        echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
-        ?>
+    <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+        <i class="fa fa-bars"></i>
+    </button>
+    <div class="logo-container">
+        <img src="include/img/logo.png" alt="Company Logo" class="logo">
+        <img src="include/img/mansar.png" alt="Company Name" class="company">
     </div>
+
+    <div class="profile">
+        <i class="icon">✉</i>
+        <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
+        <div class="profile-name">
+            <?php 
+                echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+            ?>
         </div>
-    </header>
+    </div>
+</header>
 <div class="sidebar">
     <div class="sidebar-item">
         <i class="icon2">🏠</i>
@@ -193,409 +294,400 @@ font-family: Arial, sans-serif;
     </div>
 </div>
 
-    <div class="main-content3">
-        <section class="dashboard">
-            <div class="container">
-                <h2>Driver Management</h2>
-                <div class="button-row">
-                    <br>
+<div class="main-content3">
+    <section class="dashboard">
+        <div class="container">
+            <h2>Driver Management</h2>
+            <div class="button-row">
+                <br>
                 <div class="search-container" style="float: left; margin-top: 10px; margin-left: 20px;">
-    <i class="fas fa-search"></i>
-    <input type="text" id="driverSearch" placeholder="Search drivers..." onkeyup="searchDrivers()">
-</div>
-                </div>
-                <br />
-
-                <div class="table-container">
-                    <table id="driverTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Assigned Truck</th>
-                                <th>Created At</th>
-                                <th>Last Login</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="driverTableBody">
-                            <!-- Table data will be loaded here via JavaScript -->
-                        </tbody>
-                    </table>
-                    
-                    <div class="pagination">
-    <button class="prev" id="prevPageBtn">◄</button>
-    <div id="page-numbers" class="page-numbers"></div>
-    <button class="next" id="nextPageBtn">►</button>
-</div>
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="driverSearch" placeholder="Search drivers..." onkeyup="searchDrivers()">
                 </div>
             </div>
-        </section>
-    </div>
+            <br />
 
-    <!-- Modal Structure -->
-    <div id="driverModal" class="modal">
+            <div class="table-container">
+                <table id="driverTable">
+                    <thead>
+                        <tr>
+                            <th>Profile</th>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Assigned Truck</th>
+                            <th>Created At</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driverTableBody">
+                        <!-- Table data will be loaded here via JavaScript -->
+                    </tbody>
+                </table>
+                
+                <div class="pagination">
+                    <button class="prev" id="prevPageBtn">◄</button>
+                    <div id="page-numbers" class="page-numbers"></div>
+                    <button class="next" id="nextPageBtn">►</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Modal Structure (Edit Only) -->
+<div id="driverModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal()">×</span>
-        <h2 id="modalTitle">Driver Details</h2>
+        <h2>Edit Driver</h2>
         <form id="driverForm">
             <input type="hidden" id="driverId" name="driverId">
             
-            <label for="driverName">Name</label>
-            <input type="text" id="driverName" name="driverName" required>
-
-            <label for="driverEmail">Email</label>
-            <input type="email" id="driverEmail" name="driverEmail" required>
             
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password">
-            
-            <label for="assignedTruck">Assigned Truck ID</label>
-            <input type="text" id="assignedTruck" name="assignedTruck">
+            <div class="form-group">
+                <label for="driverName">Name</label>
+                <input type="text" id="driverName" name="driverName" required>
+            </div>
 
-            <button type="submit" id="saveButton">Save</button>
-            <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
+            <div class="form-group">
+                <label for="driverEmail">Email</label>
+                <input type="email" id="driverEmail" name="driverEmail" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password">
+                <small>Leave blank to keep current password</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="assignedTruck">Assigned Truck ID</label>
+                <input type="text" id="assignedTruck" name="assignedTruck">
+            </div>
+
+            <button type="submit" id="saveButton" class="btn-primary">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <button type="button" class="cancelbtn" onclick="closeModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
         </form>
     </div>
 </div>
 
-    <script>
-        let currentDriverId = null;
-        let modalMode = 'add';
-        
-       
-        let driversData = [];
-        let currentPage = 1;
-        let rowsPerPage = 5;
+<script>
+    let currentDriverId = null;
+    let driversData = [];
+    let currentPage = 1;
+    let rowsPerPage = 5;
 
-      
-        $(document).ready(function() {
-            fetchDrivers();
-        });
-
-        function fetchDrivers() {
-            $.ajax({
-                url: 'include/handlers/get_all_drivers.php',
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    if (data.success) {
-                        driversData = data.drivers;
-                        renderTable();
-                    } else {
-                        alert("Error fetching drivers: " + data.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    alert("An error occurred while fetching driver data.");
-                }
-            });
-        }
-
-      function renderTable() {
-
-         document.querySelectorAll('.highlight').forEach(el => {
-        el.outerHTML = el.innerHTML;
+    $(document).ready(function() {
+        fetchDrivers();
     });
-    
-    $('#driverTableBody').empty();
-    var startIndex = (currentPage - 1) * rowsPerPage;
-    var endIndex = startIndex + rowsPerPage;
-    var pageData = driversData.slice(startIndex, Math.min(endIndex, driversData.length));
-    
-    if (pageData.length > 0) {
-        pageData.forEach(function(driver) {
-        
-            let formattedLastLogin = formatTime(driver.last_login);
-            
-            var row = "<tr>" +
-                "<td>" + driver.driver_id + "</td>" +
-                "<td>" + driver.name + "</td>" +
-                "<td>" + driver.email + "</td>" +
-                "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
-                "<td>" + driver.created_at + "</td>" +
-                "<td>" + formattedLastLogin + "</td>" +
-                "<td class='actions'>" +
-                "<button class='edit' onclick='editDriver(\"" + driver.driver_id + "\")'>Edit</button>" +
-                "<button class='delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>Delete</button>" +
-                "</td>" +
-                "</tr>";
-            $('#driverTableBody').append(row);
-        });
-    } else {
-        $('#driverTableBody').append("<tr><td colspan='7'>No drivers found</td></tr>");
-    }
-    
-    updatePagination();
-}
 
-function formatTime(dateString) {
-    if (!dateString || dateString === 'NULL') return 'Never';
-    
-    const date = new Date(dateString);
-    
-  
-    const options = {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true,  
-    };
-    
-    return date.toLocaleString('en-US', options);
-}
-
-        
-        let totalPages = 0;
-
-        function updatePagination() {
-    totalPages = Math.ceil(driversData.length / rowsPerPage);
-    
-   
-    
-    $('#page-numbers').empty();
-    
-    
-    for (var i = 1; i <= totalPages; i++) {
-        var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
-        var pageNumberElement = $(`<div class="${pageNumClass}">${i}</div>`);
-        
-     
-        pageNumberElement.on('click', function() {
-            var page = parseInt($(this).text());
-            goToPage(page);
-        });
-        
-        $('#page-numbers').append(pageNumberElement);
-    }
-    
-   
-    
-    $('#prevPageBtn').prop('disabled', currentPage === 1);
-    $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
-}
-
-
-function goToPage(page) {
-    currentPage = page;
-    renderTable();
-    $('.page-number').removeClass('active');
-    $(`.page-number:contains(${page})`).addClass('active');
-}
-
-function changePage(step) {
-    var newPage = currentPage + step;
-    if (newPage >= 1 && newPage <= totalPages) {
-        currentPage = newPage;
-        renderTable();
-    }
-}
-
-
-$('#prevPageBtn').on('click', function() {
-    changePage(-1);
-});
-
-$('#nextPageBtn').on('click', function() {
-    changePage(1);
-});
-
-$(document).on('click', '.page-number', function() {
-    var page = parseInt($(this).data('page'));
-    goToPage(page);
-});
-
-        function openModal(mode, driverId = null) {
-            modalMode = mode;
-            currentDriverId = driverId;
-            
-            if (mode === 'add') {
-                document.getElementById("modalTitle").textContent = "Add New Driver";
-                document.getElementById("driverForm").reset();
-                document.getElementById("driverId").value = "";
-            } else {
-                document.getElementById("modalTitle").textContent = "Edit Driver";
-               
-            }
-            
-            document.getElementById("driverModal").style.display = "block";
-        }
-
-        function closeModal() {
-            document.getElementById("driverModal").style.display = "none";
-        }
-
-        function editDriver(driverId) {
-          
-            $.ajax({
-                url: 'include/handlers/get_driver.php?id=' + driverId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    if (data.success) {
-                        const driver = data.driver;
-                        
-                       
-                        document.getElementById("driverId").value = driver.driver_id;
-                        document.getElementById("driverName").value = driver.name;
-                        document.getElementById("driverEmail").value = driver.email;
-                        document.getElementById("password").value = '';
-                        document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
-                        
-                        openModal('edit', driverId);
-                    } else {
-                        alert("Error fetching driver data: " + data.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    alert("An error occurred while fetching driver data.");
+    function fetchDrivers() {
+        $.ajax({
+            url: 'include/handlers/get_all_drivers.php',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    driversData = data.drivers;
+                    renderTable();
+                } else {
+                    alert("Error fetching drivers: " + data.message);
                 }
-            });
-        }
-
-        function deleteDriver(driverId) {
-            if (confirm("Are you sure you want to delete this driver?")) {
-               
-                $.ajax({
-                    url: 'include/handlers/delete_driver.php',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ driverId: driverId }),
-                    success: function(data) {
-                        if (data.success) {
-                            alert("Driver deleted successfully.");
-                         
-                            fetchDrivers();
-                        } else {
-                            alert("Error deleting driver: " + data.message);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error:', error);
-                        alert("An error occurred while deleting the driver.");
-                    }
-                });
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert("An error occurred while fetching driver data.");
             }
-        }
-
-       
-        document.getElementById("driverForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                driverId: document.getElementById("driverId").value,
-                name: document.getElementById("driverName").value,
-                email: document.getElementById("driverEmail").value,
-                password: document.getElementById("password").value,
-                assignedTruck: document.getElementById("assignedTruck").value,
-                mode: modalMode
-            };
-            
-           
-            $.ajax({
-                url: 'include/handlers/save_driver.php',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                success: function(data) {
-                    if (data.success) {
-                        alert(modalMode === 'add' ? "Driver added successfully." : "Driver updated successfully.");
-                   
-                        fetchDrivers();
-                        closeModal();
-                    } else {
-                        alert("Error: " + data.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    alert("An error occurred while saving the driver data.");
-                }
-            });
         });
+    }
 
-     function searchDrivers() {
-    const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
-    
-    if (searchTerm === '') {
-        // Remove any existing highlights
+    function renderTable() {
         document.querySelectorAll('.highlight').forEach(el => {
             el.outerHTML = el.innerHTML;
         });
-        fetchDrivers();
-        return;
+        
+        $('#driverTableBody').empty();
+        var startIndex = (currentPage - 1) * rowsPerPage;
+        var endIndex = startIndex + rowsPerPage;
+        var pageData = driversData.slice(startIndex, Math.min(endIndex, driversData.length));
+        
+        if (pageData.length > 0) {
+            pageData.forEach(function(driver) {
+                let formattedLastLogin = formatTime(driver.last_login);
+                
+              var row = "<tr>" +
+    "<td><i class='fa-solid fa-circle-user profile-icon'></i></td>" + 
+    "<td>" + driver.driver_id + "</td>" +
+    "<td>" + driver.name + "</td>" +
+    "<td>" + driver.email + "</td>" +
+    "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
+    "<td>" + driver.created_at + "</td>" +
+    "<td>" + formattedLastLogin + "</td>" +
+    "<td class='actions'><div class='actions-container'>" +
+    "<button class='action-btn.edit-btn' title='Edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
+    "<button class='action-btn.delete-btn' title='Delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
+    "</div></td>" +
+    "</tr>";
+                $('#driverTableBody').append(row);
+            });
+        } else {
+            $('#driverTableBody').append("<tr><td colspan='8'>No drivers found</td></tr>");
+        }
+        
+        updatePagination();
     }
 
-    // Filter drivers based on search term
-    const filteredDrivers = driversData.filter(driver => {
-        return (
-            String(driver.driver_id).toLowerCase().includes(searchTerm) ||
-            String(driver.name).toLowerCase().includes(searchTerm) ||
-            String(driver.email).toLowerCase().includes(searchTerm) ||
-            String(driver.assigned_truck_id || 'None').toLowerCase().includes(searchTerm) ||
-            String(driver.created_at).toLowerCase().includes(searchTerm) ||
-            String(formatTime(driver.last_login)).toLowerCase().includes(searchTerm)
-        );
+    function formatTime(dateString) {
+        if (!dateString || dateString === 'NULL') return 'Never';
+        
+        const date = new Date(dateString);
+        
+        const options = {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,  
+        };
+        
+        return date.toLocaleString('en-US', options);
+    }
+    
+    function updatePagination() {
+        totalPages = Math.ceil(driversData.length / rowsPerPage);
+        
+        $('#page-numbers').empty();
+        
+        for (var i = 1; i <= totalPages; i++) {
+            var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
+            var pageNumberElement = $(`<div class="${pageNumClass}">${i}</div>`);
+            
+            pageNumberElement.on('click', function() {
+                var page = parseInt($(this).text());
+                goToPage(page);
+            });
+            
+            $('#page-numbers').append(pageNumberElement);
+        }
+        
+        $('#prevPageBtn').prop('disabled', currentPage === 1);
+        $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        renderTable();
+        $('.page-number').removeClass('active');
+        $(`.page-number:contains(${page})`).addClass('active');
+    }
+
+    function changePage(step) {
+        var newPage = currentPage + step;
+        if (newPage >= 1 && newPage <= totalPages) {
+            currentPage = newPage;
+            renderTable();
+        }
+    }
+
+    $('#prevPageBtn').on('click', function() {
+        changePage(-1);
     });
 
-    renderFilteredDrivers(filteredDrivers, searchTerm);
+    $('#nextPageBtn').on('click', function() {
+        changePage(1);
+    });
+
+    $(document).on('click', '.page-number', function() {
+        var page = parseInt($(this).data('page'));
+        goToPage(page);
+    });
+
+    function closeModal() {
+        document.getElementById("driverModal").style.display = "none";
+    }
+
+   function editDriver(driverId) {
+    $.ajax({
+        url: 'include/handlers/get_driver.php?id=' + driverId,
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            if (data.success) {
+                const driver = data.driver;
+                
+                document.getElementById("driverId").value = driver.driver_id;
+                document.getElementById("driverName").value = driver.name;
+                document.getElementById("driverEmail").value = driver.email;
+                document.getElementById("password").value = '';
+                document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
+                
+              
+                
+                
+                document.getElementById("driverModal").style.display = "block";
+            } else {
+                alert("Error fetching driver data: " + data.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert("An error occurred while fetching driver data.");
+        }
+    });
 }
 
-function renderFilteredDrivers(filteredDrivers, searchTerm) {
-    $('#driverTableBody').empty();
-    
-    if (filteredDrivers.length > 0) {
-        filteredDrivers.forEach(function(driver) {
-            let formattedLastLogin = formatTime(driver.last_login);
-            
-            const highlightText = (text) => {
-                if (!searchTerm || !text) return text;
-                const str = String(text);
-                const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                return str.replace(regex, '<span class="highlight">$1</span>');
-            };
-            
-            var row = "<tr>" +
-                "<td>" + highlightText(driver.driver_id) + "</td>" +
-                "<td>" + highlightText(driver.name) + "</td>" +
-                "<td>" + highlightText(driver.email) + "</td>" +
-                "<td>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
-                "<td>" + highlightText(driver.created_at) + "</td>" +
-                "<td>" + highlightText(formattedLastLogin) + "</td>" +
-                "<td class='actions'>" +
-                "<button class='edit' onclick='editDriver(\"" + driver.driver_id + "\")'>Edit</button>" +
-                "<button class='delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>Delete</button>" +
-                "</td>" +
-                "</tr>";
-            $('#driverTableBody').append(row);
+
+    function deleteDriver(driverId) {
+        if (confirm("Are you sure you want to delete this driver?")) {
+            $.ajax({
+                url: 'include/handlers/delete_driver.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ driverId: driverId }),
+                success: function(data) {
+                    if (data.success) {
+                        alert("Driver deleted successfully.");
+                        fetchDrivers();
+                    } else {
+                        alert("Error deleting driver: " + data.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    alert("An error occurred while deleting the driver.");
+                }
+            });
+        }
+    }
+
+    document.getElementById("driverForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        formData.append('driverId', document.getElementById("driverId").value);
+        formData.append('name', document.getElementById("driverName").value);
+        formData.append('email', document.getElementById("driverEmail").value);
+        formData.append('password', document.getElementById("password").value);
+        formData.append('assignedTruck', document.getElementById("assignedTruck").value);
+        
+
+        
+        $.ajax({
+            url: 'include/handlers/update_driver.php',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(data) {
+                if (data.success) {
+                    alert("Driver updated successfully.");
+                    fetchDrivers();
+                    closeModal();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert("An error occurred while updating the driver data.");
+            }
         });
-    } else {
-        $('#driverTableBody').append("<tr><td colspan='7'>No matching drivers found</td></tr>");
+    });
+
+    function searchDrivers() {
+        const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
+        
+        if (searchTerm === '') {
+            document.querySelectorAll('.highlight').forEach(el => {
+                el.outerHTML = el.innerHTML;
+            });
+            fetchDrivers();
+            return;
+        }
+
+        const filteredDrivers = driversData.filter(driver => {
+            return (
+                String(driver.driver_id).toLowerCase().includes(searchTerm) ||
+                String(driver.name).toLowerCase().includes(searchTerm) ||
+                String(driver.email).toLowerCase().includes(searchTerm) ||
+                String(driver.assigned_truck_id || 'None').toLowerCase().includes(searchTerm) ||
+                String(driver.created_at).toLowerCase().includes(searchTerm) ||
+                String(formatTime(driver.last_login)).toLowerCase().includes(searchTerm)
+            );
+        });
+
+        renderFilteredDrivers(filteredDrivers, searchTerm);
+    }
+
+    function renderFilteredDrivers(filteredDrivers, searchTerm) {
+        $('#driverTableBody').empty();
+        
+        if (filteredDrivers.length > 0) {
+            filteredDrivers.forEach(function(driver) {
+                let formattedLastLogin = formatTime(driver.last_login);
+                
+                const highlightText = (text) => {
+                    if (!searchTerm || !text) return text;
+                    const str = String(text);
+                    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                    return str.replace(regex, '<span class="highlight">$1</span>');
+                };
+                
+                var row = "<tr>" +
+                    "<td><i class='fa-solid fa-circle-user profile-icon'></i></td>" + 
+                    "<td>" + highlightText(driver.driver_id) + "</td>" +
+                    "<td>" + highlightText(driver.name) + "</td>" +
+                    "<td>" + highlightText(driver.email) + "</td>" +
+                    "<td>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
+                    "<td>" + highlightText(driver.created_at) + "</td>" +
+                    "<td>" + highlightText(formattedLastLogin) + "</td>" +
+                    "<td class='actions'>" +
+                    "<button class='action-btn.edit-btn' title='Edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
+                    "<button class='action-btn.delete-btn' title='Delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
+                    "</td>" +
+                    "</tr>";
+                $('#driverTableBody').append(row);
+            });
+        } else {
+            $('#driverTableBody').append("<tr><td colspan='8'>No matching drivers found</td></tr>");
+        }
+        
+        $('#page-numbers').empty();
+        $('#page-numbers').append(`<div>Showing ${filteredDrivers.length} result(s)</div>`);
+        $('#prevPageBtn').prop('disabled', true);
+        $('#nextPageBtn').prop('disabled', true);
     }
     
-    // Update pagination info to show filtered results
-    $('#page-numbers').empty();
-    $('#page-numbers').append(`<div>Showing ${filteredDrivers.length} result(s)</div>`);
-    $('#prevPageBtn').prop('disabled', true);
-    $('#nextPageBtn').prop('disabled', true);
-}
-        window.onclick = function(event) {
-            const modal = document.getElementById("driverModal");
-            if (event.target == modal) {
-                closeModal();
-            }
+    // Preview profile image when selected
+    document.getElementById('driverProfile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('profilePreview').innerHTML = 
+                    `<img src="${event.target.result}" style="max-width: 100px; max-height: 100px; border-radius: 50%;">`;
+            };
+            reader.readAsDataURL(file);
         }
-    </script>
+    });
 
-    <script>
+    window.onclick = function(event) {
+        const modal = document.getElementById("driverModal");
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+
+<script>
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
 </script>
-
 
 </body>
 </html>

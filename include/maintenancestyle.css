@@ -4,12 +4,7 @@ body {
     background-color: rgb(241, 241, 244);
 }
 
-table {
-    width: 98%;
-    border-collapse: collapse;
-    margin-top: 20px;
 
-}
 
 th, td {
     padding: 12px;
@@ -45,37 +40,7 @@ tr:hover {
 }
 
 /* Column Widths */
-th:nth-child(1), td:nth-child(1) {
-    width: 5%; 
-}
 
-th:nth-child(2), td:nth-child(2) {
-    width: 7%; 
-}
-
-th:nth-child(3), td:nth-child(3) {
-    width: 12%; 
-}
-
-th:nth-child(4), td:nth-child(4) {
-    width: 20%;
-}
-
-th:nth-child(5), td:nth-child(5) {
-    width: 10%;
-}
-
-th:nth-child(6), td:nth-child(6) {
-    width: 10%; 
-}
-
-th:nth-child(7), td:nth-child(7) {
-    width: 10%; 
-}
-
-th:nth-child(8), td:nth-child(8) {
-    width: 5%; 
-}
 
 
 /* Status Colors */
@@ -107,39 +72,9 @@ th:nth-child(8), td:nth-child(8) {
     border-radius: 20px;
 }
 
-.actions button {
-    padding: 6px 12px;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    border-radius: 7px;
-    margin: 0 5px;
-    transition: background-color 0.3s, color 0.3s;
-    width: 100px; 
-    white-space: nowrap; 
-    margin-bottom: 10px;
-}
 
-/* Individual Button Styles */
-.actions button.edit {
-    background-color: #4CAF50; /* Green */
-    color: white;
-}
 
-.actions button.delete {
-    background-color: #d7584f; /* Red */
-    color: white;
-}
 
-.actions button.history {
-    background-color: #2196F3; /* Orange */
-    color: rgb(255, 252, 252);
-}
-
-/* Button Hover Effects */
-.actions button:hover {
-    opacity: 0.5;
-}
 
 .main-content3{
     width: 90vw;

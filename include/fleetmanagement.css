@@ -121,13 +121,10 @@ tr:hover {
 
 .actions button.edit {
     background-color:#4CAF50;
-    color: white;
+    color: rgb(0, 0, 0);
 }
 
-.actions button.delete {
-    background-color: #d7584f;
-    color: white;
-}
+
 
 .main-content3 {
     width: 90vw;

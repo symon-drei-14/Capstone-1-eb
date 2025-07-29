@@ -14,13 +14,29 @@ checkAccess();
     <style>
         body{
             font-family: Arial, sans-serif;
+               background-color:#FCFAEE;
         }
+        .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #B82132;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    max-height: 40px;
+    top: 0;
+    left: 0;
+    z-index: 1200;
+
+}
         h3{
             font-family: Arial, sans-serif;
-            margin-top:-10px;
-            margin-bottom:40px;
+            margin-top:20px;
+            margin-bottom:20px;
             font-size:1.5rem;
-            text-transform:uppercase;
+            text-align:left;
         }
         .toggle-sidebar-btn {
             background: none;
@@ -28,7 +44,7 @@ checkAccess();
             font-size: 24px;
             cursor: pointer;
             margin-left: 1rem;
-            color: #333;
+            color: white;
         }
 
         @media (max-width: 768px) {
@@ -191,7 +207,7 @@ th[onclick]:hover {
 }
 
 .show-deleted-filter {
-    margin-bottom: 20px;
+   
     display: flex;
     align-items: center;
     gap: 10px;
@@ -220,9 +236,7 @@ th[onclick]:hover {
     margin-right: 5px;
 }
 
-.restore:hover {
-    background-color: #218838;
-}
+
 
 .view-reason {
     background-color: #17a2b8;
@@ -234,7 +248,7 @@ th[onclick]:hover {
 }
 
 .view-reason:hover {
-    background-color: #138496;
+       transform: scale(1.7);
 }
 
 .full-delete {
@@ -248,8 +262,73 @@ th[onclick]:hover {
 }
 
 .full-delete:hover {
-    background-color: #c82333;
+       transform: scale(1.7);
 }
+
+.actions {
+       flex-direction: row;
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    align-items: center;
+}
+.actions button {
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 7px;
+    transition: background-color 0.3s, color 0.3s;
+    width: 30px;
+    white-space: nowrap;
+    margin-bottom: 8px;
+    margin:10;
+}
+
+.actions button.edit {
+    background-color:transparent;
+    color: rgba(8, 89, 18, 1);
+}
+
+.actions button.delete {
+    background-color:transparent;
+    color: rgba(189, 13, 31, 1);
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    padding: 1px;
+    margin: 0;
+    cursor: pointer;
+    font-size: 16px;
+    color: #555;
+    transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+
+    transform: scale(1.7);
+}
+
+/* Specific icon colors */
+
+
+.icon-btn.delete {
+    color: #ff0b0bff;
+}
+
+.icon-btn.restore {
+    color: #28a745;
+}
+
+.icon-btn.full-delete {
+    color: #dc3545;
+}
+
+.icon-btn.view-reason {
+    color: #17a2b8;
+}
+
 
     </style>
 </head>
@@ -313,12 +392,14 @@ th[onclick]:hover {
 
     <div class="main-content4">
         <section class="content-2">
+            
             <div class="container">
+                        <h3>Truck Management</h3>
                 <div class="button-row">
                     <button class="add_trip" onclick="openTruckModal()">Add a truck</button>
                 </div>
                 <br>
-                <h3>List of Trucks</h3>
+        
                 <div class="status-filter">
     <label for="statusFilter">Filter by Status:</label>
     <select id="statusFilter" onchange="filterTrucksByStatus()">
@@ -329,13 +410,15 @@ th[onclick]:hover {
         <option value="Overdue">Overdue</option>
 
     </select>
-</div>
-<div class="show-deleted-filter">
+    <div class="show-deleted-filter">
     <label>
         <input type="checkbox" id="showDeleted" onchange="toggleDeletedTrucks()">
         Show Deleted Trucks
     </label>
 </div>
+       
+</div>
+
                 <div class="table-container">
                     <table id="trucksTable">
                         <thead>
@@ -633,19 +716,29 @@ function renderTrucksTable() {
         <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
         <td class="actions">
             ${truck.is_deleted == 1 ? `
-                <button class="restore" onclick="restoreTruck(${truck.truck_id})">Restore</button>
+                <button class="icon-btn restore" title="Restore" onclick="restoreTruck(${truck.truck_id})">
+                  <i class="fas fa-trash-restore"></i>
+                </button>
                 ${window.userRole === 'Full Admin' ? 
-                  `<button class="full-delete" onclick="fullDeleteTruck(${truck.truck_id})">Full Delete</button>` : ''}
-                <button class="view-reason" onclick="viewDeletionReason(${truck.truck_id})">View Reason</button>
+                  `<button class="icon-btn full-delete" title="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
+                          <i class="fa-solid fa-ban"></i>
+                  </button>` : ''}
+                <button class="icon-btn view-reason" title="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
+                    <i class="fas fa-info-circle"></i>
+                </button>
             ` : `
-                <button class="edit" onclick="openTruckModal(true, ${truck.truck_id})">Edit</button>
-                <button class="delete" onclick="deleteTruck(${truck.truck_id})">Delete</button>
+                <button class="icon-btn edit" title="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-btn delete" title="Delete" onclick="deleteTruck(${truck.truck_id})">
+                
+                     <i class="fas fa-trash"></i>
+                </button>
             `}
         </td>
     `;
-        tableBody.appendChild(tr);
+    tableBody.appendChild(tr);
     });
-    
     document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
 }
 
