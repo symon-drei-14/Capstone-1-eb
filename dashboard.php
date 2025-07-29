@@ -466,6 +466,37 @@ body{
     font-size: 14px;
 }
 
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 11000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: black;
+}
+
 
 </style>
 
@@ -593,6 +624,7 @@ body{
                 <th>Helper</th>
                 <th>Client</th>
                 <th>Delivery Address</th>
+                 <th>Date of Departure</th>
                 <th>Actions</th>
             </tr>
            
@@ -824,54 +856,59 @@ $(document).ready(function() {
     let currentPage = 1;
     
     // Function to load trips for a specific page
-    function loadTrips(page) {
-        $.ajax({
-            url: 'include/handlers/dashboard_handler.php',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                action: 'get_ongoing_trips',
-                page: page
-            }),
-            success: function(response) {
-                if (response.success) {
-                    // Clear existing table rows (except header)
-                    $('.table-container table tr:not(:first)').remove();
-                    
-                    // Add new rows for each ongoing trip
-                    if (response.trips.length > 0) {
-                        response.trips.forEach(function(trip) {
-                            var row = `
-                                <tr>
-                                    <td><i class="fa fa-automobile icon-bg2"></i></td>
-                                    <td>${trip.plate_no}</td>
-                                    <td>${trip.driver}</td>
-                                    <td>${trip.helper}</td>
-                                    <td>${trip.client}</td>
-                                    <td>${trip.destination}</td>
-                                    <td><button class="location">View Location</button></td>
-                                </tr>
-                            `;
-                            $('.table-container table').append(row);
-                        });
-                    } else {
-                        $('.table-container table').append(`
+   function loadTrips(page) {
+    $.ajax({
+        url: 'include/handlers/dashboard_handler.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_ongoing_trips',
+            page: page
+        }),
+        success: function(response) {
+            if (response.success) {
+                $('.table-container table tr:not(:first)').remove();
+                
+                if (response.trips.length > 0) {
+                    response.trips.forEach(function(trip) {
+                        var dateObj = new Date(trip.date);
+                        var formattedDate = dateObj.toLocaleDateString();
+                        var formattedTime = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        var row = `
                             <tr>
-                                <td colspan="7" style="text-align: center;">No ongoing trips found</td>
+                                <td><i class="fa fa-automobile icon-bg2"></i></td>
+                                <td>${trip.plate_no}</td>
+                                <td>${trip.driver}</td>
+                                <td>${trip.helper}</td>
+                                <td>${trip.client}</td>
+                                <td>${trip.destination}</td>
+                                <td>${formattedDate} ${formattedTime}</td>
+                                <td><button class="trip-details" data-plate="${trip.plate_no}" 
+                                    data-driver="${trip.driver}" data-helper="${trip.helper}"
+                                    data-client="${trip.client}" data-destination="${trip.destination}"
+                                    data-date="${trip.date}">View Trip Details</button></td>
                             </tr>
-                        `);
-                    }
-                    
-                    // Update pagination controls
-                    updatePaginationControls(response.pagination);
-                    currentPage = page;
+                        `;
+                        $('.table-container table').append(row);
+                    });
+                } else {
+                    $('.table-container table').append(`
+                        <tr>
+                            <td colspan="8" style="text-align: center;">No ongoing trips found</td>
+                        </tr>
+                    `);
                 }
-            },
-            error: function() {
-                console.error('Error fetching ongoing trips');
+                
+                updatePaginationControls(response.pagination);
+                currentPage = page;
             }
-        });
-    }
+        },
+        error: function() {
+            console.error('Error fetching ongoing trips');
+        }
+    });
+}
     
     // Function to update pagination controls
     function updatePaginationControls(pagination) {
@@ -909,6 +946,34 @@ $(document).ready(function() {
     $(document).on('click', '.pagination-btn.next', function() {
         loadTrips(currentPage + 1);
     });
+});
+
+$(document).on('click', '.trip-details', function() {
+    var plate = $(this).data('plate');
+    var driver = $(this).data('driver');
+    var helper = $(this).data('helper');
+    var client = $(this).data('client');
+    var destination = $(this).data('destination');
+    var date = new Date($(this).data('date'));
+    
+    $('#td-plate').text(plate);
+    $('#td-driver').text(driver);
+    $('#td-helper').text(helper);
+    $('#td-client').text(client);
+    $('#td-destination').text(destination);
+    $('#td-date').text(date.toLocaleString());
+    
+    $('#tripDetailsModal').show();
+});
+
+$('.close').on('click', function() {
+    $('#tripDetailsModal').hide();
+});
+
+$(window).on('click', function(event) {
+    if ($(event.target).hasClass('modal')) {
+        $('#tripDetailsModal').hide();
+    }
 });
 </script>
 
@@ -954,5 +1019,20 @@ $(document).ready(function() {
         <p>&copy; <?php echo date("Y"); ?> Mansar Logistics. All rights reserved.</p>
     </div>
 </footer>
+
+<div id="tripDetailsModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <span class="close">&times;</span>
+        <h3>Trip Details</h3>
+        <div id="tripDetailsContent">
+            <p><strong>Plate No:</strong> <span id="td-plate"></span></p>
+            <p><strong>Driver:</strong> <span id="td-driver"></span></p>
+            <p><strong>Helper:</strong> <span id="td-helper"></span></p>
+            <p><strong>Client:</strong> <span id="td-client"></span></p>
+            <p><strong>Destination:</strong> <span id="td-destination"></span></p>
+            <p><strong>Date of Departure:</strong> <span id="td-date"></span></p>
+        </div>
+    </div>
+</div>
 </body>
 </html>
