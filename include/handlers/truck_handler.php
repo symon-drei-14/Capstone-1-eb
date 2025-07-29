@@ -205,11 +205,27 @@ case 'softDeleteTruck':
     break;
 
     case 'restoreTruck':
+    // First get the truck's previous status before deletion
+    $getStmt = $conn->prepare("SELECT status FROM truck_table WHERE truck_id = ?");
+    $getStmt->bind_param("i", $data['truck_id']);
+    $getStmt->execute();
+    $result = $getStmt->get_result();
+    $truck = $result->fetch_assoc();
+    
+    // Determine the status to restore to
+    $statusToRestore = 'In Terminal'; // default if no status found
+    if ($truck && isset($truck['status'])) {
+        // If the status was 'Deleted' (from soft delete), restore to default
+        $statusToRestore = ($truck['status'] === 'Deleted') ? 'In Terminal' : $truck['status'];
+    }
+    
+    // Now update the truck
     $stmt = $conn->prepare("UPDATE truck_table 
-                          SET is_deleted=0, delete_reason=NULL, 
+                          SET is_deleted=0, delete_reason=NULL, status=?,
                           last_modified_by=?, last_modified_at=NOW()
                           WHERE truck_id=?");
-    $stmt->bind_param("si", 
+    $stmt->bind_param("ssi", 
+        $statusToRestore,
         $currentUser,
         $data['truck_id']
     );

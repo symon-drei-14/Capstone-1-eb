@@ -766,28 +766,7 @@ function fullDeleteTruck(truckId) {
     }
 }
 
-function restoreTruck(truckId) {
-    if (confirm("Are you sure you want to restore this truck?")) {
-        fetch('include/handlers/truck_handler.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                action: 'restoreTruck', 
-                truck_id: truckId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Truck has been restored successfully!');
-                fetchTrucks();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-}
+
 
 
 function sortTrucks(sortBy) {
