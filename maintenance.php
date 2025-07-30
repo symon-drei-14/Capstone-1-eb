@@ -35,7 +35,7 @@
 }
     
         table {
-        width: 98%;
+        width: 100%;
         border-collapse: collapse;
         margin-top: 2px;
 
@@ -250,12 +250,13 @@
             margin-top: 80px;
             margin-left: 10px; 
             margin-right: 20px; 
-            width: calc(100% - 25px); 
+            width: calc(100% - 50px); 
             height: auto;
             max-height: 150vh;
             min-height:150vh;
             transition: margin-left 0.3s ease;
             overflow-y: hidden;
+            padding:20px;
         }
 
         th:nth-child(9), td:nth-child(9) {
@@ -517,28 +518,137 @@
     color: #dc3545 !important;
 }
 
+
+    .datetime-container {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: right;
+        justify-content: right;
+        margin-left: 45em;
+        gap: 20px;  
+    }
+    
+    .date-display {
+        font-size: 14px;
+        color: #DDDAD0;
+        font-weight:bold;   
+    }
+    
+    .time-display {
+        font-size: 14px;
+        color: #DDDAD0;
+          font-weight:bold;   
+    }
+    
+    .profile {
+    display: flex;
+    align-items: center;
+    position: relative;
+    right: 50px;
+    
+}
+
+   .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .header-left {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .stats-cards {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+
+    
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        width: 150px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: all 0.3s ease; 
+        transform: scale(1);
+    }
+
+    .stat-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); 
+        cursor: default; 
+    }
+    .stat-card .value {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+    .stat-card.total {
+        border-top: 4px solid #4b77de;
+    }
+
+    .stat-card.pending {
+        border-top: 4px solid #f39c12;
+    }
+
+    .stat-card.completed {
+        border-top: 4px solid #2ecc71;
+    }
+
+    .stat-card.overdue {
+        border-top: 4px solid #e74c3c;
+    }
+
+    .stat-card.in-progress {
+        border-top: 4px solid #3498db;
+    }
+
+    @media (max-width: 1200px) {
+        .dashboard-header {
+            flex-direction: column;
+        }
+        
+        .stats-cards {
+            justify-content: flex-start;
+            margin-top: 20px;
+        }
+    }
     </style>
     <body>
 
-    <header class="header">
-            <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
-    <i class="fa fa-bars"></i>
+   <header class="header">
+    <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+        <i class="fa fa-bars"></i>
     </button>
-            <div class="logo-container">
-                <img src="include/img/logo.png" alt="Company Logo" class="logo">
-                <img src="include/img/mansar.png" alt="Company Name" class="company">
-            </div>
+    <div class="logo-container">
+        <img src="include/img/logo.png" alt="Company Logo" class="logo">
+        <img src="include/img/mansar.png" alt="Company Name" class="company">
+    </div>
 
-            <div class="profile">
-                <i class="icon">✉</i>
-                <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
-                <div class="profile-name">
+    <div class="datetime-container">
+        <div id="current-date" class="date-display"></div>
+        <div id="current-time" class="time-display"></div>
+    </div>
+
+    <div class="profile">
+        <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
+        <div class="profile-name">
             <?php 
-            echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+                echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
             ?>
         </div>
-            </div>
-        </header>
+    </div>
+</header>
 
     <div class="sidebar">
         <div class="sidebar-item">
@@ -581,14 +691,43 @@
     </div>
 
         <div class="main-content3">
-            <section class="dashboard">
-                <div class="container">
-                    <h2>Preventive Maintenance Scheduling</h2>
-                    <div class="button-row">
-                        <button class="add_sched" onclick="openModal('add')">Add Maintenance Schedule</button>
-                        <button class="reminder_btn" onclick="openRemindersModal()">Maintenance Reminders</button>
-                    </div>
-
+            <div class="dashboard-header">
+    <div class="header-left">
+        <h2>Preventive Maintenance Scheduling</h2>
+        <div class="button-row">
+            <button class="add_sched" onclick="openModal('add')">Add Maintenance Schedule</button>
+            <button class="reminder_btn" onclick="openRemindersModal()">Maintenance Reminders</button>
+        </div>
+    </div>
+    
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <div class="title">Total</div>
+            <div class="value">24</div>
+            <div class="label">Maintenance</div>
+        </div>
+        <div class="stat-card pending">
+            <div class="title">Pending</div>
+            <div class="value">12</div>
+            <div class="label">Schedules</div>
+        </div>
+        <div class="stat-card in-progress">
+            <div class="title">In Progress</div>
+            <div class="value">5</div>
+            <div class="label">Services</div>
+        </div>
+        <div class="stat-card completed">
+            <div class="title">Completed</div>
+            <div class="value">4</div>
+            <div class="label">This Month</div>
+        </div>
+        <div class="stat-card overdue">
+            <div class="title">Overdue</div>
+            <div class="value">3</div>
+            <div class="label">Services</div>
+        </div>
+    </div>
+</div>
             <div class="filter-controls">
         <div class="status-filter-container">
             <label for="statusFilter">Show:</label>
@@ -811,6 +950,19 @@
         fetchTrucksList();
     });
 
+      function updateDateTime() {
+        const now = new Date();
+        
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, options);
+        
+        document.getElementById('current-time').textContent = now.toLocaleTimeString();
+    }
+
+   
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
             function validateMaintenanceForm() {
         const requiredFields = [
             {id: 'truckId', name: 'Truck ID'},
@@ -966,7 +1118,7 @@
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="icon-btn delete" title="Delete" onclick="deleteMaintenance(${row.maintenance_id})">
-                        <i class="fas fa-trash"></i>
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                     <button class="icon-btn history" title="View History" onclick="openHistoryModal(${row.truck_id})">
                         <i class="fas fa-history"></i>

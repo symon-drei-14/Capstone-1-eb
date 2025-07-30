@@ -31,7 +31,87 @@ $drivingDrivers = getDrivingDrivers();
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
 <style>
+.grid-item.card.statistic .content p,
+.grid-item.card.statistic .content2 p,
+.grid-item.card.statistic .content3 p,
+.grid-item.card.statistic .content4 p {
+    color: inherit; 
+    margin-bottom: 10px;
+    font-size: 20px;
+}
 
+.grid-item.card.statistic .content h2,
+.grid-item.card.statistic .content2 h2,
+.grid-item.card.statistic .content3 h2,
+.grid-item.card.statistic .content4 h2 {
+    color: inherit; 
+    margin: 0;
+    font-size: 50px;
+}
+
+.grid-item.card.statistic .icon-container i,
+.grid-item.card.statistic .icon-container2 i,
+.grid-item.card.statistic .icon-container3 i,
+.grid-item.card.statistic .icon-container4 i {
+    font-size: 32px;
+    opacity: 0.8;
+}
+
+
+.on-route {
+    background-color: rgba(69, 137, 63, 0.13);
+    color: rgb(27, 123, 19); 
+}
+.on-route .icon-container i {
+    color: rgb(27, 123, 19); 
+}
+
+.error {
+    background-color: rgba(255, 0, 0, 0.2);
+    color: rgb(209, 25, 25); 
+}
+.error .icon-container2 i {
+    color: rgba(91, 12, 12, 1); 
+}
+
+.late {
+    background-color: rgba(255, 201, 8, 0.45);
+    color: rgba(114, 89, 0, 0.56); 
+}
+.late .icon-container3 i {
+    color: rgba(98, 80, 13, 0.91);
+}
+
+.deviated {
+    background-color: rgba(230, 121, 49, 0.43);
+    color: rgb(230, 121, 49); 
+}
+.deviated .icon-container4 i {
+    color: rgba(255, 102, 0, 1); 
+}
+.on-route {
+    background-color:rgba(69, 137, 63, 0.13);
+    color: rgb(27, 123, 19);
+}
+    
+    .error {
+    background-color:rgba(255, 0, 0, 0.2);
+    color: rgb(209, 25, 25);
+    }
+    
+    
+    .late {
+    background-color:rgba(255, 201, 8, 0.28);
+    color: rgba(114, 89, 0, 0.56);
+    }
+    
+    
+    .deviated {
+    background-color:rgba(230, 121, 49, 0.19);
+    color: rgb(230, 121, 49);
+    }
+
+    
     .pagination-controls {
     display: flex;
     justify-content: center;
@@ -49,6 +129,285 @@ $drivingDrivers = getDrivingDrivers();
     cursor: pointer;
     transition: background-color 0.3s;
 }
+
+.grid-item.card.statistic {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+}
+
+
+.grid-item.card.statistic:hover {
+    transform: scale(1.05); 
+   box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
+}
+
+
+.card-large {
+    flex: 3;
+    background: #fff;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+    margin-top:15px;
+}
+
+.card-large2 {
+    flex: 3;
+    background: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+  
+}
+.card-small {
+    flex: 1;
+    background: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+
+}
+
+.fa.fa-user.icon-bg {
+    height: 5px; 
+    width: 5px; 
+    font-size: 24px; 
+    color: #B82132; 
+    background-color: rgba(184, 33, 50, 0.1); 
+    border-radius: 50%; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px; 
+}
+
+.table-container {
+    padding: 10px;
+}
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+padding:20px;
+border-radius:15px;
+}
+
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 15px;
+    text-align: center;
+    border:none;
+    border-bottom: 2px solid rgba(235, 233, 233, 0.88);
+
+}
+
+
+th {
+    background-color: #f8f8f8; 
+    padding:10px;
+    border-bottom: none;
+    border-bottom: 3px double #B82132; 
+    padding-bottom: 12px;
+    height:30px; 
+}
+
+tr:not(:last-child) td {
+    border-bottom: 1px solid #f0f0f0; 
+}
+
+tr:hover td {
+    background-color: rgba(115, 81, 84, 0.07); 
+}
+
+tr:first-child th:first-child {
+    border-top-left-radius: 15px;
+}
+
+tr:first-child th:last-child {
+    border-top-right-radius: 15px;
+}
+
+tr:last-child td:first-child {
+    border-bottom-left-radius: 15px;
+}
+
+tr:last-child td:last-child {
+    border-bottom-right-radius: 15px;
+}
+
+.icon-bg2 {
+    display: flex;  /* Enables flexbox */
+    align-items: center;  /* Centers vertically */
+    justify-content: center;
+width: 35px;
+height: 22px;
+border-radius: 20px;
+padding:  5px 10px;
+text-align: center;
+line-height: 40px;
+margin-right: 15px;
+   color: #B82132; 
+    background-color: rgba(184, 33, 50, 0.1); 
+}
+
+.maintenance-section {
+    margin-top: 30px;
+}
+
+.maintenance-container {
+    margin-top: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.maintenance-header {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr 1fr;
+    padding: 15px 20px;
+    background-color: #f8f8f8;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.maintenance-item {
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 0;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.maintenance-item:hover {
+    background-color: rgba(184, 33, 50, 0.03);
+}
+
+.maintenance-details {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr 1fr;
+    padding: 15px 20px;
+    align-items: center;
+}
+
+.maintenance-progress {
+    height: 4px;
+    background-color: #f0f0f0;
+    width: 100%;
+}
+
+.progress-bar {
+    height: 100%;
+}
+
+/* Status badges */
+.status-badge {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.urgent-badge {
+    background-color: rgba(217, 31, 25, 0.1);
+    color: #D91F19;
+}
+
+.warning-badge {
+    background-color: rgba(255, 201, 8, 0.2);
+    color: #BB9407;
+}
+
+.normal-badge {
+    background-color: rgba(69, 137, 63, 0.1);
+    color: #45893F;
+}
+
+.completed-badge {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #007BFF;
+}
+
+/* Progress bars */
+.urgent-bar {
+    background-color: #D91F19;
+}
+
+.warning-bar {
+    background-color: #BB9407;
+}
+
+.normal-bar {
+    background-color: #45893F;
+}
+
+.completed-bar {
+    background-color: #007BFF;
+}
+
+.view-all-btn {
+    display: block;
+    width:20%;
+    padding: 12px;
+    margin-top: 20px;
+    background-color: #B82132;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  
+}
+
+.view-all-btn:hover {
+    background-color: #9a1c2a;
+}
+
+/*@media (max-width: 768px) {
+    .maintenance-header,
+    .maintenance-details {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .maintenance-header span:nth-child(3),
+    .maintenance-details span:nth-child(3) {
+        display: none;
+    }
+    
+    .status-badge {
+        justify-self: end;
+    }
+}
+    */
+
+.quick-stats {
+    background: #f8f9fa;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-around;
+    margin-top: 50px; 
+    border-bottom: 1px solid #e0e0e0;
+box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em;
+}
+
+.quick-stats span {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.quick-stats i {
+    margin-right: 8px;
+    color: #B82132;
+}
+/* ------------------------------------------------------------------------------------------------------------ */
 
 .pagination-btn:hover:not(:disabled) {
     background-color: #2a277a;
@@ -124,14 +483,7 @@ $drivingDrivers = getDrivingDrivers();
         width: 300px;
     }
 */
-.profile {
-    display: flex;
-    align-items: center;
-    position: relative;
-    right: 70px;
-    color: #FAF7F3;
-}
-
+   
 .profile-icon {
     width: 40px;
     height: 40px;
@@ -496,7 +848,36 @@ body{
 .close:hover {
     color: black;
 }
-
+  .datetime-container {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: right;
+        justify-content: right;
+        margin-left: 45em;
+        gap: 20px;  
+    }
+    
+    .date-display {
+        font-size: 14px;
+        color: #DDDAD0;
+        font-weight:bold;   
+    }
+    
+    .time-display {
+        font-size: 14px;
+        color: #DDDAD0;
+          font-weight:bold;   
+    }
+    
+   
+  
+    .profile {
+    display: flex;
+    align-items: center;
+    position: relative;
+    right: 50px;
+    
+}
 
 </style>
 
@@ -504,27 +885,28 @@ body{
 
 <body>
 <header class="header">
-<button id="toggleSidebarBtn" class="toggle-sidebar-btn">
-  <i class="fa fa-bars"></i>
-</button>
-        <div class="logo-container">
-            <img src="include/img/logo.png" alt="Company Logo" class="logo">
-            <img src="include/img/mansar.png" alt="Company Name" class="company">
-        </div>
-
-     
-
-        <div class="profile">
-            <i class="icon">✉</i>
-            <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
-            <div class="profile-name">
-        <?php 
-    
-        echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
-        ?>
+    <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+        <i class="fa fa-bars"></i>
+    </button>
+    <div class="logo-container">
+        <img src="include/img/logo.png" alt="Company Logo" class="logo">
+        <img src="include/img/mansar.png" alt="Company Name" class="company">
     </div>
+
+    <div class="datetime-container">
+        <div id="current-date" class="date-display"></div>
+        <div id="current-time" class="time-display"></div>
+    </div>
+
+    <div class="profile">
+        <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
+        <div class="profile-name">
+            <?php 
+                echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+            ?>
         </div>
-    </header>
+    </div>
+</header>
 
 <div class="sidebar">
     <div class="sidebar-item">
@@ -566,12 +948,17 @@ body{
     </div>
 </div>
 
+<div class="quick-stats">
+    <span><i class="fas fa-truck"></i> 42 Active Vehicles</span>
+    <span><i class="fas fa-user"></i> 18 Drivers On Duty</span>
+    <span><i class="fas fa-map-marker-alt"></i> 7 Deliveries Today</span>
+</div>
 
 <div class="dashboard-grid">
     <div class="grid-item card statistic on-route">
         <div class="content">
             <p>On Going Deliveries</p>
-            <h2>42,420</h2>
+            <h2>2</h2>
            
         </div>
         <div class="icon-container">
@@ -581,7 +968,7 @@ body{
     <div class="grid-item card statistic error">
         <div class="content2">
             <p>Damaged Vehicles</p>
-            <h2>890</h2>
+            <h2>11</h2>
          
         </div>
         <div class="icon-container2">
@@ -591,7 +978,7 @@ body{
     <div class="grid-item card statistic late">
         <div class="content3">
             <p>Late Deliveries</p>
-            <h2>13,890</h2>
+            <h2>120</h2>
           
         </div>
         <div class="icon-container3">
@@ -602,7 +989,7 @@ body{
     <div class="grid-item card statistic deviated">
         <div class="content4">
             <p>Unchecked Vehicles</p>
-            <h2>27,711</h2>
+            <h2>2</h2>
            
         </div>
         <div class="icon-container4">
@@ -633,7 +1020,7 @@ body{
 </div>
 
 <div class="dashboard-section">
-    <div class="card-large">
+    <div class="card-large2">
         <h3>Shipment Statistics</h3>
         <p>Total deliveries: 23.8k</p>
         <div id="shipmentStatisticsChart"></div> <!-- Added for line chart -->
@@ -660,13 +1047,77 @@ body{
         ?>
     </div>
 </div>
-
+<section class="maintenance-section">
+    <div class="card-large">
+        <h3>Upcoming Maintenance</h3>
+        <div class="maintenance-container">
+            <div class="maintenance-header">
+                <span class="header-vehicle">Vehicle</span>
+                <span class="header-service">Service Type</span>
+                <span class="header-date">Due Date</span>
+                <span class="header-status">Status</span>
+            </div>
+            
+            <div class="maintenance-item urgent">
+                <div class="maintenance-details">
+                    <span class="vehicle">MAN-4567 (Volvo Truck)</span>
+                    <span class="service">Oil Change</span>
+                    <span class="date">Tomorrow</span>
+                    <span class="status-badge urgent-badge">Urgent</span>
+                </div>
+                <div class="maintenance-progress">
+                    <div class="progress-bar urgent-bar" style="width: 95%"></div>
+                </div>
+            </div>
+            
+            <div class="maintenance-item warning">
+                <div class="maintenance-details">
+                    <span class="vehicle">MAN-8910 (Isuzu Truck)</span>
+                    <span class="service">Brake Inspection</span>
+                    <span class="date">In 3 Days</span>
+                    <span class="status-badge warning-badge">Upcoming</span>
+                </div>
+                <div class="maintenance-progress">
+                    <div class="progress-bar warning-bar" style="width: 75%"></div>
+                </div>
+            </div>
+            
+            <div class="maintenance-item normal">
+                <div class="maintenance-details">
+                    <span class="vehicle">MAN-1122 (Hino Truck)</span>
+                    <span class="service">Tire Rotation</span>
+                    <span class="date">Next Week</span>
+                    <span class="status-badge normal-badge">Scheduled</span>
+                </div>
+                <div class="maintenance-progress">
+                    <div class="progress-bar normal-bar" style="width: 50%"></div>
+                </div>
+            </div>
+            
+            <div class="maintenance-item completed">
+                <div class="maintenance-details">
+                    <span class="vehicle">MAN-3344 (Mitsubishi Truck)</span>
+                    <span class="service">Engine Tune-up</span>
+                    <span class="date">Completed</span>
+                    <span class="status-badge completed-badge">Completed</span>
+                </div>
+                <div class="maintenance-progress">
+                    <div class="progress-bar completed-bar" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="view-all-btn">View All Maintenance Records</button>
+    </div>
+</section>
 
 <section class="calendar-section">
     <div class="card-large">
         <h3>Event Calendar</h3>
         <div id="calendar"></div> 
 </section>
+
+
 
 <script>
     // Shipment Statistics Line Chart
@@ -845,6 +1296,7 @@ body{
  
 </script>
 
+
 <script>
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
@@ -852,6 +1304,19 @@ body{
 </script>
 
 <script>
+
+     function updateDateTime() {
+        const now = new Date();
+        
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, options);
+        
+        document.getElementById('current-time').textContent = now.toLocaleTimeString();
+    }
+
+    // Update immediately and then every second
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
 $(document).ready(function() {
     let currentPage = 1;
     
@@ -974,6 +1439,21 @@ $(window).on('click', function(event) {
     if ($(event.target).hasClass('modal')) {
         $('#tripDetailsModal').hide();
     }
+});
+
+$(document).on('mouseenter', '.maintenance-item', function() {
+    $(this).css('transform', 'scale(1.02)');
+}).on('mouseleave', '.maintenance-item', function() {
+    $(this).css('transform', 'scale(1)');
+});
+
+// Smooth scroll for anchor links
+$('a[href*="#"]').on('click', function(e) {
+    e.preventDefault();
+    $('html, body').animate(
+        { scrollTop: $($(this).attr('href')).offset().top - 20 },
+        500
+    );
 });
 </script>
 

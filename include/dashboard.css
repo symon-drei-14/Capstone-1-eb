@@ -56,20 +56,6 @@ body {
 
 
 
-.grid-item.card.statistic {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px;
-    border-radius: 10px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.grid-item.card.statistic:hover {
-    transform: scale(1.05); 
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); 
-}
-
 
 
 .icon-container {
@@ -188,35 +174,6 @@ h2{
 
 
 
-.table-container {
-    padding: 20px;
-}
-
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-
-
-}
-
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 15px;
-    text-align: left;
-    border:none;
-    border-bottom: 2px solid rgba(235, 233, 233, 0.88);
-    border-radius:2px;
-}
-
-
-th {
-    background-color:rgba(235, 233, 233, 0.32);
-    padding:10px;
-    border-bottom:none;
-}
 
 
 .orders {
@@ -328,21 +285,6 @@ background-color:rgb(6, 36, 65);
 
 
 
-.card-large {
-    flex: 3;
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-.card-small {
-    flex: 1;
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
 
 .week-schedule {
 display: grid;
@@ -416,28 +358,7 @@ padding: 5px 0;
     color: #333;
 }
 
-.on-route {
-    background-color:rgba(69, 137, 63, 0.13);
-    color: rgb(27, 123, 19);
-    }
-    
-    
-    .error {
-    background-color:rgba(255, 0, 0, 0.2);
-    color: rgb(209, 25, 25);
-    }
-    
-    
-    .late {
-    background-color:rgba(255, 202, 8, 0.18);
-    color: rgb(187, 148, 7);
-    }
-    
-    
-    .deviated {
-    background-color:rgba(230, 121, 49, 0.19);
-    color: rgb(230, 121, 49);
-    }
+
 
 .location{
     padding: 7px;

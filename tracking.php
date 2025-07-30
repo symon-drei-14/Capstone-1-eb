@@ -118,30 +118,52 @@ font-family: Arial, sans-serif;
     color:white;
 }
 
-
+    .datetime-container {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: right;
+        justify-content: right;
+        margin-left: 45em;
+        gap: 20px;  
+    }
+    
+    .date-display {
+        font-size: 14px;
+        color: #DDDAD0;
+        font-weight:bold;   
+    }
+    
+    .time-display {
+        font-size: 14px;
+        color: #DDDAD0;
+          font-weight:bold;   
+    }
+    
+    
 </style>
 <body>
 <header class="header2">
       <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
-  <i class="fa fa-bars"></i>
-</button>
-        <div class="logo-container2">
-            <img src="include/img/logo.png" alt="Company Logo" class="logo">
-            <img src="include/img/mansar.png" alt="Company Name" class="company">
-        </div>
-
-     
-
-        <div class="profile2">
-            <i class="icon">✉</i>
-            <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
-            <div class="profile-name">
-        <?php 
-    
-        echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
-        ?>
+        <i class="fa fa-bars"></i>
+    </button>
+    <div class="logo-container">
+        <img src="include/img/logo.png" alt="Company Logo" class="logo">
+        <img src="include/img/mansar.png" alt="Company Name" class="company">
     </div>
+
+    <div class="datetime-container">
+        <div id="current-date" class="date-display"></div>
+        <div id="current-time" class="time-display"></div>
+    </div>
+
+    <div class="profile2">
+        <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
+        <div class="profile-name">
+            <?php 
+                echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+            ?>
         </div>
+    </div>
     </header>
     
 <div class="sidebar">
@@ -217,6 +239,20 @@ font-family: Arial, sans-serif;
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="include/js/tracking.js"></script>
      <script>
+
+           function updateDateTime() {
+        const now = new Date();
+        
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, options);
+        
+        document.getElementById('current-time').textContent = now.toLocaleTimeString();
+    }
+
+   
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });

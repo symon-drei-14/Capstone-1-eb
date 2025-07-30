@@ -330,25 +330,64 @@ th[onclick]:hover {
 }
 
 
+    .datetime-container {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: right;
+        justify-content: right;
+        margin-left: 45em;
+        gap: 20px;  
+    }
+    
+    .date-display {
+        font-size: 14px;
+        color: #DDDAD0;
+        font-weight:bold;   
+    }
+    
+    .time-display {
+        font-size: 14px;
+        color: #DDDAD0;
+          font-weight:bold;   
+    }
+    
+   
+  
+    .profile {
+    display: flex;
+    align-items: center;
+    position: relative;
+    right: 50px;
+    
+}
+
+
     </style>
 </head>
 <body>
     <header class="header">
-        <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
-            <i class="fa fa-bars"></i>
-        </button>
-        <div class="logo-container">
-            <img src="include/img/logo.png" alt="Company Logo" class="logo">
-            <img src="include/img/mansar.png" alt="Company Name" class="company">
+    <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+        <i class="fa fa-bars"></i>
+    </button>
+    <div class="logo-container">
+        <img src="include/img/logo.png" alt="Company Logo" class="logo">
+        <img src="include/img/mansar.png" alt="Company Name" class="company">
+    </div>
+
+    <div class="datetime-container">
+        <div id="current-date" class="date-display"></div>
+        <div id="current-time" class="time-display"></div>
+    </div>
+
+    <div class="profile">
+        <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
+        <div class="profile-name">
+            <?php 
+                echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+            ?>
         </div>
-        <div class="profile">
-            <i class="icon">✉</i>
-            <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
-            <div class="profile-name">
-                <?php echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User'; ?>
-            </div>
-        </div>
-    </header>
+    </div>
+</header>
     
     <div class="sidebar">
         <div class="sidebar-item">
@@ -516,6 +555,19 @@ th[onclick]:hover {
         let isEditMode = false;
         let currentSortOrder = 'asc';
  let showDeleted = false;
+
+  function updateDateTime() {
+        const now = new Date();
+        
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, options);
+        
+        document.getElementById('current-time').textContent = now.toLocaleTimeString();
+    }
+
+    // Update immediately and then every second
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
 
 function toggleDeletedTrucks() {
     showDeleted = document.getElementById('showDeleted').checked;
@@ -732,7 +784,7 @@ function renderTrucksTable() {
                 </button>
                 <button class="icon-btn delete" title="Delete" onclick="deleteTruck(${truck.truck_id})">
                 
-                     <i class="fas fa-trash"></i>
+                     <i class='fas fa-trash-alt'></i>
                 </button>
             `}
         </td>
