@@ -129,7 +129,21 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     ];
 }
 
-
+function getMaintenanceCounts($conn) {
+    $sql = "SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as in_progress,
+            SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN status = 'Overdue' THEN 1 ELSE 0 END) as overdue,
+            SUM(CASE WHEN status = 'Completed' AND MONTH(date_mtnce) = MONTH(CURRENT_DATE()) 
+                      AND YEAR(date_mtnce) = YEAR(CURRENT_DATE()) THEN 1 ELSE 0 END) as completed_this_month
+            FROM maintenance
+            WHERE is_deleted = 0";
+    
+    $result = $conn->query($sql);
+    return $result->fetch_assoc();
+}
 
 // Get maintenance history for a specific truck
 function getMaintenanceHistory($conn, $truckId) {
@@ -591,6 +605,11 @@ case 'restore':
     } else {
         echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
     }
+    break;
+
+    case 'getCounts':
+    $counts = getMaintenanceCounts($conn);
+    echo json_encode($counts);
     break;
         
     default:

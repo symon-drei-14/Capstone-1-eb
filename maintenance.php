@@ -948,6 +948,7 @@
     $(document).ready(function() {
         loadMaintenanceData();
         fetchTrucksList();
+         updateStatsCards();
     });
 
       function updateDateTime() {
@@ -1394,6 +1395,7 @@
                 if (response.success) {
                     closeModal();
                     loadMaintenanceData();
+                    updateStatsCards();
                     alert(isEditing ? "Maintenance record updated successfully!" : "Maintenance record added successfully!");
                 } else {
                     alert("Error: " + (response.message || "Unknown error"));
@@ -1460,6 +1462,7 @@
             success: function(response) {
                 if (response.success) {
                     loadMaintenanceData();
+                    updateStatsCards();
                     alert("Maintenance record deleted successfully!");
                 } else {
                     alert("Error: " + (response.message || "Unknown error"));
@@ -1471,6 +1474,21 @@
             }
         });
     }
+
+    function updateStatsCards() {
+    fetch('include/handlers/maintenance_handler.php?action=getCounts')
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('.stat-card.total .value').textContent = data.total || 0;
+            document.querySelector('.stat-card.pending .value').textContent = data.pending || 0;
+            document.querySelector('.stat-card.in-progress .value').textContent = data.in_progress || 0;
+            document.querySelector('.stat-card.completed .value').textContent = data.completed_this_month || 0;
+            document.querySelector('.stat-card.overdue .value').textContent = data.overdue || 0;
+        })
+        .catch(error => {
+            console.error("Error loading stats:", error);
+        });
+}
 
             function openHistoryModal(truckId) {
                 currentTruckId = truckId;
@@ -1623,6 +1641,7 @@
             success: function(response) {
                 if (response.success) {
                     loadMaintenanceData();
+                    updateStatsCards();
                     alert("Maintenance record restored successfully!");
                 } else {
                     alert("Error: " + (response.message || "Unknown error"));
