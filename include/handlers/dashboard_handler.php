@@ -20,10 +20,9 @@ try {
     $total = $countStmt->get_result()->fetch_assoc()['total'];
     $totalPages = ceil($total / $limit);
     
-    // Get paginated results - add date to the SELECT
+    // Get paginated results - now selecting all fields
     $stmt = $conn->prepare("
-        SELECT plate_no, driver, helper, client, destination, date 
-        FROM assign 
+        SELECT * FROM assign 
         WHERE status = 'En Route'
         ORDER BY date DESC
         LIMIT ? OFFSET ?
@@ -46,6 +45,25 @@ try {
             'totalTrips' => $total
         ]
     ]);
+    break;
+
+    case 'get_trip_details':
+    $tripId = $data['tripId'] ?? null;
+    if (!$tripId) {
+        throw new Exception("Trip ID is required");
+    }
+    
+    $stmt = $conn->prepare("SELECT * FROM assign WHERE trip_id = ?");
+    $stmt->bind_param("i", $tripId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        throw new Exception("Trip not found");
+    }
+    
+    $trip = $result->fetch_assoc();
+    echo json_encode(['success' => true, 'trip' => $trip]);
     break;
 
         default:

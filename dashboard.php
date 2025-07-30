@@ -827,14 +827,21 @@ body{
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.5);
+    overflow-y: auto; /* Allow background scrolling if needed */
+    padding: 20px 0; /* Add padding to prevent modal from touching edges */
 }
 
 .modal-content {
     background-color: #fff;
-    margin: 10% auto;
+    margin: 2% auto; /* Reduced margin for better visibility */
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    max-width: 700px; /* Increased width slightly */
+    max-height: 100vh; /* Increased max height */
+    overflow-y: auto; /* Make content scrollable */
+    position: relative;
+    width: 90%; /* Responsive width */
 }
 
 .close {
@@ -877,6 +884,69 @@ body{
     position: relative;
     right: 50px;
     
+}
+
+#tripDetailsContent {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    max-height: calc(120vh - 120px); /* Account for header and padding */
+    overflow-y: auto; /* Make the content area scrollable */
+    padding-right: 10px; /* Space for scrollbar */
+}
+
+#tripDetailsContent p {
+    margin: 8px 0;
+    padding: 5px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
+
+#tripDetailsContent strong {
+    color: #555;
+    display: inline-block;
+    min-width: 120px;
+}
+
+#tripDetailsContent .status {
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+#tripDetailsContent .status.completed {
+    background-color: #28a745;
+    color: white;
+}
+
+#tripDetailsContent .status.pending {
+    background-color: #ffc107;
+    color: black;
+}
+
+#tripDetailsContent .status.cancelled {
+    background-color: #dc3545;
+    color: white;
+}
+
+#tripDetailsContent .status.enroute {
+    background-color: #007bff;
+    color: white;
+}
+
+.trip-details {
+    background-color: #B82132;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s;
+}
+
+.trip-details:hover {
+    background-color: #9a1c2a;
 }
 
 </style>
@@ -1349,10 +1419,7 @@ $(document).ready(function() {
                                 <td>${trip.client}</td>
                                 <td>${trip.destination}</td>
                                 <td>${formattedDate} ${formattedTime}</td>
-                                <td><button class="trip-details" data-plate="${trip.plate_no}" 
-                                    data-driver="${trip.driver}" data-helper="${trip.helper}"
-                                    data-client="${trip.client}" data-destination="${trip.destination}"
-                                    data-date="${trip.date}">View Trip Details</button></td>
+                                <td><button class="trip-details" data-id="${trip.trip_id}">View Trip Details</button></td>
                             </tr>
                         `;
                         $('.table-container table').append(row);
@@ -1372,6 +1439,19 @@ $(document).ready(function() {
         error: function() {
             console.error('Error fetching ongoing trips');
         }
+    });
+}
+
+function fetchTripDetails(tripId) {
+    return $.ajax({
+        url: 'include/handlers/dashboard_handler.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_trip_details',
+            tripId: tripId
+        })
+        
     });
 }
     
@@ -1411,24 +1491,41 @@ $(document).ready(function() {
     $(document).on('click', '.pagination-btn.next', function() {
         loadTrips(currentPage + 1);
     });
-});
+
 
 $(document).on('click', '.trip-details', function() {
-    var plate = $(this).data('plate');
-    var driver = $(this).data('driver');
-    var helper = $(this).data('helper');
-    var client = $(this).data('client');
-    var destination = $(this).data('destination');
-    var date = new Date($(this).data('date'));
+    var tripId = $(this).data('id');
     
-    $('#td-plate').text(plate);
-    $('#td-driver').text(driver);
-    $('#td-helper').text(helper);
-    $('#td-client').text(client);
-    $('#td-destination').text(destination);
-    $('#td-date').text(date.toLocaleString());
-    
-    $('#tripDetailsModal').show();
+    fetchTripDetails(tripId).then(function(response) {
+        if (response.success) {
+            var trip = response.trip;
+            var dateObj = new Date(trip.date);
+            var modifiedDateObj = new Date(trip.last_modified_at);
+            
+            $('#td-plate').text(trip.plate_no || 'N/A');
+            $('#td-date').text(dateObj.toLocaleString());
+            $('#td-driver').text(trip.driver || 'N/A');
+            $('#td-helper').text(trip.helper || 'N/A');
+            $('#td-dispatcher').text(trip.dispatcher || 'N/A');
+            $('#td-container').text(trip.container_no || 'N/A');
+            $('#td-client').text(trip.client || 'N/A');
+            $('#td-destination').text(trip.destination || 'N/A');
+            $('#td-shipping').text(trip.shippine_line || 'N/A');
+            $('#td-consignee').text(trip.consignee || 'N/A');
+            $('#td-size').text(trip.size || 'N/A');
+            $('#td-cashadvance').text(trip.cash_adv || 'N/A');
+            $('#td-status').text(trip.status || 'N/A').removeClass().addClass('status ' + (trip.status ? trip.status.toLowerCase().replace(/\s+/g, '') : ''));
+            $('#td-modifiedby').text(trip.last_modified_by || 'System');
+            $('#td-modifiedat').text(modifiedDateObj.toLocaleString());
+            
+            $('#tripDetailsModal').show();
+        } else {
+            alert('Error loading trip details: ' + response.message);
+        }
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('Failed to load trip details');
+    });
 });
 
 $('.close').on('click', function() {
@@ -1439,6 +1536,8 @@ $(window).on('click', function(event) {
     if ($(event.target).hasClass('modal')) {
         $('#tripDetailsModal').hide();
     }
+});
+
 });
 
 $(document).on('mouseenter', '.maintenance-item', function() {
@@ -1501,16 +1600,25 @@ $('a[href*="#"]').on('click', function(e) {
 </footer>
 
 <div id="tripDetailsModal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
         <span class="close">&times;</span>
         <h3>Trip Details</h3>
-        <div id="tripDetailsContent">
+        <div id="tripDetailsContent" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <p><strong>Plate No:</strong> <span id="td-plate"></span></p>
+            <p><strong>Date:</strong> <span id="td-date"></span></p>
             <p><strong>Driver:</strong> <span id="td-driver"></span></p>
             <p><strong>Helper:</strong> <span id="td-helper"></span></p>
+            <p><strong>Dispatcher:</strong> <span id="td-dispatcher"></span></p>
+            <p><strong>Container No:</strong> <span id="td-container"></span></p>
             <p><strong>Client:</strong> <span id="td-client"></span></p>
             <p><strong>Destination:</strong> <span id="td-destination"></span></p>
-            <p><strong>Date of Departure:</strong> <span id="td-date"></span></p>
+            <p><strong>Shipping Line:</strong> <span id="td-shipping"></span></p>
+            <p><strong>Consignee:</strong> <span id="td-consignee"></span></p>
+            <p><strong>Size:</strong> <span id="td-size"></span></p>
+            <p><strong>Cash Advance:</strong> <span id="td-cashadvance"></span></p>
+            <p><strong>Status:</strong> <span id="td-status" class="status"></span></p>
+            <p><strong>Last Modified By:</strong> <span id="td-modifiedby"></span></p>
+            <p><strong>Last Modified At:</strong> <span id="td-modifiedat"></span></p>
         </div>
     </div>
 </div>
