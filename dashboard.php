@@ -4,11 +4,13 @@ checkAccess(); // No role needed—logic is handled internally
 
 
 require_once 'include/handlers/get_driving_drivers.php';
-
+$ongoingCount = getOngoingDeliveriesCount();
 
 $drivingDrivers = getDrivingDrivers();
 
-
+$alldeliveries = getAllDeliveriesCount();
+$alloverduetrucks = getOverdueTrucks();
+$allrepairtrucks = getRepairTrucks();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1025,20 +1027,21 @@ body{
 </div>
 
 <div class="dashboard-grid">
-    <div class="grid-item card statistic on-route">
-        <div class="content">
-            <p>On Going Deliveries</p>
-            <h2>2</h2>
-           
-        </div>
-        <div class="icon-container">
-            <i class="fa fa-truck"></i>
-        </div>
+   <div class="grid-item card statistic on-route">
+    <div class="content">
+        <p>On Going Deliveries</p>
+        <h2><?php echo htmlspecialchars($ongoingCount); ?></h2>
+    </div>
+    <div class="icon-container">
+        <i class="fa fa-truck"></i>
+    </div>
+
+     
     </div>
     <div class="grid-item card statistic error">
         <div class="content2">
-            <p>Damaged Vehicles</p>
-            <h2>11</h2>
+            <p>Under Repair Trucks</p>
+            <h2><?php echo htmlspecialchars($allrepairtrucks); ?></h2>
          
         </div>
         <div class="icon-container2">
@@ -1047,8 +1050,8 @@ body{
     </div>
     <div class="grid-item card statistic late">
         <div class="content3">
-            <p>Late Deliveries</p>
-            <h2>120</h2>
+            <p>Scheduled Deliveries</p>
+                <h2><?php echo htmlspecialchars($alldeliveries); ?></h2>
           
         </div>
         <div class="icon-container3">
@@ -1059,8 +1062,7 @@ body{
     <div class="grid-item card statistic deviated">
         <div class="content4">
             <p>Unchecked Vehicles</p>
-            <h2>2</h2>
-           
+            <h2><?php echo htmlspecialchars($alloverduetrucks); ?></h2>
         </div>
         <div class="icon-container4">
             <i class="fa fa-cogs"></i>

@@ -24,4 +24,65 @@ function getDrivingDrivers() {
     
     return $drivers;
 }
+
+function getOngoingDeliveriesCount() {
+    global $conn;
+    
+    $count = 0;
+    $query = "SELECT COUNT(*) as count FROM assign WHERE status = 'en route'";
+    $result = $conn->query($query);
+    
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    return $count;
+}
+
+function getAllDeliveriesCount() {
+    global $conn;
+    
+    $count = 0;
+    $query = "SELECT COUNT(*) as count FROM assign WHERE is_deleted = '0'";
+    $result = $conn->query($query);
+    
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    return $count;
+}
+
+function getOverdueTrucks() {
+    global $conn;
+    
+    $count = 0;
+    $query = "SELECT COUNT(*) as count FROM truck_table WHERE status = 'Overdue'";
+    $result = $conn->query($query);
+    
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    return $count;
+}
+
+function getRepairTrucks() {
+    global $conn;
+    
+    $count = 0;
+    $query = "SELECT COUNT(*) as count FROM truck_table WHERE status = 'In Repair'";
+    $result = $conn->query($query);
+    
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    return $count;
+}
+
 ?>
