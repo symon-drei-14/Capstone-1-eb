@@ -44,7 +44,7 @@ function getAllDeliveriesCount() {
     global $conn;
     
     $count = 0;
-    $query = "SELECT COUNT(*) as count FROM assign WHERE is_deleted = '0'";
+    $query = "SELECT COUNT(*) as count FROM assign WHERE is_deleted = '0' and status ='Pending'";
     $result = $conn->query($query);
     
     if ($result && $result->num_rows > 0) {

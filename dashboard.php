@@ -18,7 +18,7 @@ $allrepairtrucks = getRepairTrucks();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
-    <link rel="stylesheet" href="include/sidenav.css">
+    <link rel="stylesheet" href="include/css/sidenav.css">
     <link rel="stylesheet" href="include/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -526,26 +526,6 @@ box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 
     }*/
 
 
-.sidebar-item {
-    position: relative;
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    margin-top: 1.7rem;
-    cursor: pointer;
-    opacity: 1;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    border: 2px solid transparent;
-    box-sizing: border-box;
-}
-
-    .sidebar-item:hover {
-        background-color: #ffffff;
-        border-color: #161616ac;
-        width: 300px;
-        border-top-left-radius: 40px;
-        border-bottom-left-radius: 40px;
-    }
 
 .icon {
     margin-right: 10px;
@@ -566,49 +546,24 @@ box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 
     filter: grayscale(100%) brightness(0);
 } */
 
-.sidebar-item span {
-    position: absolute;
-    left: 60px;
-    visibility: hidden;
-    opacity: 0;
-
+    .sidebar {
+    position: fixed;
+    top: 1.7rem;
+    left: 0;
+    width: 300px; 
+    height: 100%;
+    background-color: #edf1ed;
+    color: #161616 !important;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 1100;
+    border-right: 2px solid #16161627;
+    transform: translateX(-100%); 
+    transition: transform 0.3s ease;
 }
 
-.sidebar:hover .sidebar-item span {
-    visibility: visible;
-    opacity: 1;
-}
-
-.sidebar-item a:visited,
-.sidebar-item a:hover,
-.sidebar-item a:active {
-    text-decoration: none !important; 
-    color: inherit !important; /* Ensure color remains the same */
-}
-
-.sidebar-item a {
-    position: absolute;
-    left: 60px;
-    visibility: hidden;
-    opacity: 0;
-    text-decoration: none !important; /* Force remove underline */
-    color: inherit !important; /* Force inherit text color */
-}
-
-.sidebar:hover .sidebar-item a {
-    visibility: visible;
-    opacity: 1;
-    text-decoration: none; /* Ensures no underline on hover */
-    color: inherit; /* Keeps the same color on hover */
-}
-
-.sidebar:hover .logo-container-small {
-    display: none;
-}
-
-.sidebar:hover .logo-container {
-    display: block;
-}
 
 .container {
     display: flex;
@@ -668,50 +623,8 @@ box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 
 }
 
 
-.sidebar {
-    position: fixed;
-    top: 1.7rem;
-    left: 0;
-    width: 300px; 
-    height: 100%;
-    background-color: #edf1ed;
-    color: #161616 !important;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1100;
-    border-right: 2px solid #16161627;
-    transform: translateX(-100%); 
-    transition: transform 0.3s ease;
-}
 
 
-.sidebar.expanded {
-    transform: translateX(0);
-}
-
-.sidebar.expanded .sidebar-item a,
-.sidebar.expanded .sidebar-item span {
-    visibility: visible;
-    opacity: 1;
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #B82132;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    width: 100%;
-    max-height: 40px;
-    top: 0;
-    left: 0;
-    z-index: 1200;
-
-}
 
 body{
    background-color:#FCFAEE;
@@ -1556,6 +1469,33 @@ $('a[href*="#"]').on('click', function(e) {
         500
     );
 });
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current page filename
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Find all sidebar links
+    const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+    
+    // Check each link
+    sidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('href').split('/').pop();
+        
+        // If this link matches current page, add active class
+        if (linkPage === currentPage) {
+            link.parentElement.classList.add('active');
+            
+            // Also highlight the icon
+            const icon = link.parentElement.querySelector('.icon2');
+            if (icon) {
+                icon.style.color = 'white';
+            }
+        }
+    });
+});
+
 </script>
 
 

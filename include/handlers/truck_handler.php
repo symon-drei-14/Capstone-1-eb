@@ -232,6 +232,7 @@ case 'softDeleteTruck':
     $stmt->execute();
     echo json_encode(['success' => true]);
     break;
+    
 
         default:
             throw new Exception("Invalid action");

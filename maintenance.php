@@ -10,7 +10,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Maintenance Scheduling</title>
         
-        <link rel="stylesheet" href="include/sidenav.css">
+        <link rel="stylesheet" href="include/css/sidenav.css">
         <link rel="stylesheet" href="include/maintenancestyle.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
@@ -561,68 +561,94 @@
         min-width: 300px;
     }
 
+.stats-cards {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+   padding: 15px 15px;
+    width: 140px;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card .icon {
+    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff !important;
+}
+
+.stat-card.total .icon {
+    background-color: #6c757d;
+}
+
+.stat-card.pending .icon {
+    background-color: #ffc107;
+}
+
+.stat-card.in-progress .icon {
+    background-color: #17a2b8;
+}
+
+.stat-card.completed .icon {
+    background-color: #28a745;
+}
+
+.stat-card.overdue .icon {
+    background-color: #dc3545;
+}
+
+.stat-card .content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card .value {
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.stat-card .label {
+    font-size: 14px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+@media (max-width: 1200px) {
     .stats-cards {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        margin-top: 10px;
+        justify-content: flex-start;
     }
-
     
-
     .stat-card {
-        background: white;
-        border-radius: 8px;
-        padding: 15px;
-        width: 150px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        transition: all 0.3s ease; 
-        transform: scale(1);
+        width: calc(50% - 10px);
     }
+}
 
-    .stat-card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); 
-        cursor: default; 
+@media (max-width: 768px) {
+    .stat-card {
+        width: 100%;
     }
-    .stat-card .value {
-        font-size: 24px;
-        font-weight: bold;
-        margin: 10px 0;
-    }
-
-    .stat-card.total {
-        border-top: 4px solid #4b77de;
-    }
-
-    .stat-card.pending {
-        border-top: 4px solid #f39c12;
-    }
-
-    .stat-card.completed {
-        border-top: 4px solid #2ecc71;
-    }
-
-    .stat-card.overdue {
-        border-top: 4px solid #e74c3c;
-    }
-
-    .stat-card.in-progress {
-        border-top: 4px solid #3498db;
-    }
-
-    @media (max-width: 1200px) {
-        .dashboard-header {
-            flex-direction: column;
-        }
-        
-        .stats-cards {
-            justify-content: flex-start;
-            margin-top: 20px;
-        }
-    }
+}
     </style>
     <body>
 
@@ -690,7 +716,7 @@
         </div>
     </div>
 
-        <div class="main-content3">
+    <div class="main-content3">
             <div class="dashboard-header">
     <div class="header-left">
         <h2>Preventive Maintenance Scheduling</h2>
@@ -700,33 +726,43 @@
         </div>
     </div>
     
-    <div class="stats-cards">
-        <div class="stat-card total">
-            <div class="title">Total</div>
-            <div class="value">24</div>
-            <div class="label">Maintenance</div>
-        </div>
-        <div class="stat-card pending">
-            <div class="title">Pending</div>
-            <div class="value">12</div>
-            <div class="label">Schedules</div>
-        </div>
-        <div class="stat-card in-progress">
-            <div class="title">In Progress</div>
-            <div class="value">5</div>
-            <div class="label">Services</div>
-        </div>
-        <div class="stat-card completed">
-            <div class="title">Completed</div>
-            <div class="value">4</div>
-            <div class="label">This Month</div>
-        </div>
-        <div class="stat-card overdue">
-            <div class="title">Overdue</div>
-            <div class="value">3</div>
-            <div class="label">Services</div>
+  <div class="stats-cards">
+    <div class="stat-card pending">
+        <div class="icon"><i class="fas fa-clock"></i></div>
+        <div class="content">
+            <div class="value"></div>
+            <div class="label">Pending</div>
         </div>
     </div>
+    <div class="stat-card in-progress">
+        <div class="icon"><i class="fas fa-spinner"></i></div>
+        <div class="content">
+            <div class="value"></div>
+            <div class="label">In Progress</div>
+        </div>
+    </div>
+    <div class="stat-card completed">
+        <div class="icon"><i class="fas fa-check-circle"></i></div>
+        <div class="content">
+            <div class="value"></div>
+            <div class="label">Completed</div>
+        </div>
+    </div>
+    <div class="stat-card overdue">
+        <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="content">
+            <div class="value"></div>
+            <div class="label">Overdue</div>
+        </div>
+    </div>
+    <div class="stat-card total">
+        <div class="icon"><i class="fas fa-tools"></i></div>
+        <div class="content">
+            <div class="value"></div>
+            <div class="label">Total</div>
+        </div>
+    </div>
+</div>
 </div>
             <div class="filter-controls">
         <div class="status-filter-container">
@@ -1662,6 +1698,30 @@
         document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
             document.querySelector('.sidebar').classList.toggle('expanded');
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+    // Get current page filename
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Find all sidebar links
+    const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+    
+    // Check each link
+    sidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('href').split('/').pop();
+        
+        // If this link matches current page, add active class
+        if (linkPage === currentPage) {
+            link.parentElement.classList.add('active');
+            
+            // Also highlight the icon
+            const icon = link.parentElement.querySelector('.icon2');
+            if (icon) {
+                icon.style.color = 'white';
+            }
+        }
+    });
+});
     </script>
     </body>
     </html>

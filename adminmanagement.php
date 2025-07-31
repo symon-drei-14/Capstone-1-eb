@@ -10,7 +10,7 @@ checkAccess();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Management</title>
-    <link rel="stylesheet" href="include/sidenav.css">
+    <link rel="stylesheet" href="include/css/sidenav.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="include/fleetmanagement.css">
 </head>
@@ -817,6 +817,30 @@ document.getElementById('showDeletedCheckbox').addEventListener('change', toggle
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Get current page filename
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Find all sidebar links
+    const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+    
+    // Check each link
+    sidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('href').split('/').pop();
+        
+        // If this link matches current page, add active class
+        if (linkPage === currentPage) {
+            link.parentElement.classList.add('active');
+            
+            // Also highlight the icon
+            const icon = link.parentElement.querySelector('.icon2');
+            if (icon) {
+                icon.style.color = 'white';
+            }
+        }
+    });
+});
 </script>
 </body>
 </html>

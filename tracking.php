@@ -11,7 +11,7 @@ checkAccess(); // No role needed—logic is handled internally
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link rel="stylesheet" href="include/tracking.css">
-    <link rel="stylesheet" href="include/sidenav.css">
+    <link rel="stylesheet" href="include/css/sidenav.css">
     <link rel="stylesheet" href="include/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -256,6 +256,30 @@ font-family: Arial, sans-serif;
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Get current page filename
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Find all sidebar links
+    const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+    
+    // Check each link
+    sidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('href').split('/').pop();
+        
+        // If this link matches current page, add active class
+        if (linkPage === currentPage) {
+            link.parentElement.classList.add('active');
+            
+            // Also highlight the icon
+            const icon = link.parentElement.querySelector('.icon2');
+            if (icon) {
+                icon.style.color = 'white';
+            }
+        }
+    });
+});
 </script>
 </body>
 </html>

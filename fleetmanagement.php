@@ -8,7 +8,7 @@ checkAccess();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fleet Management</title>
-    <link rel="stylesheet" href="include/sidenav.css">
+    <link rel="stylesheet" href="include/css/sidenav.css">
     <link rel="stylesheet" href="include/fleetmanagement.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -62,28 +62,9 @@ checkAccess();
             }
         }
 
-        .sidebar {
-            position: fixed;
-            top: 1.7rem;
-            left: 0;
-            width: 300px;
-            height: 100%;
-            background-color: #edf1ed;
-            color: #161616 !important;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-x: hidden;
-            overflow-y: auto;
-            z-index: 1100;
-            border-right: 2px solid #16161627;
-            transform: translateX(-100%); 
-            transition: transform 0.3s ease;
-        }
+     
 
-        .sidebar.expanded {
-            transform: translateX(0);
-        }
-
+     
         .main-content4 {
             margin-top: 80px;
             margin-left: 10px;
@@ -361,6 +342,77 @@ th[onclick]:hover {
     
 }
 
+/* --------------------------------- */
+.stats-container {
+    display: flex;
+    gap: 15px;
+    position: absolute;
+    right: 80px;
+    top: 130px;
+    z-index: 1000;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 15px 15px;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 120px;
+}
+
+.stat-icon {
+    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+  
+}
+.icon-terminal {
+    background-color: #28a745;
+    color: white;
+}
+
+.icon-enroute {
+    background-color: #007bff;
+    color: white;
+}
+
+.icon-repair {
+    background-color: #ef9e2e;
+    color: white;
+}
+
+.icon-overdue {
+    background-color: #dc3545;
+    color: white;
+}
+
+.icon-total {
+    background-color: #6c757d;
+    color: white;
+}   
+
 
     </style>
 </head>
@@ -434,6 +486,53 @@ th[onclick]:hover {
             
             <div class="container">
                         <h3>Truck Management</h3>
+                        <div class="stats-container" id="statsContainer">
+    <div class="stat-card">
+        <div class="stat-icon icon-terminal">
+            <i class="fas fa-truck-loading"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">8</div>
+            <div class="stat-label">In Terminal</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-enroute">
+            <i class="fas fa-truck-moving"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">5</div>
+            <div class="stat-label">Enroute</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-repair">
+            <i class="fas fa-tools"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">2</div>
+            <div class="stat-label">In Repair</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-overdue">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">1</div>
+            <div class="stat-label">Overdue</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-total">
+            <i class="fas fa-truck"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">16</div>
+            <div class="stat-label">Total Trucks</div>
+        </div>
+    </div>
+</div>
                 <div class="button-row">
                     <button class="add_trip" onclick="openTruckModal()">Add a truck</button>
                 </div>
@@ -923,6 +1022,32 @@ function changeTruckPage(direction) {
         .catch(error => console.error('Error:', error));
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current page filename
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Find all sidebar links
+    const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+    
+    // Check each link
+    sidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('href').split('/').pop();
+        
+        // If this link matches current page, add active class
+        if (linkPage === currentPage) {
+            link.parentElement.classList.add('active');
+            
+            // Also highlight the icon
+            const icon = link.parentElement.querySelector('.icon2');
+            if (icon) {
+                icon.style.color = 'white';
+            }
+        }
+    });
+});
+
+
     </script>
 </body>
 </html>

@@ -11,7 +11,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Driver Management</title>
-        <link rel="stylesheet" href="include/sidenav.css">
+        <link rel="stylesheet" href="include/css/sidenav.css">
         <link rel="stylesheet" href="include/drivermanagement.css">
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -346,7 +346,7 @@
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Assigned Truck</th>
-                                <th>Created At</th>
+                                <th>Created At <br> (Y-M-D)</th>
                                 <th>Last Login</th>
                                 <th>Actions</th>
                             </tr>
@@ -733,6 +733,28 @@
         document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
             document.querySelector('.sidebar').classList.toggle('expanded');
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    
+    const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+    
+
+    sidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('href').split('/').pop();
+        
+       
+        if (linkPage === currentPage) {
+            link.parentElement.classList.add('active');
+            const icon = link.parentElement.querySelector('.icon2');
+            if (icon) {
+                icon.style.color = 'white';
+            }
+        }
+    });
+});
     </script>
 
     </body>

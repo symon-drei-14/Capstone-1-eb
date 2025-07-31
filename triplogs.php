@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/include/check_access.php';
 checkAccess(); // No role needed—logic is handled internally
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -8,7 +10,7 @@ checkAccess(); // No role needed—logic is handled internally
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trip logs</title>
-    <link rel="stylesheet" href="include/sidenav.css">
+    <link rel="stylesheet" href="include/css/sidenav.css">
     <link rel="stylesheet" href="include/triplogs.css">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1172,12 +1174,90 @@ margin:20px
     right: 50px;
     
 }
+
+/* --------------------------------- */
+
+.stats-container {
+    display: flex;
+    gap: 15px;
+    position: absolute;
+    right: 30px;
+    top: 150px;
+    z-index: 1000;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 15px 15px;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 120px;
+}
+
+.stat-icon {
+    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+  
+}
+
+.icon-total {
+    background-color: #6c757d;
+    color: white;
+}   
+
+.icon-pending {
+    background-color: #ffc107; 
+    color: white;
+}
+
+.icon-enroute {
+    background-color: #007bff; 
+    color: white;
+}
+
+.icon-completed {
+    background-color: #28a745; 
+    color: white;
+}
+
+.icon-cancelled {
+    background-color: #dc3545; 
+    color: white;
+}
+
 </style>
 <body>
     <?php
     require 'include/handlers/dbhandler.php';
+    require 'include/handlers/triplogstats.php';
+
+
+$tripStats = getTripStatistics($conn);
     session_start();
-    // Fetch trip assignments
+
   
 $sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity, a.edit_reasons,d.driver_id
         FROM assign a
@@ -1301,9 +1381,12 @@ if ($driverResult->num_rows > 0) {
     </div>
 </div>
 <div class="main-container">
+   
     <div class="calendar-container">
         <section class="calendar-section">
             <h2>Trip Management</h2>
+
+            
             <div class="toggle-btns">
                 <button id="calendarViewBtn" class="toggle-btn active"> <i class="fa fa-calendar"> Calendar</i></button>
                 <button id="tableViewBtn" class="toggle-btn">  <i class="fa fa-tasks"> Table</i></button>
@@ -1321,7 +1404,7 @@ if ($driverResult->num_rows > 0) {
         </section>
     </div>
 
-<div id="editModal" class="modal">
+    <div id="editModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
         <h3>Edit Event</h3>
@@ -1353,12 +1436,12 @@ if ($driverResult->num_rows > 0) {
             <input type="text" id="editEventHelper" name="eventHelper" required><br><br>
 
             <label for="editEventDispatcher">Dispatcher:</label><br>
-<input type="text" id="editEventDispatcher" name="eventDispatcher" required><br><br>
+    <input type="text" id="editEventDispatcher" name="eventDispatcher" required><br><br>
 
 
     
            <label for="editEventContainerNo">Container No.:</label><br>
-<input type="text" id="editEventContainerNo" name="eventContainerNo" required><br><br>
+    <input type="text" id="editEventContainerNo" name="eventContainerNo" required><br><br>
     
             <label for="editEventClient">Client:</label><br>
             <select id="editEventClient" name="eventClient" required>
@@ -1406,7 +1489,7 @@ if ($driverResult->num_rows > 0) {
                 <option value="Cancelled">Cancelled</option>
                   <option value="En Route">En Route</option>
             </select><br><br>
-<div class="edit-reasons-section">
+    <div class="edit-reasons-section">
     <label>Reason for Edit (select all that apply):</label>
     <div class="reasons-container">
         <div class="reason-option">
@@ -1438,11 +1521,59 @@ if ($driverResult->num_rows > 0) {
             <textarea id="otherReasonText" name="otherReasonText" rows="3" placeholder="Enter specific reason for edit"></textarea>
         </div>
     </div>
-</div>
+    </div>
     
             <button type="submit">Save Changes</button>
             <button type="button" class="close-btn cancel-btn">Cancel</button>
         </form>
+    </div>
+</div>
+
+<div class="stats-container" id="statsContainer">
+    <div class="stat-card">
+        <div class="stat-icon icon-pending">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value"><?php echo $tripStats['pending']; ?></div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-enroute">
+            <i class="fas fa-truck-moving"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value"><?php echo $tripStats['enroute']; ?></div>
+            <div class="stat-label">En Route</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-completed">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value"><?php echo $tripStats['completed']; ?></div>
+            <div class="stat-label">Completed</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-cancelled">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value"><?php echo $tripStats['cancelled']; ?></div>
+            <div class="stat-label">Cancelled</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-total">
+            <i class="fas fa-list-alt"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value"><?php echo $tripStats['total']; ?></div>
+            <div class="stat-label">Total Trips</div>
+        </div>
     </div>
 </div>
 
@@ -1567,7 +1698,8 @@ if ($driverResult->num_rows > 0) {
         <i class="fa fa-search"></i>
         <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()">
     </div>
-    
+      
+</div>
 
     <div class="show-deleted-container" style="margin-left: 20px;">
         <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedTrucks()">
@@ -2204,12 +2336,13 @@ $(window).on('click', function(event) {
         });
         
         // View toggle buttons
-  $('#calendarViewBtn').on('click', function() {
+$('#calendarViewBtn').on('click', function() {
     $(this).addClass('active');
     $('#tableViewBtn').removeClass('active');
     $('#calendar').show();
     $('#eventDetails').show();
     $('#eventsTable, #eventTableBody, .pagination-container, .filter-row').hide();
+    $('body').removeClass('table-view'); 
     $('#calendar').fullCalendar('render');
 });
 
@@ -2219,10 +2352,10 @@ $('#tableViewBtn').on('click', function() {
     $('#calendar').hide();
     $('#eventDetails').hide();
     $('#eventsTable, #eventTableBody, .pagination-container, .filter-row').show(); 
+    $('body').addClass('table-view'); // Add table-view class
     currentPage = 1;
     renderTable();
 });
-        
         // Edit button click handler
 $(document).on('click', '.icon-btn.edit', function() {
     var eventId = $(this).data('id');
@@ -2232,16 +2365,12 @@ $(document).on('click', '.icon-btn.edit', function() {
         $('#editEventId').val(event.id);
         $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
         
-        // Format date for datetime-local input (remove seconds if present)
         var eventDate = event.date.includes(':00.') 
             ? event.date.replace(/:00\.\d+Z$/, '') 
             : event.date;
         $('#editEventDate').val(eventDate);
-        
-        // Populate drivers based on selected size first
+  
         populateDriverDropdowns(event.size);
-        
-        // Then set the driver value after a small delay to ensure dropdown is populated
         setTimeout(() => {
             $('#editEventDriver').val(event.driver);
         }, 100);
@@ -2560,8 +2689,51 @@ $(document).on('click', 'icon-btn.restore', function() {
 });
 
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current page filename
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Find all sidebar links
+    const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+    
+    // Check each link
+    sidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('href').split('/').pop();
+        
+        // If this link matches current page, add active class
+        if (linkPage === currentPage) {
+            link.parentElement.classList.add('active');
+            
+            // Also highlight the icon
+            const icon = link.parentElement.querySelector('.icon2');
+            if (icon) {
+                icon.style.color = 'white';
+            }
+        }
+    });
+});
 
+
+function updateStats() {
+    $.ajax({
+        url: 'include/handlers/triplogstats.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(stats) {
+            $('.stat-value').eq(0).text(stats.pending);
+            $('.stat-value').eq(1).text(stats.enroute);
+            $('.stat-value').eq(2).text(stats.completed);
+            $('.stat-value').eq(3).text(stats.cancelled);
+            $('.stat-value').eq(4).text(stats.total);
+        }
+    });
+}
+
+updateStats();
+setInterval(updateStats, 300000);
 console.log("Filtering by:", currentStatusFilter, "Found:", filteredEvents.length, "events");
+
+
 </script>
 </body>
 </html>
