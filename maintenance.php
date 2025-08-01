@@ -649,6 +649,59 @@
         width: 100%;
     }
 }
+
+ .remarks-container {
+        display: flex;
+        flex-direction: column;
+        margin-top: 10px;
+    }
+
+    .remark-option {
+        display: flex;
+        align-items: center;
+        background-color: #fff;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        margin-bottom: 5px;
+    }
+
+    .remark-option label {
+        display: block;
+        cursor: pointer;
+        margin: 0;
+        font-size: 14px;
+        flex-grow: 1;
+        word-break: break-word;
+        margin-top: 10px;
+        margin-bottom: -10px;
+    }
+
+    .remark-option input[type="checkbox"] {
+        margin-right: 51em;
+        flex-shrink: 0;
+        position: relative;
+        top: -1em;
+    }
+
+    .other-remark {
+        margin-top: 10px;
+        padding-left: 20px;
+    }
+
+    .other-remark label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .other-remark textarea {
+        width: 90%;
+        padding: 8px;
+        border-radius: 4px;
+        resize: vertical;
+        min-height: 60px;
+    }
     </style>
     <body>
 
@@ -844,8 +897,62 @@
                     <label for="date">Date of Inspection:</label>
                     <input type="date" id="date" name="date" required><br><br>
 
-                    <label for="remarks">Remarks:</label>
-                    <input type="text" id="remarks" name="remarks" required><br><br>
+                        <label>Remarks:</label>
+                    <div class="remarks-container">
+                        <div class="remark-option">
+                            <label>
+                                Change Oil
+                                <input type="checkbox" name="remarks[]" value="Change Oil">
+                            </label>
+                        </div>
+                        <div class="remark-option">
+                            <label>
+                                Change Tires
+                                <input type="checkbox" name="remarks[]" value="Change Tires">
+                            </label>
+                        </div>
+                        <div class="remark-option">
+                            <label>
+                                Brake Inspection
+                                <input type="checkbox" name="remarks[]" value="Brake Inspection">
+                            </label>
+                        </div>
+                        <div class="remark-option">
+                            <label>
+                                Engine Check
+                                <input type="checkbox" name="remarks[]" value="Engine Check">
+                            </label>
+                        </div>
+                        <div class="remark-option">
+                            <label>
+                                Transmission Check
+                                <input type="checkbox" name="remarks[]" value="Transmission Check">
+                            </label>
+                        </div>
+                        <div class="remark-option">
+                            <label>
+                                Electrical System Check
+                                <input type="checkbox" name="remarks[]" value="Electrical System Check">
+                            </label>
+                        </div>
+                        <div class="remark-option">
+                            <label>
+                                Suspension Check
+                                <input type="checkbox" name="remarks[]" value="Suspension Check">
+                            </label>
+                        </div>
+                        <div class="remark-option">
+                            <label>
+                                Other (please specify below)
+                                <input type="checkbox" name="remarks[]" value="Other">
+                            </label>
+                        </div>
+                        <div class="other-remark">
+                            <label for="otherRemarkText">Specify other remark:</label>
+                            <textarea id="otherRemarkText" name="otherRemarkText" rows="3" placeholder="Enter specific remark"></textarea>
+                        </div>
+                    </div>
+                    <br>
 
                     <label for="status">Status:</label>
                     <select id="status" name="status" required>
@@ -1001,36 +1108,42 @@
     setInterval(updateDateTime, 1000);
 
             function validateMaintenanceForm() {
-        const requiredFields = [
-            {id: 'truckId', name: 'Truck ID'},
-            {id: 'date', name: 'Date of Inspection'},
-            {id: 'remarks', name: 'Remarks'},
-            {id: 'status', name: 'Status'},
-            {id: 'maintenanceType', name: 'Maintenance Type'}
-        ];
-        
-        for (const field of requiredFields) {
-            const element = document.getElementById(field.id);
-            if (!element.value) {
-                alert(`Please fill in the ${field.name} field`);
-                element.focus();
-                return false;
-            }
+    const requiredFields = [
+        {id: 'truckId', name: 'Truck ID'},
+        {id: 'date', name: 'Date of Inspection'},
+        {id: 'status', name: 'Status'},
+        {id: 'maintenanceType', name: 'Maintenance Type'}
+    ];
+    
+    for (const field of requiredFields) {
+        const element = document.getElementById(field.id);
+        if (!element || !element.value) {
+            alert(`Please fill in the ${field.name} field`);
+            if (element) element.focus();
+            return false;
         }
-        
-        // Additional validation - check if date is in the future for new records
-        if (!isEditing) {
-            const today = new Date();
-            const inspectionDate = new Date(document.getElementById('date').value);
-            if (inspectionDate < today) {
-                alert("Inspection date must be today or in the future");
-                document.getElementById('date').focus();
-                return false;
-            }
-        }
-        
-        return true;
     }
+    
+    // Check at least one remark is selected
+    const remarkCheckboxes = document.querySelectorAll('input[name="remarks[]"]:checked');
+    if (remarkCheckboxes.length === 0) {
+        alert("Please select at least one maintenance remark.");
+        return false;
+    }
+    
+    // Additional validation - check if date is in the future for new records
+    if (!isEditing) {
+        const today = new Date();
+        const inspectionDate = new Date(document.getElementById("date").value);
+        if (inspectionDate < today) {
+            alert("Inspection date must be today or in the future");
+            document.getElementById("date").focus();
+            return false;
+        }
+    }
+    
+    return true;
+}
 
 
             
@@ -1313,33 +1426,94 @@
         }
     }
 
-    function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost, maintenanceType) {
-        isEditing = true;
-        document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
-        document.getElementById("maintenanceId").value = id;
-        document.getElementById("truckId").value = truckId;
-        document.getElementById("licensePlate").value = licensePlate || '';
-        document.getElementById("date").value = date;
-        document.getElementById("remarks").value = remarks;
-        document.getElementById("status").value = status;
-        document.getElementById("supplier").value = supplier;
-        document.getElementById("cost").value = cost;
-        document.getElementById("maintenanceType").value = maintenanceType || 'preventive';
-        
-        // Enable the status dropdown for editing
-        document.getElementById("status").disabled = false;
-        
-        // Show edit reasons section for edit mode
-        document.querySelector('.edit-reasons-section').style.display = 'block';
-        
-        // Reset checkboxes and textarea
-        document.querySelectorAll('input[name="editReason"]').forEach(checkbox => {
+   function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost, maintenanceType) {
+    isEditing = true;
+    document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
+    document.getElementById("maintenanceId").value = id;
+    document.getElementById("truckId").value = truckId;
+    document.getElementById("licensePlate").value = licensePlate || '';
+    document.getElementById("date").value = date;
+    document.getElementById("status").value = status;
+    document.getElementById("supplier").value = supplier;
+    document.getElementById("cost").value = cost;
+    document.getElementById("maintenanceType").value = maintenanceType || 'preventive';
+    
+    // Parse the remarks and set checkboxes
+    if (remarks) {
+        try {
+            // Try to parse as JSON first
+            let remarksArray;
+            try {
+                remarksArray = JSON.parse(remarks);
+            } catch (e) {
+                // If not JSON, treat as comma-separated string
+                remarksArray = remarks.split(',').map(item => item.trim());
+            }
+            
+            // Uncheck all checkboxes first
+            document.querySelectorAll('input[name="remarks[]"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Check the appropriate checkboxes
+            remarksArray.forEach(remark => {
+                // Check if remark starts with "Other:"
+                if (typeof remark === 'string' && remark.startsWith("Other:")) {
+                    document.querySelector('input[name="remarks[]"][value="Other"]').checked = true;
+                    document.getElementById('otherRemarkText').value = remark.replace("Other:", "").trim();
+                } else {
+                    // Try to find exact match first
+                    const exactMatch = document.querySelector(`input[name="remarks[]"][value="${remark}"]`);
+                    if (exactMatch) {
+                        exactMatch.checked = true;
+                    } else {
+                        // If no exact match, check if it's one of our standard options
+                        const standardRemarks = [
+                            "Change Oil", "Change Tires", "Brake Inspection", 
+                            "Engine Check", "Transmission Check", 
+                            "Electrical System Check", "Suspension Check"
+                        ];
+                        
+                        if (standardRemarks.includes(remark)) {
+                            document.querySelector(`input[name="remarks[]"][value="${remark}"]`).checked = true;
+                        } else {
+                            // If not a standard option, put in Other
+                            document.querySelector('input[name="remarks[]"][value="Other"]').checked = true;
+                            document.getElementById('otherRemarkText').value = remark;
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Error parsing remarks:", e);
+            // Fallback: if parsing fails, treat as single value
+            const checkbox = document.querySelector(`input[name="remarks[]"][value="${remarks}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+            } else if (remarks) {
+                document.querySelector('input[name="remarks[]"][value="Other"]').checked = true;
+                document.getElementById('otherRemarkText').value = remarks;
+            }
+        }
+    } else {
+        // Reset if no remarks
+        document.querySelectorAll('input[name="remarks[]"]').forEach(checkbox => {
             checkbox.checked = false;
         });
-        document.getElementById('otherReasonText').value = '';
-        
-        document.getElementById("maintenanceModal").style.display = "block";
+        document.getElementById('otherRemarkText').value = '';
     }
+    
+    document.getElementById("status").disabled = false;
+    document.querySelector('.edit-reasons-section').style.display = 'block';
+    document.querySelectorAll('input[name="editReason"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.getElementById('otherReasonText').value = '';
+    
+    document.getElementById("maintenanceModal").style.display = "block";
+}
+
+
     function showEditRemarks(reasonsJson) {
         try {
             const reasons = JSON.parse(reasonsJson);
@@ -1378,7 +1552,6 @@
     }
             
         function saveMaintenanceRecord() {
-        // First validate the form
         if (!validateMaintenanceForm()) {
             return;
         }
@@ -1403,6 +1576,25 @@
             }
         }
         
+        // Collect remarks
+        let remarks = [];
+        const remarkCheckboxes = document.querySelectorAll('input[name="remarks[]"]:checked');
+        remarkCheckboxes.forEach(checkbox => {
+            if (checkbox.value === "Other") {
+                const otherRemark = document.getElementById('otherRemarkText').value.trim();
+                if (otherRemark) {
+                    remarks.push("Other: " + otherRemark);
+                }
+            } else {
+                remarks.push(checkbox.value);
+            }
+        });
+        
+        if (remarks.length === 0) {
+            alert("Please select at least one maintenance remark.");
+            return;
+        }
+        
         const form = document.getElementById("maintenanceForm");
         const maintenanceId = document.getElementById("maintenanceId").value;
         const action = isEditing ? 'edit' : 'add';
@@ -1412,15 +1604,13 @@
             truckId: parseInt(document.getElementById("truckId").value),
             licensePlate: document.getElementById("licensePlate").value,
             date: document.getElementById("date").value,
-            remarks: document.getElementById("remarks").value,
+            remarks: JSON.stringify(remarks), // Convert array to JSON string
             status: document.getElementById("status").value,
             supplier: document.getElementById("supplier").value,
             cost: parseFloat(document.getElementById("cost").value || 0),
             maintenanceType: document.getElementById("maintenanceType").value,
-            editReasons: editReasons // Add this line to include edit reasons
+            editReasons: editReasons
         };
-        
-        console.log("Submitting form data:", formData);
         
         $.ajax({
             url: 'include/handlers/maintenance_handler.php?action=' + action,
@@ -1443,6 +1633,20 @@
             }
         });
     }
+
+    document.getElementById('otherRemarkText').addEventListener('input', function() {
+        const otherCheckbox = document.querySelector('input[name="remarks[]"][value="Other"]');
+        if (this.value.trim() !== '') {
+            otherCheckbox.checked = true;
+        }
+    });
+    
+
+    document.querySelector('input[name="remarks[]"][value="Other"]').addEventListener('change', function() {
+        if (!this.checked) {
+            document.getElementById('otherRemarkText').value = '';
+        }
+    });
 
     function searchMaintenance() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();

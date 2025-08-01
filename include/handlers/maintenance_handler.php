@@ -391,13 +391,17 @@ case 'getAllRecordsForSearch':
     $supplier = isset($data->supplier) ? $data->supplier : '';
     $cost = isset($data->cost) ? $data->cost : 0;
     
+    // Process remarks
+    $remarksArray = json_decode($data->remarks);
+    $remarksString = implode(", ", $remarksArray);
+    
     $stmt = $conn->prepare("INSERT INTO maintenance (truck_id, licence_plate, date_mtnce, remarks, status, supplier, cost, last_modified_by, maintenance_type) 
                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("isssssdss", 
         $data->truckId,
         $licensePlate,
         $data->date, 
-        $data->remarks,
+        $remarksString,
         $data->status,
         $supplier,
         $cost,
@@ -474,6 +478,10 @@ case 'edit':
     $cost = isset($data->cost) ? $data->cost : 0;
     $editReasons = isset($data->editReasons) ? json_encode($data->editReasons) : null;
     
+    // Process remarks
+    $remarksArray = json_decode($data->remarks);
+    $remarksString = implode(", ", $remarksArray);
+    
     $stmt = $conn->prepare("UPDATE maintenance SET truck_id = ?, licence_plate = ?, date_mtnce = ?, remarks = ?, 
                            status = ?, supplier = ?, cost = ?, last_modified_by = ?, maintenance_type = ?, edit_reasons = ?
                            WHERE maintenance_id = ?");
@@ -481,7 +489,7 @@ case 'edit':
         $data->truckId,
         $licensePlate,
         $data->date, 
-        $data->remarks,
+        $remarksString,
         $data->status,
         $supplier,
         $cost,
