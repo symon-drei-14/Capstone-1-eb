@@ -412,7 +412,33 @@ th[onclick]:hover {
     background-color: #6c757d;
     color: white;
 }   
+.search-container {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
 
+#searchInput {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    margin-right: 5px;
+    width: 200px;
+}
+
+.search-btn {
+    background-color: #B82132;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-btn:hover {
+    background-color: #9a1a2a;
+}
 
     </style>
 </head>
@@ -548,12 +574,22 @@ th[onclick]:hover {
         <option value="Overdue">Overdue</option>
 
     </select>
+
+       
+
     <div class="show-deleted-filter">
     <label>
         <input type="checkbox" id="showDeleted" onchange="toggleDeletedTrucks()">
         Show Deleted Trucks
     </label>
 </div>
+
+<div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
+        <button class="search-btn" onclick="searchTrucks()">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
        
 </div>
 
@@ -669,6 +705,7 @@ th[onclick]:hover {
     setInterval(updateDateTime, 1000);
 
 function toggleDeletedTrucks() {
+     clearTimeout(searchTimeout);
     showDeleted = document.getElementById('showDeleted').checked;
     // Reset to first page when toggling
     currentTruckPage = 1;
@@ -687,7 +724,9 @@ function viewDeletionReason(truckId) {
 
 
      function filterTrucksByStatus() {
+           clearTimeout(searchTimeout); 
     currentStatusFilter = document.getElementById('statusFilter').value;
+     document.getElementById('searchInput').value = '';
     currentTruckPage = 1; // Reset to first page when filtering
     fetchTrucks(); // This will fetch fresh data with the new filter
 }
@@ -827,12 +866,64 @@ function performSoftDelete() {
     .catch(error => console.error('Error:', error));
 }
 
+let searchTimeout;
+
+function searchTrucks() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        if (!searchTerm) {
+            renderTrucksTable();
+            return;
+        }
+    
+    // Filter trucks based on search term
+    const filteredTrucks = trucksData.filter(truck => {
+        return (
+            truck.truck_id.toString().includes(searchTerm) ||
+            truck.plate_no.toLowerCase().includes(searchTerm) ||
+            truck.capacity.toString().includes(searchTerm) ||
+            (truck.display_status && truck.display_status.toLowerCase().includes(searchTerm)) ||
+            (truck.status && truck.status.toLowerCase().includes(searchTerm)) ||
+            (truck.last_modified_by && truck.last_modified_by.toLowerCase().includes(searchTerm)) ||
+            (truck.delete_reason && truck.delete_reason.toLowerCase().includes(searchTerm))
+        );
+    });
+    
+    // Temporarily use the filtered trucks for rendering
+    const originalTrucks = trucksData;
+    trucksData = filteredTrucks;
+    currentTruckPage = 1; // Reset to first page when searching
+    renderTrucksTable();
+    trucksData = originalTrucks; // Restore original data
+}, 300);
+}
+
 function renderTrucksTable() {
     const start = (currentTruckPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
+
+     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    let filteredTrucks = [...trucksData]; // Create a copy
+    
+    if (searchTerm) {
+        // Apply search filter if there's a search term
+        filteredTrucks = filteredTrucks.filter(truck => {
+            return (
+                truck.truck_id.toString().includes(searchTerm) ||
+                truck.plate_no.toLowerCase().includes(searchTerm) ||
+                truck.capacity.toString().includes(searchTerm) ||
+                (truck.display_status && truck.display_status.toLowerCase().includes(searchTerm)) ||
+                (truck.status && truck.status.toLowerCase().includes(searchTerm)) ||
+                (truck.last_modified_by && truck.last_modified_by.toLowerCase().includes(searchTerm)) ||
+                (truck.delete_reason && truck.delete_reason.toLowerCase().includes(searchTerm))
+            );
+        });
+    }
     
     // Filter trucks based on the showDeleted flag
-    let filteredTrucks = trucksData.filter(truck => {
+   filteredTrucks = filteredTrucks.filter(truck => {
         return showDeleted ? truck.is_deleted == 1 : truck.is_deleted == 0;
     });
 
@@ -844,10 +935,16 @@ function renderTrucksTable() {
         );
     }
 
-    const pageData = filteredTrucks.slice(start, Math.min(end, filteredTrucks.length));
+     const pageData = filteredTrucks.slice(start, Math.min(end, filteredTrucks.length));
     
     const tableBody = document.getElementById("trucksTableBody");
     tableBody.innerHTML = "";
+
+     if (filteredTrucks.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center;">No trucks found matching your search</td></tr>`;
+        document.getElementById("truck-page-info").textContent = `Page 0 of 0`;
+        return;
+    }
     
     pageData.forEach(truck => {
         const tr = document.createElement("tr");
@@ -949,25 +1046,53 @@ function sortTrucks(sortBy) {
 
 // Update changeTruckPage function to work with filtered data
 function changeTruckPage(direction) {
-    let filteredTrucks = trucksData;
+    // Get current search term
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    
+    // Start with all trucks
+    let filteredTrucks = [...trucksData];
+    
+    // Apply search filter if there's a search term
+    if (searchTerm) {
+        filteredTrucks = filteredTrucks.filter(truck => {
+            return (
+                truck.truck_id.toString().includes(searchTerm) ||
+                truck.plate_no.toLowerCase().includes(searchTerm) ||
+                truck.capacity.toString().includes(searchTerm) ||
+                (truck.display_status && truck.display_status.toLowerCase().includes(searchTerm)) ||
+                (truck.status && truck.status.toLowerCase().includes(searchTerm)) ||
+                (truck.last_modified_by && truck.last_modified_by.toLowerCase().includes(searchTerm)) ||
+                (truck.delete_reason && truck.delete_reason.toLowerCase().includes(searchTerm))
+            );
+        });
+    }
+    
+    // Apply status filter
     if (currentStatusFilter !== 'all') {
         if (currentStatusFilter === 'deleted') {
-            filteredTrucks = trucksData.filter(truck => truck.is_deleted == 1);
+            filteredTrucks = filteredTrucks.filter(truck => truck.is_deleted == 1);
         } else {
-            filteredTrucks = trucksData.filter(truck => 
+            filteredTrucks = filteredTrucks.filter(truck => 
                 (truck.display_status === currentStatusFilter || 
                  truck.status === currentStatusFilter) &&
                 truck.is_deleted == 0
             );
         }
     } else {
-        filteredTrucks = trucksData.filter(truck => truck.is_deleted == 0);
+        // If not showing deleted trucks, filter them out
+        if (!showDeleted) {
+            filteredTrucks = filteredTrucks.filter(truck => truck.is_deleted == 0);
+        }
     }
     
+    // Calculate pagination
     const totalPages = Math.ceil(filteredTrucks.length / rowsPerPage);
     currentTruckPage += direction;
+    
+    // Ensure we stay within bounds
     if (currentTruckPage < 1) currentTruckPage = 1;
     if (currentTruckPage > totalPages) currentTruckPage = totalPages;
+    
     renderTrucksTable();
 }
 
