@@ -2735,6 +2735,8 @@ console.log("Filtering by:", currentStatusFilter, "Found:", filteredEvents.lengt
 
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="include/js/logout-confirm.js"></script>
 </body>
 </html>
 

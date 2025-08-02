@@ -1049,5 +1049,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     </script>
+    <!-- Add SweetAlert for nice alerts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Include the logout confirmation script -->
+<script src="include/js/logout-confirm.js"></script>
 </body>
 </html>
