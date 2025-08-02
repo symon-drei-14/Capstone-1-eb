@@ -459,3 +459,52 @@
 2025-07-24 09:13:50 - Data validation passed
 2025-07-24 09:13:50 - Database connection successful
 2025-07-24 09:13:50 - Login successful for: asd@gmail.com
+2025-07-31 13:04:58 - Login request received
+{"email":"asd@gmail.com","password":"asdasd"}
+
+2025-07-31 13:04:58 - JSON parsed successfully
+2025-07-31 13:04:58 - Data validation passed
+2025-07-31 13:04:58 - Database connection successful
+2025-07-31 13:04:58 - Login successful for: asd@gmail.com
+2025-08-02 14:58:33 - Login request received
+{"email":"asd@gmail.com","password":"asdasd"}
+
+2025-08-02 14:58:33 - JSON parsed successfully
+2025-08-02 14:58:33 - Data validation passed
+2025-08-02 14:58:33 - Database connection successful
+2025-08-02 14:58:34 - Login successful for: asd@gmail.com
+2025-08-02 15:26:23 - Login request received
+{"email":"asd@gmail.com","password":"asdasd"}
+
+2025-08-02 15:26:23 - JSON parsed successfully
+2025-08-02 15:26:23 - Data validation passed
+2025-08-02 15:26:23 - Database connection successful
+2025-08-02 15:26:23 - Login successful for: asd@gmail.com
+2025-08-02 15:45:53 - Login request received
+{"email":"dsa@gmail.com","password":"dsadsa"}
+
+2025-08-02 15:45:53 - JSON parsed successfully
+2025-08-02 15:45:53 - Data validation passed
+2025-08-02 15:45:53 - Database connection successful
+2025-08-02 15:45:53 - Login successful for: dsa@gmail.com
+2025-08-02 15:50:15 - Login request received
+{"email":"qwe@gmail.com","password":"qweqwe"}
+
+2025-08-02 15:50:15 - JSON parsed successfully
+2025-08-02 15:50:15 - Data validation passed
+2025-08-02 15:50:15 - Database connection successful
+2025-08-02 15:50:15 - Login successful for: qwe@gmail.com
+2025-08-02 15:54:22 - Login request received
+{"email":"asd@gmail.com","password":"asdasd"}
+
+2025-08-02 15:54:22 - JSON parsed successfully
+2025-08-02 15:54:22 - Data validation passed
+2025-08-02 15:54:22 - Database connection successful
+2025-08-02 15:54:22 - Login successful for: asd@gmail.com
+2025-08-02 16:33:41 - Login request received
+{"email":"qwe@gmail.com","password":"qweqwe"}
+
+2025-08-02 16:33:41 - JSON parsed successfully
+2025-08-02 16:33:41 - Data validation passed
+2025-08-02 16:33:41 - Database connection successful
+2025-08-02 16:33:41 - Login successful for: qwe@gmail.com
