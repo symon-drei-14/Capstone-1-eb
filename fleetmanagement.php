@@ -777,6 +777,7 @@ function fetchTrucks() {
                     alert(isEditMode ? 'Truck updated successfully!' : 'Truck added successfully!');
                     closeModal('truckModal');
                     fetchTrucks();
+                     fetchTruckCounts();
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -818,6 +819,7 @@ function performSoftDelete() {
             alert('Truck has been deleted successfully!');
             closeModal('deleteModal');
             fetchTrucks();
+             fetchTruckCounts();
         } else {
             alert('Error: ' + data.message);
         }
@@ -909,6 +911,7 @@ function fullDeleteTruck(truckId) {
             if (data.success) {
                 alert('Truck has been permanently deleted!');
                 fetchTrucks();
+                  fetchTruckCounts();
             } else {
                 alert('Error: ' + data.message);
             }
@@ -974,7 +977,24 @@ function changeTruckPage(direction) {
             return date.toLocaleString(); // This will format based on user's locale
         }
 
-  
+  function fetchTruckCounts() {
+    fetch('include/handlers/truck_handler.php?action=getTruckCounts')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateStatsCards(data.counts);
+            }
+        })
+        .catch(error => console.error('Error fetching truck counts:', error));
+}
+
+function updateStatsCards(counts) {
+    document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = counts['In Terminal'] || '0';
+    document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = counts['Enroute'] || '0';
+    document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = counts['In Repair'] || '0';
+    document.querySelector('.stat-card:nth-child(4) .stat-value').textContent = counts['Overdue'] || '0';
+    document.querySelector('.stat-card:nth-child(5) .stat-value').textContent = counts['Total'] || '0';
+}
 
         function fetchTrucks() {
             fetch('include/handlers/truck_handler.php?action=getTrucks')
@@ -994,6 +1014,7 @@ function changeTruckPage(direction) {
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchTrucks();
+            fetchTruckCounts();
             document.getElementById('toggleSidebarBtn').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.toggle('expanded');
             });
@@ -1015,6 +1036,7 @@ function changeTruckPage(direction) {
             if (data.success) {
                 alert('Truck has been restored successfully!');
                 fetchTrucks();
+                fetchTruckCounts();
             } else {
                 alert('Error: ' + data.message);
             }
@@ -1049,9 +1071,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     </script>
-    <!-- Add SweetAlert for nice alerts -->
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- Include the logout confirmation script -->
 <script src="include/js/logout-confirm.js"></script>
 </body>
 </html>

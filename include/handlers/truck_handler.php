@@ -117,6 +117,8 @@ try {
     echo json_encode(['success' => true]);
     break;
 
+
+
   case 'deleteTruck':
     // Start transaction
     $conn->begin_transaction();
@@ -202,6 +204,29 @@ case 'softDeleteTruck':
     );
     $stmt->execute();
     echo json_encode(['success' => true]);
+    break;
+
+    case 'getTruckCounts':
+    $counts = [];
+    
+    // Query for each status
+    $statuses = ['In Terminal', 'Enroute', 'In Repair', 'Overdue'];
+    
+    foreach ($statuses as $status) {
+        $stmt = $conn->prepare("SELECT COUNT(*) as count FROM truck_table WHERE status = ? AND is_deleted = 0");
+        $stmt->bind_param("s", $status);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $counts[$status] = $result->fetch_assoc()['count'];
+    }
+    
+    // Total trucks (non-deleted)
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM truck_table WHERE is_deleted = 0");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $counts['Total'] = $result->fetch_assoc()['count'];
+    
+    echo json_encode(['success' => true, 'counts' => $counts]);
     break;
 
     case 'restoreTruck':
