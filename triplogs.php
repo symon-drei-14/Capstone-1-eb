@@ -2831,6 +2831,36 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+document.getElementById('reason6').addEventListener('change', function() {
+    const otherReasonContainer = document.getElementById('otherReasonContainer');
+    otherReasonContainer.style.display = this.checked ? 'block' : 'none';
+    
+    
+    if (!this.checked) {
+        document.getElementById('otherReasonText').value = '';
+    }
+});
+
+
+document.getElementById('otherReasonText').addEventListener('input', function() {
+    if (this.value.trim() !== '') {
+        document.getElementById('reason6').checked = true;
+        document.getElementById('otherReasonContainer').style.display = 'block';
+    }
+});
+
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    const otherCheckbox = document.getElementById('reason6');
+    const otherReasonText = document.getElementById('otherReasonText').value.trim();
+    
+    if (otherCheckbox.checked && otherReasonText === '') {
+        e.preventDefault();
+        alert('Please specify the other reason');
+        document.getElementById('otherReasonText').focus();
+    }
+});
+
 function updateStats() {
     $.ajax({
         url: 'include/handlers/triplogstats.php',
