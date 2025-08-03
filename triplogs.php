@@ -2772,7 +2772,7 @@ function loadDeletedTrips() {
     });
 }
 
-$(document).on('click', 'icon-btn.restore', function() {
+$(document).on('click', '.icon-btn.restore', function() {
     const tripId = $(this).data('id');
     if (confirm('Are you sure you want to restore this trip?')) {
         $.ajax({
@@ -2785,8 +2785,15 @@ $(document).on('click', 'icon-btn.restore', function() {
             }),
             success: function(response) {
                 if (response.success) {
-                    alert('Trip restored successfully!');
-                    renderTable(); 
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Trip restored successfully!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    renderTable(); // Refresh the table
+                    updateStats(); // Update the counter cards
                 } else {
                     alert('Error: ' + response.message);
                 }
