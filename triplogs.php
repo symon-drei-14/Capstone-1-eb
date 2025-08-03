@@ -38,26 +38,33 @@ checkAccess(); // No role needed—logic is handled internally
 }
 
 
-    
+
 #editReasonsModal {
    align-items: left;
     justify-content: center;
     z-index: 99999; 
-     overflow-x: hidden; 
+
 }
 
-#editReasonsModal .modal-content {
+#editModal .modal-content {
+    max-height: 80vh; /* Limit height to 80% of viewport */
+    overflow-y: auto; /* Enable vertical scrolling */
+    padding: 20px;
+    width: 90%;
+    max-width: 600px;
     position: relative;
-    z-index: 100000;
-    height:auto;    
-    max-height:30em;
-    width:30em;
-    margin-top:10em;
-     overflow-x: hidden; 
+}
 
-}   
 
-/* Add this to your existing CSS */
+.edit-reasons-section {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+
+
 #editForm .edit-reasons-section {
     margin-top: 15px;
     padding: 15px;
@@ -65,7 +72,7 @@ checkAccess(); // No role needed—logic is handled internally
     border-radius: 5px;
     border: 1px solid #ddd;
     width:23em;
-     overflow-x: hidden; 
+
 }
 
 #editForm .reasons-container {
@@ -84,14 +91,31 @@ checkAccess(); // No role needed—logic is handled internally
 
 }
 
-#editForm .reason-option input[type="checkbox"] {
-    margin-right: -20em;
-    left:13em;
-    flex-shrink: 0;
-   position:relative;
-   top:1em;
-   
+.reason-option {
+    transition: background-color 0.2s;
 }
+
+.reason-option:hover {
+    background-color: #f1f1f1 !important;
+}
+
+.reason-option input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.other-reason textarea {
+    min-height: 80px;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+#editForm .reason-option input[type="checkbox"] {
+    margin-right: -12em;
+
+    flex-shrink: 0;
+   position:relative;   
+}
+
 .reason-option label {
     display: block;
     cursor: pointer;
@@ -587,34 +611,51 @@ checkAccess(); // No role needed—logic is handled internally
         border: none;
     }
     
-    .modal {
-        display: none; 
-        position: fixed; 
-        z-index: 11000; 
-        left: 0;
-        top: 0;
-        width: 100%; 
-        height: 100%;
-       overflow-x: hidden; 
-        background-color: rgba(0, 0, 0, 0.5); /* Black with opacity */
+    /* ---------------------- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 11000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+
+.modal-content {
+    left: 450;
+    top: 15;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    position: relative;
+}
+
+    .modal-content h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #333;
+}
     
-    }
-    
-    .modal-content {
-        background-color: #fff;
-        margin: 1% auto;
-        padding: 20px;
-        height: 90vh;
-        border: 1px solid #888;
-        width: 50%;
-        max-width: 400px;
-        border-radius: 20px;
-        box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-    overflow-y: auto;
-    }
-    
-    
-    .close:hover,
     .close:focus {
         color: rgb(255, 255, 255);
         text-decoration: none;
@@ -644,6 +685,38 @@ checkAccess(); // No role needed—logic is handled internally
     .add-schedule-btn:hover {
         background-color: #45a049;
     }
+
+    #addScheduleForm input,
+#addScheduleForm select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#addScheduleForm input:focus,
+#addScheduleForm select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.cancel-btn {
+    background-color: #f443360c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cancel-btn:hover {
+    background-color: #d32f2f;
+}
+
+    /* ---------------------- */
     
     label {
         font-size: 16px;
@@ -653,6 +726,7 @@ checkAccess(); // No role needed—logic is handled internally
         text-align: left;
         width: 100%; /* Ensure label takes up full width */
     }
+
     
     input, select {
         padding: 10px;
@@ -673,11 +747,19 @@ checkAccess(); // No role needed—logic is handled internally
     input[type="datetime-local"] {
         padding: 8px;
     }
-    
+
+    #addScheduleForm label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+}
+
+
     #editForm button[type="submit"],
     #addScheduleForm button[type="submit"] {
         margin-top: 10px;
-        padding: 10px 20px;
+        padding: 8px 15px;
         background-color: #4CAF50;
         color: white;
         border: none;
@@ -1404,127 +1486,145 @@ if ($driverResult->num_rows > 0) {
         </section>
     </div>
 
-    <div id="editModal" class="modal">
-    <div class="modal-content">
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: scroll;">
         <span class="close">&times;</span>
-        <h3>Edit Event</h3>
-        <form id="editForm">
+        <h3 style="margin-top: 0;">Edit Trip</h3>
+        <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
             <input type="hidden" id="editEventId" name="eventId">
             
-  <label for="editEventSize">Shipment Size:</label><br>
-            <select id="editEventSize" name="eventSize" required>
-                <option value="">Select Size</option>
-                <option value="20ft">20ft</option>
-                <option value="40ft">40ft</option>
-                <option value="40ft HC">40ft HC</option>
-                <option value="45ft">45ft</option>
-            </select><br><br>
+            <!-- Column 1 -->
+            <div style="display: flex; flex-direction: column;">
+                <label for="editEventSize">Shipment Size:</label>
+                <select id="editEventSize" name="eventSize" required style="width: 100%;">
+                    <option value="">Select Size</option>
+                    <option value="20ft">20ft</option>
+                    <option value="40ft">40ft</option>
+                    <option value="40ft HC">40ft HC</option>
+                    <option value="45ft">45ft</option>
+                </select>
 
-            <label for="editEventPlateNo">Plate No.:</label><br>
-            <input type="text" id="editEventPlateNo" name="eventPlateNo" required><br><br>
-    
-            <label for="editEventDate">Date & Time:</label><br>
-            <input type="datetime-local" id="editEventDate" name="editEventDate" required><br><br>
+                <label for="editEventPlateNo">Plate No.:</label>
+                <input type="text" id="editEventPlateNo" name="eventPlateNo" required style="width: 100%;">
 
-            <label for="editEventDriver">Driver:</label><br>
-            <select id="editEventDriver" name="eventDriver" required>
-                <option value="">Select Driver</option>
-                <!-- Drivers will be populated by JavaScript -->
-            </select><br><br>
-    
-            <label for="editEventHelper">Helper:</label><br>
-            <input type="text" id="editEventHelper" name="eventHelper" required><br><br>
+                <label for="editEventDate">Date & Time:</label>
+                <input type="datetime-local" id="editEventDate" name="editEventDate" required style="width: 100%;">
 
-            <label for="editEventDispatcher">Dispatcher:</label><br>
-    <input type="text" id="editEventDispatcher" name="eventDispatcher" required><br><br>
+                <label for="editEventDriver">Driver:</label>
+                <select id="editEventDriver" name="eventDriver" required style="width: 100%;">
+                    <option value="">Select Driver</option>
+                </select>
 
+                <label for="editEventHelper">Helper:</label>
+                <input type="text" id="editEventHelper" name="eventHelper" required style="width: 100%;">
+            </div>
 
+            <!-- Column 2 -->
+            <div style="display: flex; flex-direction: column;">
+                <label for="editEventDispatcher">Dispatcher:</label>
+                <input type="text" id="editEventDispatcher" name="eventDispatcher" required style="width: 100%;">
+
+                <label for="editEventContainerNo">Container No.:</label>
+                <input type="text" id="editEventContainerNo" name="eventContainerNo" required style="width: 100%;">
+
+                <label for="editEventClient">Client:</label>
+                <select id="editEventClient" name="eventClient" required style="width: 100%;">
+                    <option value="">Select Client</option>
+                    <option value="Maersk">Maersk</option>
+                    <option value="MSC">MSC</option>
+                    <option value="COSCO">COSCO</option>
+                    <option value="CMA CGM">CMA CGM</option>
+                    <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+                    <option value="Evergreen">Evergreen</option>
+                </select>
+
+                <label for="editEventDestination">Destination:</label>
+                <select id="editEventDestination" name="eventDestination" required style="width: 100%;">
+                    <option value="">Select Destination</option>
+                    <option value="Manila Port">Manila Port</option>
+                    <option value="Batangas Port">Batangas Port</option>
+                    <option value="Subic Port">Subic Port</option>
+                    <option value="Cebu Port">Cebu Port</option>
+                    <option value="Davao Port">Davao Port</option>
+                </select>
+
+                <label for="editEventStatus">Status:</label>
+                <select id="editEventStatus" name="eventStatus" required style="width: 100%;">
+                    <option value="Pending">Pending</option>
+                    <option value="En Route">En Route</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+
+            <!-- Full width fields -->
+            <div style="grid-column: span 2;">
+                <label for="editEventShippingLine">Shipping Line:</label>
+                <select id="editEventShippingLine" name="eventShippingLine" required style="width: 35%;">
+                    <option value="">Select Shipping Line</option>
+                    <option value="Maersk Line">Maersk Line</option>
+                    <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
+                    <option value="COSCO Shipping">COSCO Shipping</option>
+                    <option value="CMA CGM">CMA CGM</option>
+                    <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+                </select>
+             
+                <label for="editEventConsignee">Consignee:</label>
+                <input type="text" id="editEventConsignee" name="eventConsignee" required style="width: 25%;">
+                   <br>
+                <label for="editEventCashAdvance">Cash Advance:</label>
+                <input type="text" id="editEventCashAdvance" name="eventCashAdvance" required style="width: 20%;">
+            </div>
+
+            
+       <div class="edit-reasons-section" style="grid-column: span 2; margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #ddd; width: 100%;">
+    <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Reason for Edit</h4>
+    <p style="margin-top: 0; margin-bottom: 10px; color: #666;">Select all that apply:</p>
     
-           <label for="editEventContainerNo">Container No.:</label><br>
-    <input type="text" id="editEventContainerNo" name="eventContainerNo" required><br><br>
-    
-            <label for="editEventClient">Client:</label><br>
-            <select id="editEventClient" name="eventClient" required>
-                <option value="">Select Client</option>
-                <option value="Maersk">Maersk</option>
-                <option value="MSC">MSC</option>
-                <option value="COSCO">COSCO</option>
-                <option value="CMA CGM">CMA CGM</option>
-                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-                <option value="Evergreen">Evergreen</option>
-            </select><br><br>
-    
-            <label for="editEventDestination">Destination:</label><br>
-            <select id="editEventDestination" name="eventDestination" required>
-                <option value="">Select Destination</option>
-                <option value="Manila Port">Manila Port</option>
-                <option value="Batangas Port">Batangas Port</option>
-                <option value="Subic Port">Subic Port</option>
-                <option value="Cebu Port">Cebu Port</option>
-                <option value="Davao Port">Davao Port</option>
-            </select><br><br>
-    
-            <label for="editEventShippingLine">Shipping Line:</label><br>
-            <select id="editEventShippingLine" name="eventShippingLine" required>
-                <option value="">Select Shipping Line</option>
-                <option value="Maersk Line">Maersk Line</option>
-                <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
-                <option value="COSCO Shipping">COSCO Shipping</option>
-                <option value="CMA CGM">CMA CGM</option>
-                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-            </select><br><br>
-    
-            <label for="editEventConsignee">Consignee:</label><br>
-            <input type="text" id="editEventConsignee" name="eventConsignee" required><br><br>
-    
-          
-    
-            <label for="editEventCashAdvance">Cash Advance:</label><br>
-            <input type="text" id="editEventCashAdvance" name="eventCashAdvance" required><br><br>
-    
-            <label for="editEventStatus">Status:</label><br>
-            <select id="editEventStatus" name="eventStatus" required>
-                <option value="Completed">Completed</option>
-                <option value="Pending">Pending</option>
-                <option value="Cancelled">Cancelled</option>
-                  <option value="En Route">En Route</option>
-            </select><br><br>
-    <div class="edit-reasons-section">
-    <label>Reason for Edit (select all that apply):</label>
-    <div class="reasons-container">
-        <div class="reason-option">
-            <input type="checkbox" name="editReason" value="Changed schedule as per client request" id="reason1">
-            <label for="reason1">Changed schedule as per client request</label>
+    <div class="reasons-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+        <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+            <label for="reason1" style="margin: 0; cursor: pointer; flex: 1;">Changed schedule as per client request</label>
+            <input type="checkbox" name="editReason" value="Changed schedule as per client request" id="reason1" style="margin-left: 10px;">
         </div>
-        <div class="reason-option">
-            <input type="checkbox" name="editReason" value="Updated driver assignment due to availability" id="reason2">
-            <label for="reason2">Updated driver assignment due to availability</label>
+        
+        <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+            <label for="reason2" style="margin: 0; cursor: pointer; flex: 1;">Updated driver assignment due to availability</label>
+            <input type="checkbox" name="editReason" value="Updated driver assignment due to availability" id="reason2" style="margin-left: 10px;">
         </div>
-        <div class="reason-option">
-            <input type="checkbox" name="editReason" value="Modified vehicle assignment for capacity requirements" id="reason3">
-            <label for="reason3">Modified vehicle assignment for capacity requirements</label>
+        
+        <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+            <label for="reason3" style="margin: 0; cursor: pointer; flex: 1;">Modified vehicle assignment for capacity requirements</label>
+            <input type="checkbox" name="editReason" value="Modified vehicle assignment for capacity requirements" id="reason3" style="margin-left: 10px;">
         </div>
-        <div class="reason-option">
-            <input type="checkbox" name="editReason" value="Adjusted destination based on new instructions" id="reason4">
-            <label for="reason4">Adjusted destination based on new instructions</label>
+        
+        <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+            <label for="reason4" style="margin: 0; cursor: pointer; flex: 1;">Adjusted destination based on new instructions</label>
+            <input type="checkbox" name="editReason" value="Adjusted destination based on new instructions" id="reason4" style="margin-left: 10px;">
         </div>
-        <div class="reason-option">
-            <input type="checkbox" name="editReason" value="Updated container details for accuracy" id="reason5">
-            <label for="reason5">Updated container details for accuracy</label>
+        
+        <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+            <label for="reason5" style="margin: 0; cursor: pointer; flex: 1;">Updated container details for accuracy</label>
+            <input type="checkbox" name="editReason" value="Updated container details for accuracy" id="reason5" style="margin-left: 10px;">
         </div>
-        <div class="reason-option">
-            <input type="checkbox" name="editReason" value="Other" id="reason6">
-            <label for="reason6">Other (please specify below)</label>
+        
+        <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+            <label for="reason6" style="margin: 0; cursor: pointer; flex: 1;">Other (please specify below)</label>
+            <input type="checkbox" name="editReason" value="Other" id="reason6" style="margin-left: 10px;">
         </div>
-        <div class="other-reason">
-            <label for="otherReasonText">Specify other reason:</label>
-            <textarea id="otherReasonText" name="otherReasonText" rows="3" placeholder="Enter specific reason for edit"></textarea>
+        
+        <div class="other-reason" style="margin-top: 10px; display: none; width: 100%;" id="otherReasonContainer">
+            <label for="otherReasonText" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Specify other reason:</label>
+            <textarea id="otherReasonText" name="otherReasonText" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; min-height: 80px;"></textarea>
         </div>
     </div>
-    </div>
-    
-            <button type="submit">Save Changes</button>
-            <button type="button" class="close-btn cancel-btn">Cancel</button>
+</div>
+
+            <!-- Form buttons -->
+            <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button type="submit" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
+            </div>
         </form>
     </div>
 </div>
@@ -1578,93 +1678,103 @@ if ($driverResult->num_rows > 0) {
 </div>
 
     <div id="addScheduleModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow: hidden;">
         <span class="close">&times;</span>
-        <h2>Add Schedule</h2>
-        <form id="addScheduleForm">
+        <h2 style="margin-top: 0;">Add Schedule</h2>
+        <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
+            <!-- Column 1 -->
+            <div style="display: flex; flex-direction: column;">
+                <label for="addEventSize">Shipment Size:</label>
+                <select id="addEventSize" name="eventSize" required style="width: 100%;">
+                    <option value="">Select Size</option>
+                    <option value="20ft">20ft</option>
+                    <option value="40ft">40ft</option>
+                    <option value="40ft HC">40ft HC</option>
+                    <option value="45ft">45ft</option>
+                </select>
 
-  <label for="addEventSize">Shipment Size:</label><br>
-         <select id="addEventSize" name="eventSize" required>
-                <option value="">Select Size</option>
-                <option value="20ft">20ft</option>
-                <option value="40ft">40ft</option>
-                <option value="40ft HC">40ft HC</option>
-                <option value="45ft">45ft</option>
-            </select><br><br>
+                <label for="addEventPlateNo">Plate No.:</label>
+                <input type="text" id="addEventPlateNo" name="eventPlateNo" required style="width: 100%;">
 
-            <label for="addEventPlateNo">Plate No.:</label><br>
-            <input type="text" id="addEventPlateNo" name="eventPlateNo" required><br><br>
-    
-            <label for="addEventDate">Date & Time:</label><br>
-            <input type="datetime-local" id="addEventDate" name="eventDate" required><br><br>
+                <label for="addEventDate">Date & Time:</label>
+                <input type="datetime-local" id="addEventDate" name="eventDate" required style="width: 100%;">
 
-            <label for="addEventDriver">Driver:</label><br>
-            <select id="addEventDriver" name="eventDriver" required>
-                <option value="">Select Driver</option>
-                <!-- Drivers will be populated by JavaScript -->
-            </select><br><br>
-    
-            <label for="addEventHelper">Helper:</label><br>
-            <input type="text" id="addEventHelper" name="eventHelper" required><br><br>
+                <label for="addEventDriver">Driver:</label>
+                <select id="addEventDriver" name="eventDriver" required style="width: 100%;">
+                    <option value="">Select Driver</option>
+                </select>
 
-            <label for="addEventDispatcher">Dispatcher:</label><br>
-<input type="text" id="addEventDispatcher" name="eventDispatcher" required><br><br>
-    
-            <label for="addEventContainerNo">Container No.:</label><br>
-<input type="text" id="addEventContainerNo" name="eventContainerNo" required><br><br>
-    
-            <label for="addEventClient">Client:</label><br>
-            <select id="addEventClient" name="eventClient" required>
-                <option value="">Select Client</option>
-                <option value="Maersk">Maersk</option>
-                <option value="MSC">MSC</option>
-                <option value="COSCO">COSCO</option>
-                <option value="CMA CGM">CMA CGM</option>
-                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-                <option value="Evergreen">Evergreen</option>
-            </select><br><br>
-    
-            <label for="addEventDestination">Destination:</label><br>
-            <select id="addEventDestination" name="eventDestination" required>
-                <option value="">Select Destination</option>
-                <option value="Manila Port">Manila Port</option>
-                <option value="Batangas Port">Batangas Port</option>
-                <option value="Subic Port">Subic Port</option>
-                <option value="Cebu Port">Cebu Port</option>
-                <option value="Davao Port">Davao Port</option>
-            </select><br><br>
-    
-            <label for="addEventShippingLine">Shipping Line:</label><br>
-            <select id="addEventShippingLine" name="eventShippingLine" required>
-                <option value="">Select Shipping Line</option>
-                <option value="Maersk Line">Maersk Line</option>
-                <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
-                <option value="COSCO Shipping">COSCO Shipping</option>
-                <option value="CMA CGM">CMA CGM</option>
-                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-            </select><br><br>
-    
-            <label for="addEventConsignee">Consignee:</label><br>
-            <input type="text" id="addEventConsignee" name="eventConsignee" required><br><br>
-    
-      
-    
-            <label for="addEventCashAdvance">Cash Advance:</label><br>
-            <input type="text" id="addEventCashAdvance" name="eventCashAdvance" required><br><br>
-    
-            <label for="addEventStatus">Status:</label><br>
-            <select id="addEventStatus" name="eventStatus" required>
-                <option value="Completed">Completed</option>
-                <option value="Pending">Pending</option>
-                <option value="Cancelled">Cancelled</option>
-                <option value="En Route">En Route</option>
-            </select><br><br>
+                <label for="addEventHelper">Helper:</label>
+                <input type="text" id="addEventHelper" name="eventHelper" required style="width: 100%;">
+            </div>
 
-            
+            <!-- Column 2 -->
+            <div style="display: flex; flex-direction: column;">
+                <label for="addEventDispatcher">Dispatcher:</label>
+                <input type="text" id="addEventDispatcher" name="eventDispatcher" required style="width: 100%;">
+
+                <label for="addEventContainerNo">Container No.:</label>
+                <input type="text" id="addEventContainerNo" name="eventContainerNo" required style="width: 100%;">
+
+                <label for="addEventClient">Client:</label>
+                <select id="addEventClient" name="eventClient" required style="width: 100%;">
+                    <option value="">Select Client</option>
+                    <option value="Maersk">Maersk</option>
+                    <option value="MSC">MSC</option>
+                    <option value="COSCO">COSCO</option>
+                    <option value="CMA CGM">CMA CGM</option>
+                    <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+                    <option value="Evergreen">Evergreen</option>
+                </select>
+
+                <label for="addEventDestination">Destination:</label>
+                <select id="addEventDestination" name="eventDestination" required style="width: 100%;">
+                    <option value="">Select Destination</option>
+                    <option value="Manila Port">Manila Port</option>
+                    <option value="Batangas Port">Batangas Port</option>
+                    <option value="Subic Port">Subic Port</option>
+                    <option value="Cebu Port">Cebu Port</option>
+                    <option value="Davao Port">Davao Port</option>
+                </select>
+
+                <label for="addEventStatus">Status:</label>
+                <select id="addEventStatus" name="eventStatus" required style="width: 100%;">
+                    <option value="Pending">Pending</option>
+                    <option value="En Route">En Route</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+
+           <div style="grid-column: span 2; display: flex; gap: 15px; align-items: flex-end;">
+    <div style="flex: 1;">
+        <label for="addEventShippingLine">Shipping Line:</label>
+        <select id="addEventShippingLine" name="eventShippingLine" required style="width: 100%;">
+            <option value="">Select Shipping Line</option>
+            <option value="Maersk Line">Maersk Line</option>
+            <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
+            <option value="COSCO Shipping">COSCO Shipping</option>
+            <option value="CMA CGM">CMA CGM</option>
+            <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+        </select>
+    </div>
     
-            <!-- Save and Cancel buttons -->
-            <button type="submit">Save Schedule</button>
-            <button type="button" class="close-btn cancel-btn">Cancel</button>
+    <div style="flex: 1;">
+        <label for="addEventConsignee">Consignee:</label>
+        <input type="text" id="addEventConsignee" name="eventConsignee" required style="width: 100%;">
+    </div>
+</div>
+
+<div style="grid-column: span 2;">
+    <label for="addEventCashAdvance">Cash Advance:</label>
+    <input type="text" id="addEventCashAdvance" name="eventCashAdvance" required style="width: 100%;">
+</div>
+
+            <!-- Form buttons -->
+            <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px;">Cancel</button>
+                <button type="submit" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
+            </div>
         </form>
     </div>
 </div>
@@ -1750,7 +1860,7 @@ if ($driverResult->num_rows > 0) {
         <span class="close">&times;</span>
         <h3>Edit Remarks</h3>
         <div id="editReasonsContent">
-            <!-- Content will be populated by JavaScript -->
+        
         </div>
         <button type="button" class="close-btn cancel-btn" style="margin-top: 20px;">Close</button>
     </div>
