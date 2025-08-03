@@ -321,7 +321,7 @@
 }
 .company {
     margin-left:-90px;
-    height: 150px;
+    height: 110px;
 }
     </style>
     <body>
@@ -672,39 +672,50 @@
             }
         }
 
-        document.getElementById("driverForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData();
-            formData.append('driverId', document.getElementById("driverId").value);
-            formData.append('name', document.getElementById("driverName").value);
-            formData.append('email', document.getElementById("driverEmail").value);
-            formData.append('password', document.getElementById("password").value);
-            formData.append('assignedTruck', document.getElementById("assignedTruck").value);
-            
-
-            
-            $.ajax({
-                url: 'include/handlers/update_driver.php',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(data) {
-                    if (data.success) {
-                        alert("Driver updated successfully.");
-                        fetchDrivers();
-                        closeModal();
-                    } else {
-                        alert("Error: " + data.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    alert("An error occurred while updating the driver data.");
+      document.getElementById("driverForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            driverId: document.getElementById("driverId").value,
+            name: document.getElementById("driverName").value,
+            email: document.getElementById("driverEmail").value,
+            password: document.getElementById("password").value,
+            assignedTruck: document.getElementById("assignedTruck").value,
+            mode: 'edit' // This matches your old version's logic
+        };
+        
+        $.ajax({
+            url: 'include/handlers/save_driver.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(data) {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Driver updated successfully!'
+                    });
+                    fetchDrivers();
+                    closeModal();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Error updating driver'
+                    });
                 }
-            });
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while updating the driver data.'
+                });
+            }
         });
+    });
 
         function searchDrivers() {
             const searchTerm = document.getElementById('driverSearch').value.toLowerCase();

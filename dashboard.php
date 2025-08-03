@@ -461,9 +461,7 @@ box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 
     height: 80px;
 }
 
-.company {
-    height: 80px;
-}
+
 
 /* .search-container {
     display: flex;
@@ -787,7 +785,7 @@ body{
 }
 .company {
     margin-left:-90px;
-    height: 150px;
+    height: 110px;
 }
 </style>
 

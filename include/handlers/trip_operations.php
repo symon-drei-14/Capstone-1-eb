@@ -269,7 +269,6 @@ case 'restore':
     $getTrip->execute();
     $trip = $getTrip->get_result()->fetch_assoc();
     
-
     $stmt = $conn->prepare("UPDATE assign SET 
         is_deleted = 0,
         delete_reason = NULL,
@@ -286,7 +285,14 @@ case 'restore':
         $updateTruck->execute();
     }
     
-    echo json_encode(['success' => true]);
+    // Get updated stats
+    require 'triplogstats.php';
+    $stats = getTripStatistics($conn);
+    
+    echo json_encode([
+        'success' => true,
+        'stats' => $stats
+    ]);
     break;
 
         default:

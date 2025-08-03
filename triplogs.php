@@ -1043,13 +1043,7 @@ body {
     background-color: #45a049;
 }
 
-.show-deleted-container {
-    display: flex;
-    align-items: left;
-    margin-bottom:10px;
-    gap: 8px;
-    width:auto;
-}
+
 
 .show-deleted-container label {
     margin-bottom: 0;
@@ -1061,7 +1055,7 @@ body {
 }
 
 .show-deleted-container input[type="checkbox"] {
-    order: 1; 
+    order: 0; 
     margin: 0; 
     cursor: pointer;
 }
@@ -1432,18 +1426,27 @@ left:10%;
 .show-deleted-container {
     display: flex;
     align-items: center;
-    gap: 5px;
-    margin-left: -5em;
+    gap: 5px;  /* Space between checkbox and label */
+    margin-left: 0; /* Remove negative margin */
     white-space: nowrap;
 }
-.show-deleted-container label {
+
+/*.show-deleted-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 0em;
+    white-space: nowrap;
+} */
+
+/*.show-deleted-container label {
     margin-bottom: 0;
     cursor: pointer;
 }
-
+*/
 .company {
     margin-left:-90px;
-    height: 150px;
+    height: 110px;
 }
 </style>
 <body>
@@ -2036,7 +2039,12 @@ function renderTable() {
             if (response.success) {
                 const trips = response.trips;
                 
-               
+                 if (showDeleted && trips.length === 0) {
+                    $('#eventTableBody').html('<tr><td colspan="17" style="text-align: center; padding: 20px; font-style: italic; color: #666;">There are no deleted trips</td></tr>');
+                    $('#page-numbers').empty();
+                    return;
+                }
+                
                 if (trips.length === 0) {
                     $('#eventTableBody').html('<tr><td colspan="17">No trips found</td></tr>');
                     $('#page-numbers').empty();
@@ -2563,6 +2571,7 @@ $(window).on('click', function(event) {
         
         // View toggle buttons
 $('#calendarViewBtn').on('click', function() {
+$('#showDeletedCheckbox').prop('checked', false);
     $(this).addClass('active');
     $('#tableViewBtn').removeClass('active');
     $('#calendar').show();
@@ -2573,6 +2582,7 @@ $('#calendarViewBtn').on('click', function() {
 });
 
 $('#tableViewBtn').on('click', function() {
+$('#showDeletedCheckbox').prop('checked', false);
     $(this).addClass('active');
     $('#calendarViewBtn').removeClass('active');
     $('#calendar').hide();
@@ -2890,6 +2900,8 @@ function loadDeletedTrips() {
 
 $(document).on('click', '.icon-btn.restore', function() {
     const tripId = $(this).data('id');
+const $row = $(this).closest('tr');
+
     if (confirm('Are you sure you want to restore this trip?')) {
         $.ajax({
             url: 'include/handlers/trip_operations.php',
@@ -2901,6 +2913,15 @@ $(document).on('click', '.icon-btn.restore', function() {
             }),
             success: function(response) {
                 if (response.success) {
+                    // Update stats cards with the returned data
+                    $('.stat-value').eq(0).text(response.stats.pending);
+                    $('.stat-value').eq(1).text(response.stats.enroute);
+                    $('.stat-value').eq(2).text(response.stats.completed);
+                    $('.stat-value').eq(3).text(response.stats.cancelled);
+                    $('.stat-value').eq(4).text(response.stats.total);
+
+                     $row.remove();
+                    
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
@@ -2909,7 +2930,6 @@ $(document).on('click', '.icon-btn.restore', function() {
                         showConfirmButton: false
                     });
                     renderTable(); // Refresh the table
-                    updateStats(); // Update the counter cards
                 } else {
                     alert('Error: ' + response.message);
                 }

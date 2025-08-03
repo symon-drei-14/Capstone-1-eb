@@ -773,7 +773,7 @@
 }
 .company {
     margin-left:-90px;
-    height: 150px;
+    height: 110px;
 }
 
     </style>
