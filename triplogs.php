@@ -675,11 +675,13 @@ checkAccess(); // No role needed—logic is handled internally
     
     .add-schedule-btn {
         padding: 10px 20px;
-        background-color: #4CAF50;
+
+
         color: white;
         border: none;
         border-radius: 5px;
         cursor: pointer;
+        
     }
     
     .add-schedule-btn:hover {
@@ -699,8 +701,8 @@ checkAccess(); // No role needed—logic is handled internally
 #addScheduleForm input:focus,
 #addScheduleForm select:focus {
     outline: none;
-    border-color: #4CAF50;
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    border-color: #4843a4ff;
+    box-shadow: 0 0 0 2px rgba(52, 109, 174, 0.26);
 }
 
 .cancel-btn {
@@ -710,12 +712,29 @@ checkAccess(); // No role needed—logic is handled internally
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
+    width:100px;
+    height:40px;
+    margin-top:0.7em;
 }
 
 .cancel-btn:hover {
     background-color: #d32f2f;
 }
 
+.save-btn{
+    height:40px;
+    width:100px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+   align-items:center;
+   justify-items:center;
+   display:flex;
+}
+.save-btn:hover {
+    background-color: #ffffffff;
+
+
+}
     /* ---------------------- */
     
     label {
@@ -912,6 +931,7 @@ body {
     font-family: Arial, sans-serif;
      background-color:#FCFAEE;
     overflow-y: auto; /* or just remove this; auto is default */
+    overflow-x:hidden;
     height: auto; /* allow content to grow */
 }
 
@@ -959,21 +979,25 @@ body {
 
 .filter-row {
     display: flex;
-    justify-content: flex-start;
-    gap: 10px;
-    margin-bottom: 15px;
+    justify-content: space-between;
     align-items: center;
-     flex-wrap: wrap; 
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #ffffffff;
+    border-radius: 5px;
+    flex-wrap: nowrap;
+    width: 100%;
     
 }
 
 .status-filter-container {
     display: flex;
     align-items: center;
-    gap: 5px;
-    margin-right: 10px; /* Add some spacing between filter and search */
-    
+    gap: 10px;
+    margin-right: 10px;
+    flex: 1;
 }
+
 
 .status-filter-container label {
     font-weight: bold;
@@ -1150,8 +1174,10 @@ body {
     position: relative;
     display: flex;
     align-items: center;
-      margin-right: 10px; /* Reduced from 20px */
+    flex: 1;
+    max-width: 300px;
 }
+
 
 .search-container .fa-search {
     position: absolute;
@@ -1330,6 +1356,95 @@ margin:20px
     color: white;
 }
 
+ .icon-btn {
+    position: relative; 
+}
+
+.icon-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 70%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999; 
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    margin-bottom: 5px;
+}
+
+.icon-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+.icon-btn::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999;
+}
+
+.icon-btn:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+.edit::after {
+    background-color: #085912; 
+}
+
+.delete::after {
+    background-color: #bd0d1f; 
+}
+.restore::after {
+    background-color: #0dbd33ff; 
+}
+
+
+.view-reasons::after {
+    background-color: #0d7cbdff; 
+left:10%;
+}
+
+#showDeletedCheckbox {
+    margin-right: 5px;
+}
+
+.show-deleted-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: -5em;
+    white-space: nowrap;
+}
+.show-deleted-container label {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.company {
+    margin-left:-90px;
+    height: 150px;
+}
 </style>
 <body>
     <?php
@@ -1394,6 +1509,7 @@ if ($driverResult->num_rows > 0) {
         ];
     }
 }
+
     
     $eventsDataJson = json_encode($eventsData);
     $driversDataJson = json_encode($driversData);
@@ -1404,8 +1520,8 @@ if ($driverResult->num_rows > 0) {
         <i class="fa fa-bars"></i>
     </button>
     <div class="logo-container">
-        <img src="include/img/logo.png" alt="Company Logo" class="logo">
-        <img src="include/img/mansar.png" alt="Company Name" class="company">
+     
+        <img src="include/img/mansar2.png" alt="Company Name" class="company">
     </div>
 
     <div class="datetime-container">
@@ -1613,7 +1729,7 @@ if ($driverResult->num_rows > 0) {
             <input type="checkbox" name="editReason" value="Other" id="reason6" style="margin-left: 10px;">
         </div>
         
-        <div class="other-reason" style="margin-top: 10px; display: none; width: 100%;" id="otherReasonContainer">
+        <div class="other-reason" style="width: 90%;" id="otherReasonContainer">
             <label for="otherReasonText" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Specify other reason:</label>
             <textarea id="otherReasonText" name="otherReasonText" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; min-height: 80px;"></textarea>
         </div>
@@ -1623,7 +1739,7 @@ if ($driverResult->num_rows > 0) {
             <!-- Form buttons -->
             <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
                 <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
-                <button type="submit" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
+                <button type="submit" class="save-btn"style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
             </div>
         </form>
     </div>
@@ -1772,8 +1888,8 @@ if ($driverResult->num_rows > 0) {
 
             <!-- Form buttons -->
             <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
-                <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px;">Cancel</button>
-                <button type="submit" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
+                <button type="button" class="close-btn cancel-btn" style="padding: 5px 10px;">Cancel</button>
+                <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
             </div>
         </form>
     </div>
@@ -1809,9 +1925,9 @@ if ($driverResult->num_rows > 0) {
         <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()">
     </div>
       
-</div>
 
-    <div class="show-deleted-container" style="margin-left: 20px;">
+
+    <div class="show-deleted-container">
         <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedTrucks()">
         <label for="showDeletedCheckbox">Show Deleted Trips</label>
     </div>
@@ -1970,7 +2086,7 @@ function renderTripRows(trips, showDeleted) {
             statusCell = `<td><span class="status cancelled">Deleted</span></td>`;
             actionCell = `
                 <td class="actions">
-                    <button class="icon-btn restore" title="Restore" data-id="${trip.trip_id}">
+                    <button class="icon-btn restore" data-tooltip="Restore" data-id="${trip.trip_id}">
                        <i class="fas fa-trash-restore"></i>
                     </button>
                 </td>
@@ -1979,10 +2095,10 @@ function renderTripRows(trips, showDeleted) {
             statusCell = `<td><span class="status ${trip.status.toLowerCase().replace(/\s+/g, '')}">${trip.status}</span></td>`;
             actionCell = `
               <td class="actions">
-    <button class="icon-btn edit" title="Edit" data-id="${trip.trip_id}"><i class="fas fa-edit"></i></button>
-    <button class="icon-btn delete" title="Delete" data-id="${trip.trip_id}"><i class="fas fa-trash-alt"></i></button>
+    <button class="icon-btn edit" data-tooltip="Edit" data-id="${trip.trip_id}"><i class="fas fa-edit"></i></button>
+    <button class="icon-btn delete" data-tooltip="Delete" data-id="${trip.trip_id}"><i class="fas fa-trash-alt"></i></button>
     ${trip.edit_reasons && trip.edit_reasons !== 'null' && trip.edit_reasons !== '' ? 
-        `<button class="icon-btn view-reasons" title="View Edit History" data-id="${trip.trip_id}">
+        `<button class="icon-btn view-reasons" data-tooltip="View Edit History" data-id="${trip.trip_id}">
             <i class="fas fa-history"></i>
         </button>` : ''}
         </td>
@@ -2419,14 +2535,14 @@ $(window).on('click', function(event) {
                     <p><strong>Last modified by: </strong>${event.modifiedby}<br>
                     <strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
                     <div class="event-actions" style="margin-top: 15px;">
-                        <button class="icon-btn edit" title="Edit" data-id="${event.id}">
+                        <button class="icon-btn edit" data-tooltip="Edit" data-id="${event.id}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="icon-btn delete" title="Delete" data-id="${event.id}">
+                        <button class="icon-btn delete" data-tooltip="Delete" data-id="${event.id}">
                             <i class="fas fa-trash"></i>
                         </button>
                         ${hasEditReasons ? 
-                            `<button class="icon-btn view-reasons" title="View Edit History" data-id="${event.id}">
+                            `<button class="icon-btn view-reasons" data-tooltip="View Edit History" data-id="${event.id}">
                                 <i class="fas fa-history"></i>
                             </button>` : ''}
                     </div>

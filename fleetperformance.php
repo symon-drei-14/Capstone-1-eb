@@ -139,7 +139,10 @@ body {
     position: relative;
     right: 50px;
     }
-
+.company {
+    margin-left:-90px;
+    height: 150px;
+}
 </style>
 
 <body>
@@ -148,8 +151,8 @@ body {
         <i class="fa fa-bars"></i>
     </button>
     <div class="logo-container">
-        <img src="include/img/logo.png" alt="Company Logo" class="logo">
-        <img src="include/img/mansar.png" alt="Company Name" class="company">
+
+        <img src="include/img/mansar2.png" alt="Company Name" class="company">
     </div>
 
     <div class="datetime-container">

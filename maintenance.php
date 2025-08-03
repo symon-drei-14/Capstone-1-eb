@@ -494,7 +494,7 @@
 
 
 .actions button:hover {
-    transform: scale(1.7);
+    transform: scale(1.2);
    
 }
 
@@ -702,6 +702,80 @@
         resize: vertical;
         min-height: 60px;
     }
+
+     .icon-btn {
+    position: relative; 
+}
+
+.icon-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 70%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999; 
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    margin-bottom: 5px;
+}
+
+.icon-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+.icon-btn::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999;
+}
+
+.icon-btn:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+.edit::after {
+    background-color: #085912; 
+}
+
+.delete::after {
+    background-color: #bd0d1f; 
+}
+.history::after {
+    background-color: #17a2b8; 
+}
+.restore::after {
+    background-color: #28a745; 
+}
+.full-delete::after {
+    background-color: #dc3545; 
+}
+.company {
+    margin-left:-90px;
+    height: 150px;
+}
+
     </style>
     <body>
 
@@ -710,8 +784,8 @@
         <i class="fa fa-bars"></i>
     </button>
     <div class="logo-container">
-        <img src="include/img/logo.png" alt="Company Logo" class="logo">
-        <img src="include/img/mansar.png" alt="Company Name" class="company">
+     
+        <img src="include/img/mansar2.png" alt="Company Name" class="company">
     </div>
 
     <div class="datetime-container">
@@ -1252,25 +1326,25 @@
             }   
             const actionsCell = row.is_deleted 
                 ? `
-                    <button class="icon-btn restore" title="Restore" onclick="restoreMaintenance(${row.maintenance_id})">
+                    <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreMaintenance(${row.maintenance_id})">
                        <i class="fas fa-trash-restore"></i>
                     </button>
                     ${window.userRole === 'Full Admin' ? 
-                    `<button class="icon-btn full-delete" title="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenance_id})">
+                    `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenance_id})">
                         <i class="fa-solid fa-ban"></i>
                     </button>` : ''}
-                    <button class="icon-btn history" title="View History" onclick="openHistoryModal(${row.truck_id})">
+                    <button class="icon-btn history" data-tooltip="View History" onclick="openHistoryModal(${row.truck_id})">
                         <i class="fas fa-history"></i>
                     </button>
                 `
                 : `
-                    <button class="icon-btn edit" title="Edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost}, '${row.maintenance_type || 'preventive'}')">
+                    <button class="icon-btn edit" data-tooltip="Edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost}, '${row.maintenance_type || 'preventive'}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="icon-btn delete" title="Delete" onclick="deleteMaintenance(${row.maintenance_id})">
+                    <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenance_id})">
                         <i class="fas fa-trash-alt"></i>
                     </button>
-                    <button class="icon-btn history" title="View History" onclick="openHistoryModal(${row.truck_id})">
+                    <button class="icon-btn history" data-tooltip="View History" onclick="openHistoryModal(${row.truck_id})">
                         <i class="fas fa-history"></i>
                     </button>
                 `;

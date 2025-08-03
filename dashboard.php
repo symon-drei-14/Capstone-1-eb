@@ -641,84 +641,6 @@ body{
     width: 100%;
 }
 
-.footer-content {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.footer-section {
-    flex: 1;
-    min-width: 250px;
-    margin-bottom: 30px;
-    padding: 0 15px;
-}
-
-.footer-section h4 {
-    color: #fff;
-    margin-bottom: 20px;
-    font-size: 18px;
-    position: relative;
-    padding-bottom: 10px;
-}
-
-.footer-section h4::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 50px;
-    height: 2px;
-    background-color: #fff;
-}
-
-.footer-section ul {
-    list-style: none;
-    padding: 0;
-}
-
-.footer-section ul li {
-    margin-bottom: 10px;
-}
-
-.footer-section ul li a {
-    color: #ddd;
-    text-decoration: none;
-    transition: color 0.3s;
-}
-
-.footer-section ul li a:hover {
-    color: #fff;
-}
-
-.footer-section p {
-    color: #ddd;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-}
-
-.footer-section p i {
-    margin-right: 10px;
-}
-
-.social-icons {
-    display: flex;
-    gap: 15px;
-}
-
-.social-icons a {
-    color: #fff;
-    font-size: 20px;
-    transition: color 0.3s;
-}
-
-.social-icons a:hover {
-    color: #ddd;
-}
 
 .footer-bottom {
     text-align: center;
@@ -863,7 +785,10 @@ body{
 .trip-details:hover {
     background-color: #9a1c2a;
 }
-
+.company {
+    margin-left:-90px;
+    height: 150px;
+}
 </style>
 
 </head>
@@ -874,8 +799,8 @@ body{
         <i class="fa fa-bars"></i>
     </button>
     <div class="logo-container">
-        <img src="include/img/logo.png" alt="Company Logo" class="logo">
-        <img src="include/img/mansar.png" alt="Company Name" class="company">
+       
+        <img src="include/img/mansar2.png" alt="Company Name" class="company">
     </div>
 
     <div class="datetime-container">
@@ -1501,41 +1426,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <footer class="site-footer">
-    <div class="footer-content">
-        <div class="footer-section">
-            <h4>Quick Links</h4>
-            <ul>
-                <li><a href="dashboard.php">Home</a></li>
-                <li><a href="drivermanagement.php">Driver Management</a></li>
-                <li><a href="fleetmanagement.php">Fleet Management</a></li>
-                <li><a href="triplogs.php">Trip Logs</a></li>
-            </ul>
-        </div>
-        <div class="footer-section">
-            <h4>Company</h4>
-            <ul>
-                <li><a href="#">About Us</a></li>
-                <li><a href="#">Contact</a></li>
-                <li><a href="#">Privacy Policy</a></li>
-                <li><a href="#">Terms of Service</a></li>
-            </ul>
-        </div>
-        <div class="footer-section">
-            <h4>Contact Us</h4>
-            <p><i class="fas fa-map-marker-alt"></i> 123 Logistics St, City</p>
-            <p><i class="fas fa-phone"></i> (123) 456-7890</p>
-            <p><i class="fas fa-envelope"></i> info@mansarlogistics.com</p>
-        </div>
-        <div class="footer-section">
-            <h4>Follow Us</h4>
-            <div class="social-icons">
-                <a href="#"><i class="fab fa-facebook"></i></a>
-                <a href="#"><i class="fab fa-twitter"></i></a>
-                <a href="#"><i class="fab fa-linkedin"></i></a>
-                <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-        </div>
-    </div>
+
     <div class="footer-bottom">
         <p>&copy; <?php echo date("Y"); ?> Mansar Logistics. All rights reserved.</p>
     </div>

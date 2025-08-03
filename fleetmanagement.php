@@ -289,7 +289,7 @@ th[onclick]:hover {
 
 .icon-btn:hover {
 
-    transform: scale(1.7);
+    transform: scale(1.2);
 }
 
 /* Specific icon colors */
@@ -413,34 +413,105 @@ th[onclick]:hover {
     background-color: #6c757d;
     color: white;
 }   
-.search-container {
-    display: flex;
-    align-items: center;
-    margin-left: 10px;
+   .search-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-container .fa-search {
+        position: absolute;
+        left: 10px;
+        color: #aaa;
+        pointer-events: none;
+    }
+
+    #searchInput {
+        padding: 5px 10px 5px 30px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        width: 200px;
+    }
+
+    #searchInput:focus {
+        outline: none;
+        border-color: #4b77de;
+    }
+
+
+   .icon-btn {
+    position: relative; 
 }
 
-#searchInput {
-    padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-    margin-right: 5px;
-    width: 200px;
-}
-
-.search-btn {
-    background-color: #B82132;
+.icon-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 70%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
     color: white;
-    border: none;
+    padding: 4px 8px;
     border-radius: 4px;
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999; 
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    margin-bottom: 5px;
 }
 
-.search-btn:hover {
-    background-color: #9a1a2a;
+.icon-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
 }
 
+
+.icon-btn::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999;
+}
+
+.icon-btn:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+.edit::after {
+    background-color: #085912; 
+}
+
+.delete::after {
+    background-color: #bd0d1f; 
+}
+.history::after {
+    background-color: #17a2b8; 
+}
+.restore::after {
+    background-color: #28a745; 
+}
+.full-delete::after {
+    background-color: #dc3545; 
+}
+
+.company {
+    margin-left:-90px;
+    height: 150px;
+}
     </style>
 </head>
 <body>
@@ -449,8 +520,8 @@ th[onclick]:hover {
         <i class="fa fa-bars"></i>
     </button>
     <div class="logo-container">
-        <img src="include/img/logo.png" alt="Company Logo" class="logo">
-        <img src="include/img/mansar.png" alt="Company Name" class="company">
+ 
+        <img src="include/img/mansar2.png" alt="Company Name" class="company">
     </div>
 
     <div class="datetime-container">
@@ -586,10 +657,9 @@ th[onclick]:hover {
 </div>
 
 <div class="search-container">
+     <i class="fas fa-search"></i>
         <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
-        <button class="search-btn" onclick="searchTrucks()">
-            <i class="fas fa-search"></i>
-        </button>
+       
     </div>
        
 </div>
@@ -967,21 +1037,21 @@ function renderTrucksTable() {
         <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
         <td class="actions">
             ${truck.is_deleted == 1 ? `
-                <button class="icon-btn restore" title="Restore" onclick="restoreTruck(${truck.truck_id})">
+                <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreTruck(${truck.truck_id})">
                   <i class="fas fa-trash-restore"></i>
                 </button>
                 ${window.userRole === 'Full Admin' ? 
-                  `<button class="icon-btn full-delete" title="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
+                  `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
                           <i class="fa-solid fa-ban"></i>
                   </button>` : ''}
-                <button class="icon-btn view-reason" title="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
+                <button class="icon-btn view-reason" data-tooltip="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
                     <i class="fas fa-info-circle"></i>
                 </button>
             ` : `
-                <button class="icon-btn edit" title="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
+                <button class="icon-btn edit" data-tooltip="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="icon-btn delete" title="Delete" onclick="deleteTruck(${truck.truck_id})">
+                <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteTruck(${truck.truck_id})">
                 
                      <i class='fas fa-trash-alt'></i>
                 </button>

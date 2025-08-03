@@ -179,7 +179,7 @@
         margin-left: 0; 
     }
     .actions button:hover {
-    transform:scale(1.5);
+    transform:scale(1.2);
     }
     .action-btn i {
         color: inherit;
@@ -259,6 +259,70 @@
         right: 50px;
         
     }
+
+    .action-btn {
+    position: relative; 
+}
+
+.action-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 65%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999; 
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    margin-bottom: 5px;
+}
+
+.action-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999;
+}
+
+.action-btn:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+.edit-btn::after {
+    background-color: #085912; 
+}
+
+.delete-btn::after {
+    background-color: #bd0d1f; 
+}
+.company {
+    margin-left:-90px;
+    height: 150px;
+}
     </style>
     <body>
     <header class="header">
@@ -266,8 +330,8 @@
             <i class="fa fa-bars"></i>
         </button>
         <div class="logo-container">
-            <img src="include/img/logo.png" alt="Company Logo" class="logo">
-            <img src="include/img/mansar.png" alt="Company Name" class="company">
+         
+            <img src="include/img/mansar2.png" alt="Company Name" class="company">
         </div>
 
         <div class="datetime-container">
@@ -450,41 +514,41 @@
             });
         }
 
-        function renderTable() {
-            document.querySelectorAll('.highlight').forEach(el => {
-                el.outerHTML = el.innerHTML;
-            });
+       function renderTable() {
+    document.querySelectorAll('.highlight').forEach(el => {
+        el.outerHTML = el.innerHTML;
+    });
+    
+    $('#driverTableBody').empty();
+    var startIndex = (currentPage - 1) * rowsPerPage;
+    var endIndex = startIndex + rowsPerPage;
+    var pageData = driversData.slice(startIndex, Math.min(endIndex, driversData.length));
+    
+    if (pageData.length > 0) {
+        pageData.forEach(function(driver) {
+            let formattedLastLogin = formatTime(driver.last_login);
             
-            $('#driverTableBody').empty();
-            var startIndex = (currentPage - 1) * rowsPerPage;
-            var endIndex = startIndex + rowsPerPage;
-            var pageData = driversData.slice(startIndex, Math.min(endIndex, driversData.length));
-            
-            if (pageData.length > 0) {
-                pageData.forEach(function(driver) {
-                    let formattedLastLogin = formatTime(driver.last_login);
-                    
-                var row = "<tr>" +
-        "<td><i class='fa-solid fa-circle-user profile-icon'></i></td>" + 
-        "<td>" + driver.driver_id + "</td>" +
-        "<td>" + driver.name + "</td>" +
-        "<td>" + driver.email + "</td>" +
-        "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
-        "<td>" + driver.created_at + "</td>" +
-        "<td>" + formattedLastLogin + "</td>" +
-        "<td class='actions'><div class='actions-container'>" +
-        "<button class='action-btn.edit-btn' title='Edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
-        "<button class='action-btn.delete-btn' title='Delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
-        "</div></td>" +
-        "</tr>";
-                    $('#driverTableBody').append(row);
-                });
-            } else {
-                $('#driverTableBody').append("<tr><td colspan='8'>No drivers found</td></tr>");
-            }
-            
-            updatePagination();
-        }
+            var row = "<tr>" +
+                "<td><i class='fa-solid fa-circle-user profile-icon'></i></td>" + 
+                "<td>" + driver.driver_id + "</td>" +
+                "<td>" + driver.name + "</td>" +
+                "<td>" + driver.email + "</td>" +
+                "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
+                "<td>" + driver.created_at + "</td>" +
+                "<td>" + formattedLastLogin + "</td>" +
+                "<td class='actions'><div class='actions-container'>" +
+                "<button class='action-btn edit-btn' data-tooltip='Edit Driver' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
+                "<button class='action-btn delete-btn' data-tooltip='Delete Driver' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
+                "</div></td>" +
+                "</tr>";
+            $('#driverTableBody').append(row);
+        });
+    } else {
+        $('#driverTableBody').append("<tr><td colspan='8'>No drivers found</td></tr>");
+    }
+    
+    updatePagination();
+}
 
         function formatTime(dateString) {
             if (!dateString || dateString === 'NULL') return 'Never';
@@ -690,8 +754,8 @@
                         "<td>" + highlightText(driver.created_at) + "</td>" +
                         "<td>" + highlightText(formattedLastLogin) + "</td>" +
                         "<td class='actions'>" +
-                        "<button class='action-btn.edit-btn' title='Edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
-                        "<button class='action-btn.delete-btn' title='Delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
+                        "<button class='action-btn.edit-btn' data-tooltip='Edit Driver' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
+                        "<button class='action-btn.delete-btn' data-tooltip ='Delete Driver' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
                         "</td>" +
                         "</tr>";
                     $('#driverTableBody').append(row);

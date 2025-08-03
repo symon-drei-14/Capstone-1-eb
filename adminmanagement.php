@@ -220,6 +220,53 @@ button.restore:hover {
     margin-left:40px;
 }
 
+   .action-btn {
+    position: relative; 
+}
+
+.action-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 65%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999; 
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    margin-bottom: 5px;
+}
+
+.action-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999;
+}
+
 
 
 .actions button.edit {
@@ -307,6 +354,74 @@ body {
         right: 50px;
         
     }
+     .icon-btn {
+    position: relative; 
+}
+
+.icon-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 70%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999; 
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    margin-bottom: 5px;
+}
+
+.icon-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+.icon-btn::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 9999;
+}
+
+.icon-btn:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+.edit::after {
+    background-color: #085912; 
+}
+
+.delete::after {
+    background-color: #bd0d1f; 
+}
+.restore::after {
+    background-color: #4CAF50; 
+}
+
+.company {
+    margin-left:-90px;
+    height: 150px;
+}
+
 </style>
 
 <body>
@@ -316,8 +431,8 @@ body {
             <i class="fa fa-bars"></i>
         </button>
         <div class="logo-container">
-            <img src="include/img/logo.png" alt="Company Logo" class="logo">
-            <img src="include/img/mansar.png" alt="Company Name" class="company">
+           
+            <img src="include/img/mansar2.png" alt="Company Name" class="company">
         </div>
 
         <div class="datetime-container">
@@ -567,9 +682,9 @@ function renderAdminsTable(admins, isSearchResult = false) {
             <td class="deleted-only">${highlightText(deletedAt)}</td>
             <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
             <td class="actions">
-                ${admin.is_deleted ? '' : `<button class="edit" onclick="openAdminModal(${admin.admin_id})" title="Edit"><i class="fas fa-edit"></i></button>`}
-                ${admin.is_deleted ? '' : `<button class="delete" onclick="confirmDeleteAdmin(${admin.admin_id})" title="Delete"><i class="fas fa-trash-alt"></i></button>`}
-                ${admin.is_deleted ? `<button class="restore" onclick="restoreAdmin(${admin.admin_id})" title="Restore"><i class="fas fa-trash-restore"></i></button>` : ''}
+                ${admin.is_deleted ? '' : `<button class="icon-btn edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i></button>`}
+                ${admin.is_deleted ? '' : `<button class="icon-btn delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i></button>`}
+                ${admin.is_deleted ? `<button class="icon-btn restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i></button>` : ''}
             </td>
         `;
         tableBody.appendChild(row);
