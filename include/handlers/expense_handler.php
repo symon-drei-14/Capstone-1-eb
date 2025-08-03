@@ -38,67 +38,114 @@ error_log("Expense Handler - Action: $action, Data: " . json_encode($data));
 try {
     switch ($action) {
         case 'add_expense':
-            $tripId = $data['trip_id'] ?? null;
-            $driverId = $data['driver_id'] ?? null;
-            $truckId = $data['truck_id'] ?? null;
-            $expenseType = $data['expense_type'] ?? null;
-            $amount = $data['amount'] ?? null;
-           
-            if (!$tripId || !$driverId || !$expenseType || !$amount) {
-                throw new Exception("Missing required fields. Trip ID: $tripId, Driver ID: $driverId, Type: $expenseType, Amount: $amount");
-            }
-           
-            // Validate amount is positive
-            if ($amount <= 0) {
-                throw new Exception("Amount must be greater than 0");
-            }
-           
-            // Get truck_id from assign table using trip_id
-            if (!$truckId) {
-                $getTruckStmt = $conn->prepare("
-                    SELECT t.truck_id
-                    FROM assign a
-                    JOIN truck_table t ON a.plate_no = t.plate_no
-                    WHERE a.trip_id = ?
-                ");
-                if ($getTruckStmt === false) {
-                    throw new Exception("Failed to prepare truck query: " . $conn->error);
-                }
-                $getTruckStmt->bind_param("i", $tripId);
-                $getTruckStmt->execute();
-                $truckResult = $getTruckStmt->get_result();
-                if ($truckResult->num_rows > 0) {
-                    $truckData = $truckResult->fetch_assoc();
-                    $truckId = $truckData['truck_id'];
-                    error_log("Found truck_id: $truckId for trip_id: $tripId");
+    $tripId = $data['trip_id'] ?? null;
+    $driverId = $data['driver_id'] ?? null;
+    $truckId = $data['truck_id'] ?? null;
+    $expenseType = $data['expense_type'] ?? null;
+    $amount = $data['amount'] ?? null;
+   
+    // Enhanced logging
+    error_log("ADD EXPENSE - Received data: " . json_encode($data));
+    error_log("ADD EXPENSE - Trip ID: $tripId (type: " . gettype($tripId) . ")");
+    error_log("ADD EXPENSE - Driver ID: $driverId (type: " . gettype($driverId) . ")");
+    error_log("ADD EXPENSE - Truck ID: $truckId (type: " . gettype($truckId) . ")");
+    
+    if (!$tripId || !$driverId || !$expenseType || !$amount) {
+        throw new Exception("Missing required fields. Trip ID: $tripId, Driver ID: $driverId, Type: $expenseType, Amount: $amount");
+    }
+   
+    // Ensure tripId is integer and valid
+    $tripId = intval($tripId);
+    if ($tripId <= 0) {
+        throw new Exception("Invalid trip ID: must be a positive integer, received: " . $data['trip_id']);
+    }
+    
+    // Ensure driverId is integer and valid
+    $driverId = intval($driverId);
+    if ($driverId <= 0) {
+        throw new Exception("Invalid driver ID: must be a positive integer, received: " . $data['driver_id']);
+    }
+   
+    // Validate amount is positive
+    if ($amount <= 0) {
+        throw new Exception("Amount must be greater than 0");
+    }
+   
+    // Get truck_id from assign table using trip_id if not provided
+    if (!$truckId || intval($truckId) <= 0) {
+        error_log("Looking up truck_id for trip_id: $tripId");
+        
+        $getTruckStmt = $conn->prepare("
+            SELECT DISTINCT t.truck_id, t.plate_no
+            FROM assign a
+            JOIN truck_table t ON a.plate_no = t.plate_no
+            WHERE a.trip_id = ?
+            LIMIT 1
+        ");
+        if ($getTruckStmt === false) {
+            throw new Exception("Failed to prepare truck query: " . $conn->error);
+        }
+        $getTruckStmt->bind_param("i", $tripId);
+        $getTruckStmt->execute();
+        $truckResult = $getTruckStmt->get_result();
+        if ($truckResult->num_rows > 0) {
+            $truckData = $truckResult->fetch_assoc();
+            $truckId = intval($truckData['truck_id']);
+            error_log("Found truck_id: $truckId (plate: {$truckData['plate_no']}) for trip_id: $tripId");
+        } else {
+            error_log("No truck found in assign table for trip_id: $tripId");
+            
+            // Try alternative lookup from trips table if exists
+            $altTruckStmt = $conn->prepare("
+                SELECT truck_id FROM trips WHERE trip_id = ?
+            ");
+            if ($altTruckStmt) {
+                $altTruckStmt->bind_param("i", $tripId);
+                $altTruckStmt->execute();
+                $altResult = $altTruckStmt->get_result();
+                if ($altResult->num_rows > 0) {
+                    $altData = $altResult->fetch_assoc();
+                    $truckId = intval($altData['truck_id']);
+                    error_log("Found truck_id: $truckId from trips table for trip_id: $tripId");
                 } else {
-                    error_log("No truck found for trip_id: $tripId, setting truck_id to NULL");
+                    error_log("No truck found in trips table either for trip_id: $tripId");
                     $truckId = null;
                 }
-                $getTruckStmt->close();
+                $altTruckStmt->close();
+            } else {
+                $truckId = null;
             }
-           
-            // Insert expense
-            $stmt = $conn->prepare("INSERT INTO expenses
-                (trip_id, driver_id, truck_id, expense_type, amount, created_by)
-                VALUES (?, ?, ?, ?, ?, ?)");
-           
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare insert statement: " . $conn->error);
-            }
-           
-            $stmt->bind_param("iiisds", $tripId, $driverId, $truckId, $expenseType, $amount, $currentUser);
-           
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute insert: " . $stmt->error);
-            }
-           
-            $newExpenseId = $conn->insert_id;
-            $stmt->close();
-           
-            error_log("Expense added successfully. ID: $newExpenseId, Trip: $tripId, Truck: $truckId");
-            echo json_encode(['success' => true, 'expense_id' => $newExpenseId]);
-            break;
+        }
+        $getTruckStmt->close();
+    } else {
+        $truckId = intval($truckId);
+        error_log("Using provided truck_id: $truckId");
+    }
+   
+    // Final validation log
+    error_log("Final values - Trip ID: $tripId, Driver ID: $driverId, Truck ID: " . ($truckId ?: 'NULL') . ", Type: $expenseType, Amount: $amount");
+   
+    // Insert expense
+    $stmt = $conn->prepare("INSERT INTO expenses
+        (trip_id, driver_id, truck_id, expense_type, amount, created_by)
+        VALUES (?, ?, ?, ?, ?, ?)");
+   
+    if ($stmt === false) {
+        throw new Exception("Failed to prepare insert statement: " . $conn->error);
+    }
+   
+    $stmt->bind_param("iiisds", $tripId, $driverId, $truckId, $expenseType, $amount, $currentUser);
+   
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute insert: " . $stmt->error);
+    }
+   
+    $newExpenseId = $conn->insert_id;
+    $stmt->close();
+   
+    error_log("✅ Expense added successfully. ID: $newExpenseId, Trip: $tripId, Driver: $driverId, Truck: " . ($truckId ?: 'NULL'));
+    echo json_encode(['success' => true, 'expense_id' => $newExpenseId]);
+    break;
 
 
         case 'get_expenses_by_trip':
