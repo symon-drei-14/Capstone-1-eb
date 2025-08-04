@@ -11,7 +11,7 @@ checkAccess();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Management</title>
     <link rel="stylesheet" href="include/css/sidenav.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="include/fleetmanagement.css">
 </head>
 <style>
@@ -150,6 +150,8 @@ checkAccess();
 button.restore {
     background-color: #4CAF50;
     color: white;
+
+
 }
 
 button.restore:hover {
@@ -196,29 +198,30 @@ button.restore:hover {
     border-radius: 2px;
     }
 
-  .actions {
-     display: inline-flex;
+ .actions {
+    display: block;
     flex-wrap: nowrap;
-    gap: 0px;
+    gap: 50px; 
     justify-content: center;
     align-items: center;
     padding: 2px;
-    margin: 20;
-    flex-direction:row;
+    margin: 10; 
+    flex-direction: row;
 }
+
 .actions button {
-    padding: 6px 12px;
+    padding: 6px 8px; 
     font-size: 16px;
     cursor: pointer;
     border: none;
     border-radius: 7px;
-    margin: 0 5px;
+    margin: 0; 
     transition: background-color 0.3s, color 0.3s;
-    width: 80px; 
-    white-space: nowrap; 
-    margin-bottom: 10px;
-    margin-left:40px;
+    width: auto; 
+    white-space: nowrap;
+    margin-bottom: 0; 
 }
+
 
    .action-btn {
     position: relative; 
@@ -272,21 +275,21 @@ button.restore:hover {
 .actions button.edit {
     background-color:transparent;
       color: rgba(8, 89, 18, 1);
-       margin-right: -20px;
+      
               
 }
 
 .actions button.delete {
     background-color:transparent;
      color: rgba(189, 13, 31, 1);
-    margin-left: -30px;    
+  
 
 }
 
 .actions button.restore {
     background-color:transparent;
     color: #4CAF50;
-      margin-left: 10px;    
+
 
 }
 
@@ -416,10 +419,53 @@ body {
 .restore::after {
     background-color: #4CAF50; 
 }
+.full-delete::after {
+    background-color: #dc3545; 
+}
 
+.actions button.full-delete {
+    background-color: transparent;
+    color: #dc3545 !important;
+    border: none;
+    padding: 5px 8px; 
+    border-radius: 4px;
+    cursor: pointer;
+
+}
+
+.full-delete:hover {
+       transform: scale(1.1);
+}
 .company {
     margin-left:-90px;
     height: 110px;
+}
+.site-footer {
+    background-color: #B82132;
+    color: white;
+    padding: 30px 0 0;
+    margin-top: 40px;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-bottom {
+    text-align: center;
+    display:block;
+    justify-items:center;
+    align-items:center;
+    padding: 10px 0;
+
+    
+}
+
+.footer-bottom p {
+    margin: 0;
+    color: #ddd;
+    font-size: 16px;
+    display:block;
+    
 }
 
 </style>
@@ -681,11 +727,12 @@ function renderAdminsTable(admins, isSearchResult = false) {
             <td class="deleted-only">${highlightText(admin.deleted_by || '')}</td>
             <td class="deleted-only">${highlightText(deletedAt)}</td>
             <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
-            <td class="actions">
-                ${admin.is_deleted ? '' : `<button class="icon-btn edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i></button>`}
-                ${admin.is_deleted ? '' : `<button class="icon-btn delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i></button>`}
-                ${admin.is_deleted ? `<button class="icon-btn restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i></button>` : ''}
-            </td>
+             <td class="actions">
+        ${admin.is_deleted ? '' : `<button class="icon-btn edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i></button>`}
+        ${admin.is_deleted ? '' : `<button class="icon-btn delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i></button>`}
+        ${admin.is_deleted ? `<button class="icon-btn restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i></button>` : ''}
+        ${admin.is_deleted ? `<button class="icon-btn full-delete" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i></button>` : ''}
+                 </td>
         `;
         tableBody.appendChild(row);
     });
@@ -959,5 +1006,12 @@ document.getElementById('showDeletedCheckbox').addEventListener('change', toggle
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
+
+<footer class="site-footer">
+
+    <div class="footer-bottom">
+        <p>&copy; <?php echo date("Y"); ?> Mansar Logistics. All rights reserved.</p>
+    </div>
+</footer>
 </body>
 </html>

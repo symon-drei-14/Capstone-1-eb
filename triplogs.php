@@ -979,7 +979,7 @@ body {
 
 .filter-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     margin-bottom: 15px;
     padding: 10px;
@@ -995,7 +995,7 @@ body {
     align-items: center;
     gap: 10px;
     margin-right: 10px;
-    flex: 1;
+    flex: 0 0 auto; 
 }
 
 
@@ -1010,7 +1010,7 @@ body {
     border: 1px solid #ddd;
     background-color: white;
     cursor: pointer;
-    margin-left:-95em;
+    margin-left:-96em;
     width:120px;
     
 }
@@ -1042,7 +1042,6 @@ body {
 .restore-btn:hover {
     background-color: #45a049;
 }
-
 
 
 .show-deleted-container label {
@@ -1412,6 +1411,9 @@ margin:20px
 .restore::after {
     background-color: #0dbd33ff; 
 }
+.full-delete::after {
+    background-color: #dc3545; 
+}
 
 
 .view-reasons::after {
@@ -1419,34 +1421,59 @@ margin:20px
 left:10%;
 }
 
-#showDeletedCheckbox {
-    margin-right: 5px;
-}
-
 .show-deleted-container {
     display: flex;
     align-items: center;
-    gap: 5px;  /* Space between checkbox and label */
-    margin-left: 0; /* Remove negative margin */
+    gap: 5px;   
     white-space: nowrap;
+    flex: 0 0 auto;
+
 }
-
-/*.show-deleted-container {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-left: 0em;
-    white-space: nowrap;
-} */
-
-/*.show-deleted-container label {
-    margin-bottom: 0;
+.full-delete {
+ 
+    color: #dc3545;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
     cursor: pointer;
+    margin-right: 5px;
 }
-*/
+
+.full-delete:hover {
+       transform: scale(1.1);
+}
+
 .company {
     margin-left:-90px;
     height: 110px;
+}
+
+.site-footer {
+    background-color: #B82132;
+    color: white;
+    padding: 30px 0 0;
+    margin-top: 40px;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-bottom {
+    text-align: center;
+    display:block;
+    justify-items:center;
+    align-items:center;
+    padding: 10px 0;
+
+    
+}
+
+.footer-bottom p {
+    margin: 0;
+    color: #ddd;
+    font-size: 16px;
+    display:block;
+    
 }
 </style>
 <body>
@@ -1923,7 +1950,7 @@ if ($driverResult->num_rows > 0) {
         </select>
     
 
- <div class="search-container" style="margin-left: 20px;">
+ <div class="search-container" style="margin-left: 10px;">
         <i class="fa fa-search"></i>
         <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()">
     </div>
@@ -2096,6 +2123,10 @@ function renderTripRows(trips, showDeleted) {
                 <td class="actions">
                     <button class="icon-btn restore" data-tooltip="Restore" data-id="${trip.trip_id}">
                        <i class="fas fa-trash-restore"></i>
+                       ${window.userRole === 'Full Admin' ? 
+                  `<button class="icon-btn full-delete" data-tooltip="Permanently Delete">
+                          <i class="fa-solid fa-ban"></i>
+                  </button>` : ''}
                     </button>
                 </td>
             `;
@@ -3020,6 +3051,13 @@ console.log("Filtering by:", currentStatusFilter, "Found:", filteredEvents.lengt
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
+
+<footer class="site-footer">
+
+    <div class="footer-bottom">
+        <p>&copy; <?php echo date("Y"); ?> Mansar Logistics. All rights reserved.</p>
+    </div>
+</footer>
 </body>
 </html>
 

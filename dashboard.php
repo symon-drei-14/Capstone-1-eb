@@ -11,6 +11,21 @@ $drivingDrivers = getDrivingDrivers();
 $alldeliveries = getAllDeliveriesCount();
 $alloverduetrucks = getOverdueTrucks();
 $allrepairtrucks = getRepairTrucks();
+
+require_once 'include/handlers/dbhandler.php';
+$maintenanceQuery = "SELECT licence_plate, remarks, date_mtnce, status 
+                    FROM maintenance 
+                    WHERE is_deleted = 0 
+                    AND status != 'completed'
+                    ORDER BY date_mtnce ASC 
+                    LIMIT 5";
+$maintenanceResult = $conn->query($maintenanceQuery);
+$maintenanceRecords = [];
+if ($maintenanceResult->num_rows > 0) {
+    while($row = $maintenanceResult->fetch_assoc()) {
+        $maintenanceRecords[] = $row;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -642,15 +657,20 @@ body{
 
 .footer-bottom {
     text-align: center;
-    padding: 15px 0;
-    background-color: rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
+    display:block;
+    justify-items:center;
+    align-items:center;
+    padding: 10px 0;
+
+    
 }
 
 .footer-bottom p {
     margin: 0;
     color: #ddd;
-    font-size: 14px;
+    font-size: 16px;
+    display:block;
+    
 }
 
 .modal {
@@ -787,8 +807,166 @@ body{
     margin-left:-90px;
     height: 110px;
 }
-</style>
 
+#calendar {
+    width: 96%;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 15px 25px, rgba(0, 0, 0, 0.05) 0px 5px 10px;
+    height:auto;
+
+}
+
+.fc-event {
+    max-width: 120px !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 2px 4px !important;
+    margin: 1px 0 !important;
+    font-size: 0.85em !important;
+    line-height: 1.2;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    display: inline-block;
+}
+
+.fc-event .fc-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.fc-event .fc-time {
+    font-weight: bold;
+    margin-right: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fc-event .fc-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.fc-day-selected {
+    background-color: #d5d5d8 !important;
+    color: white !important;
+}
+
+.fc-day:hover {
+    background-color: #d5d5d8;
+    color: white;
+}
+
+.status.completed {
+    background-color: #28a745;
+    color: white;
+}
+
+.status.pending {
+    background-color: #ffc107;
+    color: black;
+}
+
+.status.cancelled {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status.enroute, 
+.status.en-route {
+    background-color: #007bff;
+    color: white;
+}
+
+  .calendar-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding: 10px;
+        background-color: #ffffffff;
+        border-radius: 8px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .legend-color {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+    }
+    
+    .legend-color.pending {
+        background-color: #ffc107; /* Yellow */
+    }
+    
+    .legend-color.enroute {
+        background-color: #007bff; /* Blue */
+    }
+    
+    .legend-color.completed {
+        background-color: #28a745; /* Green */
+    }
+    
+    .legend-color.cancelled {
+        background-color: #dc3545; /* Red */
+    }
+    
+    .legend-label {
+        font-size: 14px;
+        color: #333;
+    }
+</style>
+<?php
+require_once __DIR__ . '/include/check_access.php';
+require 'include/handlers/dbhandler.php';
+
+// Fetch trip data
+$sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity, a.edit_reasons, d.driver_id
+        FROM assign a
+        LEFT JOIN drivers_table d ON a.driver = d.name
+        LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id
+        WHERE a.is_deleted = 0";
+$result = $conn->query($sql);
+$eventsData = [];
+
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $eventsData[] = [
+            'id' => $row['trip_id'],
+            'plateNo' => $row['plate_no'],
+            'date' => $row['date'],
+            'driver' => $row['driver'],
+            'driver_id' => $row['driver_id'],
+            'helper' => $row['helper'],
+            'dispatcher' => $row['dispatcher'],
+            'containerNo' => $row['container_no'],
+            'client' => $row['client'],
+            'destination' => $row['destination'],
+            'shippingLine' => $row['shippine_line'],
+            'consignee' => $row['consignee'],
+            'size' => $row['size'],
+            'cashAdvance' => $row['cash_adv'],
+            'status' => $row['status'],
+            'modifiedby' => $row['last_modified_by'],
+            'modifiedat' => $row['last_modified_at'],
+            'truck_plate_no' => $row['truck_plate_no'],
+            'truck_capacity' => $row['truck_capacity'],
+            'edit_reasons' => $row['edit_reasons'] 
+        ];
+    }
+}
+
+$eventsDataJson = json_encode($eventsData);
+?>
 </head>
 
 <body>
@@ -856,11 +1034,11 @@ body{
     </div>
 </div>
 
-<div class="quick-stats">
+ <!-- <div class="quick-stats">
     <span><i class="fas fa-truck"></i> 42 Active Vehicles</span>
     <span><i class="fas fa-user"></i> 18 Drivers On Duty</span>
     <span><i class="fas fa-map-marker-alt"></i> 7 Deliveries Today</span>
-</div>
+</div>  -->
 
 <div class="dashboard-grid">
    <div class="grid-item card statistic on-route">
@@ -957,78 +1135,108 @@ body{
 </div>
 <section class="maintenance-section">
     <div class="card-large">
-        <h3>Upcoming Maintenance</h3>
+        <h3>Maintenance keneve Status</h3>
         <div class="maintenance-container">
             <div class="maintenance-header">
-                <span class="header-vehicle">Vehicle</span>
+                <span class="header-vehicle">License Plate</span>
                 <span class="header-service">Service Type</span>
                 <span class="header-date">Due Date</span>
                 <span class="header-status">Status</span>
             </div>
             
-            <div class="maintenance-item urgent">
-                <div class="maintenance-details">
-                    <span class="vehicle">MAN-4567 (Volvo Truck)</span>
-                    <span class="service">Oil Change</span>
-                    <span class="date">Tomorrow</span>
-                    <span class="status-badge urgent-badge">Urgent</span>
+            <?php if (!empty($maintenanceRecords)): ?>
+                <?php foreach ($maintenanceRecords as $record): 
+                    // Determine status class based on status value
+                    $statusClass = '';
+                    if (stripos($record['status'], 'overdue') !== false) {
+                        $statusClass = 'urgent';
+                    } elseif (stripos($record['status'], 'in progress') !== false) {
+                        $statusClass = 'warning';
+                    } elseif (stripos($record['status'], 'pending') !== false) {
+                        $statusClass = 'normal';
+                    } else {
+                        $statusClass = 'normal'; // Default fallback
+                    }
+                    
+                    // Format the date
+                    $dueDate = date('M j, Y', strtotime($record['date_mtnce']));
+                    $today = new DateTime();
+                    $dueDateTime = new DateTime($record['date_mtnce']);
+                    $interval = $today->diff($dueDateTime);
+                    $daysDifference = $interval->format('%r%a');
+                    
+                    // Create a human-readable date string
+                    if ($daysDifference == 0) {
+                        $dateString = 'Today';
+                    } elseif ($daysDifference == 1) {
+                        $dateString = 'Tomorrow';
+                    } elseif ($daysDifference > 1 && $daysDifference <= 7) {
+                        $dateString = 'In ' . $daysDifference . ' days';
+                    } elseif ($daysDifference < 0) {
+                        $dateString = abs($daysDifference) . ' days overdue';
+                    } else {
+                        $dateString = $dueDate;
+                    }
+                ?>
+                <div class="maintenance-item <?php echo $statusClass; ?>">
+                    <div class="maintenance-details">
+                        <span class="vehicle"><?php echo htmlspecialchars($record['licence_plate']); ?></span>
+                        <span class="service"><?php echo htmlspecialchars($record['remarks']); ?></span>
+                        <span class="date"><?php echo $dateString; ?></span>
+                        <span class="status-badge <?php echo $statusClass; ?>-badge">
+                            <?php echo htmlspecialchars($record['status']); ?>
+                        </span>
+                    </div>
+                    <div class="maintenance-progress">
+                        <div class="progress-bar urgent-bar" style="width: 100%;"></div>
+                    </div>
                 </div>
-                <div class="maintenance-progress">
-                    <div class="progress-bar urgent-bar" style="width: 95%"></div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="maintenance-item">
+                    <div class="maintenance-details" style="grid-template-columns: 1fr; text-align: center;">
+                        <span>No maintenance records found</span>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="maintenance-item warning">
-                <div class="maintenance-details">
-                    <span class="vehicle">MAN-8910 (Isuzu Truck)</span>
-                    <span class="service">Brake Inspection</span>
-                    <span class="date">In 3 Days</span>
-                    <span class="status-badge warning-badge">Upcoming</span>
-                </div>
-                <div class="maintenance-progress">
-                    <div class="progress-bar warning-bar" style="width: 75%"></div>
-                </div>
-            </div>
-            
-            <div class="maintenance-item normal">
-                <div class="maintenance-details">
-                    <span class="vehicle">MAN-1122 (Hino Truck)</span>
-                    <span class="service">Tire Rotation</span>
-                    <span class="date">Next Week</span>
-                    <span class="status-badge normal-badge">Scheduled</span>
-                </div>
-                <div class="maintenance-progress">
-                    <div class="progress-bar normal-bar" style="width: 50%"></div>
-                </div>
-            </div>
-            
-            <div class="maintenance-item completed">
-                <div class="maintenance-details">
-                    <span class="vehicle">MAN-3344 (Mitsubishi Truck)</span>
-                    <span class="service">Engine Tune-up</span>
-                    <span class="date">Completed</span>
-                    <span class="status-badge completed-badge">Completed</span>
-                </div>
-                <div class="maintenance-progress">
-                    <div class="progress-bar completed-bar" style="width: 100%"></div>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
         
-        <button class="view-all-btn">View All Maintenance Records</button>
+        <button class="view-all-btn" onclick="window.location.href='maintenance.php'">View All Maintenance Records</button>
     </div>
 </section>
 
 <section class="calendar-section">
     <div class="card-large">
         <h3>Event Calendar</h3>
-        <div id="calendar"></div> 
+        
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <span class="legend-color pending"></span>
+                <span class="legend-label">Pending</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color enroute"></span>
+                <span class="legend-label">En Route</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color completed"></span>
+                <span class="legend-label">Completed</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color cancelled"></span>
+                <span class="legend-label">Cancelled</span>
+            </div>
+        </div>
+        
+        <div id="calendar"></div>
+    </div>
 </section>
 
 
-
 <script>
-    // Shipment Statistics Line Chart
+  
+
+
     var shipmentOptions = {
         series: [{
             name: 'Income',
@@ -1102,105 +1310,63 @@ body{
         labels: ['On the way', 'Unloading', 'Loading', 'Waiting']
     };
 
+
+    
+     var calendarEvents = <?php echo $eventsDataJson; ?>;
+    
+    // Format events for FullCalendar
+    var formattedEvents = calendarEvents.map(function(event) {
+        return {
+            id: event.id,
+            title: event.client + ' - ' + event.destination,
+            start: event.date,
+            plateNo: event.plateNo,
+            driver: event.driver,
+            helper: event.helper,
+            dispatcher: event.dispatcher,
+            containerNo: event.containerNo,
+            client: event.client,
+            destination: event.destination,
+            shippingLine: event.shippingLine,
+            consignee: event.consignee,
+            size: event.size,
+            cashAdvance: event.cashAdvance,
+            status: event.status,
+            modifiedby: event.modifiedby,
+            modifiedat: event.modifiedat
+        };
+    });
+
+    // Initialize calendar with the formatted events
     $(document).ready(function() {
         $('#calendar').fullCalendar({
-            header: {
-                left: 'prev,next today',    // Buttons for navigation
-                center: 'title',            // Title in the center
-                right: 'agendaWeek'         // Only show agenda week view
+            header: { 
+                left: 'prev,next today', 
+                center: 'title', 
+                right: 'month,agendaWeek,agendaDay' 
             },
-            defaultView: 'agendaWeek',      // Start with week view
-            views: {
-                agendaWeek: {
-                    titleFormat: 'MM-DD-YYYY',  // Display only the week title
-                }
+            events: formattedEvents,
+            timeFormat: 'h:mm A', 
+            displayEventTime: true, 
+            displayEventEnd: false, 
+            eventRender: function(event, element) {
+                element.find('.fc-title').css({
+                    'white-space': 'normal',
+                    'overflow': 'visible'
+                });
+                
+                element.find('.fc-title').html(event.client + ' - ' + event.destination);
+                
+                var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
+                element.addClass(statusClass);
             },
-            // Custom day render to highlight today's date
-            dayRender: function(date, cell) {
-                var today = moment().format('MM-DD-YYYY');
-                if (date.format('YYYY-MM-DD') === today) {
-                    // Apply a gray background for today's date
-                    cell.css("background-color", "#e0e0e0");
-                    cell.addClass("highlight-today");
-                }
-            },
-            events: [
-                {
-                    title: 'Ongoing Delivery',
-                    start: '2025-04-06T10:00:00',
-                    end: '2025-04-06T12:00:00',
-                    color: '#457B3D', // Custom color for event
-                    description: 'Delivering goods to clients'
-                },
-                {
-                    title: 'Damaged Vehicle',
-                    start: '2025-04-07T14:00:00',
-                    color: '#D91F19', // Custom color for event
-                    description: 'Vehicle needs repair'
-                },
-                {
-                    title: 'Late Delivery',
-                    start: '2025-04-08T16:00:00',
-                    color: '#BB9407', // Custom color for event
-                    description: 'Delivery delayed due to traffic'
-                },
-                {
-                    title: 'Vehicle Maintenance',
-                    start: '2025-04-09T09:00:00',
-                    color: '#E67931', // Custom color for event
-                    description: 'Routine maintenance'
-                },
-                {
-                    title: 'New Event',
-                    start: '2025-04-10T10:00:00',
-                    end: '2025-04-10T12:00:00',
-                    color: '#0077FF',
-                    description: 'Client delivery on time'
-                },
-                {
-                    title: 'Package Delivery',
-                    start: '2025-04-11T14:00:00',
-                    end: '2025-04-11T16:00:00',
-                    color: '#FF5733',
-                    description: 'Package delivery scheduled for today'
-                },
-                {
-                    title: 'Routine Check-up',
-                    start: '2025-04-06T08:00:00',
-                    end: '2025-04-06T09:00:00',
-                    color: '#F1C40F',
-                    description: 'Routine vehicle check-up in the morning'
-                },
-                {
-                    title: 'Urgent Delivery',
-                    start: '2025-04-07T11:00:00',
-                    color: '#E74C3C',
-                    description: 'Urgent delivery to client A'
-                },
-                {
-                    title: 'Driver Rest',
-                    start: '2025-04-09T18:00:00',
-                    end: '2025-04-09T20:00:00',
-                    color: '#2ECC71',
-                    description: 'Rest period for driver'
-                },
-                {
-                    title: 'Heavy Traffic Expected',
-                    start: '2025-04-10T08:00:00',
-                    color: '#9B59B6',
-                    description: 'Expect delays due to roadwork'
-                },
-                {
-                    title: 'New Vehicle Inspection',
-                    start: '2025-04-11T10:00:00',
-                    end: '2025-04-11T11:00:00',
-                    color: '#FF8C00',
-                    description: 'Inspect new vehicle before use'
-                }
-            ]
+            dayClick: function(date, jsEvent, view) {
+                var clickedDay = $(this);
+                $('.fc-day').removeClass('fc-day-selected');
+                clickedDay.addClass('fc-day-selected');
+            }
         });
     });
-  
  
 </script>
 

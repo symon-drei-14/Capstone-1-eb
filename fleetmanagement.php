@@ -155,9 +155,7 @@ checkAccess();
     gap: 10px;
 }
 
-.status-filter label {
-    font-weight: bold;
-}
+
 
 .status-filter select {
     padding: 8px 12px;
@@ -512,6 +510,34 @@ th[onclick]:hover {
     margin-left:-90px;
     height: 110px;
 }
+
+.site-footer {
+    background-color: #B82132;
+    color: white;
+    padding: 30px 0 0;
+    margin-top: 40px;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-bottom {
+    text-align: center;
+    display:block;
+    justify-items:center;
+    align-items:center;
+    padding: 10px 0;
+
+    
+}
+
+.footer-bottom p {
+    margin: 0;
+    color: #ddd;
+    font-size: 16px;
+    display:block;
+    
+}
     </style>
 </head>
 <body>
@@ -648,19 +674,16 @@ th[onclick]:hover {
     </select>
 
        
-
-    <div class="show-deleted-filter">
+<div class="search-container">
+     <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
+    </div>
+        <div class="show-deleted-filter">
     <label>
         <input type="checkbox" id="showDeleted" onchange="toggleDeletedTrucks()">
         Show Deleted Trucks
     </label>
 </div>
-
-<div class="search-container">
-     <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
-       
-    </div>
        
 </div>
 
@@ -1270,5 +1293,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
+
+<footer class="site-footer">
+
+    <div class="footer-bottom">
+        <p>&copy; <?php echo date("Y"); ?> Mansar Logistics. All rights reserved.</p>
+    </div>
+</footer>
 </body>
 </html>
