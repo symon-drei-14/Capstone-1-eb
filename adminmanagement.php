@@ -719,21 +719,21 @@ function renderAdminsTable(admins, isSearchResult = false) {
         const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
         
         row.innerHTML = `
-            <td><i class="fa-solid fa-circle-user"></i></td>
-            <td>${highlightText(admin.admin_id)}</td>
-            <td>${highlightText(admin.username)}</td>
-            <td>${highlightText(admin.role || 'Full Admin')}</td>
-            <td>${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
-            <td class="deleted-only">${highlightText(admin.deleted_by || '')}</td>
-            <td class="deleted-only">${highlightText(deletedAt)}</td>
-            <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
-             <td class="actions">
+    <td><i class="fa-solid fa-circle-user"></i></td>
+    <td>${highlightText(admin.admin_id)}</td>
+    <td>${highlightText(admin.username)}</td>
+    <td>${highlightText(admin.role || 'Full Admin')}</td>
+    <td>${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
+    <td class="deleted-only">${highlightText(admin.deleted_by || '')}</td>
+    <td class="deleted-only">${highlightText(deletedAt)}</td>
+    <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
+    <td class="actions">
         ${admin.is_deleted ? '' : `<button class="icon-btn edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i></button>`}
         ${admin.is_deleted ? '' : `<button class="icon-btn delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i></button>`}
         ${admin.is_deleted ? `<button class="icon-btn restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i></button>` : ''}
-        ${admin.is_deleted ? `<button class="icon-btn full-delete" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i></button>` : ''}
-                 </td>
-        `;
+        ${admin.is_deleted ? `<button class="icon-btn full-delete" onclick="fullDeleteAdmin(${admin.admin_id})" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i></button>` : ''}
+    </td>
+`;
         tableBody.appendChild(row);
     });
     
@@ -1003,6 +1003,29 @@ document.getElementById('showDeletedCheckbox').addEventListener('change', toggle
         }
     });
 });
+
+function fullDeleteAdmin(adminId) {
+    if (confirm('WARNING: This will permanently delete this admin record. Are you absolutely sure?')) {
+        fetch('include/handlers/delete_admin.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                admin_id: adminId,
+                full_delete: true
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Admin permanently deleted!');
+                fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
