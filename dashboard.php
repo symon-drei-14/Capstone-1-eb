@@ -1314,7 +1314,7 @@ $eventsDataJson = json_encode($eventsData);
     
      var calendarEvents = <?php echo $eventsDataJson; ?>;
     
-    // Format events for FullCalendar
+    
     var formattedEvents = calendarEvents.map(function(event) {
         return {
             id: event.id,
@@ -1337,36 +1337,69 @@ $eventsDataJson = json_encode($eventsData);
         };
     });
 
-    // Initialize calendar with the formatted events
-    $(document).ready(function() {
-        $('#calendar').fullCalendar({
-            header: { 
-                left: 'prev,next today', 
-                center: 'title', 
-                right: 'month,agendaWeek,agendaDay' 
-            },
-            events: formattedEvents,
-            timeFormat: 'h:mm A', 
-            displayEventTime: true, 
-            displayEventEnd: false, 
-            eventRender: function(event, element) {
-                element.find('.fc-title').css({
-                    'white-space': 'normal',
-                    'overflow': 'visible'
-                });
-                
-                element.find('.fc-title').html(event.client + ' - ' + event.destination);
-                
-                var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
-                element.addClass(statusClass);
-            },
-            dayClick: function(date, jsEvent, view) {
-                var clickedDay = $(this);
-                $('.fc-day').removeClass('fc-day-selected');
-                clickedDay.addClass('fc-day-selected');
-            }
-        });
+  
+   $(document).ready(function() {
+    $('#calendar').fullCalendar({
+        header: { 
+            left: 'prev,next today', 
+            center: 'title', 
+            right: 'month,agendaWeek,agendaDay' 
+        },
+        events: formattedEvents,
+        timeFormat: 'h:mm A', 
+        displayEventTime: true, 
+        displayEventEnd: false, 
+        eventRender: function(event, element) {
+            element.find('.fc-title').css({
+                'white-space': 'normal',
+                'overflow': 'visible'
+            });
+            
+            element.find('.fc-title').html(event.client + ' - ' + event.destination);
+            
+            var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
+            element.addClass(statusClass);
+        },
+        dayClick: function(date, jsEvent, view) {
+            var clickedDay = $(this);
+            $('.fc-day').removeClass('fc-day-selected');
+            clickedDay.addClass('fc-day-selected');
+        },
+        eventClick: function(calEvent, jsEvent, view) {
+           
+            var dateObj = new Date(calEvent.start);
+            var formattedDate = dateObj.toLocaleString();
+            
+          
+            var modifiedDate = calEvent.modifiedat ? new Date(calEvent.modifiedat).toLocaleString() : 'N/A';
+            
+          
+            $('#td-plate').text(calEvent.plateNo || 'N/A');
+            $('#td-date').text(formattedDate);
+            $('#td-driver').text(calEvent.driver || 'N/A');
+            $('#td-helper').text(calEvent.helper || 'N/A');
+            $('#td-dispatcher').text(calEvent.dispatcher || 'N/A');
+            $('#td-container').text(calEvent.containerNo || 'N/A');
+            $('#td-client').text(calEvent.client || 'N/A');
+            $('#td-destination').text(calEvent.destination || 'N/A');
+            $('#td-shipping').text(calEvent.shippingLine || 'N/A');
+            $('#td-consignee').text(calEvent.consignee || 'N/A');
+            $('#td-size').text(calEvent.size || 'N/A');
+            $('#td-cashadvance').text(calEvent.cashAdvance || 'N/A');
+            $('#td-status').text(calEvent.status || 'N/A')
+                          .removeClass()
+                          .addClass('status ' + (calEvent.status ? calEvent.status.toLowerCase().replace(/\s+/g, '') : ''));
+            $('#td-modifiedby').text(calEvent.modifiedby || 'System');
+            $('#td-modifiedat').text(modifiedDate);
+            
+           
+            $('#tripDetailsModal').show();
+            
+            
+            return false;
+        }
     });
+});
  
 </script>
 
