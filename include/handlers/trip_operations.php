@@ -295,6 +295,29 @@ case 'restore':
     ]);
     break;
 
+    case 'full_delete':
+    // First get the trip details
+    $getTrip = $conn->prepare("SELECT * FROM assign WHERE trip_id = ?");
+    $getTrip->bind_param("i", $data['id']);
+    $getTrip->execute();
+    $trip = $getTrip->get_result()->fetch_assoc();
+    
+    // Permanently delete the trip
+    $stmt = $conn->prepare("DELETE FROM assign WHERE trip_id = ?");
+    $stmt->bind_param("i", $data['id']);
+    $stmt->execute();
+    
+    // Get updated stats
+    require 'triplogstats.php';
+    $stats = getTripStatistics($conn);
+    
+    echo json_encode([
+        'success' => true,
+        'stats' => $stats,
+        'message' => 'Trip permanently deleted'
+    ]);
+    break;
+
         default:
             throw new Exception("Invalid action");
     }

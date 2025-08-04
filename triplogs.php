@@ -2886,6 +2886,67 @@ function searchTrips() {
 }
 
 
+$(document).on('click', '.icon-btn.full-delete', function() {
+    const tripId = $(this).closest('.icon-btn.restore').data('id');
+    const $row = $(this).closest('tr');
+
+    Swal.fire({
+        title: 'Permanently Delete Trip?',
+        text: "This action cannot be undone! The trip will be permanently deleted from the database.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete permanently!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'include/handlers/trip_operations.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'full_delete',
+                    id: tripId
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        // Update stats cards with the returned data
+                        $('.stat-value').eq(0).text(response.stats.pending);
+                        $('.stat-value').eq(1).text(response.stats.enroute);
+                        $('.stat-value').eq(2).text(response.stats.completed);
+                        $('.stat-value').eq(3).text(response.stats.cancelled);
+                        $('.stat-value').eq(4).text(response.stats.total);
+
+                        // Remove the row from the table
+                        $row.remove();
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: 'The trip has been permanently deleted.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to delete trip'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Server error occurred'
+                    });
+                }
+            });
+        }
+    });
+});
+
 function loadDeletedTrips() {
     $.ajax({
         url: 'include/handlers/trip_operations.php',
