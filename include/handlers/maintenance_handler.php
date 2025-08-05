@@ -172,40 +172,52 @@ function getMaintenanceHistory($conn, $truckId) {
 
 function getMaintenanceReminders($conn) {
     // First get all maintenance records that are due soon or overdue
-    $sql = "SELECT m.maintenance_id, m.truck_id, t.plate_no as licence_plate, m.date_mtnce, 
-            m.remarks, m.status, m.supplier, m.cost, m.last_modified_by, m.last_modified_at,
+    $sql = "SELECT 
+            m.maintenance_id, 
+            m.truck_id, 
+            t.plate_no as licence_plate, 
+            m.date_mtnce, 
+            m.remarks, 
+            m.status, 
             DATEDIFF(m.date_mtnce, CURDATE()) as days_remaining
             FROM maintenance m
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id
             WHERE m.status != 'Completed' 
-            AND (DATEDIFF(m.date_mtnce, CURDATE()) <= 7)
+            AND m.is_deleted = 0
+            AND t.is_deleted = 0
+            AND (DATEDIFF(m.date_mtnce, CURDATE()) <= 7 OR m.date_mtnce < CURDATE())
             ORDER BY days_remaining ASC";
     
     $result = $conn->query($sql);
     
-    $reminders = [];
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            // Check if this record is overdue (days_remaining < 0)
-            if ($row['days_remaining'] < 0 && $row['status'] != 'Overdue') {
-                // Update the status to Overdue
-                $updateStmt = $conn->prepare("UPDATE maintenance SET status = 'Overdue' WHERE maintenance_id = ?");
-                $updateStmt->bind_param("i", $row['maintenance_id']);
-                $updateStmt->execute();
-                
-                // Update the truck status
-                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Overdue' WHERE truck_id = ?");
-                $updateTruck->bind_param("i", $row['truck_id']);
-                $updateTruck->execute();
-                
-                // Update the status in our result
-                $row['status'] = 'Overdue';
-            }
-            $reminders[] = $row;
-        }
-    } else {
+    if (!$result) {
         error_log("Reminders query error: " . $conn->error);
+        return [];
     }
+    
+    $reminders = [];
+    $updateStmt = $conn->prepare("UPDATE maintenance SET status = 'Overdue' WHERE maintenance_id = ?");
+    $updateTruckStmt = $conn->prepare("UPDATE truck_table SET status = 'Overdue' WHERE truck_id = ?");
+    
+    while ($row = $result->fetch_assoc()) {
+        // Check if this record is overdue (days_remaining < 0)
+        if ($row['days_remaining'] < 0 && $row['status'] != 'Overdue') {
+            // Update the status to Overdue
+            $updateStmt->bind_param("i", $row['maintenance_id']);
+            $updateStmt->execute();
+            
+            // Update the truck status
+            $updateTruckStmt->bind_param("i", $row['truck_id']);
+            $updateTruckStmt->execute();
+            
+            // Update the status in our result
+            $row['status'] = 'Overdue';
+        }
+        $reminders[] = $row;
+    }
+    
+    $updateStmt->close();
+    $updateTruckStmt->close();
     
     return $reminders;
 }
@@ -464,7 +476,7 @@ case 'edit':
         exit;
     }
 
-    // Validate maintenance type
+   
     $validTypes = ['preventive', 'emergency'];
     if (!in_array($data->maintenanceType, $validTypes)) {
         echo json_encode(["success" => false, "message" => "Invalid maintenance type"]);
@@ -478,7 +490,7 @@ case 'edit':
     $cost = isset($data->cost) ? $data->cost : 0;
     $editReasons = isset($data->editReasons) ? json_encode($data->editReasons) : null;
     
-    // Process remarks
+    
     $remarksArray = json_decode($data->remarks);
     $remarksString = implode(", ", $remarksArray);
     
@@ -500,7 +512,7 @@ case 'edit':
     );
     
     if ($stmt->execute()) {
-        // Update truck status based on maintenance status
+        
         updateTruckStatusFromMaintenance($conn, $data->truckId, $data->status);
         echo json_encode(["success" => true]);
     } else {

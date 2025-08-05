@@ -910,7 +910,46 @@
     vertical-align: middle; 
 }
 
+.reminder-item {
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
 
+.reminder-item:hover {
+    transform: translateY(-2px);
+}
+
+.reminder-item.overdue {
+    border-left: 4px solid #dc3545;
+    background-color: #fff5f5;
+}
+
+.reminder-item.due-today {
+    border-left: 4px solid #ffc107;
+    background-color: #fffdf5;
+}
+
+.reminder-item.upcoming {
+    border-left: 4px solid #17a2b8;
+    background-color: #f5fdff;
+}
+
+/* Loading animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.reminders-list p {
+    animation: fadeIn 0.3s ease;
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
    
     </style>
     <body>
@@ -1982,54 +2021,62 @@
             }
             
             function openRemindersModal() {
-                $.ajax({
-                    url: 'include/handlers/maintenance_handler.php?action=getReminders',
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        const remindersList = document.getElementById("remindersList");
-                        remindersList.innerHTML = ""; 
-                        
-                        if (response.reminders.length === 0) {
-                            remindersList.innerHTML = "<p>No upcoming maintenance reminders.</p>";
-                        } else {
-                            response.reminders.forEach(item => {
-                                const daysRemaining = parseInt(item.days_remaining);
-                                let statusClass = '';
-                                let daysText = '';
-                                
-                                if (daysRemaining < 0) {
-                                    statusClass = 'overdue';
-                                    daysText = `<span class="overdue">OVERDUE by ${Math.abs(daysRemaining)} days</span>`;
-                                } else if (daysRemaining === 0) {
-                                    statusClass = 'due-today';
-                                    daysText = `<span class="due-today">DUE TODAY</span>`;
-                                } else {
-                                    statusClass = 'upcoming';
-                                    daysText = `<span class="upcoming">Due in ${daysRemaining} days</span>`;
-                                }
-                                
-                                const reminderItem = document.createElement("div");
-                                reminderItem.className = `reminder-item ${statusClass}`;
-                                reminderItem.innerHTML = `
-                                    <strong>Truck:</strong> ${item.truck_id} (${item.licence_plate || 'N/A'})<br>
-                                    <strong>Maintenance:</strong> ${item.remarks}<br>
-                                    <strong>Due Date:</strong> ${formatDate(item.date_mtnce)} - ${daysText}<br>
-                                    <strong>Status:</strong> ${item.status}<br>
-                                    <hr>
-                                `;
-                                remindersList.appendChild(reminderItem);
-                            });
-                        }
-                        
-                        document.getElementById("remindersModal").style.display = "block";
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error loading reminders: " + error);
-                        alert("Failed to load maintenance reminders.");
-                    }
-                });
+    const modal = document.getElementById("remindersModal");
+    const list = document.getElementById("remindersList");
+    
+    // Show loading state
+    list.innerHTML = "<p>Loading reminders...</p>";
+    modal.style.display = "block";
+    
+    fetch('include/handlers/maintenance_handler.php?action=getReminders')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (data.reminders.length === 0) {
+                list.innerHTML = "<p>No upcoming maintenance reminders.</p>";
+                return;
             }
+            
+            // Use document fragment for better performance
+            const fragment = document.createDocumentFragment();
+            
+            data.reminders.forEach(item => {
+                const daysRemaining = parseInt(item.days_remaining);
+                let statusClass, daysText;
+                
+                if (daysRemaining < 0) {
+                    statusClass = 'overdue';
+                    daysText = `<span class="overdue">OVERDUE by ${Math.abs(daysRemaining)} days</span>`;
+                } else if (daysRemaining === 0) {
+                    statusClass = 'due-today';
+                    daysText = `<span class="due-today">DUE TODAY</span>`;
+                } else {
+                    statusClass = 'upcoming';
+                    daysText = `<span class="upcoming">Due in ${daysRemaining} days</span>`;
+                }
+                
+                const reminderItem = document.createElement("div");
+                reminderItem.className = `reminder-item ${statusClass}`;
+                reminderItem.innerHTML = `
+                    <strong>Truck:</strong> ${item.truck_id} (${item.licence_plate || 'N/A'})<br>
+                    <strong>Maintenance:</strong> ${item.remarks}<br>
+                    <strong>Due Date:</strong> ${formatDate(item.date_mtnce)} - ${daysText}<br>
+                    <strong>Status:</strong> ${item.status}<br>
+                    <hr>
+                `;
+                fragment.appendChild(reminderItem);
+            });
+            
+            list.innerHTML = ""; // Clear loading message
+            list.appendChild(fragment);
+        })
+        .catch(error => {
+            console.error("Error loading reminders:", error);
+            list.innerHTML = "<p>Failed to load reminders. Please try again.</p>";
+        });
+}
             
             function closeRemindersModal() {
                 document.getElementById("remindersModal").style.display = "none";
