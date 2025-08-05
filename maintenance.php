@@ -938,7 +938,7 @@
     background-color: #f5fdff;
 }
 
-/* Loading animation */
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
