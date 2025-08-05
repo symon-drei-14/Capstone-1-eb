@@ -51,7 +51,15 @@
         margin-bottom:15px;
     }
 
+.form-group2{
+   
+        margin-top: 10px;
+        padding: 15px;
 
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        margin-bottom:15px;
+}
 
     .reasons-container {
         display: flex;
@@ -82,14 +90,14 @@
     }
 
 
-    .reason-option input[type="checkbox"] {
-        margin-right: 51em;
-        flex-shrink: 0;
-    position:relative;
-    top:-1em;
-    
+  .reason-option input[type="checkbox"],
+.remark-option input[type="checkbox"] {
+    margin-right: 0; /* Remove the excessive right margin */
+    position: static; /* Remove positioning that was causing issues */
+    top: auto; /* Reset positioning */
+}
 
-    }
+
 
     .other-reason {
         margin-top: 10px;
@@ -164,8 +172,8 @@
         margin: 5% auto;
         padding: 20px;
         border: 1px solid #888;
-        width: 50%; 
-        max-width: 500px; 
+        width: 80%; 
+        max-width:800px;
         border-radius: 20px;
         box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
         overflow-x: hidden; 
@@ -673,25 +681,20 @@
         font-size: 14px;
         flex-grow: 1;
         word-break: break-word;
-        margin-top: 10px;
-        margin-bottom: -10px;
+
+
     }
 
-    .remark-option input[type="checkbox"] {
-        margin-right: 51em;
-        flex-shrink: 0;
-        position: relative;
-        top: -1em;
-    }
+ 
 
     .other-remark {
-        margin-top: 10px;
+        margin-top: 20px;
         padding-left: 20px;
     }
 
     .other-remark label {
         display: block;
-        margin-bottom: 5px;
+        margin-bottom: 500px;
         font-weight: bold;
     }
 
@@ -803,6 +806,112 @@
     display:block;
     
 }
+
+.form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -10px;
+    }
+    
+    .form-group {
+        flex: 1;
+        min-width: 200px;
+        padding: 0 10px;
+        margin-bottom: 15px;
+    }
+    
+    .form-group.full-width {
+        flex: 0 0 00%;
+    }
+    
+    .modal-content label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .modal-content select,
+    .modal-content input[type="text"],
+    .modal-content input[type="date"],
+    .modal-content input[type="number"],
+    .modal-content textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+    
+    .modal-content textarea {
+        min-height: 80px;
+    }
+    
+    .modal-content .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    
+    .modal-content button.submitbtn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .modal-content button.cancelbtn {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .modal-content button:hover {
+        opacity: 0.9;
+    }
+    
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+    margin-left:2em;
+    padding:10px;
+  
+}
+    
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 20px; 
+}
+
+   .checkbox-item input[type="checkbox"] {
+    margin: 0; 
+    width: auto; 
+    position: static; 
+}
+.checkbox-item label {
+    margin: 0; 
+    font-weight: normal;
+    cursor: pointer; 
+    display: inline; 
+    vertical-align: middle; 
+}
+
+
+   
     </style>
     <body>
 
@@ -899,7 +1008,7 @@
         <div class="icon"><i class="fas fa-check-circle"></i></div>
         <div class="content">
             <div class="value"></div>
-            <div class="label">Completed</div>
+            <div class="label">Completed this month</div>
         </div>
     </div>
     <div class="stat-card overdue">
@@ -976,161 +1085,159 @@
         </div>
 
         <!-- Add/Edit Maintenance Modal -->
-        <div id="maintenanceModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <h2 id="modalTitle">Add Maintenance Schedule</h2>
-                <form id="maintenanceForm">
-                    <input type="hidden" id="maintenanceId" name="maintenanceId">
+       <div id="maintenanceModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle">Add Maintenance Schedule</h2>
+        <form id="maintenanceForm">
+            <input type="hidden" id="maintenanceId" name="maintenanceId">
+            
+            <div class="form-row">
+                <div class="form-group">
                     <label for="maintenanceType">Maintenance Type:</label>
-    <select id="maintenanceType" name="maintenanceType" required>
-        <option value="preventive">Preventive Maintenance</option>
-        <option value="emergency">Emergency Repair</option>
-    </select><br><br>
-
+                    <select id="maintenanceType" name="maintenanceType" required>
+                        <option value="preventive">Preventive Maintenance</option>
+                        <option value="emergency">Emergency Repair</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
                     <label for="truckId">Truck ID:</label>
                     <select id="truckId" name="truckId" required>
                         <!-- Will be populated by JavaScript -->
-                    </select><br><br>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
                     <label for="licensePlate">License Plate:</label>
-                    <input type="text" id="licensePlate" name="licensePlate" readonly><br><br>
-
+                    <input type="text" id="licensePlate" name="licensePlate" readonly>
+                </div>
+                
+                <div class="form-group">
                     <label for="date">Date of Inspection:</label>
-                    <input type="date" id="date" name="date" required><br><br>
-
-                        <label>Remarks:</label>
-                    <div class="remarks-container">
-                        <div class="remark-option">
-                            <label>
-                                Change Oil
-                                <input type="checkbox" name="remarks[]" value="Change Oil">
-                            </label>
-                        </div>
-                        <div class="remark-option">
-                            <label>
-                                Change Tires
-                                <input type="checkbox" name="remarks[]" value="Change Tires">
-                            </label>
-                        </div>
-                        <div class="remark-option">
-                            <label>
-                                Brake Inspection
-                                <input type="checkbox" name="remarks[]" value="Brake Inspection">
-                            </label>
-                        </div>
-                        <div class="remark-option">
-                            <label>
-                                Engine Check
-                                <input type="checkbox" name="remarks[]" value="Engine Check">
-                            </label>
-                        </div>
-                        <div class="remark-option">
-                            <label>
-                                Transmission Check
-                                <input type="checkbox" name="remarks[]" value="Transmission Check">
-                            </label>
-                        </div>
-                        <div class="remark-option">
-                            <label>
-                                Electrical System Check
-                                <input type="checkbox" name="remarks[]" value="Electrical System Check">
-                            </label>
-                        </div>
-                        <div class="remark-option">
-                            <label>
-                                Suspension Check
-                                <input type="checkbox" name="remarks[]" value="Suspension Check">
-                            </label>
-                        </div>
-                        <div class="remark-option">
-                            <label>
-                                Other (please specify below)
-                                <input type="checkbox" name="remarks[]" value="Other">
-                            </label>
-                        </div>
-                        <div class="other-remark">
-                            <label for="otherRemarkText">Specify other remark:</label>
-                            <textarea id="otherRemarkText" name="otherRemarkText" rows="3" placeholder="Enter specific remark"></textarea>
-                        </div>
+                    <input type="date" id="date" name="date" required>
+                </div>
+            </div>
+            
+            <div class="form-group2">
+                <label>Remarks:</label>
+                <div class="checkbox-grid">
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="remarks[]" value="Change Oil" id="remark-oil">
+                        <label for="remark-oil">Change Oil</label>
                     </div>
-                    <br>
-
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="remarks[]" value="Change Tires" id="remark-tires">
+                        <label for="remark-tires">Change Tires</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="remarks[]" value="Brake Inspection" id="remark-brake">
+                        <label for="remark-brake">Brake Inspection</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="remarks[]" value="Engine Check" id="remark-engine">
+                        <label for="remark-engine">Engine Check</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="remarks[]" value="Transmission Check" id="remark-transmission">
+                        <label for="remark-transmission">Transmission Check</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="remarks[]" value="Electrical System Check" id="remark-electrical">
+                        <label for="remark-electrical">Electrical System Check</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="remarks[]" value="Suspension Check" id="remark-suspension">
+                        <label for="remark-suspension">Suspension Check</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="remarks[]" value="Other" id="remark-other">
+                        <label for="remark-other">Other</label>
+                    </div>
+                </div>
+                
+                <div class="other-remark">
+                    <label for="otherRemarkText">Specify other remark:</label>
+                    <textarea id="otherRemarkText" name="otherRemarkText" rows="3" placeholder="Enter specific remark"></textarea>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
                     <label for="status">Status:</label>
                     <select id="status" name="status" required>
                         <option value="Pending" selected>Pending</option>
                         <option value="Completed">Completed</option>
                         <option value="In Progress">In Progress</option>
                         <option value="Overdue">Overdue</option>
-                    </select><br><br>
-                    
+                    </select>
+                </div>
+                
+                <div class="form-group">
                     <label for="supplier">Supplier:</label>
-                    <input type="text" id="supplier" name="supplier"><br><br>
-
+                    <input type="text" id="supplier" name="supplier">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
                     <label for="cost">Cost:</label>
-                    <input type="number" id="cost" name="cost" step="0.01"><br><br>
-                    
-    <div class="edit-reasons-section">
-        <label>Reason for Edit (select all that apply):</label>
-        <div class="reasons-container">
-            <div class="reason-option">
-                <label>
-                    Changed maintenance schedule as per supplier availability
-                    <input type="checkbox" name="editReason" value="Changed maintenance schedule as per supplier availability">
-                </label>
+                    <input type="number" id="cost" name="cost" step="0.01">
+                </div>
             </div>
-            <div class="reason-option">
-                <label>
-                    Updated maintenance type based on vehicle condition
-                    <input type="checkbox" name="editReason" value="Updated maintenance type based on vehicle condition">
-                </label>
+            
+            <div class="edit-reasons-section">
+                <label>Reason for Edit (select all that apply):</label>
+                <div class="checkbox-grid">
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="editReason" value="Changed maintenance schedule as per supplier availability" id="reason-supplier">
+                        <label for="reason-supplier">Supplier availability</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="editReason" value="Updated maintenance type based on vehicle condition" id="reason-condition">
+                        <label for="reason-condition">Vehicle condition</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="editReason" value="Adjusted date due to parts availability" id="reason-parts">
+                        <label for="reason-parts">Parts availability</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="editReason" value="Updated cost estimate after inspection" id="reason-cost">
+                        <label for="reason-cost">Updated cost</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="editReason" value="Changed status based on work progress" id="reason-progress">
+                        <label for="reason-progress">Work progress</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="editReason" value="Updated supplier information" id="reason-supplier-info">
+                        <label for="reason-supplier-info">Supplier info</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="editReason" value="Corrected data entry error" id="reason-error">
+                        <label for="reason-error">Data correction</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="editReason" value="Other" id="reason-other">
+                        <label for="reason-other">Other</label>
+                    </div>
+                </div>
+                
+                <div class="other-reason">
+                    <label for="otherReasonText">Specify other reason:</label>
+                    <textarea id="otherReasonText" name="otherReasonText" rows="3" placeholder="Enter specific reason for edit"></textarea>
+                </div>
             </div>
-            <div class="reason-option">
-                <label>
-                    Adjusted date due to parts availability
-                    <input type="checkbox" name="editReason" value="Adjusted date due to parts availability">
-                </label>
+            
+            <div class="form-actions">
+                <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
+                <button type="button" class="submitbtn" onclick="saveMaintenanceRecord()">Submit</button>
             </div>
-            <div class="reason-option">
-                <label>
-                    Updated cost estimate after inspection
-                    <input type="checkbox" name="editReason" value="Updated cost estimate after inspection">
-                </label>
-            </div>
-            <div class="reason-option">
-                <label>
-                    Changed status based on work progress
-                    <input type="checkbox" name="editReason" value="Changed status based on work progress">
-                </label>
-            </div>
-            <div class="reason-option">
-                <label>
-                    Updated supplier information
-                    <input type="checkbox" name="editReason" value="Updated supplier information">
-                </label>
-            </div>
-            <div class="reason-option">
-                <label>
-                    Corrected data entry error
-                    <input type="checkbox" name="editReason" value="Corrected data entry error">
-                </label>
-            </div>
-            <div class="reason-option">
-                <label>
-                    Other (please specify below)
-                    <input type="checkbox" name="editReason" value="Other">
-                </label>
-            </div>
-            <div class="other-reason">
-                <label for="otherReasonText">Specify other reason:</label>
-                <textarea id="otherReasonText" name="otherReasonText" rows="3" placeholder="Enter specific reason for edit"></textarea>
-            </div>
-        </div>
+        </form>
     </div>
-                    <button type="button" class="submitbtn" onclick="saveMaintenanceRecord()">Submit</button>
-                    <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
-                </form>
-            </div>
-        </div>
+</div>
 
         <!-- Maintenance History Modal -->
         <div id="historyModal" class="modal">

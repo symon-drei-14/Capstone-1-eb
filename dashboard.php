@@ -319,54 +319,62 @@ margin-right: 15px;
     height: 4px;
     background-color: #f0f0f0;
     width: 100%;
+    border-radius: 2px;
+    overflow: hidden;
 }
 
 .progress-bar {
-    height: 100%;
-}
+    height: 70%;
+}   
 
-/* Status badges */
+
 .status-badge {
     padding: 6px 12px;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
     text-transform: uppercase;
+    border-radius: 12px;
+    font-weight: 600;
 }
-.urgent-badge {
-    background-color: rgba(217, 31, 25, 0.1);
-    color: #D91F19;
-}
-
-.warning-badge {
+.pending-badge {
     background-color: rgba(255, 201, 8, 0.2);
     color: #BB9407;
 }
 
-.normal-badge {
-    background-color: rgba(69, 137, 63, 0.1);
-    color: #45893F;
+.in-progress-badge {
+    background-color: rgba(0, 123, 255, 0.2);
+    color: #0062cc;
 }
 
 .completed-badge {
-    background-color: rgba(0, 123, 255, 0.1);
-    color: #007BFF;
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #28a745;
 }
 
-/* Progress bars */
-.urgent-bar {
-    background-color: #D91F19;
+.overdue-badge {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
 }
 
-.warning-bar {
-    background-color: #BB9407;
+
+.pending-bar {
+    background-color: #FFC107; 
+    width: 30%; 
 }
 
-.normal-bar {
-    background-color: #45893F;
+.in-progress-bar {
+    background-color: #17A2B8; 
+    width: 60%; 
 }
 
 .completed-bar {
-    background-color: #007BFF;
+    background-color: #28A745; 
+    width: 100%; 
+}
+
+.overdue-bar {
+    background-color: #DC3545; 
+    width: 100%; 
 }
 
 .view-all-btn {
@@ -905,19 +913,19 @@ body{
     }
     
     .legend-color.pending {
-        background-color: #ffc107; /* Yellow */
+        background-color: #ffc107; 
     }
     
     .legend-color.enroute {
-        background-color: #007bff; /* Blue */
+        background-color: #007bff; 
     }
     
     .legend-color.completed {
-        background-color: #28a745; /* Green */
+        background-color: #28a745; 
     }
     
     .legend-color.cancelled {
-        background-color: #dc3545; /* Red */
+        background-color: #dc3545; 
     }
     
     .legend-label {
@@ -1109,14 +1117,14 @@ $eventsDataJson = json_encode($eventsData);
     <div class="card-large2">
         <h3>Shipment Statistics</h3>
         <p>Total deliveries: 23.8k</p>
-        <div id="shipmentStatisticsChart"></div> <!-- Added for line chart -->
+        <div id="shipmentStatisticsChart"></div>
     </div>
     <div class="card-small">
         <h3>Active Drivers</h3>
         <?php
-        // Check if there are any drivers with pending status
+      
         if (count($drivingDrivers) > 0) {
-            // Loop through each driving driver and display them
+           
             foreach ($drivingDrivers as $driver) {
                 echo '<div class="performance">
                         <i class="fa fa-user icon-bg"></i>
@@ -1124,7 +1132,7 @@ $eventsDataJson = json_encode($eventsData);
                       </div>';
             }
         } else {
-            // Display a message if no driving drivers are found
+           
             echo '<div class="performance">
                     <i class="fa fa-info-circle icon-bg"></i>
                     <p>No active drivers currently on duty</p>
@@ -1145,53 +1153,46 @@ $eventsDataJson = json_encode($eventsData);
             </div>
             
             <?php if (!empty($maintenanceRecords)): ?>
-                <?php foreach ($maintenanceRecords as $record): 
-                    // Determine status class based on status value
-                    $statusClass = '';
-                    if (stripos($record['status'], 'overdue') !== false) {
-                        $statusClass = 'urgent';
-                    } elseif (stripos($record['status'], 'in progress') !== false) {
-                        $statusClass = 'warning';
-                    } elseif (stripos($record['status'], 'pending') !== false) {
-                        $statusClass = 'normal';
-                    } else {
-                        $statusClass = 'normal'; // Default fallback
-                    }
-                    
-                    // Format the date
-                    $dueDate = date('M j, Y', strtotime($record['date_mtnce']));
-                    $today = new DateTime();
-                    $dueDateTime = new DateTime($record['date_mtnce']);
-                    $interval = $today->diff($dueDateTime);
-                    $daysDifference = $interval->format('%r%a');
-                    
-                    // Create a human-readable date string
-                    if ($daysDifference == 0) {
-                        $dateString = 'Today';
-                    } elseif ($daysDifference == 1) {
-                        $dateString = 'Tomorrow';
-                    } elseif ($daysDifference > 1 && $daysDifference <= 7) {
-                        $dateString = 'In ' . $daysDifference . ' days';
-                    } elseif ($daysDifference < 0) {
-                        $dateString = abs($daysDifference) . ' days overdue';
-                    } else {
-                        $dateString = $dueDate;
-                    }
-                ?>
-                <div class="maintenance-item <?php echo $statusClass; ?>">
-                    <div class="maintenance-details">
-                        <span class="vehicle"><?php echo htmlspecialchars($record['licence_plate']); ?></span>
-                        <span class="service"><?php echo htmlspecialchars($record['remarks']); ?></span>
-                        <span class="date"><?php echo $dateString; ?></span>
-                        <span class="status-badge <?php echo $statusClass; ?>-badge">
-                            <?php echo htmlspecialchars($record['status']); ?>
-                        </span>
-                    </div>
-                    <div class="maintenance-progress">
-                        <div class="progress-bar urgent-bar" style="width: 100%;"></div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
+              <?php foreach ($maintenanceRecords as $record): 
+   
+    $statusClass = strtolower(str_replace(' ', '-', $record['status']));
+    $badgeClass = $statusClass . '-badge';
+    $barClass = $statusClass . '-bar';
+    
+   
+    $dueDate = date('M j, Y', strtotime($record['date_mtnce']));
+    $today = new DateTime();
+    $dueDateTime = new DateTime($record['date_mtnce']);
+    $interval = $today->diff($dueDateTime);
+    $daysDifference = $interval->format('%r%a');
+    
+  
+    if ($daysDifference == 0) {
+        $dateString = 'Today';
+               }elseif ($daysDifference == 1) {
+                $dateString = 'Tomorrow';
+               } elseif ($daysDifference > 1 && $daysDifference <= 7) {
+                $dateString = 'In ' . $daysDifference . ' days';
+               } elseif ($daysDifference < 0) {
+               $dateString = abs($daysDifference) . ' days overdue';
+               } else {
+              $dateString = $dueDate;
+             }
+            ?>
+        <div class="maintenance-item">
+         <div class="maintenance-details">
+             <span class="vehicle"><?php echo htmlspecialchars($record['licence_plate']); ?></span>
+             <span class="service"><?php echo htmlspecialchars($record['remarks']); ?></span>
+             <span class="date"><?php echo $dateString; ?></span>
+              <span class="status-badge <?php echo $badgeClass; ?>">
+            <?php echo htmlspecialchars($record['status']); ?>
+             </span>
+             </div>
+             <div class="maintenance-progress">
+                <div class="progress-bar <?php echo $barClass; ?>"></div>
+             </div>
+            </div>
+            <?php endforeach; ?>
             <?php else: ?>
                 <div class="maintenance-item">
                     <div class="maintenance-details" style="grid-template-columns: 1fr; text-align: center;">
