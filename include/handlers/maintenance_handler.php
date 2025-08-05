@@ -200,17 +200,17 @@ function getMaintenanceReminders($conn) {
     $updateTruckStmt = $conn->prepare("UPDATE truck_table SET status = 'Overdue' WHERE truck_id = ?");
     
     while ($row = $result->fetch_assoc()) {
-        // Check if this record is overdue (days_remaining < 0)
+        
         if ($row['days_remaining'] < 0 && $row['status'] != 'Overdue') {
-            // Update the status to Overdue
+      
             $updateStmt->bind_param("i", $row['maintenance_id']);
             $updateStmt->execute();
             
-            // Update the truck status
+        
             $updateTruckStmt->bind_param("i", $row['truck_id']);
             $updateTruckStmt->execute();
             
-            // Update the status in our result
+            
             $row['status'] = 'Overdue';
         }
         $reminders[] = $row;
@@ -222,9 +222,9 @@ function getMaintenanceReminders($conn) {
     return $reminders;
 }
 
-// Function to update truck status based on maintenance status
+
 function updateTruckStatusFromMaintenance($conn, $truckId, $status) {
-    $newStatus = 'In Terminal'; // Default
+    $newStatus = 'In Terminal'; 
     
     if ($status === 'In Progress') {
         $newStatus = 'In Repair';
