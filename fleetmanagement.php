@@ -538,6 +538,44 @@ th[onclick]:hover {
     display:block;
     
 }
+
+.history-modal-content {
+    padding: 20px;
+}
+
+.history-modal-content h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.history-modal-content ul {
+    list-style-type: none;
+    padding: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-modal-content li {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.history-modal-content button {
+    background-color: #B82132;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.history-modal-content button:hover {
+    background-color: #9a1a28;
+}
     </style>
 </head>
 <body>
@@ -696,6 +734,7 @@ th[onclick]:hover {
                                 <th>Capacity</th>
                                 <th>Status</th>
                                 <th>Last Modified</th>
+                                <th>Maintenance History</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -710,6 +749,13 @@ th[onclick]:hover {
             </div>
         </section>
     </div>
+
+    <div id="historyModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="close" onclick="document.getElementById('historyModal').style.display='none'">&times;</span>
+        <div id="historyModalContent"></div>
+    </div>
+</div>
 
     <div id="truckModal" class="modal">
         <div class="modal-content">
@@ -1053,34 +1099,39 @@ function renderTrucksTable() {
         }
         
         tr.innerHTML = `
-        <td>${truck.truck_id}</td>
-        <td>${truck.plate_no}</td>
-        <td>${truck.capacity}</td>
-        <td><span class="status-${statusClass}">${statusText}</span></td>
-        <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
-        <td class="actions">
-            ${truck.is_deleted == 1 ? `
-                <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreTruck(${truck.truck_id})">
-                  <i class="fas fa-trash-restore"></i>
-                </button>
-                ${window.userRole === 'Full Admin' ? 
-                  `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
-                          <i class="fa-solid fa-ban"></i>
-                  </button>` : ''}
-                <button class="icon-btn view-reason" data-tooltip="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
-                    <i class="fas fa-info-circle"></i>
-                </button>
-            ` : `
-                <button class="icon-btn edit" data-tooltip="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteTruck(${truck.truck_id})">
-                
-                     <i class='fas fa-trash-alt'></i>
-                </button>
-            `}
-        </td>
-    `;
+    <td>${truck.truck_id}</td>
+    <td>${truck.plate_no}</td>
+    <td>${truck.capacity}</td>
+    <td><span class="status-${statusClass}">${statusText}</span></td>
+    <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
+    <td>
+        <button class="icon-btn history" data-tooltip="View History" onclick="viewMaintenanceHistory(${truck.truck_id})">
+            <i class="fas fa-history"></i>
+        </button>
+    </td>
+    <td class="actions">
+        ${truck.is_deleted == 1 ? `
+            <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreTruck(${truck.truck_id})">
+              <i class="fas fa-trash-restore"></i>
+            </button>
+            ${window.userRole === 'Full Admin' ? 
+              `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
+                      <i class="fa-solid fa-ban"></i>
+              </button>` : ''}
+            <button class="icon-btn view-reason" data-tooltip="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
+                <i class="fas fa-info-circle"></i>
+            </button>
+        ` : `
+            <button class="icon-btn edit" data-tooltip="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteTruck(${truck.truck_id})">
+            
+                 <i class='fas fa-trash-alt'></i>
+            </button>
+        `}
+    </td>
+`;
     tableBody.appendChild(tr);
     });
     document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
@@ -1112,7 +1163,42 @@ function fullDeleteTruck(truckId) {
 }
 
 
-
+function viewMaintenanceHistory(truckId) {
+    fetch(`include/handlers/maintenance_handler.php?action=getHistory&truckId=${truckId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.history && data.history.length > 0) {
+                let historyHTML = '<div class="history-modal-content"><h3>Maintenance History</h3><ul>';
+                
+                data.history.forEach(item => {
+                    if (item.status === 'Completed') {
+                        historyHTML += `
+                            <li>
+                                <strong>Date Completed:</strong> ${formatDateTime(item.last_modified_at)}<br>
+                                <strong>Remarks:</strong> ${item.remarks}<br>
+                                <hr>
+                            </li>
+                        `;
+                    }
+                });
+                
+                historyHTML += '</ul><button onclick="document.getElementById(\'historyModal\').style.display=\'none\'">Close</button></div>';
+                
+                document.getElementById('historyModalContent').innerHTML = historyHTML;
+                document.getElementById('historyModal').style.display = 'block';
+            } else {
+                document.getElementById('historyModalContent').innerHTML = 
+                    '<div class="history-modal-content"><p>No completed maintenance history found for this truck.</p></div>';
+                document.getElementById('historyModal').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading maintenance history:', error);
+            document.getElementById('historyModalContent').innerHTML = 
+                '<div class="history-modal-content"><p>Error loading maintenance history.</p></div>';
+            document.getElementById('historyModal').style.display = 'block';
+        });
+}
 
 function sortTrucks(sortBy) {
     // Toggle sort order if clicking the same column
