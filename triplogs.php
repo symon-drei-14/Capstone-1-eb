@@ -1475,6 +1475,10 @@ left:10%;
     display:block;
     
 }
+
+.swal2-container {
+    z-index: 99999 !important;
+}
 </style>
 <body>
     <?php
