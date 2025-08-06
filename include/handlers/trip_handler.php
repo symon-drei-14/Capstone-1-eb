@@ -208,7 +208,7 @@ try {
             $stmt->close();
             
             if ($current && $current['status'] !== $data['status']) {
-                $newTruckStatus = 'Good'; 
+                $newTruckStatus = 'In Terminal'; 
                 
                 if ($data['status'] === 'En Route') {
                     $newTruckStatus = 'Enroute';
@@ -251,7 +251,7 @@ try {
             $stmt->close();
             
             if ($trip && $trip['status'] === 'En Route') {
-                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Good' WHERE plate_no = ?");
+                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'In Terminal' WHERE plate_no = ?");
                 if ($updateTruck === false) {
                     throw new Exception("Failed to prepare truck update: " . $conn->error);
                 }
@@ -487,7 +487,7 @@ try {
             $stmt->close();
             
             // Update truck status accordingly
-            $newTruckStatus = 'Good';
+            $newTruckStatus = 'In Terminal';
             if ($newStatus === 'En Route') {
                 $newTruckStatus = 'Enroute';
             } elseif ($newStatus === 'Pending') {
