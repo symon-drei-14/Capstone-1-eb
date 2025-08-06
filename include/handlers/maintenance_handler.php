@@ -631,6 +631,40 @@ case 'restore':
     $counts = getMaintenanceCounts($conn);
     echo json_encode($counts);
     break;
+
+    case 'checkMaintenance':
+    $plateNo = isset($_GET['plateNo']) ? $_GET['plateNo'] : '';
+    $tripDate = isset($_GET['tripDate']) ? $_GET['tripDate'] : '';
+    
+    if (empty($plateNo) || empty($tripDate)) {
+        echo json_encode(['success' => false, 'message' => 'Missing parameters']);
+        break;
+    }
+    
+    // Check for maintenance within 7 days before or after the trip date
+    $stmt = $conn->prepare("SELECT date_mtnce, remarks, maintenance_type 
+                           FROM maintenance 
+                           WHERE licence_plate = ? 
+                           AND is_deleted = 0
+                           AND status != 'Completed'
+                           AND DATEDIFF(date_mtnce, ?) BETWEEN -7 AND 7");
+    $stmt->bind_param("ss", $plateNo, $tripDate);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $maintenance = $result->fetch_assoc();
+        echo json_encode([
+            'success' => true,
+            'hasConflict' => true,
+            'maintenanceDate' => $maintenance['date_mtnce'],
+            'maintenanceType' => $maintenance['maintenance_type'],
+            'remarks' => $maintenance['remarks']
+        ]);
+    } else {
+        echo json_encode(['success' => true, 'hasConflict' => false]);
+    }
+    break;
         
     default:
         echo json_encode(["success" => false, "message" => "Invalid action"]);

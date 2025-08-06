@@ -2107,6 +2107,41 @@ function renderTable() {
     });
 }
 
+function checkMaintenanceConflict(plateNo, tripDate, callback) {
+    $.ajax({
+        url: 'include/handlers/maintenance_handler.php',
+        type: 'GET',
+        data: {
+            action: 'checkMaintenance',
+            plateNo: plateNo,
+            tripDate: tripDate
+        },
+        success: function(response) {
+            if (response.success && response.hasConflict) {
+                // Show warning modal
+                Swal.fire({
+                    title: 'Maintenance Conflict',
+                    html: `This truck has scheduled maintenance on <strong>${response.maintenanceDate}</strong>.<br><br>
+                           Maintenance Type: <strong>${response.maintenanceType}</strong><br>
+                           Remarks: <strong>${response.remarks}</strong>`,
+                    icon: 'warning',
+                    confirmButtonText: 'Continue Anyway',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    callback(result.isConfirmed);
+                });
+            } else {
+                callback(true); // No conflict, proceed
+            }
+        },
+        error: function() {
+            console.error('Error checking maintenance');
+            callback(true); // On error, proceed anyway
+        }
+    });
+}
+
 
 function renderTripRows(trips, showDeleted) {
     trips.forEach(function(trip) {
@@ -2670,6 +2705,12 @@ $(document).on('click', '.icon-btn.edit', function() {
     var selectedDriver = $('#addEventDriver').val();
     var driver = driversData.find(d => d.name === selectedDriver);
     var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#addEventPlateNo').val();
+    var tripDate = $('#addEventDate').val();
+
+     checkMaintenanceConflict(truckPlateNo, tripDate, function(shouldProceed) {
+        if (!shouldProceed) {
+            return; // User cancelled after seeing maintenance warning
+        }
     
     $.ajax({
         url: 'include/handlers/trip_operations.php',
@@ -2709,6 +2750,8 @@ $(document).on('click', '.icon-btn.edit', function() {
             alert('Server error occurred. Check console for details.');
         }
     });
+
+     });
 });
 
 $(document).on('click', '.icon-btn.view-reasons', function() {
@@ -2756,6 +2799,12 @@ $(document).on('click', '.icon-btn.view-reasons', function() {
     var selectedDriver = $('#editEventDriver').val();
     var driver = driversData.find(d => d.name === selectedDriver);
     var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#editEventPlateNo').val();
+     var tripDate = $('#editEventDate').val();
+
+     checkMaintenanceConflict(truckPlateNo, tripDate, function(shouldProceed) {
+        if (!shouldProceed) {
+            return; // User cancelled after seeing maintenance warning
+        }
 
      var editReasons = [];
     $('input[name="editReason"]:checked').each(function() {
@@ -2802,6 +2851,7 @@ $(document).on('click', '.icon-btn.view-reasons', function() {
         error: function() {
             alert('Server error occurred');
         }
+    });
     });
 });
             
@@ -3088,6 +3138,8 @@ document.querySelector('form').addEventListener('submit', function(e) {
         document.getElementById('otherReasonText').focus();
     }
 });
+
+
 
 function updateStats() {
     $.ajax({
