@@ -295,6 +295,22 @@ case 'restore':
     ]);
     break;
 
+    case 'get_expenses':
+    $tripId = $data['tripId'] ?? 0;
+    
+    $stmt = $conn->prepare("SELECT expense_type, amount FROM expenses WHERE trip_id = ?");
+    $stmt->bind_param("i", $tripId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $expenses = [];
+    while ($row = $result->fetch_assoc()) {
+        $expenses[] = $row;
+    }
+    
+    echo json_encode(['success' => true, 'expenses' => $expenses]);
+    break;
+
     case 'full_delete':
     // First get the trip details
     $getTrip = $conn->prepare("SELECT * FROM assign WHERE trip_id = ?");

@@ -1773,6 +1773,7 @@ if ($driverResult->num_rows > 0) {
             <!-- Form buttons -->
             <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
                 <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button type="button" id="viewExpensesBtn" class="save-btn" style="padding: 8px 15px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;">Expense Reports</button>
                 <button type="submit" class="save-btn"style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
             </div>
         </form>
@@ -1824,6 +1825,25 @@ if ($driverResult->num_rows > 0) {
             <div class="stat-value"><?php echo $tripStats['total']; ?></div>
             <div class="stat-label">Total Trips</div>
         </div>
+    </div>
+</div>
+
+<div id="expensesModal" class="modal">
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+        <span class="close">&times;</span>
+        <h3 style="margin-top: 0;">Expense Reports</h3>
+        <div id="expensesContent">
+            <table class="events-table" style="width: 100%; margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>Expense Type</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="expensesTableBody"></tbody>
+            </table>
+        </div>
+        <button type="button" class="close-btn cancel-btn" style="margin-top: 20px;">Close</button>
     </div>
 </div>
 
@@ -2691,9 +2711,55 @@ $(document).on('click', '.icon-btn.edit', function() {
         $('#editEventSize').val(event.size);
         $('#editEventCashAdvance').val(event.cashAdvance);
         $('#editEventStatus').val(event.status);
+
+          if (event.status === 'Completed') {
+            $('#viewExpensesBtn').show();
+        } else {
+            $('#viewExpensesBtn').hide();
+        }
         
         $('#editModal').show();
     }
+});
+
+$(document).on('click', '#viewExpensesBtn', function() {
+    var tripId = $('#editEventId').val();
+    
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_expenses',
+            tripId: tripId
+        }),
+        success: function(response) {
+            if (response.success) {
+                $('#expensesTableBody').empty();
+                
+                if (response.expenses.length > 0) {
+                    response.expenses.forEach(function(expense) {
+                        var row = `
+                            <tr>
+                                <td>${expense.expense_type}</td>
+                                <td>${expense.amount}</td>
+                            </tr>
+                        `;
+                        $('#expensesTableBody').append(row);
+                    });
+                } else {
+                    $('#expensesTableBody').html('<tr><td colspan="2" style="text-align: center;">No expenses recorded for this trip</td></tr>');
+                }
+                
+                $('#expensesModal').show();
+            } else {
+                alert('Error: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Server error occurred while loading expenses');
+        }
+    });
 });
         
 
