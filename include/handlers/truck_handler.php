@@ -193,6 +193,18 @@ try {
     break;
 
 case 'softDeleteTruck':
+    // First check if truck is Enroute
+    $checkStmt = $conn->prepare("SELECT status FROM truck_table WHERE truck_id = ?");
+    $checkStmt->bind_param("i", $data['truck_id']);
+    $checkStmt->execute();
+    $checkResult = $checkStmt->get_result();
+    $truckStatus = $checkResult->fetch_assoc()['status'];
+    
+    if ($truckStatus === 'Enroute') {
+        echo json_encode(['success' => false, 'message' => 'Cannot delete a truck that is currently Enroute']);
+        break;
+    }
+    
     $stmt = $conn->prepare("UPDATE truck_table 
                           SET is_deleted=1, status='Deleted', delete_reason=?, 
                           last_modified_by=?, last_modified_at=NOW()

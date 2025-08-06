@@ -968,9 +968,21 @@ function fetchTrucks() {
         }
 
        function deleteTruck(truckId) {
-    document.getElementById('deleteTruckId').value = truckId;
-    document.getElementById('deleteReason').value = '';
-    openModal('deleteModal');
+    // Find the truck in our data
+    const truck = trucksData.find(t => t.truck_id == truckId);
+    
+    if (truck) {
+        // Check if truck is Enroute
+        if (truck.display_status === 'Enroute' || truck.status === 'Enroute') {
+            alert("Cannot delete a truck that is currently Enroute. Please change its status first.");
+            return;
+        }
+        
+        // If not Enroute, proceed with deletion
+        document.getElementById('deleteTruckId').value = truckId;
+        document.getElementById('deleteReason').value = '';
+        openModal('deleteModal');
+    }
 }
      
 
