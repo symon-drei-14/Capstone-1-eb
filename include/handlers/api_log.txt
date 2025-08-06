@@ -177,3 +177,14 @@
 2025-08-03 15:03:45 - Email check passed
 2025-08-03 15:03:45 - SQL prepared successfully
 2025-08-03 15:03:45 - Driver registered successfully
+2025-08-06 08:21:26 - Request received
+{"driver_id":"1754461285695","firebase_uid":"1754461285695","name":"Tester","email":"Tester@gmail.com","password":"12345678","assigned_truck_id":9}
+
+2025-08-06 08:21:26 - JSON parsed successfully
+2025-08-06 08:21:26 - Data validation passed
+2025-08-06 08:21:26 - Database connection successful
+2025-08-06 08:21:26 - Table 'drivers_table' exists
+2025-08-06 08:21:26 - Table columns: driver_id, firebase_uid, name, email, password, assigned_truck_id, created_at, last_login
+2025-08-06 08:21:26 - Email check passed
+2025-08-06 08:21:26 - SQL prepared successfully
+2025-08-06 08:21:26 - Driver registered successfully
