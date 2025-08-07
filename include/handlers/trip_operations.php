@@ -262,6 +262,50 @@ case 'get_deleted_trips':
     echo json_encode(['success' => true, 'trips' => $trips]);
     break;
     
+case 'get_driver_trip_counts':
+    // Get total completed trips for all drivers
+    $totalQuery = "SELECT driver_id, COUNT(*) as total_completed 
+                  FROM assign 
+                  WHERE status = 'Completed' AND is_deleted = 0
+                  GROUP BY driver_id";
+    $totalResult = $conn->query($totalQuery);
+    $totalCounts = [];
+    while ($row = $totalResult->fetch_assoc()) {
+        $totalCounts[$row['driver_id']] = $row['total_completed'];
+    }
+    
+    // Get monthly completed trips for all drivers
+    $monthlyQuery = "SELECT driver_id, COUNT(*) as monthly_completed 
+                    FROM assign 
+                    WHERE status = 'Completed' 
+                    AND is_deleted = 0
+                    AND MONTH(date) = MONTH(CURRENT_DATE())
+                    AND YEAR(date) = YEAR(CURRENT_DATE())
+                    GROUP BY driver_id";
+    $monthlyResult = $conn->query($monthlyQuery);
+    $monthlyCounts = [];
+    while ($row = $monthlyResult->fetch_assoc()) {
+        $monthlyCounts[$row['driver_id']] = $row['monthly_completed'];
+    }
+    
+    // Combine results
+    $allDrivers = $conn->query("SELECT driver_id FROM drivers_table");
+    $tripCounts = [];
+    while ($driver = $allDrivers->fetch_assoc()) {
+        $driverId = $driver['driver_id'];
+        $tripCounts[] = [
+            'driver_id' => $driverId,
+            'total_completed' => $totalCounts[$driverId] ?? 0,
+            'monthly_completed' => $monthlyCounts[$driverId] ?? 0
+        ];
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'trip_counts' => $tripCounts
+    ]);
+    break;
+
 
 case 'restore':
     $getTrip = $conn->prepare("SELECT plate_no, status FROM assign WHERE trip_id = ?");

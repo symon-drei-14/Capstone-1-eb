@@ -197,36 +197,45 @@
         height: 40px;
     }
         th:nth-child(1), td:nth-child(1) {
-        width: 10%; 
-    }
+    width: 5%; 
+}
 
-    th:nth-child(2), td:nth-child(2) {
-        width: 7%; 
-    }
+th:nth-child(2), td:nth-child(2) {
+    width: 5%; 
+}
 
-    th:nth-child(3), td:nth-child(3) {
-        width: 12%; 
-    }
+th:nth-child(3), td:nth-child(3) {
+    width: 12%; 
+}
 
-    th:nth-child(4), td:nth-child(4) {
-        width: 10%;
-    }
+th:nth-child(4), td:nth-child(4) {
+    width: 15%;
+}
 
-    th:nth-child(5), td:nth-child(5) {
-        width: 5%;
-    }
+th:nth-child(5), td:nth-child(5) {
+    width: 10%;
+}
 
-    th:nth-child(6), td:nth-child(6) {
-        width: 10%; 
-    }
+th:nth-child(6), td:nth-child(6) {
+    width: 8%; 
+}
 
-    th:nth-child(7), td:nth-child(7) {
-        width: 10%; 
-    }
-    th:nth-child(8), td:nth-child(8) {
-        width: 5%; 
-        text-align: center;
-    }
+th:nth-child(7), td:nth-child(7) {
+    width: 8%; 
+}
+
+th:nth-child(8), td:nth-child(8) {
+    width: 10%; 
+}
+
+th:nth-child(9), td:nth-child(9) {
+    width: 10%; 
+}
+
+th:nth-child(10), td:nth-child(10) {
+    width: 7%; 
+    text-align: center;
+}
 
     
         .datetime-container {
@@ -438,6 +447,8 @@
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Assigned Truck</th>
+                                <th>Total Completed Trips</th>
+                                <th>Completed Trips This Month</th>
                                 <th>Created At <br> (Y-M-D)</th>
                                 <th>Last Login</th>
                                 <th>Actions</th>
@@ -488,23 +499,6 @@
                     <input type="text" id="assignedTruck" name="assignedTruck">
                 </div>
 
-                <div class="form-group">
-    <label>Trip Statistics</label>
-    <div id="tripStatsContainer" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <span><strong>Total Completed Trips:</strong></span>
-            <span id="totalCompletedTrips">Loading...</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-            <span><strong>Completed This Month:</strong></span>
-            <span id="monthlyCompletedTrips">Loading...</span>
-        </div>
-        <div style="font-size: 12px; color: #666; margin-top: 10px;">
-            Current Month: <span id="currentMonthDisplay"></span>
-        </div>
-    </div>
-</div>
-
                 <button type="submit" id="saveButton" class="btn-primary">
                     <i class="fas fa-save"></i> Save Changes
                 </button>
@@ -539,25 +533,49 @@
         setInterval(updateDateTime, 1000);
 
 
-        function fetchDrivers() {
-            $.ajax({
-                url: 'include/handlers/get_all_drivers.php',
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    if (data.success) {
-                        driversData = data.drivers;
-                        renderTable();
-                    } else {
-                        alert("Error fetching drivers: " + data.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    alert("An error occurred while fetching driver data.");
-                }
-            });
+       function fetchDrivers() {
+    $.ajax({
+        url: 'include/handlers/get_all_drivers.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            if (data.success) {
+                driversData = data.drivers;
+                // Fetch trip counts for each driver
+                fetchTripCounts().then(() => {
+                    renderTable();
+                });
+            } else {
+                alert("Error fetching drivers: " + data.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert("An error occurred while fetching driver data.");
         }
+    });
+}
+
+function fetchTripCounts() {
+    return $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_driver_trip_counts'
+        }),
+        success: function(response) {
+            if (response.success) {
+                // Add trip counts to each driver
+                driversData.forEach(driver => {
+                    const driverStats = response.trip_counts.find(d => d.driver_id == driver.driver_id);
+                    driver.total_completed = driverStats ? driverStats.total_completed : 0;
+                    driver.monthly_completed = driverStats ? driverStats.monthly_completed : 0;
+                });
+            }
+        }
+    });
+}
 
        function renderTable() {
     document.querySelectorAll('.highlight').forEach(el => {
@@ -579,6 +597,8 @@
                 "<td>" + driver.name + "</td>" +
                 "<td>" + driver.email + "</td>" +
                 "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
+                 "<td>" + (driver.total_completed || 0) + "</td>" +
+                "<td>" + (driver.monthly_completed || 0) + "</td>" +
                 "<td>" + driver.created_at + "</td>" +
                 "<td>" + formattedLastLogin + "</td>" +
                 "<td class='actions'><div class='actions-container'>" +
@@ -679,7 +699,7 @@
                     document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
                     
                 
-                    loadDriverTripStats(driverId);
+                    
                     
                     document.getElementById("driverModal").style.display = "block";
                 } else {
@@ -692,37 +712,6 @@
             }
         });
     }
-
-    function loadDriverTripStats(driverId) {
-    // Reset to loading state
-    document.getElementById("totalCompletedTrips").textContent = "Loading...";
-    document.getElementById("monthlyCompletedTrips").textContent = "Loading...";
-    document.getElementById("currentMonthDisplay").textContent = "Loading...";
-    
-    $.ajax({
-        url: 'include/handlers/get_driver_trip_stats.php?driver_id=' + driverId,
-        type: 'GET',
-        dataType: 'json',
-        success: function(data) {
-            if (data.success) {
-                document.getElementById("totalCompletedTrips").textContent = data.stats.total_completed;
-                document.getElementById("monthlyCompletedTrips").textContent = data.stats.monthly_completed;
-                document.getElementById("currentMonthDisplay").textContent = data.stats.current_month;
-            } else {
-                document.getElementById("totalCompletedTrips").textContent = "Error loading";
-                document.getElementById("monthlyCompletedTrips").textContent = "Error loading";
-                document.getElementById("currentMonthDisplay").textContent = "Error";
-                console.error("Error loading trip stats: " + data.message);
-            }
-        },
-        error: function(xhr, status, error) {
-            document.getElementById("totalCompletedTrips").textContent = "Error loading";
-            document.getElementById("monthlyCompletedTrips").textContent = "Error loading";
-            document.getElementById("currentMonthDisplay").textContent = "Error";
-            console.error('Error loading trip stats:', error);
-        }
-    });
-}
 
 
         function deleteDriver(driverId) {
