@@ -488,6 +488,23 @@
                     <input type="text" id="assignedTruck" name="assignedTruck">
                 </div>
 
+                <div class="form-group">
+    <label>Trip Statistics</label>
+    <div id="tripStatsContainer" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span><strong>Total Completed Trips:</strong></span>
+            <span id="totalCompletedTrips">Loading...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <span><strong>Completed This Month:</strong></span>
+            <span id="monthlyCompletedTrips">Loading...</span>
+        </div>
+        <div style="font-size: 12px; color: #666; margin-top: 10px;">
+            Current Month: <span id="currentMonthDisplay"></span>
+        </div>
+    </div>
+</div>
+
                 <button type="submit" id="saveButton" class="btn-primary">
                     <i class="fas fa-save"></i> Save Changes
                 </button>
@@ -662,7 +679,7 @@
                     document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
                     
                 
-                    
+                    loadDriverTripStats(driverId);
                     
                     document.getElementById("driverModal").style.display = "block";
                 } else {
@@ -675,6 +692,37 @@
             }
         });
     }
+
+    function loadDriverTripStats(driverId) {
+    // Reset to loading state
+    document.getElementById("totalCompletedTrips").textContent = "Loading...";
+    document.getElementById("monthlyCompletedTrips").textContent = "Loading...";
+    document.getElementById("currentMonthDisplay").textContent = "Loading...";
+    
+    $.ajax({
+        url: 'include/handlers/get_driver_trip_stats.php?driver_id=' + driverId,
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            if (data.success) {
+                document.getElementById("totalCompletedTrips").textContent = data.stats.total_completed;
+                document.getElementById("monthlyCompletedTrips").textContent = data.stats.monthly_completed;
+                document.getElementById("currentMonthDisplay").textContent = data.stats.current_month;
+            } else {
+                document.getElementById("totalCompletedTrips").textContent = "Error loading";
+                document.getElementById("monthlyCompletedTrips").textContent = "Error loading";
+                document.getElementById("currentMonthDisplay").textContent = "Error";
+                console.error("Error loading trip stats: " + data.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            document.getElementById("totalCompletedTrips").textContent = "Error loading";
+            document.getElementById("monthlyCompletedTrips").textContent = "Error loading";
+            document.getElementById("currentMonthDisplay").textContent = "Error";
+            console.error('Error loading trip stats:', error);
+        }
+    });
+}
 
 
         function deleteDriver(driverId) {
