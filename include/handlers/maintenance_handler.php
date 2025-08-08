@@ -25,7 +25,7 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
         $updateTruck->bind_param("i", $row['truck_id']);
         $updateTruck->execute();
     }
-    
+
     $offset = ($page - 1) * $rowsPerPage;
     
     $sql = "SELECT 
@@ -256,9 +256,10 @@ $action = isset($_GET['action']) ? $_GET['action'] : '';
 switch ($action) {
 case 'getRecords':
     $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+     $rowsPerPage = isset($_GET['limit']) ? intval($_GET['limit']) : 5; // Add this line
     $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
     $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
-    $data = getMaintenanceRecords($conn, $page, 5, $statusFilter, $showDeleted);
+    $data = getMaintenanceRecords($conn, $page, $rowsPerPage, $statusFilter, $showDeleted);
     echo json_encode($data);
     break;
 

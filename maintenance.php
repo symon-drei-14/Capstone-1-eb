@@ -260,8 +260,8 @@
             margin-right: 20px; 
             width: calc(100% - 50px); 
             height: auto;
-            max-height: 150vh;
-            min-height:150vh;
+            max-height: 900vh;
+            min-height:50vh;
             transition: margin-left 0.3s ease;
             overflow-y: hidden;
             padding:20px;
@@ -628,6 +628,7 @@
 .stat-card .content {
     display: flex;
     flex-direction: column;
+     flex-shrink:7;
 }
 
 .stat-card .value {
@@ -640,6 +641,7 @@
     font-size: 14px;
     color: #6c757d;
     margin-top: 5px;
+    flex-shrink:0.;
 }
 
 @media (max-width: 1200px) {
@@ -950,6 +952,26 @@
     padding: 20px;
     color: #666;
 }
+
+.rows-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 20px;
+}
+
+.rows-per-page select {
+    padding: 5px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.rows-per-page label {
+    font-size: 14px;
+    color: #333;
+}
+
    
     </style>
     <body>
@@ -1088,8 +1110,18 @@
             <label for="showDeletedCheckbox">Show Deleted Records</label>
         </div>
     </div>
-            <br/>
-            <br/>
+                <div class="rows-per-page">
+                    <label for="rowsPerPage">Rows per page:</label>
+                    <select id="rowsPerPage" onchange="changeRowsPerPage()">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+    <br/>
+    <br/>
                     <div class="table-container">
                         <table id="maintenanceTable">
                             <thead>
@@ -1111,13 +1143,14 @@
                             </thead>
                             <tbody>
                             </tbody>
-                        </table>
-                
-                        <div class="pagination">
-                        <button class="prev" onclick="changePage(-1)">◄</button> 
-                        <div id="page-numbers" class="page-numbers"></div>
-                        <button class="next" onclick="changePage(1)">►</button> 
-    </div>
+                        </table>  
+                <div class="pagination">
+                   
+                    <button class="prev" onclick="changePage(-1)">◄</button>
+                    <div id="page-numbers" class="page-numbers"></div>
+                    <button class="next" onclick="changePage(1)">►</button>
+                </div>
+
                 </div>
             </section>
             </div>
@@ -1327,13 +1360,16 @@
             let isEditing = false;
             let trucksList = [];
             let sortTruckIdAsc = true; 
+            let rowsPerPage = 10; // Default value
             
         function getLocalDate() {
         const now = new Date();
         const offset = now.getTimezoneOffset() * 60000; // offset in milliseconds
         const localISOTime = (new Date(now - offset)).toISOString().slice(0, 10);
         return localISOTime;
-    }
+        }
+
+ 
 
     $(document).ready(function() {
         loadMaintenanceData();
@@ -1438,31 +1474,59 @@
 
     
     function loadMaintenanceData() {
-        const showDeleted = document.getElementById('showDeletedCheckbox').checked;
-        let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}`;
-        
-        if (currentStatusFilter !== 'all') {
-            url += `&status=${encodeURIComponent(currentStatusFilter)}`;
-        }
-        
-        if (showDeleted) {
-            url += `&showDeleted=1`;
-        }
-        
-        fetch(url)
-            .then(response => response.json())
-            .then(response => {
-                renderTable(response.records || []);
-                totalPages = response.totalPages || 1;
-                currentPage = response.currentPage || 1;
-                updatePagination();
-            })
-            .catch(error => {
-                console.error("Error loading data:", error);
-                const tableBody = document.querySelector("#maintenanceTable tbody");
-                tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading data</td></tr>';
-            });
+    const showDeleted = document.getElementById('showDeletedCheckbox').checked;
+    let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}&limit=${rowsPerPage}`;
+    
+    if (currentStatusFilter !== 'all') {
+        url += `&status=${encodeURIComponent(currentStatusFilter)}`;
     }
+    
+    if (showDeleted) {
+        url += `&showDeleted=1`;
+    }
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(response => {
+            renderTable(response.records || []);
+            totalPages = response.totalPages || 1;
+            currentPage = response.currentPage || 1;
+            updatePagination();
+        })
+        .catch(error => {
+            console.error("Error loading data:", error);
+            const tableBody = document.querySelector("#maintenanceTable tbody");
+            tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading data</td></tr>';
+        });
+}
+
+        function changeRowsPerPage() {
+            const newRowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+            if (!isNaN(newRowsPerPage) && newRowsPerPage > 0) {
+                rowsPerPage = newRowsPerPage;
+                currentPage = 1; // Reset to first page
+                loadMaintenanceData();
+                
+                // Update the dropdown to show the selected value
+                document.getElementById('rowsPerPage').value = rowsPerPage;
+            }
+        }
+
+    window.onload = function() {
+
+        rowsPerPage = parseInt(document.getElementById('rowsPerPage').value) || 5;
+        document.getElementById('rowsPerPage').value = rowsPerPage;
+        
+
+        document.getElementById('showDeletedCheckbox').addEventListener('change', toggleDeletedRecords);
+        loadMaintenanceData();
+        updateStatsCards();
+    };
 
     function fetchAllRecordsForSearch() {
         let url = `include/handlers/maintenance_handler.php?action=getAllRecordsForSearch`;

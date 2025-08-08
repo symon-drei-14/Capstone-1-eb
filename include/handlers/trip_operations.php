@@ -207,6 +207,9 @@ try {
 case 'get_active_trips':
     $statusFilter = $data['statusFilter'] ?? 'all';
     $sortOrder = $data['sortOrder'] ?? 'desc';
+    $page = $data['page'] ?? 1;
+    $perPage = $data['perPage'] ?? 10; // Default to 10 items per page
+    
     $query = "SELECT * FROM assign WHERE is_deleted = 0";
     
     if ($statusFilter !== 'all') {
@@ -215,11 +218,16 @@ case 'get_active_trips':
     
     $query .= " ORDER BY date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
     
+    // Add pagination
+    $offset = ($page - 1) * $perPage;
+    $query .= " LIMIT ? OFFSET ?";
+    
     if ($statusFilter !== 'all') {
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("s", $statusFilter);
+        $stmt->bind_param("sii", $statusFilter, $perPage, $offset);
     } else {
         $stmt = $conn->prepare($query);
+        $stmt->bind_param("ii", $perPage, $offset);
     }
     
     $stmt->execute();
@@ -230,12 +238,36 @@ case 'get_active_trips':
         $trips[] = $row;
     }
     
-    echo json_encode(['success' => true, 'trips' => $trips]);
+    // Get total count for pagination
+    $countQuery = "SELECT COUNT(*) as total FROM assign WHERE is_deleted = 0";
+    if ($statusFilter !== 'all') {
+        $countQuery .= " AND status = ?";
+    }
+    
+    if ($statusFilter !== 'all') {
+        $countStmt = $conn->prepare($countQuery);
+        $countStmt->bind_param("s", $statusFilter);
+    } else {
+        $countStmt = $conn->prepare($countQuery);
+    }
+    $countStmt->execute();
+    $total = $countStmt->get_result()->fetch_assoc()['total'];
+    
+    echo json_encode([
+        'success' => true, 
+        'trips' => $trips,
+        'total' => $total,
+        'perPage' => $perPage,
+        'currentPage' => $page
+    ]);
     break;
 
 case 'get_deleted_trips':
     $statusFilter = $data['statusFilter'] ?? 'all';
     $sortOrder = $data['sortOrder'] ?? 'desc';
+    $page = $data['page'] ?? 1;
+    $perPage = $data['perPage'] ?? 10;
+    
     $query = "SELECT * FROM assign WHERE is_deleted = 1";
     
     if ($statusFilter !== 'all') {
@@ -243,12 +275,15 @@ case 'get_deleted_trips':
     }
     
     $query .= " ORDER BY date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
+    $offset = ($page - 1) * $perPage;
+    $query .= " LIMIT ? OFFSET ?";
     
     if ($statusFilter !== 'all') {
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("s", $statusFilter);
+        $stmt->bind_param("sii", $statusFilter, $perPage, $offset);
     } else {
         $stmt = $conn->prepare($query);
+        $stmt->bind_param("ii", $perPage, $offset);
     }
     
     $stmt->execute();
@@ -259,7 +294,27 @@ case 'get_deleted_trips':
         $trips[] = $row;
     }
     
-    echo json_encode(['success' => true, 'trips' => $trips]);
+    $countQuery = "SELECT COUNT(*) as total FROM assign WHERE is_deleted = 1";
+    if ($statusFilter !== 'all') {
+        $countQuery .= " AND status = ?";
+    }
+    
+    if ($statusFilter !== 'all') {
+        $countStmt = $conn->prepare($countQuery);
+        $countStmt->bind_param("s", $statusFilter);
+    } else {
+        $countStmt = $conn->prepare($countQuery);
+    }
+    $countStmt->execute();
+    $total = $countStmt->get_result()->fetch_assoc()['total'];
+    
+    echo json_encode([
+        'success' => true, 
+        'trips' => $trips,
+        'total' => $total,
+        'perPage' => $perPage,
+        'currentPage' => $page
+    ]);
     break;
     
 case 'get_driver_trip_counts':

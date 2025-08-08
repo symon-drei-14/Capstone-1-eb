@@ -12,10 +12,49 @@ checkAccess();
     <link rel="stylesheet" href="include/fleetmanagement.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body{
-            font-family: Arial, sans-serif;
-               background-color:#FCFAEE;
+        body {
+        font-family: Arial, sans-serif;
+        background-color: #FCFAEE;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
         }
+        table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+   
+        }
+        .table-container {
+         width: 100%;
+        }
+        .container{
+            height:auto;
+            padding:20;
+        }
+
+        #trucksTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+            .main-content4 {
+                 margin-top: 80px;
+                margin-left: 10px;
+                margin-right: 10px;
+                width: calc(100% - 20px);
+                background-color: #ffffff;
+                border-radius: 10px;
+                box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+                padding-bottom: 20px;
+                height:auto;
+                
+                
+            }
+
         .header {
     display: flex;
     justify-content: space-between;
@@ -30,7 +69,7 @@ checkAccess();
     left: 0;
     z-index: 1200;
 
-}
+        }       
         h3{
             font-family: Arial, sans-serif;
             margin-top:20px;
@@ -63,21 +102,6 @@ checkAccess();
         }
 
      
-
-     
-        .main-content4 {
-            margin-top: 80px;
-            margin-left: 10px;
-            margin-right: 10px;
-            width: calc(100% - 110px);
-            width: 96vw;
-            height: 105vh;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-            overflow-x: hidden;
-            overflow-y: hidden;
-        }
 
         .status-enroute {
             background-color: #007bff; /* Blue */
@@ -309,6 +333,9 @@ th[onclick]:hover {
     color: #17a2b8;
 }
 
+.icon-btn.history {
+    color: #17a2b8;
+}
 
     .datetime-container {
         display: inline-flex;
@@ -342,25 +369,38 @@ th[onclick]:hover {
 }
 
 /* --------------------------------- */
+.header-stats-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
 .stats-container {
     display: flex;
     gap: 15px;
-    position: absolute;
-    right: 80px;
-    top: 130px;
-    z-index: 1000;
+    flex-wrap: wrap;
+    margin:0;
+    position: static;
+    top: auto;
+    right: auto;
+    z-index: auto;
+    margin-right:50px;
 }
 
 .stat-card {
     background: white;
     border-radius: 8px;
-    padding: 15px 15px;
+    padding: 15px;
+    width: 140px;
     box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-width: 120px;
+    gap: 15px;
+    transition: all 0.3s ease;
 }
+
 
 .stat-icon {
     font-size: 20px;
@@ -515,7 +555,7 @@ th[onclick]:hover {
     background-color: #B82132;
     color: white;
     padding: 30px 0 0;
-    margin-top: 40px;
+    margin-top: 20px;
     position: relative;
     bottom: 0;
     width: 100%;
@@ -575,6 +615,44 @@ th[onclick]:hover {
 
 .history-modal-content button:hover {
     background-color: #9a1a28;
+}
+
+.rows-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 20px;
+}
+
+.rows-per-page select {
+    padding: 5px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.rows-per-page label {
+    font-size: 14px;
+    color: #333;
+}
+.pagination2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    position: static;
+}
+
+.pagination2 button {
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 10px;
+    margin: 0 5px;
+   
 }
     </style>
 </head>
@@ -644,86 +722,97 @@ th[onclick]:hover {
     </div>
 
     <div class="main-content4">
-        <section class="content-2">
-            
             <div class="container">
+                <div class="header-stats-container">
                         <h3>Truck Management</h3>
                         <div class="stats-container" id="statsContainer">
-    <div class="stat-card">
-        <div class="stat-icon icon-terminal">
-            <i class="fas fa-truck-loading"></i>
-        </div>
-        <div class="stat-content">
-            <div class="stat-value">8</div>
-            <div class="stat-label">In Terminal</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon icon-enroute">
-            <i class="fas fa-truck-moving"></i>
-        </div>
-        <div class="stat-content">
-            <div class="stat-value">5</div>
-            <div class="stat-label">Enroute</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon icon-repair">
-            <i class="fas fa-tools"></i>
-        </div>
-        <div class="stat-content">
-            <div class="stat-value">2</div>
-            <div class="stat-label">In Repair</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon icon-overdue">
-            <i class="fas fa-exclamation-triangle"></i>
-        </div>
-        <div class="stat-content">
-            <div class="stat-value">1</div>
-            <div class="stat-label">Overdue</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon icon-total">
-            <i class="fas fa-truck"></i>
-        </div>
-        <div class="stat-content">
-            <div class="stat-value">16</div>
-            <div class="stat-label">Total Trucks</div>
-        </div>
-    </div>
-</div>
+                    <div class="stat-card">
+                        <div class="stat-icon icon-terminal">
+                            <i class="fas fa-truck-loading"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">8</div>
+                            <div class="stat-label">In Terminal</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon icon-enroute">
+                            <i class="fas fa-truck-moving"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">5</div>
+                            <div class="stat-label">Enroute</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon icon-repair">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">2</div>
+                            <div class="stat-label">In Repair</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon icon-overdue">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">1</div>
+                            <div class="stat-label">Overdue</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon icon-total">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">16</div>
+                            <div class="stat-label">Total Trucks</div>
+                        </div>
+                    </div>
+            </div>
+            </div>
                 <div class="button-row">
                     <button class="add_trip" onclick="openTruckModal()">Add a truck</button>
                 </div>
                 <br>
         
                 <div class="status-filter">
-    <label for="statusFilter">Filter by Status:</label>
-    <select id="statusFilter" onchange="filterTrucksByStatus()">
-        <option value="all">All Statuses</option>
-        <option value="In Terminal">In Terminal</option>
-        <option value="Enroute">Enroute</option>
-        <option value="In Repair">In Repair</option>
-        <option value="Overdue">Overdue</option>
+            <label for="statusFilter">Filter by Status:</label>
+            <select id="statusFilter" onchange="filterTrucksByStatus()">
+                <option value="all">All Statuses</option>
+                <option value="In Terminal">In Terminal</option>
+                <option value="Enroute">Enroute</option>
+                <option value="In Repair">In Repair</option>
+                <option value="Overdue">Overdue</option>
 
-    </select>
+            </select>
 
        
-<div class="search-container">
-     <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
-    </div>
-        <div class="show-deleted-filter">
-    <label>
-        <input type="checkbox" id="showDeleted" onchange="toggleDeletedTrucks()">
-        Show Deleted Trucks
-    </label>
-</div>
-       
-</div>
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
+                    </div>
+                        <div class="show-deleted-filter">
+                    <label>
+                        <input type="checkbox" id="showDeleted" onchange="toggleDeletedTrucks()">
+                        Show Deleted Trucks
+                    </label>
+                </div>
+                    
+                </div>
+
+                <div class="rows-per-page">
+                    <label for="rowsPerPage">Rows per page:</label>
+                    <select id="rowsPerPage" onchange="changeRowsPerPage()">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
 
                 <div class="table-container">
                     <table id="trucksTable">
@@ -747,7 +836,7 @@ th[onclick]:hover {
                     <button class="next" onclick="changeTruckPage(1)">►</button>
                 </div>
             </div>
-        </section>
+  
     </div>
 
     <div id="historyModal" class="modal">
@@ -826,7 +915,7 @@ th[onclick]:hover {
         let currentStatusFilter = 'all';
         let trucksData = [];
         let currentTruckPage = 1;
-        const rowsPerPage = 4;
+        let rowsPerPage = 5;
         let isEditMode = false;
         let currentSortOrder = 'asc';
  let showDeleted = false;
@@ -1059,6 +1148,7 @@ function renderTrucksTable() {
      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     let filteredTrucks = [...trucksData]; // Create a copy
     
+    
     if (searchTerm) {
         // Apply search filter if there's a search term
         filteredTrucks = filteredTrucks.filter(truck => {
@@ -1071,7 +1161,9 @@ function renderTrucksTable() {
                 (truck.last_modified_by && truck.last_modified_by.toLowerCase().includes(searchTerm)) ||
                 (truck.delete_reason && truck.delete_reason.toLowerCase().includes(searchTerm))
             );
+            document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
         });
+   
     }
     
     // Filter trucks based on the showDeleted flag
@@ -1255,7 +1347,10 @@ function changeTruckPage(direction) {
                 (truck.status && truck.status.toLowerCase().includes(searchTerm)) ||
                 (truck.last_modified_by && truck.last_modified_by.toLowerCase().includes(searchTerm)) ||
                 (truck.delete_reason && truck.delete_reason.toLowerCase().includes(searchTerm))
+                
             );
+            const totalPages = Math.ceil(filteredTrucks.length / rowsPerPage);
+    currentTruckPage += direction;
         });
     }
     
@@ -1385,6 +1480,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function changeRowsPerPage() {
+    rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+    currentTruckPage = 1;
+    renderTrucksTable();
+}
 
 
     </script>
