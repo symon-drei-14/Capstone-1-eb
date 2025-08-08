@@ -2110,7 +2110,7 @@
         const date = new Date(datetimeString);
         return date.toLocaleString(); 
     }
-
+  let currentStatusFilter = 'all';
         
         $(document).ready(function() {
 
@@ -2121,7 +2121,7 @@
             
             let now = new Date();
             let formattedNow = now.toISOString().slice(0,16); 
-                    let currentStatusFilter = 'all';
+                  
                     $('#statusFilter').on('change', filterTableByStatus);
             $('#editEventDate').attr('min', formattedNow);
             $('#addEventDate').attr('min', formattedNow); 
