@@ -433,6 +433,28 @@ case 'restore':
     ]);
     break;
 
+    case 'get_checklist':
+    $stmt = $conn->prepare("SELECT * FROM driver_checklist WHERE trip_id = ?");
+    if ($stmt === false) {
+        throw new Exception("Failed to prepare checklist query: " . $conn->error);
+    }
+    
+    $stmt->bind_param("i", $data['trip_id']);
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute checklist query: " . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    $checklist = $result->fetch_assoc();
+    $stmt->close();
+    
+    if ($checklist) {
+        echo json_encode(['success' => true, 'checklist' => $checklist]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'No checklist data found']);
+    }
+    break;
+
         default:
             throw new Exception("Invalid action");
     }

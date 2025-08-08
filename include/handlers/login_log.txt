@@ -613,3 +613,10 @@
 2025-08-06 16:40:06 - Data validation passed
 2025-08-06 16:40:06 - Database connection successful
 2025-08-06 16:40:06 - Login successful for: tester@gmail.com
+2025-08-08 16:22:50 - Login request received
+{"email":"Tester@gmail.com","password":"12345678"}
+
+2025-08-08 16:22:50 - JSON parsed successfully
+2025-08-08 16:22:50 - Data validation passed
+2025-08-08 16:22:50 - Database connection successful
+2025-08-08 16:22:50 - Login successful for: Tester@gmail.com

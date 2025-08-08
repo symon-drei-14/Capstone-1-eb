@@ -505,6 +505,65 @@ try {
             echo json_encode(['success' => true, 'message' => 'Status updated successfully']);
             break;
 
+            case 'save_checklist':
+    // Check if checklist already exists for this trip
+    $checkStmt = $conn->prepare("SELECT id FROM driver_checklist WHERE trip_id = ?");
+    $checkStmt->bind_param("i", $data['trip_id']);
+    $checkStmt->execute();
+    $exists = $checkStmt->get_result()->num_rows > 0;
+    $checkStmt->close();
+    
+    if ($exists) {
+        // Update existing checklist
+        $stmt = $conn->prepare("UPDATE driver_checklist SET 
+            no_fatigue = ?,
+            no_drugs = ?,
+            no_distractions = ?,
+            no_illness = ?,
+            fit_to_work = ?,
+            alcohol_test = ?,
+            hours_sleep = ?
+            WHERE trip_id = ?");
+        $stmt->bind_param("iiiiiddi", 
+            $data['no_fatigue'],
+            $data['no_drugs'],
+            $data['no_distractions'],
+            $data['no_illness'],
+            $data['fit_to_work'],
+            $data['alcohol_test'],
+            $data['hours_sleep'],
+            $data['trip_id']
+        );
+    } else {
+        // Insert new checklist
+        $stmt = $conn->prepare("INSERT INTO driver_checklist (
+            trip_id,
+            no_fatigue,
+            no_drugs,
+            no_distractions,
+            no_illness,
+            fit_to_work,
+            alcohol_test,
+            hours_sleep
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiiiiidd", 
+            $data['trip_id'],
+            $data['no_fatigue'],
+            $data['no_drugs'],
+            $data['no_distractions'],
+            $data['no_illness'],
+            $data['fit_to_work'],
+            $data['alcohol_test'],
+            $data['hours_sleep']
+        );
+    }
+    
+    $stmt->execute();
+    echo json_encode(['success' => true]);
+    break;
+
+
+
         case 'fix_missing_driver_ids':
             $stmt = $conn->prepare("
                 UPDATE assign a 

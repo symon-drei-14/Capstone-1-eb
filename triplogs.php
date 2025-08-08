@@ -1802,6 +1802,9 @@
 
                 <!-- Form buttons -->
                 <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                    <button type="button" id="viewChecklistBtn" class="save-btn" style="background-color: #17a2b8; display: none;">
+    View Driver Checklist
+</button>
                     <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
                     <button type="button" id="viewExpensesBtn" class="save-btn" style="padding: 8px 15px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;">Expense Reports</button>
                     <button type="submit" class="save-btn"style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
@@ -1980,6 +1983,25 @@
             </form>
         </div>
     </div>
+
+    <div id="checklistModal" class="modal">
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+        <span class="close">&times;</span>
+        <h3 style="margin-top: 0;">Driver Checklist</h3>
+        <div id="checklistContent">
+            <table class="events-table" style="width: 100%; margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Response</th>
+                    </tr>
+                </thead>
+                <tbody id="checklistTableBody"></tbody>
+            </table>
+        </div>
+        <button type="button" class="close-btn cancel-btn" style="margin-top: 20px;">Close</button>
+    </div>
+</div>
         
     <div id="deleteConfirmModal" class="modal">
         <div class="modal-content2">
@@ -2082,6 +2104,14 @@
 
 
     <script>
+
+         function formatDateTime(datetimeString) {
+        if (!datetimeString) return 'N/A';
+        const date = new Date(datetimeString);
+        return date.toLocaleString(); 
+    }
+
+        
         $(document).ready(function() {
 
         var currentPage = 1;
@@ -2531,11 +2561,7 @@
 
             // Table pagination variables
     
-            function formatDateTime(datetimeString) {
-        if (!datetimeString) return 'N/A';
-        const date = new Date(datetimeString);
-        return date.toLocaleString(); 
-    }
+           
 
 
 
@@ -2706,44 +2732,53 @@
         renderTable();
     });
             // Edit button click handler
-    $(document).on('click', '.icon-btn.edit', function() {
-        var eventId = $(this).data('id');
-        var event = eventsData.find(function(e) { return e.id == eventId; });
-        
-        if (event) {
-            $('#editEventId').val(event.id);
-            $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
-            
-            var eventDate = event.date.includes(':00.') 
-                ? event.date.replace(/:00\.\d+Z$/, '') 
-                : event.date;
-            $('#editEventDate').val(eventDate);
+   $(document).on('click', '.icon-btn.edit', function() {
+    var eventId = $(this).data('id');
+    var event = eventsData.find(function(e) { return e.id == eventId; });
     
-            populateDriverDropdowns(event.size);
-            setTimeout(() => {
-                $('#editEventDriver').val(event.driver);
-            }, 100);
-            
-            $('#editEventHelper').val(event.helper);
-            $('#editEventDispatcher').val(event.dispatcher || '');
-            $('#editEventContainerNo').val(event.containerNo);
-            $('#editEventClient').val(event.client);
-            $('#editEventDestination').val(event.destination);
-            $('#editEventShippingLine').val(event.shippingLine);
-            $('#editEventConsignee').val(event.consignee);
-            $('#editEventSize').val(event.size);
-            $('#editEventCashAdvance').val(event.cashAdvance);
-            $('#editEventStatus').val(event.status);
+    if (event) {
+        $('#editEventId').val(event.id);
+        $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
+        
+        var eventDate = event.date.includes(':00.') 
+            ? event.date.replace(/:00\.\d+Z$/, '') 
+            : event.date;
+        $('#editEventDate').val(eventDate);
 
-            if (event.status === 'Completed') {
-                $('#viewExpensesBtn').show();
-            } else {
-                $('#viewExpensesBtn').hide();
-            }
-            
-            $('#editModal').show();
-        }
-    });
+        populateDriverDropdowns(event.size);
+        setTimeout(() => {
+            $('#editEventDriver').val(event.driver);
+        }, 100);
+        
+        $('#editEventHelper').val(event.helper);
+        $('#editEventDispatcher').val(event.dispatcher || '');
+        $('#editEventContainerNo').val(event.containerNo);
+        $('#editEventClient').val(event.client);
+        $('#editEventDestination').val(event.destination);
+        $('#editEventShippingLine').val(event.shippingLine);
+        $('#editEventConsignee').val(event.consignee);
+        $('#editEventSize').val(event.size);
+        $('#editEventCashAdvance').val(event.cashAdvance);
+        $('#editEventStatus').val(event.status);
+
+        // Check for both Completed status AND if driver_id exists
+        if (event.status === 'Completed') {
+    $('#viewExpensesBtn').show();
+} else {
+    $('#viewExpensesBtn').hide();
+}
+
+// Show checklist button if we have a driver_id and status is not Cancelled
+if (event.driver_id && event.status !== 'Cancelled') {
+    $('#viewChecklistBtn').show();
+} else {
+    $('#viewChecklistBtn').hide();
+}
+       
+        
+        $('#editModal').show();
+    }
+});
 
     $(document).on('click', '#viewExpensesBtn', function() {
         var tripId = $('#editEventId').val();
@@ -3232,7 +3267,61 @@
         }
     });
 
+$('#viewChecklistBtn').on('click', function() {
+    var tripId = $('#editEventId').val();
+    
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_checklist',
+            trip_id: tripId
+        }),
+        success: function(response) {
+            if (response.success && response.checklist) {
+                $('#checklistTableBody').empty();
+                
+                var checklist = response.checklist;
+                var rows = [
+                    { question: 'No body fatigue?', response: checklist.no_fatigue ? 'Yes' : 'No' },
+                    { question: 'Did not take illegal drugs?', response: checklist.no_drugs ? 'Yes' : 'No' },
+                    { question: 'No mental distractions?', response: checklist.no_distractions ? 'Yes' : 'No' },
+                    { question: 'No body illness?', response: checklist.no_illness ? 'Yes' : 'No' },
+                    { question: 'Fit to work?', response: checklist.fit_to_work ? 'Yes' : 'No' },
+                    { question: 'Alcohol test reading', response: checklist.alcohol_test },
+                    { question: 'Hours of sleep', response: checklist.hours_sleep },
+                    { question: 'Submitted at', response: formatDateTime(checklist.submitted_at) }
+                ];
+                
+                rows.forEach(function(row) {
+                    $('#checklistTableBody').append(`
+                        <tr>
+                            <td>${row.question}</td>
+                            <td>${row.response}</td>
+                        </tr>
+                    `);
+                });
+                
+                $('#checklistModal').show();
+            } else {
+                alert('No checklist data found for this trip');
+            }
+        },
+        error: function() {
+            alert('Server error occurred while loading checklist');
+        }
+    });
+});
 
+// Show/hide the checklist button based on trip status
+$('#editEventStatus').on('change', function() {
+    if ($(this).val() !== 'Cancelled') {
+        $('#viewChecklistBtn').show();
+    } else {
+        $('#viewChecklistBtn').hide();
+    }
+});
 
     function updateStats() {
         $.ajax({
