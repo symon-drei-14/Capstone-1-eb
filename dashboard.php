@@ -63,7 +63,7 @@ if ($maintenanceResult->num_rows > 0) {
 .grid-item.card.statistic .content4 h2 {
     color: inherit; 
     margin: 0;
-    font-size: 50px;
+    font-size: 45px;
 }
 
 .grid-item.card.statistic .icon-container i,
@@ -74,59 +74,56 @@ if ($maintenanceResult->num_rows > 0) {
     opacity: 0.8;
 }
 
-
 .on-route {
-    background-color: rgba(69, 137, 63, 0.13);
-    color: rgb(27, 123, 19); 
+    background: linear-gradient(to bottom, 
+        rgba(27, 123, 19, 0.8) 0%, 
+        rgba(69, 137, 63, 0.5) 100%);
+    color: white;
+    text-shadow: 0 1px 3px rgba(27, 26, 26, 0.8);
 }
 .on-route .icon-container i {
-    color: rgb(27, 123, 19); 
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .error {
-    background-color: rgba(255, 0, 0, 0.2);
-    color: rgb(209, 25, 25); 
+    background: linear-gradient(to bottom, 
+        rgba(180, 30, 30, 0.9) 0%,  /* Darker red at top */
+        rgba(255, 120, 120, 0.5) 100%);
+    color: white;
+    text-shadow: 0 1px 3px rgba(27, 26, 26, 0.8);
 }
 .error .icon-container2 i {
-    color: rgba(91, 12, 12, 1); 
+    color: white;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .late {
-    background-color: rgba(255, 201, 8, 0.45);
-    color: rgba(114, 89, 0, 0.56); 
+    background: linear-gradient(to bottom, 
+        rgba(200, 150, 0, 0.8) 0%,  /* Darker gold at top */
+        rgba(255, 230, 150, 0.5) 100%);
+    color: white;
+    text-shadow: 0 1px 3px rgba(27, 26, 26, 0.8);
 }
 .late .icon-container3 i {
-    color: rgba(98, 80, 13, 0.91);
+    color: rgba(255, 255, 255, 1);
+    filter: drop-shadow(0 1px 1px rgba(4, 0, 0, 0.5));
 }
 
 .deviated {
-    background-color: rgba(230, 121, 49, 0.43);
-    color: rgb(230, 121, 49); 
+    background: linear-gradient(to bottom, 
+        rgba(200, 80, 20, 0.8) 0%,  /* Darker orange at top */
+        rgba(255, 190, 150, 0.5) 100%);
+    color: white;
+    text-shadow: 0 1px 3px rgba(27, 26, 26, 0.8);
 }
 .deviated .icon-container4 i {
-    color: rgba(255, 102, 0, 1); 
+    color: white;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
-.on-route {
-    background-color:rgba(69, 137, 63, 0.13);
-    color: rgb(27, 123, 19);
-}
-    
-    .error {
-    background-color:rgba(255, 0, 0, 0.2);
-    color: rgb(209, 25, 25);
-    }
-    
-    
-    .late {
-    background-color:rgba(255, 201, 8, 0.28);
-    color: rgba(114, 89, 0, 0.56);
-    }
-    
-    
-    .deviated {
-    background-color:rgba(230, 121, 49, 0.19);
-    color: rgb(230, 121, 49);
-    }
+
+
 
     
     .pagination-controls {
@@ -169,25 +166,24 @@ if ($maintenanceResult->num_rows > 0) {
     background: #fff;
     padding: 15px;
     border-radius: 15px;
-    box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
     margin-top:15px;
+     border: 1px solid #ffffff29;
 }
 
 .card-large2 {
     flex: 3;
     background: #fff;
-    padding: 20px;
+    padding: 30px;
     border-radius: 15px;
-    box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
-  
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
 }
 .card-small {
     flex: 1;
     background: #fff;
     padding: 20px;
     border-radius: 15px;
-    box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
-
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
 }
 
 .fa.fa-user.icon-bg {
@@ -649,6 +645,8 @@ box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 
 
 body{
    background-color:#FCFAEE;
+    font-family: 'Open Sans', sans-serif;
+    line-height: 1.2;
 }
 
 /* Footer Styles */
@@ -932,6 +930,34 @@ body{
         font-size: 14px;
         color: #333;
     }
+
+    .quick-actions-bar {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 10px 0;
+    border-bottom: 1px solid #d5d2d2ff;
+}
+
+.quick-action-btn {
+    padding: 10px 15px;
+    background-color:#FCFAEE;
+    color: black;
+    border: none;
+    border-radius: 10px;
+    font-size:14px;
+    cursor: pointer;
+    transition: background 0.3s;
+    border: 1px solid #00000027;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+}
+
+.quick-action-btn:hover {
+    background: #ff7777da;
+}
+
+
+
 </style>
 <?php
 require_once __DIR__ . '/include/check_access.php';
@@ -1047,8 +1073,19 @@ $eventsDataJson = json_encode($eventsData);
     <span><i class="fas fa-user"></i> 18 Drivers On Duty</span>
     <span><i class="fas fa-map-marker-alt"></i> 7 Deliveries Today</span>
 </div>  -->
-
+<div class="quick-actions-bar">
+    <button class="quick-action-btn">
+        <i class="fas fa-plus"></i> New Delivery
+    </button>
+    <button class="quick-action-btn">
+        <i class="fas fa-truck"></i> Track Fleet
+    </button>
+    <button class="quick-action-btn">
+        <i class="fas fa-calendar-alt"></i> Schedule Maintenance
+    </button>
+</div>
 <div class="dashboard-grid">
+    
    <div class="grid-item card statistic on-route">
     <div class="content">
         <p>On Going Deliveries</p>
