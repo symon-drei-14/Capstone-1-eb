@@ -15,6 +15,14 @@ checkAccess();
     <link rel="stylesheet" href="include/fleetmanagement.css">
 </head>
 <style>
+
+    table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    table-layout: fixed;
+    overflow: hidden; 
+}
     @media (max-width: 768px) {
     .sidebar {
         display: none;
@@ -31,7 +39,11 @@ checkAccess();
     }
 }
 
-
+.container {
+    padding: 20px;
+   
+    overflow-x: hidden;
+}
 
 .toggle-sidebar-btn {
     background: none;
@@ -72,10 +84,13 @@ checkAccess();
 }
 
 .main-content4 {
-    margin-top: 30px;
-    margin-left: 50px;
-    margin-right: 10px;
-    width: calc(100% - 100px);
+    width: 90vw;
+    height: 120vh;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    overflow-x: hidden;
+   overflow-y: hidden;
 }
 .deleted-row {
     background-color: #f9f9f9ff;
@@ -323,8 +338,8 @@ body {
     padding: 0;
     font-family: Arial, sans-serif;
      background-color:#FCFAEE;
-    overflow-y: auto; /* or just remove this; auto is default */
-    height: auto; /* allow content to grow */
+    overflow-y: auto; 
+    height: auto;
 }
 
         .datetime-container {
@@ -466,6 +481,26 @@ body {
     font-size: 16px;
     display:block;
     
+}
+
+.pagination2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* margin-top:-150px; */
+    margin-top:-20px;
+}
+
+.pagination2 button {
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 10px;
+    margin: 0 5px;
+   
 }
 
 </style>
