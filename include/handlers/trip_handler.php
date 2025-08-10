@@ -562,7 +562,54 @@ try {
     echo json_encode(['success' => true]);
     break;
 
-
+case 'get_checklist':
+    $tripId = $data['trip_id'] ?? null;
+    
+    if (!$tripId) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Trip ID is required']);
+        break;
+    }
+    
+    try {
+        $stmt = $conn->prepare("SELECT * FROM driver_checklist WHERE trip_id = ?");
+        if ($stmt === false) {
+            throw new Exception("Failed to prepare statement: " . $conn->error);
+        }
+        
+        $stmt->bind_param("i", $tripId);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to execute query: " . $stmt->error);
+        }
+        
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            $checklist = $result->fetch_assoc();
+            echo json_encode([
+                'success' => true, 
+                'checklist' => $checklist,
+                'message' => 'Checklist found'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'No checklist found for this trip'
+            ]);
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error fetching checklist: ' . $e->getMessage()
+        ]);
+    } finally {
+        if (isset($stmt)) {
+            $stmt->close();
+        }
+    }
+    break;
 
         case 'fix_missing_driver_ids':
             $stmt = $conn->prepare("
