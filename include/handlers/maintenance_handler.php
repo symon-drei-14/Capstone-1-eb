@@ -125,7 +125,9 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     return [
         "records" => $records,
         "totalPages" => $totalPages,
-        "currentPage" => $page
+        "currentPage" => $page,
+        "totalRecords" => $totalRows 
+        
     ];
 }
 

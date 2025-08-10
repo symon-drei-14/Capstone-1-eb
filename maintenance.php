@@ -37,7 +37,7 @@
         table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 2px;
+        margin-top: 0px;
 
     }
     
@@ -294,12 +294,31 @@
         color: #333;
     }
 
+
+.status-filter select option {
+    color: #000000ff; 
+
+}
+
+.status-filter select option[disabled][selected] {
+    display: none;
+
+}
+
+
     .status-filter-container select {
-        padding: 5px 10px;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        background-color: white;
-        cursor: pointer;
+         padding: 8px 12px 8px 35px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+    background-size: 16px;
     }
 
     .status-filter-container select:focus {
@@ -413,27 +432,14 @@
         gap: 15px;
         margin: 10px 0;
         flex-wrap: wrap;
+        border-bottom:1px solid #88888831;
+        width:100%;
     }
 
-    .status-filter-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
+   
 
 
-    .status-filter-container label {
-        font-weight: bold;
-        color: #333;
-    }
 
-    .status-filter-container select {
-        padding: 5px 10px;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        background-color: white;
-        cursor: pointer;
-    }
 
     .search-container {
         position: relative;
@@ -953,23 +959,29 @@
     color: #666;
 }
 
-.rows-per-page {
+.rows-per-page-container {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-right: 20px;
+    gap: 5px;
+    margin-right:0px;
 }
 
-.rows-per-page select {
-    padding: 5px 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: white;
-}
-
-.rows-per-page label {
+.rows-per-page-container label {
     font-size: 14px;
     color: #333;
+    margin-right: 5px;
+    border-radius:20px;
+}
+.rows-per-page-container select {
+    font-size: 14px;
+    color: black;
+    border-color: #33333328;
+    margin-right: 5px;
+    border-radius:10px;
+    padding: 5px;
+    margin: 5px;
+    max-width:200px;
+    width:auto;
 }
 
 
@@ -1038,7 +1050,17 @@
     align-items: center;
     padding: 0 5px;
 }
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0px;
+}
 
+.table-info {
+    font-size: 14px;
+    color: #555;
+}
    
     </style>
     <body>
@@ -1155,15 +1177,16 @@
     </div>
 </div>
 </div>
-            <div class="filter-controls">
+        <div class="filter-controls">
         <div class="status-filter-container">
-            <label for="statusFilter">Show:</label>
             <select id="statusFilter" onchange="filterTableByStatus()">
+                <option value="" disabled selected>Status Filter </option>
                 <option value="all">All Statuses</option>
                 <option value="Pending">Pending</option>
                 <option value="Completed">Completed</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Overdue">Overdue</option>
+                <option value="deleted">Deleted</option>
             </select>
         </div>
         
@@ -1172,23 +1195,23 @@
             <input type="text" id="searchInput" placeholder="Search..." onkeyup="searchMaintenance()">
         </div>
         
-        <div class="show-deleted-container">
-            <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedRecords()">
-            <label for="showDeletedCheckbox">Show Deleted Records</label>
-        </div>
+    
     </div>
-     <div class="table-controls">
-   
-                <div class="rows-per-page">
-                    <label for="rowsPerPage">Rows per page:</label>
-                    <select id="rowsPerPage" onchange="changeRowsPerPage()">
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
+    
+    <div class="table-controls">
+    <div class="table-info" id="showingInfo"></div>
+
+    <div class="rows-per-page-container">
+        <label for="rowsPerPage">Rows per page:</label>
+        <select id="rowsPerPage" onchange="changeRowsPerPage()">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+    </div>
+</div>
     <br/>
     <br/>
                     <div class="table-container">
@@ -1543,15 +1566,14 @@
 
     
     function loadMaintenanceData() {
-    const showDeleted = document.getElementById('showDeletedCheckbox').checked;
-    let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}&limit=${rowsPerPage}`;
     
-    if (currentStatusFilter !== 'all') {
-        url += `&status=${encodeURIComponent(currentStatusFilter)}`;
-    }
+   let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}&limit=${rowsPerPage}`;
     
-    if (showDeleted) {
+    if (currentStatusFilter === 'deleted') {
         url += `&showDeleted=1`;
+    } 
+    else if (currentStatusFilter !== 'all') {
+        url += `&status=${encodeURIComponent(currentStatusFilter)}`;
     }
     
     fetch(url)
@@ -1566,11 +1588,13 @@
             totalPages = response.totalPages || 1;
             currentPage = response.currentPage || 1;
             updatePagination();
+             updateShowingInfo(response.totalRecords, response.records.length);
         })
         .catch(error => {
             console.error("Error loading data:", error);
             const tableBody = document.querySelector("#maintenanceTable tbody");
             tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading data</td></tr>';
+             document.getElementById('showingInfo').textContent = 'Showing 0 to 0 of 0 entries';
         });
 }
 
@@ -2086,6 +2110,7 @@
                 });
                 
                 renderTable(filteredRecords);
+                updateShowingInfo(filteredRecords.length, filteredRecords.length);
                 // Hide pagination during search
                 document.querySelector('.pagination').style.display = 'none';
             })
@@ -2348,7 +2373,19 @@
 });
 
 
-
+function updateShowingInfo(totalRecords, currentPageRecordsCount) {
+    const showingInfo = document.getElementById('showingInfo');
+    
+    if (!totalRecords || totalRecords === 0) {
+        showingInfo.textContent = 'Showing 0 to 0 of 0 entries';
+        return;
+    }
+    
+    const start = ((currentPage - 1) * rowsPerPage) + 1;
+    const end = start + currentPageRecordsCount - 1;
+    
+    showingInfo.textContent = `Showing ${start} to ${end} of ${totalRecords} entries`;
+}
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>

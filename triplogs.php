@@ -460,51 +460,7 @@
     
     }
         
-        /* Pagination controls */
-        /* .pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        
-        .pagination button {
-            padding: 5px 10px;
-            margin: 0 5px;
-            cursor: pointer;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        
-        .pagination button:hover {
-            background-color: #f0f0f0;
-        } */
-
-        /* pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-        }
-        
-        .pagination button {
-            background-color: #ffffff00;
-            color: rgb(0, 0, 0);
-            border: none;
-            padding: 6px 12px;
-            font-size: 18px;
-            cursor: pointer;
-            border-radius: 10px;
-            margin: 0 5px;
-        }
-        
-        .pagination .prev, .pagination .next {
-            font-size: 18px;
-        }
-        
-        .pagination button:hover {
-            opacity: 0.7;
-        }
+     
         
         .page-numbers {
             display: inline-flex;
@@ -1509,6 +1465,113 @@
         font-size: 14px;
         color: #333;
     }
+
+    
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 5px;
+}
+
+.pagination button {
+    background-color: transparent;
+    color: #000;
+    border: none;
+    padding: 2px 5px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 15%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+    transition: all 0.3s ease;
+}
+
+.pagination button:hover {
+    background-color: #ffffffff;
+    
+    color: black;
+    font-weight:bold;
+    transform: scale(1.4); 
+}
+
+.pagination button.active {
+    background-color: #ffffff6a;
+    color: #cb1a2fff;
+    border-color: #ffffffff;    
+    font-weight: bolder;
+    font-size:20px;
+}   
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination .nav-btn {
+    border-radius: 15%;
+    width: auto;
+    font-size:14px;
+    border:none;
+}
+.pagination .nav-btn:hover {
+     transform: scale(1.6); 
+      background-color: #ffffffff;
+      font-weight:bold;
+      border:none;  
+}
+
+
+.pagination .ellipsis {
+    display: flex;
+    align-items: center;
+    padding: 0 5px;
+}
+
+
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.table-info {
+    font-size: 14px;
+    color: #555;
+}
+
+
+.rows-per-page-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right:30px;
+}
+
+.rows-per-page-container label {
+    font-size: 14px;
+    color: #333;
+    margin-right: 5px;
+    border-radius:20px;
+}
+.rows-per-page-container select {
+    font-size: 14px;
+    color: black;
+    border-color: #33333328;
+    margin-right: 5px;
+    border-radius:10px;
+    padding: 5px;
+    margin: 5px;
+    max-width:200px;
+    width:auto;
+}
     </style>
     <body>
         <?php
@@ -2019,15 +2082,16 @@
         <div class="filter-row" style="margin-bottom: 15px;">
         <div class="status-filter-container">
             <label for="statusFilter">Filter by Status:</label>
-            <select id="statusFilter">
-                <option value="all">All Statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="En Route">En Route</option>
-                <option value="Completed">Completed</option>
-                <option value="Cancelled">Cancelled</option>
-            </select>
+            <select id="statusFilter" onchange="filterTableByStatus()">
+    <option value="all">All Statuses</option>
+    <option value="Pending">Pending</option>
+    <option value="En Route">En Route</option>
+    <option value="Completed">Completed</option>
+    <option value="Cancelled">Cancelled</option>
+    <option value="deleted">Deleted</option>
+</select>
         
-
+</div>
     <div class="search-container" style="margin-left: 10px;">
             <i class="fa fa-search"></i>
             <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()">
@@ -2040,16 +2104,21 @@
             <label for="showDeletedCheckbox">Show Deleted Trips</label>
         </div>
     </div>
+    <div class="table-controls">
+    <div class="table-info" id="showingInfo"></div>
+    
     <div class="rows-per-page-container">
-                        <label for="rowsPerPage">Rows per page:</label>
-                    <select id="rowsPerPage" onchange="changeRowsPerPage()">
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
+        <label for="rowsPerPage">Rows per page:</label>
+        <select id="rowsPerPage" onchange="changeRowsPerPage()">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+    </div>
+</div>
+
 
             <table class="events-table" id="eventsTable"> 
                 <thead>
@@ -2082,9 +2151,9 @@
             </table>
             <div class="pagination-container">
                 <div class="pagination">
-                    <button class="prev" id="prevPageBtn">◄</button> 
+                    <button class="prev" id="prevPageBtn">&laquo</button> 
                     <div id="page-numbers" class="page-numbers"></div>
-                    <button class="next" id="nextPageBtn">►</button>
+                    <button class="next" id="nextPageBtn">&raquo</button>
                 </div>
             </div>
         </div>
@@ -2113,23 +2182,24 @@
   let currentStatusFilter = 'all';
         
         $(document).ready(function() {
-
-        var currentPage = 1;
-            var rowsPerPage = parseInt($('#rowsPerPage').val());
-            var totalPages = 0;
-            
+        let currentPage = 1;
+        let rowsPerPage = parseInt($('#rowsPerPage').val()); // Get the initial value from the select
+        let totalPages = 1;
+        let totalItems = 0;
             
             let now = new Date();
             let formattedNow = now.toISOString().slice(0,16); 
-                  
-                    $('#statusFilter').on('change', filterTableByStatus);
+        $('#rowsPerPage').val(rowsPerPage);
+        updateTableInfo(totalItems, 0);
+        $('#statusFilter').on('change', filterTableByStatus);
             $('#editEventDate').attr('min', formattedNow);
             $('#addEventDate').attr('min', formattedNow); 
             $('#rowsPerPage').on('change', function() {
-            rowsPerPage = parseInt($(this).val());
-            currentPage = 1; 
-            renderTable();
-    });
+    rowsPerPage = parseInt($(this).val());
+    currentPage = 1;
+    renderTable();
+});
+
 
             function updateDateTime() {
             const now = new Date();
@@ -2145,8 +2215,8 @@
         setInterval(updateDateTime, 1000);
 
     function renderTable() {
-    const showDeleted = $('#showDeletedCheckbox').is(':checked');
-    const rowsPerPage = parseInt($('#rowsPerPage').val()); // Get current value
+     const showDeleted = $('#showDeletedCheckbox').is(':checked') || currentStatusFilter === 'deleted';
+    const rowsPerPage = parseInt($('#rowsPerPage').val()); 
     
     $.ajax({
         url: 'include/handlers/trip_operations.php',
@@ -2168,9 +2238,11 @@
                 } else {
                     renderTripRows(response.trips, showDeleted);
                 }
-    
-                totalPages = Math.ceil(response.total / rowsPerPage);
-                updatePagination();
+                
+                totalItems = response.total;
+                totalPages = Math.ceil(totalItems  / rowsPerPage);
+                updatePagination(totalItems );
+                updateTableInfo(totalItems, response.trips.length);
             } else {
                 alert('Error: ' + response.message);
             }
@@ -2228,7 +2300,7 @@
             let statusCell = '';
             let actionCell = '';
             
-            if (showDeleted) {
+            if (showDeleted || trip.is_deleted) {
                 statusCell = `<td><span class="status cancelled">Deleted</span></td>`;
                 actionCell = `
                     <td class="actions">
@@ -2256,7 +2328,7 @@
             }
 
             const row = `
-                <tr class="${showDeleted ? 'deleted-row' : ''}">
+                 <tr class="${showDeleted || trip.is_deleted ? 'deleted-row' : ''}">
                     <td>${trip.plate_no || 'N/A'}</td>
                     <td>${formattedDate}</td>
                     <td>${formattedTime}</td>
@@ -2373,13 +2445,13 @@
                     $('#addEventDriver').html(driverOptions);
                 } else {
                     console.error('Error fetching truck data:', truckResponse.message);
-                    // Fallback to showing all drivers
+                   
                     populateAllDrivers(selectedSize, currentDriver);
                 }
             },
             error: function() {
                 console.error('Error fetching truck data');
-                // Fallback to showing all drivers
+                
                 populateAllDrivers(selectedSize, currentDriver);
             }
         });
@@ -2569,35 +2641,78 @@
             function filterTableByStatus() {
         currentStatusFilter = document.getElementById('statusFilter').value;
         currentPage = 1;
+        if (currentStatusFilter === 'deleted') {
+        $('#showDeletedCheckbox').prop('checked', true).hide();
+    } else {
+        $('#showDeletedCheckbox').show();
+    }
         renderTable();
     }
 
-    // Updated render function
+        function updatePagination(totalItems) {
+    const pageNumbers = $('#page-numbers');
+    pageNumbers.empty();
+    
 
+    $('#prevPageBtn').prop('disabled', currentPage === 1);
+    
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
 
-
-    // Update pagination function
-        function updatePagination() {
-        $('#page-numbers').empty();
+    if (startPage > 1) {
+        const firstPageBtn = $('<button>')
+            .text('1')
+            .addClass('page-number')
+            .attr('data-page', 1);
+        if (currentPage === 1) firstPageBtn.addClass('active');
+        firstPageBtn.on('click', function() {
+            goToPage(parseInt($(this).attr('data-page')));
+        });
+        pageNumbers.append(firstPageBtn);
         
-        // Create page number buttons
-        for (let i = 1; i <= totalPages; i++) {
-            const pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
-            $('#page-numbers').append(`<div class="${pageNumClass}" data-page="${i}">${i}</div>`);
+        if (startPage > 2) {
+            pageNumbers.append('<span class="ellipsis">...</span>');
+        }
+    }
+    
+
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = $('<button>')
+            .text(i)
+            .addClass('page-number')
+            .attr('data-page', i);
+        if (i === currentPage) pageBtn.addClass('active');
+        pageBtn.on('click', function() {
+            goToPage(parseInt($(this).attr('data-page')));
+        });
+        pageNumbers.append(pageBtn);
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            pageNumbers.append('<span class="ellipsis">...</span>');
         }
         
-        // Update button states
-        $('#prevPageBtn').prop('disabled', currentPage === 1);
-        $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
+        const lastPageBtn = $('<button>')
+            .text(totalPages)
+            .addClass('page-number')
+            .attr('data-page', totalPages);
+        if (currentPage === totalPages) lastPageBtn.addClass('active');
+        lastPageBtn.on('click', function() {
+            goToPage(parseInt($(this).attr('data-page')));
+        });
+        pageNumbers.append(lastPageBtn);
     }
-
-
-
-            // Event handler for page number clicks
-            $(document).on('click', '.page-number', function() {
-                var page = $(this).data('page');
-                goToPage(page);
-            });
+    
+    // Next button
+    $('#nextPageBtn').prop('disabled', currentPage === totalPages);
+}
 
             function goToPage(page) {
                 currentPage = page;
@@ -2613,11 +2728,15 @@
             }
 
             $('#prevPageBtn').on('click', function() {
-                changePage(-1);
+                if (currentPage > 1) {
+                goToPage(currentPage - 1);
+              }
             });
 
             $('#nextPageBtn').on('click', function() {
-                changePage(1);
+                 if (currentPage < totalPages) {
+                goToPage(currentPage + 1);
+                 }
             });
 
             // Initialize calendar
@@ -3341,6 +3460,34 @@ $('#editEventStatus').on('change', function() {
     updateStats();
     setInterval(updateStats, 300000);
     console.log("Filtering by:", currentStatusFilter, "Found:", filteredEvents.length, "events");
+
+
+function goToPage(page) {
+    currentPage = page;
+    renderTable();
+}
+
+function changeRowsPerPage() {
+    rowsPerPage = parseInt($('#rowsPerPage').val());
+    currentPage = 1;
+    renderTable();
+}
+
+function updateTableInfo(totalItems, currentItemsCount) {
+    const tableInfo = $('.table-info');
+    
+    if (!totalItems || totalItems === 0) {
+        tableInfo.text('No entries found');
+        return;
+    }
+
+ const start = ((currentPage - 1) * rowsPerPage) + 1;
+    const end = start + currentItemsCount - 1;
+
+    tableInfo.text(`Showing ${start} to ${end} of ${totalItems} entries`);
+ 
+}
+
 
 
     </script>

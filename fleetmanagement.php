@@ -644,14 +644,16 @@ th[onclick]:hover {
     background-color: #9a1a28;
 }
 
+.pagination1, 
 .pagination2 {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 20px;
+    margin-top: 10px;
     gap: 5px;
 }
 
+.pagination1 button,
 .pagination2 button {
     background-color: transparent;
     color: #000;
@@ -669,14 +671,15 @@ th[onclick]:hover {
     transition: all 0.3s ease;
 }
 
+.pagination1 button:hover, 
 .pagination2 button:hover {
     background-color: #ffffffff;
-    
     color: black;
     font-weight:bold;
     transform: scale(1.4); 
 }
 
+.pagination1 button.active , 
 .pagination2 button.active {
     background-color: #ffffff6a;
     color: #cb1a2fff;
@@ -685,17 +688,20 @@ th[onclick]:hover {
     font-size:20px;
 }   
 
+.pagination1 button:disabled,
 .pagination2 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
+.pagination1 .nav-btn,
 .pagination2 .nav-btn {
     border-radius: 15%;
     width: auto;
     font-size:14px;
     border:none;
 }
+.pagination1 .nav-btn:hover,
 .pagination2 .nav-btn:hover {
      transform: scale(1.6); 
       background-color: #ffffffff;
@@ -704,6 +710,7 @@ th[onclick]:hover {
 }
 
 
+.pagination1 .ellipsis,
 .pagination2 .ellipsis {
     display: flex;
     align-items: center;
@@ -726,6 +733,7 @@ th[onclick]:hover {
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align:center;
     gap: 5px;
 }
 
@@ -895,9 +903,13 @@ th[onclick]:hover {
     </div>
 </div>
 
-            <div class="table-controls">
+<div class="table-controls">
     <div class="table-info" id="showingInfo"></div>
-    
+    <div class="pagination1">
+                    <button class="prev" onclick="changeTruckPage(-1)">◄</button>
+                    <span id="truck-page-info">Page 1</span>
+                    <button class="next" onclick="changeTruckPage(1)">►</button>
+                </div>
     <div class="rows-per-page-container">
         <label for="rowsPerPage">Rows per page:</label>
         <select id="rowsPerPage" onchange="changeRowsPerPage()">
@@ -1587,88 +1599,86 @@ function changeRowsPerPage() {
 
 function updatePagination(totalItems) {
     const totalPages = Math.ceil(totalItems / rowsPerPage);
-    const paginationContainer = document.querySelector('.pagination2');
+    const paginationContainers = document.querySelectorAll('.pagination1, .pagination2');
     
-    paginationContainer.innerHTML = '';
-    
-    const prevButton = document.createElement('button');
-    prevButton.innerHTML = '&laquo;';
-    prevButton.classList.add('nav-btn');
-    prevButton.onclick = () => changeTruckPage(-1);
-    prevButton.disabled = currentTruckPage === 1;
-    paginationContainer.appendChild(prevButton);
-    
-
-    const maxVisiblePages = 5; 
-    let startPage = Math.max(1, currentTruckPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
-    if (endPage - startPage + 1 < maxVisiblePages) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-    
-
-    if (startPage > 1) {
-        const firstPageButton = document.createElement('button');
-        firstPageButton.textContent = '1';
-        firstPageButton.onclick = () => {
-            currentTruckPage = 1;
-            renderTrucksTable();
-        };
-        if (currentTruckPage === 1) {
-            firstPageButton.classList.add('active');
-        }
-        paginationContainer.appendChild(firstPageButton);
+    paginationContainers.forEach(paginationContainer => {
+        paginationContainer.innerHTML = '';
         
-        if (startPage > 2) {
-            const ellipsis = document.createElement('span');
-            ellipsis.textContent = '...';
-            ellipsis.classList.add('ellipsis');
-            paginationContainer.appendChild(ellipsis);
-        }
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-        const pageButton = document.createElement('button');
-        pageButton.textContent = i;
-        if (i === currentTruckPage) {
-            pageButton.classList.add('active');
-        }
-        pageButton.onclick = () => {
-            currentTruckPage = i;
-            renderTrucksTable();
-        };
-        paginationContainer.appendChild(pageButton);
-    }
-    
+        const prevButton = document.createElement('button');
+        prevButton.innerHTML = '&laquo;';
+        prevButton.classList.add('nav-btn');
+        prevButton.onclick = () => changeTruckPage(-1);
+        prevButton.disabled = currentTruckPage === 1;
+        paginationContainer.appendChild(prevButton);
 
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-            const ellipsis = document.createElement('span');
-            ellipsis.textContent = '...';
-            ellipsis.classList.add('ellipsis');
-            paginationContainer.appendChild(ellipsis);
-        }
-        
-        const lastPageButton = document.createElement('button');
-        lastPageButton.textContent = totalPages;
-        lastPageButton.onclick = () => {
-            currentTruckPage = totalPages;
-            renderTrucksTable();
-        };
-        if (currentTruckPage === totalPages) {
-            lastPageButton.classList.add('active');
-        }
-        paginationContainer.appendChild(lastPageButton);
-    }
-    
+        const maxVisiblePages = 5; 
+        let startPage = Math.max(1, currentTruckPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-    const nextButton = document.createElement('button');
-    nextButton.innerHTML = '&raquo;';
-    nextButton.classList.add('nav-btn');
-    nextButton.onclick = () => changeTruckPage(1);
-    nextButton.disabled = currentTruckPage === totalPages;
-    paginationContainer.appendChild(nextButton);
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        if (startPage > 1) {
+            const firstPageButton = document.createElement('button');
+            firstPageButton.textContent = '1';
+            firstPageButton.onclick = () => {
+                currentTruckPage = 1;
+                renderTrucksTable();
+            };
+            if (currentTruckPage === 1) {
+                firstPageButton.classList.add('active');
+            }
+            paginationContainer.appendChild(firstPageButton);
+            
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                ellipsis.classList.add('ellipsis');
+                paginationContainer.appendChild(ellipsis);
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.textContent = i;
+            if (i === currentTruckPage) {
+                pageButton.classList.add('active');
+            }
+            pageButton.onclick = () => {
+                currentTruckPage = i;
+                renderTrucksTable();
+            };
+            paginationContainer.appendChild(pageButton);
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                ellipsis.classList.add('ellipsis');
+                paginationContainer.appendChild(ellipsis);
+            }
+            
+            const lastPageButton = document.createElement('button');
+            lastPageButton.textContent = totalPages;
+            lastPageButton.onclick = () => {
+                currentTruckPage = totalPages;
+                renderTrucksTable();
+            };
+            if (currentTruckPage === totalPages) {
+                lastPageButton.classList.add('active');
+            }
+            paginationContainer.appendChild(lastPageButton);
+        }
+
+        const nextButton = document.createElement('button');
+        nextButton.innerHTML = '&raquo;';
+        nextButton.classList.add('nav-btn');
+        nextButton.onclick = () => changeTruckPage(1);
+        nextButton.disabled = currentTruckPage === totalPages;
+        paginationContainer.appendChild(nextButton);
+    });
 }
 
 function updateShowingInfo(filteredTrucks) {
