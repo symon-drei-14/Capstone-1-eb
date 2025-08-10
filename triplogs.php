@@ -2179,14 +2179,17 @@
         const date = new Date(datetimeString);
         return date.toLocaleString(); 
     }
+ let currentPage = 1;
+let rowsPerPage = 5; // Default value
+let totalPages = 1;
+let totalItems = 0;
   let currentStatusFilter = 'all';
+  let dateSortOrder = 'desc';
+let filteredEvents = [];
         
         $(document).ready(function() {
-        let currentPage = 1;
-        let rowsPerPage = parseInt($('#rowsPerPage').val()); // Get the initial value from the select
-        let totalPages = 1;
-        let totalItems = 0;
-            
+       
+            rowsPerPage = parseInt($('#rowsPerPage').val());
             let now = new Date();
             let formattedNow = now.toISOString().slice(0,16); 
         $('#rowsPerPage').val(rowsPerPage);
@@ -2457,7 +2460,7 @@
         });
     }
 
-    let dateSortOrder = 'desc'; // Default sort order
+  
 
 
     $('#dateSortBtn').on('click', function() {
