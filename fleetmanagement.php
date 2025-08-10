@@ -20,6 +20,7 @@ checkAccess();
         flex-direction: column;
         margin: 0;
         padding: 0;
+        overflow-x:hidden;
         }
         table {
         width: 100%;
@@ -51,6 +52,7 @@ checkAccess();
                 box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
                 padding-bottom: 20px;
                 height:auto;
+                contain:content;
                 
                 
             }
@@ -173,20 +175,43 @@ checkAccess();
             border-radius:20px;
         }
         .status-filter {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    padding-bottom:10px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
+    flex-wrap: wrap;
+    border-bottom:1px solid #88888831;
+    width:98%;
 }
 
 
 
+
 .status-filter select {
-    padding: 8px 12px;
+    padding: 8px 12px 8px 35px;
     border-radius: 4px;
     border: 1px solid #ddd;
     background-color: white;
     cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+    background-size: 16px;
+
+}
+
+.status-filter select option {
+    color: #000000ff; 
+
+}
+
+.status-filter select option[disabled][selected] {
+    display: none;
+
 }
 
 th[onclick] {
@@ -314,9 +339,6 @@ th[onclick]:hover {
     transform: scale(1.2);
 }
 
-/* Specific icon colors */
-
-
 .icon-btn.delete {
     color: #ff0b0bff;
 }
@@ -394,7 +416,7 @@ th[onclick]:hover {
     border-radius: 8px;
     padding: 15px;
     width: 140px;
-    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
     display: flex;
     align-items: center;
     gap: 15px;
@@ -451,30 +473,35 @@ th[onclick]:hover {
     background-color: #6c757d;
     color: white;
 }   
-   .search-container {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
+  .search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 250px; /* Fixed width */
+}
 
     .search-container .fa-search {
-        position: absolute;
-        left: 10px;
-        color: #aaa;
-        pointer-events: none;
-    }
+    position: absolute;
+    left: 10px;
+    color: #aaa;
+    pointer-events: none;
+    z-index: 2;
+}
+    
 
     #searchInput {
-        padding: 5px 10px 5px 30px;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        width: 200px;
-    }
-
+    padding: 8px 10px 8px 35px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+}
     #searchInput:focus {
-        outline: none;
-        border-color: #4b77de;
-    }
+    outline: none;
+    border-color: #4b77de;
+    box-shadow: 0 0 0 2px rgba(75, 119, 222, 0.2);
+}
 
 
    .icon-btn {
@@ -617,42 +644,114 @@ th[onclick]:hover {
     background-color: #9a1a28;
 }
 
-.rows-per-page {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-right: 20px;
-}
-
-.rows-per-page select {
-    padding: 5px 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: white;
-}
-
-.rows-per-page label {
-    font-size: 14px;
-    color: #333;
-}
 .pagination2 {
     display: flex;
     justify-content: center;
     align-items: center;
     margin-top: 20px;
-    position: static;
+    gap: 5px;
 }
 
 .pagination2 button {
-    background-color: #ffffff;
-    color: rgb(0, 0, 0);
-    border: 1px solid #ccc;
-    padding: 6px 12px;
-    font-size: 18px;
+    background-color: transparent;
+    color: #000;
+    border: none;
+    padding: 2px 5px;
+    font-size: 14px;
     cursor: pointer;
-    border-radius: 10px;
-    margin: 0 5px;
-   
+    border-radius: 15%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+    transition: all 0.3s ease;
+}
+
+.pagination2 button:hover {
+    background-color: #ffffffff;
+    
+    color: black;
+    font-weight:bold;
+    transform: scale(1.4); 
+}
+
+.pagination2 button.active {
+    background-color: #ffffff6a;
+    color: #cb1a2fff;
+    border-color: #ffffffff;    
+    font-weight: bolder;
+    font-size:20px;
+}   
+
+.pagination2 button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination2 .nav-btn {
+    border-radius: 15%;
+    width: auto;
+    font-size:14px;
+    border:none;
+}
+.pagination2 .nav-btn:hover {
+     transform: scale(1.6); 
+      background-color: #ffffffff;
+      font-weight:bold;
+      border:none;  
+}
+
+
+.pagination2 .ellipsis {
+    display: flex;
+    align-items: center;
+    padding: 0 5px;
+}
+
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.table-info {
+    font-size: 14px;
+    color: #555;
+}
+
+.pagination-top {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+
+.rows-per-page-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right:30px;
+}
+
+.rows-per-page-container label {
+    font-size: 14px;
+    color: #333;
+    margin-right: 5px;
+    border-radius:20px;
+}
+.rows-per-page-container select {
+    font-size: 14px;
+    color: black;
+    border-color: #33333328;
+    margin-right: 5px;
+    border-radius:10px;
+    padding: 5px;
+    margin: 5px;
+    max-width:200px;
+    width:auto;
 }
     </style>
 </head>
@@ -779,40 +878,37 @@ th[onclick]:hover {
                 <br>
         
                 <div class="status-filter">
-            <label for="statusFilter">Filter by Status:</label>
-            <select id="statusFilter" onchange="filterTrucksByStatus()">
-                <option value="all">All Statuses</option>
-                <option value="In Terminal">In Terminal</option>
-                <option value="Enroute">Enroute</option>
-                <option value="In Repair">In Repair</option>
-                <option value="Overdue">Overdue</option>
 
-            </select>
+    <select id="statusFilter" onchange="filterTrucksByStatus()">
+        <option value="" disabled selected>Status Filter</option>
+        <option value="all">All Statuses</option>
+        <option value="In Terminal">In Terminal</option>
+        <option value="Enroute">Enroute</option>
+        <option value="In Repair">In Repair</option>
+        <option value="Overdue">Overdue</option>
+        <option value="deleted">Deleted</option>
+    </select>
 
-       
-                <div class="search-container">
-                    <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
-                    </div>
-                        <div class="show-deleted-filter">
-                    <label>
-                        <input type="checkbox" id="showDeleted" onchange="toggleDeletedTrucks()">
-                        Show Deleted Trucks
-                    </label>
-                </div>
-                    
-                </div>
+    <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
+    </div>
+</div>
 
-                <div class="rows-per-page">
-                    <label for="rowsPerPage">Rows per page:</label>
-                    <select id="rowsPerPage" onchange="changeRowsPerPage()">
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
+            <div class="table-controls">
+    <div class="table-info" id="showingInfo"></div>
+    
+    <div class="rows-per-page-container">
+        <label for="rowsPerPage">Rows per page:</label>
+        <select id="rowsPerPage" onchange="changeRowsPerPage()">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+    </div>
+</div>
 
                 <div class="table-container">
                     <table id="trucksTable">
@@ -953,13 +1049,12 @@ function viewDeletionReason(truckId) {
 
 
      function filterTrucksByStatus() {
-           clearTimeout(searchTimeout); 
+    clearTimeout(searchTimeout); 
     currentStatusFilter = document.getElementById('statusFilter').value;
-     document.getElementById('searchInput').value = '';
-    currentTruckPage = 1; // Reset to first page when filtering
-    fetchTrucks(); // This will fetch fresh data with the new filter
+    document.getElementById('searchInput').value = '';
+    currentTruckPage = 1; 
+    fetchTrucks(); 
 }
-
 function fetchTrucks() {
     const statusFilter = document.getElementById('statusFilter').value;
     fetch(`include/handlers/truck_handler.php?action=getTrucks&status=${statusFilter}`)
@@ -1095,12 +1190,16 @@ function performSoftDelete() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
+          if (data.success) {
             alert('Truck has been deleted successfully!');
             closeModal('deleteModal');
-            fetchTrucks();
-             fetchTruckCounts();
-        } else {
+            currentTruckPage = 1; // Reset to first page
+            fetchTrucks().then(() => {
+                updateShowingInfo(trucksData);
+            });
+            fetchTruckCounts();
+        }
+         else {
             alert('Error: ' + data.message);
         }
     })
@@ -1145,12 +1244,10 @@ function renderTrucksTable() {
     const start = (currentTruckPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
-     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    let filteredTrucks = [...trucksData]; // Create a copy
-    
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    let filteredTrucks = [...trucksData];
     
     if (searchTerm) {
-        // Apply search filter if there's a search term
         filteredTrucks = filteredTrucks.filter(truck => {
             return (
                 truck.truck_id.toString().includes(searchTerm) ||
@@ -1161,32 +1258,31 @@ function renderTrucksTable() {
                 (truck.last_modified_by && truck.last_modified_by.toLowerCase().includes(searchTerm)) ||
                 (truck.delete_reason && truck.delete_reason.toLowerCase().includes(searchTerm))
             );
-            document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
         });
-   
     }
     
-    // Filter trucks based on the showDeleted flag
-   filteredTrucks = filteredTrucks.filter(truck => {
-        return showDeleted ? truck.is_deleted == 1 : truck.is_deleted == 0;
-    });
-
-    // Apply status filter only when not showing deleted trucks
-    if (!showDeleted && currentStatusFilter !== 'all') {
+   // Replace the showDeleted checkbox logic with status filter logic
+    if (currentStatusFilter !== 'all' && currentStatusFilter !== 'deleted') {
         filteredTrucks = filteredTrucks.filter(truck => 
-            truck.display_status === currentStatusFilter || 
-            truck.status === currentStatusFilter
+            (truck.display_status === currentStatusFilter || 
+             truck.status === currentStatusFilter) &&
+            truck.is_deleted == 0
         );
+    } else if (currentStatusFilter === 'deleted') {
+        filteredTrucks = filteredTrucks.filter(truck => truck.is_deleted == 1);
+    } else {
+        // Show all non-deleted when 'all' is selected
+        filteredTrucks = filteredTrucks.filter(truck => truck.is_deleted == 0);
     }
 
-     const pageData = filteredTrucks.slice(start, Math.min(end, filteredTrucks.length));
-    
+    const pageData = filteredTrucks.slice(start, Math.min(end, filteredTrucks.length));
     const tableBody = document.getElementById("trucksTableBody");
     tableBody.innerHTML = "";
 
      if (filteredTrucks.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center;">No trucks found matching your search</td></tr>`;
-        document.getElementById("truck-page-info").textContent = `Page 0 of 0`;
+        updatePagination(0);
+        updateShowingInfo(filteredTrucks);
         return;
     }
     
@@ -1201,8 +1297,8 @@ function renderTrucksTable() {
             statusClass = truck.display_status.toLowerCase().replace(/\s+/g, "-");
             statusText = truck.display_status;
         }
-        
-        tr.innerHTML = `
+     
+          tr.innerHTML = `
     <td>${truck.truck_id}</td>
     <td>${truck.plate_no}</td>
     <td>${truck.capacity}</td>
@@ -1238,7 +1334,11 @@ function renderTrucksTable() {
 `;
     tableBody.appendChild(tr);
     });
-    document.getElementById("truck-page-info").textContent = `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
+    updatePagination(filteredTrucks.length);
+    updateShowingInfo(filteredTrucks);
+    document.getElementById("truck-page-info").textContent = 
+        `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
+    
 }
 
 // Add this new function for full delete
@@ -1328,15 +1428,14 @@ function sortTrucks(sortBy) {
     renderTrucksTable();
 }
 
-// Update changeTruckPage function to work with filtered data
+
 function changeTruckPage(direction) {
-    // Get current search term
+    
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     
-    // Start with all trucks
+   
     let filteredTrucks = [...trucksData];
-    
-    // Apply search filter if there's a search term
+  
     if (searchTerm) {
         filteredTrucks = filteredTrucks.filter(truck => {
             return (
@@ -1354,7 +1453,6 @@ function changeTruckPage(direction) {
         });
     }
     
-    // Apply status filter
     if (currentStatusFilter !== 'all') {
         if (currentStatusFilter === 'deleted') {
             filteredTrucks = filteredTrucks.filter(truck => truck.is_deleted == 1);
@@ -1366,7 +1464,7 @@ function changeTruckPage(direction) {
             );
         }
     } else {
-        // If not showing deleted trucks, filter them out
+       
         if (!showDeleted) {
             filteredTrucks = filteredTrucks.filter(truck => truck.is_deleted == 0);
         }
@@ -1487,7 +1585,105 @@ function changeRowsPerPage() {
     renderTrucksTable();
 }
 
+function updatePagination(totalItems) {
+    const totalPages = Math.ceil(totalItems / rowsPerPage);
+    const paginationContainer = document.querySelector('.pagination2');
+    
+    paginationContainer.innerHTML = '';
+    
+    const prevButton = document.createElement('button');
+    prevButton.innerHTML = '&laquo;';
+    prevButton.classList.add('nav-btn');
+    prevButton.onclick = () => changeTruckPage(-1);
+    prevButton.disabled = currentTruckPage === 1;
+    paginationContainer.appendChild(prevButton);
+    
 
+    const maxVisiblePages = 5; 
+    let startPage = Math.max(1, currentTruckPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+
+    if (startPage > 1) {
+        const firstPageButton = document.createElement('button');
+        firstPageButton.textContent = '1';
+        firstPageButton.onclick = () => {
+            currentTruckPage = 1;
+            renderTrucksTable();
+        };
+        if (currentTruckPage === 1) {
+            firstPageButton.classList.add('active');
+        }
+        paginationContainer.appendChild(firstPageButton);
+        
+        if (startPage > 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.classList.add('ellipsis');
+            paginationContainer.appendChild(ellipsis);
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.textContent = i;
+        if (i === currentTruckPage) {
+            pageButton.classList.add('active');
+        }
+        pageButton.onclick = () => {
+            currentTruckPage = i;
+            renderTrucksTable();
+        };
+        paginationContainer.appendChild(pageButton);
+    }
+    
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.classList.add('ellipsis');
+            paginationContainer.appendChild(ellipsis);
+        }
+        
+        const lastPageButton = document.createElement('button');
+        lastPageButton.textContent = totalPages;
+        lastPageButton.onclick = () => {
+            currentTruckPage = totalPages;
+            renderTrucksTable();
+        };
+        if (currentTruckPage === totalPages) {
+            lastPageButton.classList.add('active');
+        }
+        paginationContainer.appendChild(lastPageButton);
+    }
+    
+
+    const nextButton = document.createElement('button');
+    nextButton.innerHTML = '&raquo;';
+    nextButton.classList.add('nav-btn');
+    nextButton.onclick = () => changeTruckPage(1);
+    nextButton.disabled = currentTruckPage === totalPages;
+    paginationContainer.appendChild(nextButton);
+}
+
+function updateShowingInfo(filteredTrucks) {
+    if (!filteredTrucks || filteredTrucks.length === 0) {
+        document.getElementById('showingInfo').textContent = 'Showing 0 to 0 of 0 entries';
+        return;
+    }
+    
+    const start = (currentTruckPage - 1) * rowsPerPage + 1;
+    const end = Math.min(currentTruckPage * rowsPerPage, filteredTrucks.length);
+    const total = filteredTrucks.length;
+    
+    document.getElementById('showingInfo').textContent = 
+        `Showing ${start} to ${end} of ${total} entries`;
+}
     </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

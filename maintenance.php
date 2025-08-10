@@ -972,6 +972,73 @@
     color: #333;
 }
 
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 5px;
+}
+
+.pagination button {
+    background-color: transparent;
+    color: #000;
+    border: none;
+    padding: 2px 5px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 15%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+    transition: all 0.3s ease;
+}
+
+.pagination button:hover {
+    background-color: #ffffffff;
+    
+    color: black;
+    font-weight:bold;
+    transform: scale(1.4); 
+}
+
+.pagination button.active {
+    background-color: #ffffff6a;
+    color: #cb1a2fff;
+    border-color: #ffffffff;    
+    font-weight: bolder;
+    font-size:20px;
+}   
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination .nav-btn {
+    border-radius: 15%;
+    width: auto;
+    font-size:14px;
+    border:none;
+}
+.pagination .nav-btn:hover {
+     transform: scale(1.6); 
+      background-color: #ffffffff;
+      font-weight:bold;
+      border:none;  
+}
+
+
+.pagination .ellipsis {
+    display: flex;
+    align-items: center;
+    padding: 0 5px;
+}
+
    
     </style>
     <body>
@@ -1110,6 +1177,8 @@
             <label for="showDeletedCheckbox">Show Deleted Records</label>
         </div>
     </div>
+     <div class="table-controls">
+   
                 <div class="rows-per-page">
                     <label for="rowsPerPage">Rows per page:</label>
                     <select id="rowsPerPage" onchange="changeRowsPerPage()">
@@ -1509,10 +1578,9 @@
             const newRowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
             if (!isNaN(newRowsPerPage) && newRowsPerPage > 0) {
                 rowsPerPage = newRowsPerPage;
-                currentPage = 1; // Reset to first page
+                currentPage = 1; 
                 loadMaintenanceData();
-                
-                // Update the dropdown to show the selected value
+               
                 document.getElementById('rowsPerPage').value = rowsPerPage;
             }
         }
@@ -1652,58 +1720,91 @@
             }
             
             function updatePagination() {
-                const pageNumbersContainer = document.getElementById("page-numbers");
-                pageNumbersContainer.innerHTML = "";
+    const paginationContainer = document.querySelector(".pagination");
+    paginationContainer.innerHTML = "";
 
-                const createPageButton = (page) => {
-                    const pageBtn = document.createElement("div");
-                    pageBtn.classList.add("page-number");
-                    if (page === currentPage) {
-                        pageBtn.classList.add("active");
-                    }
-                    pageBtn.textContent = page;
-                    pageBtn.onclick = () => {
-                        if (page !== currentPage) {
-                            currentPage = page;
-                            loadMaintenanceData();
-                        }
-                    };
-                    pageNumbersContainer.appendChild(pageBtn);
-                };
 
-                const addEllipsis = () => {
-                    const ellipsis = document.createElement("div");
-                    ellipsis.classList.add("page-number");
-                    ellipsis.textContent = "...";
-                    ellipsis.style.pointerEvents = "none";
-                    pageNumbersContainer.appendChild(ellipsis);
-                };
+    const prevButton = document.createElement("button");
+    prevButton.classList.add("prev");
+    prevButton.innerHTML = '&laquo;';
+    prevButton.onclick = () => changePage(-1);
+    prevButton.disabled = currentPage === 1;
+    paginationContainer.appendChild(prevButton);
 
-                if (totalPages <= 7) {
-                    for (let i = 1; i <= totalPages; i++) {
-                        createPageButton(i);
-                    }
-                } else {
-                    createPageButton(1);
 
-                    if (currentPage > 4) {
-                        addEllipsis();
-                    }
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-                    let startPage = Math.max(2, currentPage - 1);
-                    let endPage = Math.min(totalPages - 1, currentPage + 1);
+    // Adjust if we're at the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
 
-                    for (let i = startPage; i <= endPage; i++) {
-                        createPageButton(i);
-                    }
+    // Always show page 1
+    if (startPage > 1) {
+        const firstPageButton = document.createElement("button");
+        firstPageButton.textContent = "1";
+        firstPageButton.onclick = () => {
+            currentPage = 1;
+            loadMaintenanceData();
+        };
+        if (currentPage === 1) {
+            firstPageButton.classList.add("active");
+        }
+        paginationContainer.appendChild(firstPageButton);
 
-                    if (currentPage < totalPages - 3) {
-                        addEllipsis();
-                    }
+        if (startPage > 2) {
+            const ellipsis = document.createElement("span");
+            ellipsis.textContent = "...";
+            ellipsis.classList.add("ellipsis");
+            paginationContainer.appendChild(ellipsis);
+        }
+    }
 
-                    createPageButton(totalPages);
-                }
-            }
+    // Create numbered page buttons
+    for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement("button");
+        pageButton.textContent = i;
+        if (i === currentPage) {
+            pageButton.classList.add("active");
+        }
+        pageButton.onclick = () => {
+            currentPage = i;
+            loadMaintenanceData();
+        };
+        paginationContainer.appendChild(pageButton);
+    }
+
+    // Always show last page if needed
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement("span");
+            ellipsis.textContent = "...";
+            ellipsis.classList.add("ellipsis");
+            paginationContainer.appendChild(ellipsis);
+        }
+
+        const lastPageButton = document.createElement("button");
+        lastPageButton.textContent = totalPages;
+        lastPageButton.onclick = () => {
+            currentPage = totalPages;
+            loadMaintenanceData();
+        };
+        if (currentPage === totalPages) {
+            lastPageButton.classList.add("active");
+        }
+        paginationContainer.appendChild(lastPageButton);
+    }
+
+    // Create Next button
+    const nextButton = document.createElement("button");
+    nextButton.classList.add("next");
+    nextButton.innerHTML = '&raquo;';
+    nextButton.onclick = () => changePage(1);
+    nextButton.disabled = currentPage === totalPages;
+    paginationContainer.appendChild(nextButton);
+}
             
             function changePage(direction) {
                 const newPage = currentPage + direction;
@@ -2245,6 +2346,9 @@
         }
     });
 });
+
+
+
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>

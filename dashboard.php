@@ -48,30 +48,73 @@ if ($maintenanceResult->num_rows > 0) {
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
 <style>
-.grid-item.card.statistic .content p,
-.grid-item.card.statistic .content2 p,
-.grid-item.card.statistic .content3 p,
-.grid-item.card.statistic .content4 p {
-    color: inherit; 
-    margin-bottom: 10px;
-    font-size: 20px;
+.grid-item.card.statistic {
+    display: flex;
+    align-items: flex-start; /* Align items to the top */
+    padding: 20px;
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+}
+
+.grid-item.card.statistic .content,
+.grid-item.card.statistic .content2,
+.grid-item.card.statistic .content3,
+.grid-item.card.statistic .content4 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    text-align:center;
+}
+
+.grid-item.card.statistic .icon-container,
+.grid-item.card.statistic .icon-container2,
+.grid-item.card.statistic .icon-container3,
+.grid-item.card.statistic .icon-container4 {
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    margin-top:5px;
 }
 
 .grid-item.card.statistic .content h2,
 .grid-item.card.statistic .content2 h2,
 .grid-item.card.statistic .content3 h2,
 .grid-item.card.statistic .content4 h2 {
-    color: inherit; 
+    color: inherit;
     margin: 0;
     font-size: 45px;
+    text-shadow: 0 1px 3px rgba(108, 103, 103, 0.8); 
+    text-align:center;
+    justify-content:center;
+    display:flex;
+    width:100%;
+    order: 1; 
+
 }
 
-.grid-item.card.statistic .icon-container i,
-.grid-item.card.statistic .icon-container2 i,
-.grid-item.card.statistic .icon-container3 i,
-.grid-item.card.statistic .icon-container4 i {
-    font-size: 32px;
-    opacity: 0.8;
+.grid-item.card.statistic .content p,
+.grid-item.card.statistic .content2 p,
+.grid-item.card.statistic .content3 p,
+.grid-item.card.statistic .content4 p {
+    color: inherit;
+    margin: 10px 0 0 0; 
+    text-align:center;
+    justify-content:center;
+    display:flex; 
+    width:100%;
+    font-size: 16px;
+    text-shadow: 0 1px 3px rgba(111, 108, 108, 0.8);
+    order: 2; 
+    
+}
+
+
+.grid-item.card.statistic .content-wrapper {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
 }
 
 .on-route {
@@ -101,7 +144,7 @@ if ($maintenanceResult->num_rows > 0) {
 .late {
     background: linear-gradient(to bottom, 
         rgba(200, 150, 0, 0.8) 0%,  /* Darker gold at top */
-        rgba(255, 230, 150, 0.5) 100%);
+        rgba(235, 224, 190, 1) 100%);
     color: white;
     text-shadow: 0 1px 3px rgba(27, 26, 26, 0.8);
 }
@@ -1084,49 +1127,48 @@ $eventsDataJson = json_encode($eventsData);
         <i class="fas fa-calendar-alt"></i> Schedule Maintenance
     </button>
 </div>
+
 <div class="dashboard-grid">
     
-   <div class="grid-item card statistic on-route">
-    <div class="content">
-        <p>On Going Deliveries</p>
-        <h2><?php echo htmlspecialchars($ongoingCount); ?></h2>
-    </div>
+ <div class="grid-item card statistic on-route">
     <div class="icon-container">
         <i class="fa fa-truck"></i>
     </div>
+    <div class="content">
+        <h2><?php echo htmlspecialchars($ongoingCount); ?></h2>
+        <p>On Going Deliveries</p>
+    </div>
+</div>
 
-     
+<div class="grid-item card statistic error">
+    <div class="icon-container2">
+        <i class="fa fa-wrench"></i>
     </div>
-    <div class="grid-item card statistic error">
-        <div class="content2">
-            <p>Under Repair Trucks</p>
-            <h2><?php echo htmlspecialchars($allrepairtrucks); ?></h2>
-         
-        </div>
-        <div class="icon-container2">
-            <i class="fa fa-wrench"></i>
-        </div>
+    <div class="content2">
+        <h2><?php echo htmlspecialchars($allrepairtrucks); ?></h2>
+        <p>Under Repair Trucks</p>
     </div>
-    <div class="grid-item card statistic late">
-        <div class="content3">
-            <p>Scheduled Deliveries</p>
-                <h2><?php echo htmlspecialchars($alldeliveries); ?></h2>
-          
-        </div>
-        <div class="icon-container3">
-            <i class="fa fa-hourglass-end"></i>
-        </div>
+</div>
+
+<div class="grid-item card statistic late">
+    <div class="icon-container3">
+        <i class="fa fa-hourglass-end"></i>
     </div>
-    
-    <div class="grid-item card statistic deviated">
-        <div class="content4">
-            <p>Unchecked Vehicles</p>
-            <h2><?php echo htmlspecialchars($alloverduetrucks); ?></h2>
-        </div>
-        <div class="icon-container4">
-            <i class="fa fa-cogs"></i>
-        </div>
+    <div class="content3">
+        <h2><?php echo htmlspecialchars($alldeliveries); ?></h2>
+        <p>Scheduled Deliveries</p>
     </div>
+</div>
+
+<div class="grid-item card statistic deviated">
+    <div class="icon-container4">
+        <i class="fa fa-cogs"></i>
+    </div>
+    <div class="content4">
+        <h2><?php echo htmlspecialchars($alloverduetrucks); ?></h2>
+        <p>Unchecked Vehicles</p>
+    </div>
+</div>
 </div>
 
 <!-- On going vehicles -->
