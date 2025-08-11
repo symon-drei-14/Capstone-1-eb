@@ -232,7 +232,6 @@
             table-layout: fixed;        
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
             margin-bottom: 20px;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -940,9 +939,9 @@
         margin-bottom: 15px;
         padding: 10px;
         background-color: #ffffffff;
-        border-radius: 5px;
+        border-bottom:1px solid #88888831;
         flex-wrap: nowrap;
-        width: 100%;
+        width: 98%;
         
     }
 
@@ -961,21 +960,29 @@
     }
 
     .status-filter-container select {
-        padding: 5px 10px;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        background-color: white;
-        cursor: pointer;
-        margin-left:-96em;
-        width:120px;
-        
-    }
+    padding: 8px 12px 8px 45px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+    background-size: 16px;
+
+}
+
 
     .status-filter-container select:focus {
         outline: none;
         border-color: #4b77de;
     }
-
+#statusFilter{
+width:140px;
+}
     #deletedTripsTable tr {
         opacity: 0.7;
         background-color: #ffecec !important;
@@ -1000,20 +1007,6 @@
     }
 
 
-    .show-deleted-container label {
-        margin-bottom: 0;
-        margin-left: 5px;
-        font-weight: normal;
-        cursor: pointer;
-        order: 2; 
-        
-    }
-
-    .show-deleted-container input[type="checkbox"] {
-        order: 0; 
-        margin: 0; 
-        cursor: pointer;
-    }
     #eventsTable, #eventTableBody, .pagination-container {
         display: none;
     }
@@ -1539,7 +1532,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
+ 
 }
 
 .table-info {
@@ -2079,10 +2072,10 @@
     </div>
 
     
-        <div class="filter-row" style="margin-bottom: 15px;">
+        <div class="filter-row">
         <div class="status-filter-container">
-            <label for="statusFilter">Filter by Status:</label>
             <select id="statusFilter" onchange="filterTableByStatus()">
+                <option value="" disabled selected>Status Filter</option>
     <option value="all">All Statuses</option>
     <option value="Pending">Pending</option>
     <option value="En Route">En Route</option>
@@ -2090,19 +2083,11 @@
     <option value="Cancelled">Cancelled</option>
     <option value="deleted">Deleted</option>
 </select>
-        
-</div>
-    <div class="search-container" style="margin-left: 10px;">
+    <div class="search-container">
             <i class="fa fa-search"></i>
             <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()">
-        </div>
-        
-
-
-        <div class="show-deleted-container">
-            <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedTrucks()">
-            <label for="showDeletedCheckbox">Show Deleted Trips</label>
-        </div>
+    </div>
+    </div>
     </div>
     <div class="table-controls">
     <div class="table-info" id="showingInfo"></div>
@@ -2180,28 +2165,27 @@
         return date.toLocaleString(); 
     }
  let currentPage = 1;
-let rowsPerPage = 5; // Default value
+let rowsPerPage = 5; 
 let totalPages = 1;
 let totalItems = 0;
   let currentStatusFilter = 'all';
   let dateSortOrder = 'desc';
 let filteredEvents = [];
         
-        $(document).ready(function() {
-       
-            rowsPerPage = parseInt($('#rowsPerPage').val());
-            let now = new Date();
-            let formattedNow = now.toISOString().slice(0,16); 
-        $('#rowsPerPage').val(rowsPerPage);
-        updateTableInfo(totalItems, 0);
-        $('#statusFilter').on('change', filterTableByStatus);
-            $('#editEventDate').attr('min', formattedNow);
-            $('#addEventDate').attr('min', formattedNow); 
-            $('#rowsPerPage').on('change', function() {
-    rowsPerPage = parseInt($(this).val());
-    currentPage = 1;
-    renderTable();
-});
+       $(document).ready(function() {
+    rowsPerPage = parseInt($('#rowsPerPage').val());
+    let now = new Date();
+    let formattedNow = now.toISOString().slice(0,16); 
+    $('#rowsPerPage').val(rowsPerPage);
+    updateTableInfo(totalItems, 0);
+    $('#statusFilter').on('change', filterTableByStatus);
+    $('#editEventDate').attr('min', formattedNow);
+    $('#addEventDate').attr('min', formattedNow); 
+    $('#rowsPerPage').on('change', function() {
+        rowsPerPage = parseInt($(this).val());
+        currentPage = 1;
+        renderTable();
+    });
 
 
             function updateDateTime() {
@@ -2218,33 +2202,40 @@ let filteredEvents = [];
         setInterval(updateDateTime, 1000);
 
     function renderTable() {
-     const showDeleted = $('#showDeletedCheckbox').is(':checked') || currentStatusFilter === 'deleted';
+    const showDeleted = currentStatusFilter === 'deleted';
     const rowsPerPage = parseInt($('#rowsPerPage').val()); 
+    
+    let action;
+    if (showDeleted) {
+        action = 'get_deleted_trips';
+    } else {
+        action = 'get_active_trips';
+    }
     
     $.ajax({
         url: 'include/handlers/trip_operations.php',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({ 
-            action: showDeleted ? 'get_deleted_trips' : 'get_active_trips',
-            statusFilter: currentStatusFilter,
+            action: action, 
+            statusFilter: currentStatusFilter === 'deleted' ? 'all' : currentStatusFilter, 
             sortOrder: dateSortOrder,
             page: currentPage,
-            perPage: rowsPerPage // Use the current rowsPerPage value
+            perPage: rowsPerPage
         }),
         success: function(response) {
             if (response.success) {
                 $('#eventTableBody').empty();
                 
                 if (response.trips.length === 0) {
-                    $('#eventTableBody').html('<tr><td colspan="17">No trips found</td></tr>');
+                    $('#eventTableBody').html('<tr><td colspan="16">No trips found</td></tr>');
                 } else {
                     renderTripRows(response.trips, showDeleted);
                 }
                 
                 totalItems = response.total;
-                totalPages = Math.ceil(totalItems  / rowsPerPage);
-                updatePagination(totalItems );
+                totalPages = Math.ceil(totalItems / rowsPerPage);
+                updatePagination(totalItems);
                 updateTableInfo(totalItems, response.trips.length);
             } else {
                 alert('Error: ' + response.message);
@@ -2303,7 +2294,7 @@ let filteredEvents = [];
             let statusCell = '';
             let actionCell = '';
             
-            if (showDeleted || trip.is_deleted) {
+            if (showDeleted || trip.is_deleted == 1) {
                 statusCell = `<td><span class="status cancelled">Deleted</span></td>`;
                 actionCell = `
                     <td class="actions">
@@ -2331,7 +2322,7 @@ let filteredEvents = [];
             }
 
             const row = `
-                 <tr class="${showDeleted || trip.is_deleted ? 'deleted-row' : ''}">
+                 <tr class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
                     <td>${trip.plate_no || 'N/A'}</td>
                     <td>${formattedDate}</td>
                     <td>${formattedTime}</td>
@@ -2357,10 +2348,7 @@ let filteredEvents = [];
         });
     }
 
-    $('#showDeletedCheckbox').on('change', function() {
-        currentPage = 1; 
-        renderTable(); 
-    });
+
 
             var eventsData = <?php echo $eventsDataJson; ?>;
             var driversData = <?php echo $driversDataJson; ?>;
@@ -2634,23 +2622,11 @@ let filteredEvents = [];
         $('#addScheduleModal').show();
     });
 
-            // Table pagination variables
-    
-           
-
-
-
-
-            function filterTableByStatus() {
-        currentStatusFilter = document.getElementById('statusFilter').value;
-        currentPage = 1;
-        if (currentStatusFilter === 'deleted') {
-        $('#showDeletedCheckbox').prop('checked', true).hide();
-    } else {
-        $('#showDeletedCheckbox').show();
-    }
-        renderTable();
-    }
+       function filterTableByStatus() {
+    currentStatusFilter = document.getElementById('statusFilter').value;
+    currentPage = 1; 
+    renderTable();
+}
 
         function updatePagination(totalItems) {
     const pageNumbers = $('#page-numbers');
@@ -2832,7 +2808,6 @@ let filteredEvents = [];
             
             // View toggle buttons
     $('#calendarViewBtn').on('click', function() {
-        $('#showDeletedCheckbox').prop('checked', false);
         $(this).addClass('active');
         $('#tableViewBtn').removeClass('active');
         $('#calendar').show();
@@ -2843,7 +2818,6 @@ let filteredEvents = [];
     });
 
     $('#tableViewBtn').on('click', function() {
-        $('#showDeletedCheckbox').prop('checked', false);
         $(this).addClass('active');
         $('#calendarViewBtn').removeClass('active');
         $('#calendar').hide();
@@ -3489,7 +3463,7 @@ function updateTableInfo(totalItems, currentItemsCount) {
 
     tableInfo.text(`Showing ${start} to ${end} of ${totalItems} entries`);
  
-}
+}   
 
 
 
