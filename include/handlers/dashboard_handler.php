@@ -11,10 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // In a real implementation, you would validate CSRF token here
-    // if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    //     echo json_encode(['success' => false, 'message' => 'CSRF token mismatch']);
-    //     exit();
-    // }
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        echo json_encode(['success' => false, 'message' => 'CSRF token mismatch']);
+        exit();
+    }
 }
 
 // Get JSON input safely
