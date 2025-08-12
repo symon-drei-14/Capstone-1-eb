@@ -12,6 +12,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Driver Management</title>
         <link rel="stylesheet" href="include/css/sidenav.css">
+        <link rel="stylesheet" href="include/css/loading.css">
         <link rel="stylesheet" href="include/drivermanagement.css">
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -905,5 +906,135 @@ function fetchTripCounts() {
         <p>&copy; <?php echo date("Y"); ?> Mansar Logistics. All rights reserved.</p>
     </div>
 </footer>
+
+<div id="admin-loading" class="admin-loading">
+  <div class="admin-loading-container">
+    <div class="loading-gif-container">
+      <img src="include/img/loading.gif" alt="Loading..." class="loading-gif">
+    </div>
+    <div class="admin-loading-content">
+      <h4 class="loading-title">Loading Page</h4>
+      <p class="loading-message">Redirecting to another page...</p>
+      <div class="loading-progress">
+        <div class="progress-bar"></div>
+        <span class="progress-text">0%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+    
+  const AdminLoading = {
+  init() {
+    this.loadingEl = document.getElementById('admin-loading');
+    this.titleEl = document.querySelector('.loading-title');
+    this.messageEl = document.querySelector('.loading-message');
+    this.progressBar = document.querySelector('.progress-bar');
+    this.progressText = document.querySelector('.progress-text');
+    
+    this.setupNavigationInterception();
+  },
+  
+  show(title = 'Processing Request', message = 'Please wait while we complete this action...') {
+    this.titleEl.textContent = title;
+    this.messageEl.textContent = message;
+    
+    // Start the sequence with longer delays
+    this.loadingEl.style.display = 'flex';
+    setTimeout(() => {
+      this.loadingEl.classList.add('active');
+    }, 50);
+  },
+  
+  hide() {
+    // Longer fade out
+    this.loadingEl.classList.remove('active');
+    setTimeout(() => {
+      this.loadingEl.style.display = 'none';
+    }, 800); 
+  },
+  
+  updateProgress(percent) {
+    this.progressBar.style.width = `${percent}%`;
+    this.progressText.textContent = `${percent}%`;
+  },
+  
+  setupNavigationInterception() {
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (link && !link.hasAttribute('data-no-loading') && 
+          link.href && !link.href.startsWith('javascript:')) {
+        e.preventDefault();
+        
+        const loading = this.startAction(
+          'Loading Page', 
+          `Preparing ${link.textContent.trim()}...`
+        );
+        
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          progress += Math.random() * 40; 
+          if (progress >= 90) clearInterval(progressInterval);
+          loading.updateProgress(Math.min(progress, 100));
+        }, 300); 
+        
+
+        const minLoadTime = 2000;
+        const startTime = Date.now();
+        
+        setTimeout(() => {
+          window.location.href = link.href;
+        }, minLoadTime);
+      }
+    });
+
+    document.addEventListener('submit', (e) => {
+      const loading = this.startAction(
+        'Submitting Form', 
+        'Processing your data...'
+      );
+      
+      setTimeout(() => {
+        loading.complete();
+      }, 1500);
+    });
+    
+   
+  },
+  
+  startAction(actionName, message) {
+    this.show(actionName, message);
+    return {
+      updateProgress: (percent) => this.updateProgress(percent),
+      updateMessage: (message) => {
+        this.messageEl.textContent = message;
+        this.messageEl.style.opacity = 0;
+        setTimeout(() => {
+          this.messageEl.style.opacity = 1;
+          this.messageEl.style.transition = 'opacity 0.5s ease';
+        }, 50);
+      },
+      complete: () => {
+
+        this.updateProgress(100);
+        this.updateMessage('Done!');
+        setTimeout(() => this.hide(), 800);
+      }
+    };
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  AdminLoading.init();
+  
+  // Add smooth transition to the GIF
+  const loadingGif = document.querySelector('.loading-gif');
+  if (loadingGif) {
+    loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
+  }
+});
+</script>
     </body>
     </html>

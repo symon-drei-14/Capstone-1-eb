@@ -9,6 +9,7 @@ checkAccess();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fleet Management</title>
     <link rel="stylesheet" href="include/css/sidenav.css">
+    <link rel="stylesheet" href="include/css/loading.css">
     <link rel="stylesheet" href="include/fleetmanagement.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -55,23 +56,7 @@ checkAccess();
                 contain:content;
                 
                 
-            }
-
-        .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #B82132;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    width: 100%;
-    max-height: 40px;
-    top: 0;
-    left: 0;
-    z-index: 1200;
-
-        }       
+            }    
         h3{
             font-family: Arial, sans-serif;
             margin-top:20px;
@@ -228,32 +213,6 @@ th[onclick]:hover {
     font-size: 1.2em;
 }
 
-.status-deleted {
-    background-color: #6c757d; /* Gray */
-    color: white;
-    padding: 3px 8px;
-    border-radius: 4px;
-}
-
-.show-deleted-filter {
-   
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.show-deleted-filter label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
-.show-deleted-filter input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
 
 .restore {
     background-color: #28a745;
@@ -644,7 +603,6 @@ th[onclick]:hover {
     background-color: #9a1a28;
 }
 
-.pagination1, 
 .pagination2 {
     display: flex;
     justify-content: center;
@@ -653,7 +611,6 @@ th[onclick]:hover {
     gap: 5px;
 }
 
-.pagination1 button,
 .pagination2 button {
     background-color: transparent;
     color: #000;
@@ -671,7 +628,6 @@ th[onclick]:hover {
     transition: all 0.3s ease;
 }
 
-.pagination1 button:hover, 
 .pagination2 button:hover {
     background-color: #ffffffff;
     color: black;
@@ -679,7 +635,6 @@ th[onclick]:hover {
     transform: scale(1.4); 
 }
 
-.pagination1 button.active , 
 .pagination2 button.active {
     background-color: #ffffff6a;
     color: #cb1a2fff;
@@ -688,20 +643,17 @@ th[onclick]:hover {
     font-size:20px;
 }   
 
-.pagination1 button:disabled,
 .pagination2 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.pagination1 .nav-btn,
 .pagination2 .nav-btn {
     border-radius: 15%;
     width: auto;
     font-size:14px;
     border:none;
 }
-.pagination1 .nav-btn:hover,
 .pagination2 .nav-btn:hover {
      transform: scale(1.6); 
       background-color: #ffffffff;
@@ -709,8 +661,6 @@ th[onclick]:hover {
       border:none;  
 }
 
-
-.pagination1 .ellipsis,
 .pagination2 .ellipsis {
     display: flex;
     align-items: center;
@@ -905,11 +855,7 @@ th[onclick]:hover {
 
 <div class="table-controls">
     <div class="table-info" id="showingInfo"></div>
-    <div class="pagination1">
-                    <button class="prev" onclick="changeTruckPage(-1)">◄</button>
-                    <span id="truck-page-info">Page 1</span>
-                    <button class="next" onclick="changeTruckPage(1)">►</button>
-                </div>
+   
     <div class="rows-per-page-container">
         <label for="rowsPerPage">Rows per page:</label>
         <select id="rowsPerPage" onchange="changeRowsPerPage()">
@@ -1698,7 +1644,135 @@ function updateShowingInfo(filteredTrucks) {
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
+<div id="admin-loading" class="admin-loading">
+  <div class="admin-loading-container">
+    <div class="loading-gif-container">
+      <img src="include/img/loading.gif" alt="Loading..." class="loading-gif">
+    </div>
+    <div class="admin-loading-content">
+      <h4 class="loading-title">Loading Page</h4>
+      <p class="loading-message">Redirecting to another page...</p>
+      <div class="loading-progress">
+        <div class="progress-bar"></div>
+        <span class="progress-text">0%</span>
+      </div>
+    </div>
+  </div>
+</div>
 
+<script>
+
+    
+  const AdminLoading = {
+  init() {
+    this.loadingEl = document.getElementById('admin-loading');
+    this.titleEl = document.querySelector('.loading-title');
+    this.messageEl = document.querySelector('.loading-message');
+    this.progressBar = document.querySelector('.progress-bar');
+    this.progressText = document.querySelector('.progress-text');
+    
+    this.setupNavigationInterception();
+  },
+  
+  show(title = 'Processing Request', message = 'Please wait while we complete this action...') {
+    this.titleEl.textContent = title;
+    this.messageEl.textContent = message;
+    
+    // Start the sequence with longer delays
+    this.loadingEl.style.display = 'flex';
+    setTimeout(() => {
+      this.loadingEl.classList.add('active');
+    }, 50);
+  },
+  
+  hide() {
+    // Longer fade out
+    this.loadingEl.classList.remove('active');
+    setTimeout(() => {
+      this.loadingEl.style.display = 'none';
+    }, 800); 
+  },
+  
+  updateProgress(percent) {
+    this.progressBar.style.width = `${percent}%`;
+    this.progressText.textContent = `${percent}%`;
+  },
+  
+  setupNavigationInterception() {
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (link && !link.hasAttribute('data-no-loading') && 
+          link.href && !link.href.startsWith('javascript:')) {
+        e.preventDefault();
+        
+        const loading = this.startAction(
+          'Loading Page', 
+          `Preparing ${link.textContent.trim()}...`
+        );
+        
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          progress += Math.random() * 40; 
+          if (progress >= 90) clearInterval(progressInterval);
+          loading.updateProgress(Math.min(progress, 100));
+        }, 300); 
+        
+
+        const minLoadTime = 2000;
+        const startTime = Date.now();
+        
+        setTimeout(() => {
+          window.location.href = link.href;
+        }, minLoadTime);
+      }
+    });
+
+    document.addEventListener('submit', (e) => {
+      const loading = this.startAction(
+        'Submitting Form', 
+        'Processing your data...'
+      );
+      
+      setTimeout(() => {
+        loading.complete();
+      }, 1500);
+    });
+    
+   
+  },
+  
+  startAction(actionName, message) {
+    this.show(actionName, message);
+    return {
+      updateProgress: (percent) => this.updateProgress(percent),
+      updateMessage: (message) => {
+        this.messageEl.textContent = message;
+        this.messageEl.style.opacity = 0;
+        setTimeout(() => {
+          this.messageEl.style.opacity = 1;
+          this.messageEl.style.transition = 'opacity 0.5s ease';
+        }, 50);
+      },
+      complete: () => {
+
+        this.updateProgress(100);
+        this.updateMessage('Done!');
+        setTimeout(() => this.hide(), 800);
+      }
+    };
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  AdminLoading.init();
+  
+  // Add smooth transition to the GIF
+  const loadingGif = document.querySelector('.loading-gif');
+  if (loadingGif) {
+    loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
+  }
+});
+</script>
 <footer class="site-footer">
 
     <div class="footer-bottom">
