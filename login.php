@@ -41,65 +41,50 @@
     </div>
 </div>  
     <script>
-   document.addEventListener('DOMContentLoaded', function() {
-    const loginButton = document.getElementById('loginButton');
-    const loginForm = document.getElementById('loginForm');
-    const errorMessage = document.getElementById('error-message');
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginButton = document.getElementById('loginButton');
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('error-message');
 
-    loginButton.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        
-        // Basic validation
-        if (!username || !password) {
-            errorMessage.textContent = 'Please enter both username and password';
-            return;
-        }
-        
-        // Additional client-side validation
-        if (username.length > 50 || password.length > 255) {
-            errorMessage.textContent = 'Input too long';
-            return;
-        }
-        
-        // Create form data to send
-        const formData = new FormData();
-        formData.append('username', username);
-        formData.append('password', password);
-        formData.append('action', 'login');
-        
-        // Add CSRF token in a real implementation
-        // formData.append('csrf_token', '<?php echo $_SESSION['csrf_token'] ?? ''; ?>');
-        
-        // Send login request to server
-        fetch('include/handlers/login_process.php', {
-            method: 'POST',
-            body: formData,
-            credentials: 'same-origin' // Include cookies
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+        loginButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Basic validation
+            if (!username || !password) {
+                errorMessage.textContent = 'Please enter both username and password';
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Redirect to dashboard on successful login
-                window.location.href = 'dashboard.php';
-            } else {
-                // Display error message (already sanitized by server)
-                errorMessage.textContent = data.message || 'Login failed. Please check your credentials.';
-            }
-        })
-        .catch(error => {
-            errorMessage.textContent = 'An error occurred. Please try again later.';
-            console.error('Error:', error);
+            
+            // Create form data to send
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('action', 'login');
+            
+            // Send login request to server
+            fetch('include/handlers/login_process.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to dashboard on successful login
+                    window.location.href = 'dashboard.php';
+                } else {
+                    // Display error message
+                    errorMessage.textContent = data.message || 'Login failed. Please check your credentials.';
+                }
+            })
+            .catch(error => {
+                errorMessage.textContent = 'An error occurred. Please try again later.';
+                console.error('Error:', error);
+            });
         });
     });
-});
     </script>
 </body>
 </html>

@@ -3479,4 +3479,3 @@ function updateTableInfo(totalItems, currentItemsCount) {
     </footer>
     </body>
     </html>
-
