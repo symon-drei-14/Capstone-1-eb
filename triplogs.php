@@ -2719,28 +2719,37 @@ let filteredEvents = [];
             });
 
             // Initialize calendar
-            $('#calendar').fullCalendar({
-                header: { 
-                    left: 'prev,next today', 
-                    center: 'title', 
-                    right: 'month,agendaWeek,agendaDay' 
-                },
-                events: calendarEvents,
-                timeFormat: 'h:mm A', 
-                displayEventTime: true, 
-                displayEventEnd: false, 
-                eventRender: function(event, element) {
-                    element.find('.fc-title').css({
-                        'white-space': 'normal',
-                        'overflow': 'visible'
-                    });
-                    
-                    element.find('.fc-title').html(event.client + ' - ' + event.destination);
-                    
+           $('#calendar').fullCalendar({
+    header: { 
+        left: 'prev,next today', 
+        center: 'title', 
+        right: 'month,agendaWeek,agendaDay' 
+    },
+    events: calendarEvents,
+    timeFormat: 'h:mm A', 
+    displayEventTime: true, 
+    displayEventEnd: false, 
+    eventRender: function(event, element) {
+        element.find('.fc-title').css({
+            'white-space': 'normal',
+            'overflow': 'visible'
+        });
+        
+        element.find('.fc-title').html(event.client + ' - ' + event.destination);
+        
         var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
-                    element.addClass(statusClass);
-                },
-        dayClick: function(date, jsEvent, view) {
+        element.addClass(statusClass);
+    },
+    // Add this to automatically select today's date
+    viewRender: function(view, element) {
+        if (view.name === 'month') {
+            // Trigger a click on today's cell
+            setTimeout(function() {
+                $('.fc-today').trigger('click');
+            }, 100);
+        }
+    },
+    dayClick: function(date, jsEvent, view) {
         var clickedDay = $(this);
         
         $('.fc-day').removeClass('fc-day-selected');
@@ -2762,8 +2771,8 @@ let filteredEvents = [];
                 var viewRemarksButton = hasEditReasons ? 
                     `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}" style="margin-top: 10px;">View Remarks</button>` : 
                     '';
-                            
-                            var eventThumbnail = `
+                
+                var eventThumbnail = `
                     <div class="event-thumbnail">
                         <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
                         <strong>Plate No:</strong> ${event.plateNo}<br>
@@ -2804,7 +2813,66 @@ let filteredEvents = [];
             $(this).next('.event-details').toggle();
         });
     }
-            });
+});
+
+setTimeout(function() {
+    var today = moment().startOf('day');
+    var eventsToday = $('#calendar').fullCalendar('clientEvents', function(event) {
+        return moment(event.start).isSame(today, 'day');
+    });
+    
+    var formattedDate = today.format('MMMM D, YYYY');
+    $('#eventDetails h4').text('Event Details - ' + formattedDate);
+    
+    $('#eventList').empty();
+    $('#noEventsMessage').hide();
+    
+    if (eventsToday.length > 0) {
+        eventsToday.forEach(function(event) {
+            var hasEditReasons = event.edit_reasons && event.edit_reasons !== 'null' && event.edit_reasons !== '';
+            var viewRemarksButton = hasEditReasons ? 
+                `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}" style="margin-top: 10px;">View Remarks</button>` : 
+                '';
+            
+            var eventThumbnail = `
+                <div class="event-thumbnail">
+                    <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
+                    <strong>Plate No:</strong> ${event.plateNo}<br>
+                    <strong>Destination:</strong> ${event.destination}
+                </div>
+                <div class="event-details">
+                    <p><strong>Driver:</strong> ${event.driver}</p>
+                    <p><strong>Helper:</strong> ${event.helper}</p>
+                    <p><strong>Dispatcher:</strong> ${event.dispatcher || 'N/A'}</p>
+                    <p><strong>Client:</strong> ${event.client}</p>
+                    <p><strong>Container No.:</strong> ${event.containerNo}</p>
+                    <td> <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></p></td> 
+                    <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
+                    <p><strong>Last modified by: </strong>${event.modifiedby}<br>
+                    <strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
+                    <div class="event-actions" style="margin-top: 15px;">
+                        <button class="icon-btn edit" data-tooltip="Edit" data-id="${event.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="icon-btn delete" data-tooltip="Delete" data-id="${event.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ${hasEditReasons ? 
+                            `<button class="icon-btn view-reasons" data-tooltip="View Edit History" data-id="${event.id}">
+                                <i class="fas fa-history"></i>
+                            </button>` : ''}
+                    </div>
+                </div>
+            `;
+            $('#eventList').append(eventThumbnail);
+        });
+    } else {
+        $('#noEventsMessage').show();
+    }
+    
+    // Highlight today's date
+    $('.fc-today').addClass('fc-day-selected');
+}, 500);
             
             // View toggle buttons
     $('#calendarViewBtn').on('click', function() {
