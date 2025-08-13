@@ -10,172 +10,13 @@ checkAccess(); // No role needed—logic is handled internally
     <title>Tracking</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <link rel="stylesheet" href="include/tracking.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="include/css/loading.css">
     <link rel="stylesheet" href="include/css/sidenav.css">
     <link rel="stylesheet" href="include/dashboard.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+    <link rel="stylesheet" href="include/tracking.css">
+    <link rel="stylesheet" href="include/css/tracking-page.css">
 </head>
-<style>
-    body{
-font-family: Arial, sans-serif;
- background-color:#FCFAEE;
- width:100%;
- overflow-x:hidden;
-}
-@media (max-width: 768px) {
-    .sidebar {
-        display: none;
-        position: absolute;
-        z-index: 999;
-        background-color: #fff;
-        width: 250px;
-        height: 100%;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    }
-
-    .sidebar.show {
-        display: block;
-    }
-}
-
-.toggle-sidebar-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: white;
-    z-index: 1300;
-}
-
-
-.sidebar {
-    position: fixed;
-    top: 1rem;
-    left: 0;
-    width: 300px; 
-    height: 100%;
-    background-color: #edf1ed;
-    color: #161616 !important;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1100;
-    border-right: 2px solid #16161627;
-    transform: translateX(-100%); 
-    transition: transform 0.3s ease;
-}
-
-
-.sidebar.expanded {
-    transform: translateX(0);
-}
-
-.sidebar.expanded .sidebar-item a,
-.sidebar.expanded .sidebar-item span {
-    visibility: visible;
-    opacity: 1;
-}
-    .main-content {
-            margin-top:-0.5rem;
-            margin-left: -4rem;
-            margin-right: 10px;
-            width: calc(100% - 0px);
-            width: 96vw;
-            height: 105vh;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-            overflow-x: hidden;
-            overflow-y: hidden;
-        }
-
-        .header2 {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 20px;
-     background-color: #B82132;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    width: 100%;
-    max-height: 60px;
-    top: 0;
-    left: 0;
-    z-index: 1200;
-
-}
-.logo-container2{
-    
-    display: flex;
-    align-content:left;
-    margin-left:2.5em;
-}
-.profile2 {
-    display: flex;
-    align-items: center;
-    position: relative;
-    right: 2.1em;
-    color:white;
-}
-
-    .datetime-container {
-        display: inline-flex;
-        flex-direction: row;
-        align-items: right;
-        justify-content: right;
-        margin-left: 45em;
-        gap: 20px;  
-    }
-    
-    .date-display {
-        font-size: 14px;
-        color: #DDDAD0;
-        font-weight:bold;   
-    }
-    
-    .time-display {
-        font-size: 14px;
-        color: #DDDAD0;
-          font-weight:bold;   
-    }
-    .company {
-    margin-left:-90px;
-    height: 110px;
-}
-
-.site-footer {
-    background-color: #B82132;
-    color: white;
-    padding: 30px 0 0;
-    margin-top: 40px;
-    position: relative;
-    bottom: 0;
-    right:6%;
-    width: 100%;
-}
-
-.footer-bottom {
-    text-align: center;
-    display:block;
-    justify-items:center;
-    align-items:center;
-    padding: 10px 0;
-
-    
-}
-
-.footer-bottom p {
-    margin: 0;
-    color: #ddd;
-    font-size: 16px;
-    display:block;
-    
-}
-    
-</style>
 <body>
 <header class="header2">
       <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
@@ -241,27 +82,26 @@ font-family: Arial, sans-serif;
 </div>
 
 <div class="main-content">
-    <div class="container mt-4">
-        <div class="row mb-3">
-            <div class="col">
-                <h2>Tracking</h2>
-            </div>
-        </div>
+    <div class="container-fluid mt-4">
 
         <div class="row">
-            <div class="col-md-9">
-                <div class="map-container">
-                    <div id="map"></div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-header">
+            <div class="col-md-4">
+                <div class="card drivers-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Drivers</h5>
+                        <button id="refresh-btn" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
                     </div>
-                    <div class="card-body" style="max-height: 555px; overflow-y: auto;">
+                    <div class="card-body">
                         <div id="drivers-list"></div>
                     </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="map-container position-relative">
+                    <div id="map"></div>
                 </div>
             </div>
         </div>
