@@ -77,7 +77,7 @@ checkAccess(); // No role needed—logic is handled internally
     </div>
     <div class="sidebar-item">
         <i class="icon2">🚪</i>
-        <a href="include/handlers/logout.php">Logout</a>
+        <a href="include/handlers/logout.php" data-no-loading="true">Logout</a>
     </div>
 </div>
 
