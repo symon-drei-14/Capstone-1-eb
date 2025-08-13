@@ -10,168 +10,13 @@ checkAccess(); // No role needed—logic is handled internally
     <title>Dashboard</title>
     <link rel="stylesheet" href="include/css/sidenav.css">
     <link rel="stylesheet" href="include/css/loading.css">
-    <link rel="stylesheet" href="include/fleetperformance.css">
+    <link rel="stylesheet" href="include/css/fleetperformance.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 </head>
 <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 80px;
-    background-color:#FCFAEE;
-}
 
- .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #B82132;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    width: 100%;
-    max-height: 40px;
-    top: 0;
-    left: 0;
-    z-index: 1200;
-
-}
-
-
-.dashboard-section {
-    display: flex;
-    padding: 20px;
-    flex-wrap: wrap;  /* Allow wrapping for smaller screen sizes */
-}
-
-.card-large {
-    flex: 1;
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 10px;
-}
-
-.card-large h3 {
-    margin-bottom: 15px;
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        display: none;
-        position: absolute;
-        z-index: 999;
-        background-color: #fff;
-        width: 250px;
-        height: 100%;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    }
-
-    .sidebar.show {
-        display: block;
-    }
-}
-
-.toggle-sidebar-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: white;
-    z-index: 1300;
-}
-
-
-.sidebar {
-    position: fixed;
-    top: 1rem;
-    left: 0;
-    width: 300px; 
-    height: 100%;
-    background-color: #edf1ed;
-    color: #161616 !important;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1100;
-    border-right: 2px solid #16161627;
-    transform: translateX(-100%); 
-    transition: transform 0.3s ease;
-}
-
-
-.sidebar.expanded {
-    transform: translateX(0);
-}
-
-.sidebar.expanded .sidebar-item a,
-.sidebar.expanded .sidebar-item span {
-    visibility: visible;
-    opacity: 1;
-}
-
-   .datetime-container {
-        display: inline-flex;
-        flex-direction: row;
-        align-items: right;
-        justify-content: right;
-        margin-left: 45em;
-        gap: 20px;  
-    }
-    
-    .date-display {
-        font-size: 14px;
-        color: #DDDAD0;
-        font-weight:bold;   
-    }
-    
-    .time-display {
-        font-size: 14px;
-        color: #DDDAD0;
-          font-weight:bold;   
-    }
-    
-    .profile {
-    display: flex;
-    align-items: center;
-    position: relative;
-    right: 50px;
-    }
-.company {
-    margin-left:-90px;
-    height: 110px;
-}
-
-.site-footer {
-    background-color: #B82132;
-    color: white;
-    padding: 30px 0 0;
-    margin-top: 40px;
-    position: relative;
-    bottom: 0;
-    width: 100%;
-}
-
-.footer-bottom {
-    text-align: center;
-    display:block;
-    justify-items:center;
-    align-items:center;
-    padding: 10px 0;
-
-    
-}
-
-.footer-bottom p {
-    margin: 0;
-    color: #ddd;
-    font-size: 16px;
-    display:block;
-    
-}
 </style>
 
 <body>
@@ -238,6 +83,7 @@ body {
     </div>
 </div>
 
+ <h3 class="title"><i class="fa-solid fa-chart-line"></i>Fleet Performance Analytics</h3>
 <div class="dashboard-section">
     <!-- Operational Analytics -->
     <div class="card-large">
