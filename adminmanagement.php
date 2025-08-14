@@ -87,8 +87,6 @@ checkAccess();
     <div class="main-content4">
         <section class="content-2">
             <div class="container">
-                 <h2>Admin Management</h2>
-
                 <div class="button-row">
                     <button class="add_trip" onclick="openAdminModal()">
                     <i class="fas fa-plus"></i> Add Admin

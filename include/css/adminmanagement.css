@@ -856,15 +856,15 @@ th[onclick]:hover {
     background-color: #9a1a28;
 }
 
-.pagination2 {
+.pagination {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 20px;
     gap: 5px;
 }
 
-.pagination2 button {
+.pagination button {
     background-color: transparent;
     color: #000;
     border: none;
@@ -881,14 +881,15 @@ th[onclick]:hover {
     transition: all 0.3s ease;
 }
 
-.pagination2 button:hover {
+.pagination button:hover {
     background-color: #ffffffff;
+    
     color: black;
     font-weight:bold;
     transform: scale(1.4); 
 }
 
-.pagination2 button.active {
+.pagination button.active {
     background-color: #ffffff6a;
     color: #cb1a2fff;
     border-color: #ffffffff;    
@@ -896,25 +897,26 @@ th[onclick]:hover {
     font-size:20px;
 }   
 
-.pagination2 button:disabled {
+.pagination button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.pagination2 .nav-btn {
+.pagination .nav-btn {
     border-radius: 15%;
     width: auto;
     font-size:14px;
     border:none;
 }
-.pagination2 .nav-btn:hover {
+.pagination .nav-btn:hover {
      transform: scale(1.6); 
       background-color: #ffffffff;
       font-weight:bold;
       border:none;  
 }
 
-.pagination2 .ellipsis {
+
+.pagination .ellipsis {
     display: flex;
     align-items: center;
     padding: 0 5px;
@@ -931,15 +933,6 @@ th[onclick]:hover {
     font-size: 14px;
     color: #555;
 }
-
-.pagination-top {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align:center;
-    gap: 5px;
-}
-
 .rows-per-page-container {
     display: flex;
     align-items: center;

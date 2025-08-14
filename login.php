@@ -16,7 +16,6 @@
             <img src="./include/img/loginbg2.png" alt="Login Image" />
         </div>
         <div class="login-form-content">
-        <h1>Mansar Trucking</h1>
             <h2>Admin Login</h2>
             <form id="loginForm">
                 <div class="user-box">
@@ -34,9 +33,7 @@
                 <p id="error-message"></p>
                 
             </form>
-            <div class="forgot-password">
-    Forgot Password? <a href="#"><span class="click-here">Click here</span></a>
-</div>
+            
         </div>
     </div>
 </div>  

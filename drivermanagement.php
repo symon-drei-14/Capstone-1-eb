@@ -116,9 +116,9 @@
                     </table>
                     
                     <div class="pagination">
-                        <button class="prev" id="prevPageBtn">◄</button>
+                        <button class="prev" id="prevPageBtn">&laquo;</button>
                         <div id="page-numbers" class="page-numbers"></div>
-                        <button class="next" id="nextPageBtn">►</button>
+                        <button class="next" id="nextPageBtn">&raquo;</button>
                     </div>
                 </div>
             </div>
