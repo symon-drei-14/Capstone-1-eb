@@ -228,45 +228,61 @@ checkAccess(); // No role needed—logic is handled internally
     this.progressText.textContent = `${percent}%`;
   },
   
-  setupNavigationInterception() {
-    document.addEventListener('click', (e) => {
-      const link = e.target.closest('a');
-      if (link && !link.hasAttribute('data-no-loading') && 
-          link.href && !link.href.startsWith('javascript:')) {
-        e.preventDefault();
-        
-        const loading = this.startAction(
-          'Loading Page', 
-          `Preparing ${link.textContent.trim()}...`
-        );
-        
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-          progress += Math.random() * 40; 
-          if (progress >= 90) clearInterval(progressInterval);
-          loading.updateProgress(Math.min(progress, 100));
-        }, 300); 
-        
-
-        const minLoadTime = 2000;
-        const startTime = Date.now();
-        
-        setTimeout(() => {
-          window.location.href = link.href;
-        }, minLoadTime);
-      }
-    });
-
-    document.addEventListener('submit', (e) => {
+   setupNavigationInterception() {
+  document.addEventListener('click', (e) => {
+    // Skip if click is inside SweetAlert modal
+    if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal')) {
+      return;
+    }
+    
+    // Skip if click is on any modal element
+    if (e.target.closest('.modal, .modal-content')) {
+      return;
+    }
+    
+    const link = e.target.closest('a');
+    if (link && !link.hasAttribute('data-no-loading') && 
+        link.href && !link.href.startsWith('javascript:') &&
+        !link.href.startsWith('#')) {
+      e.preventDefault();
+      
       const loading = this.startAction(
-        'Submitting Form', 
-        'Processing your data...'
+        'Loading Page', 
+        `Preparing ${link.textContent.trim()}...`
       );
       
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 40; 
+        if (progress >= 90) clearInterval(progressInterval);
+        loading.updateProgress(Math.min(progress, 100));
+      }, 300); 
+      
+      const minLoadTime = 2000;
+      const startTime = Date.now();
+      
       setTimeout(() => {
-        loading.complete();
-      }, 1500);
-    });
+        window.location.href = link.href;
+      }, minLoadTime);
+    }
+  });
+
+  document.addEventListener('submit', (e) => {
+    // Skip if form is inside SweetAlert or modal
+    if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
+      return;
+    }
+    
+    const loading = this.startAction(
+      'Submitting Form', 
+      'Processing your data...'
+    );
+    
+    setTimeout(() => {
+      loading.complete();
+    }, 1500);
+  });
+}
     
     
   },
