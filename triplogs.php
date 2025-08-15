@@ -1543,27 +1543,67 @@ if (event.driver_id && event.status !== 'Cancelled') {
             $('#editReasonsModal').show();
         }
     });
-            // Edit form submit handler
-        $('#editForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        // Get selected driver to find their assigned truck
-        var selectedDriver = $('#editEventDriver').val();
-        var driver = driversData.find(d => d.name === selectedDriver);
-        var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#editEventPlateNo').val();
-        var tripDate = $('#editEventDate').val();
 
-        checkMaintenanceConflict(truckPlateNo, tripDate, function(shouldProceed) {
-            if (!shouldProceed) {
-                return; // User cancelled after seeing maintenance warning
-            }
+
+function validateEditReasons() {
+    // Check if at least one reason is selected
+    const checkedReasons = $('input[name="editReason"]:checked').length;
+    const otherReasonText = $('#otherReasonText').val().trim();
+    
+    if (checkedReasons === 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please select at least one reason for editing this trip',
+            confirmButtonColor: '#3085d6',
+        });
+        return false;
+    }
+    
+    // Check if "Other" is checked but no reason provided
+    if ($('#reason6').is(':checked') && otherReasonText === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please specify the "Other" reason',
+            confirmButtonColor: '#3085d6',
+        });
+        $('#otherReasonText').focus();
+        return false;
+    }
+    
+    return true;
+}
+
+
+            // Edit form submit handler
+       $('#editForm').on('submit', function(e) {
+    e.preventDefault();
+    
+   
+    if ($('input[name="editReason"]:checked').length === 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Reason Required',
+            text: 'Please select at least one reason for editing this trip',
+            confirmButtonColor: '#3085d6'
+        });
+        return; 
+    }
+    
+    var selectedDriver = $('#editEventDriver').val();
+    var driver = driversData.find(d => d.name === selectedDriver);
+    var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#editEventPlateNo').val();
+    var tripDate = $('#editEventDate').val();
+
+    checkMaintenanceConflict(truckPlateNo, tripDate, function(shouldProceed) {
+        if (!shouldProceed) return;
 
         var editReasons = [];
         $('input[name="editReason"]:checked').each(function() {
             editReasons.push($(this).val());
         });
         
-        // Add other reason if specified
         var otherReason = $('#otherReasonText').val();
         if (otherReason && editReasons.includes('Other')) {
             editReasons[editReasons.indexOf('Other')] = 'Other: ' + otherReason;
@@ -1593,19 +1633,35 @@ if (event.driver_id && event.status !== 'Cancelled') {
             }),
             success: function(response) {
                 if (response.success) {
-                    alert('Trip updated successfully!');
+                   
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Trip updated successfully!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                  
                     $('#editModal').hide();
                     location.reload(); 
                 } else {
-                    alert('Error: ' + response.message);
+                    Swal.fire({  
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Failed to update trip'
+                    });
                 }
             },
             error: function() {
-                alert('Server error occurred');
+                Swal.fire({  
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Server error occurred'
+                });
             }
         });
-        });
     });
+});
                 
         $('#confirmDeleteBtn').on('click', function() {
         var eventId = $('#deleteEventId').val();
@@ -2052,45 +2108,61 @@ function updateTableInfo(totalItems, currentItemsCount) {
     this.progressText.textContent = `${percent}%`;
   },
   
-  setupNavigationInterception() {
-    document.addEventListener('click', (e) => {
-      const link = e.target.closest('a');
-      if (link && !link.hasAttribute('data-no-loading') && 
-          link.href && !link.href.startsWith('javascript:')) {
-        e.preventDefault();
-        
-        const loading = this.startAction(
-          'Loading Page', 
-          `Preparing ${link.textContent.trim()}...`
-        );
-        
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-          progress += Math.random() * 40; 
-          if (progress >= 90) clearInterval(progressInterval);
-          loading.updateProgress(Math.min(progress, 100));
-        }, 300); 
-        
-
-        const minLoadTime = 2000;
-        const startTime = Date.now();
-        
-        setTimeout(() => {
-          window.location.href = link.href;
-        }, minLoadTime);
-      }
-    });
-
-    document.addEventListener('submit', (e) => {
+ setupNavigationInterception() {
+  document.addEventListener('click', (e) => {
+    // Skip if click is inside SweetAlert modal
+    if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal')) {
+      return;
+    }
+    
+    // Skip if click is on any modal element
+    if (e.target.closest('.modal, .modal-content')) {
+      return;
+    }
+    
+    const link = e.target.closest('a');
+    if (link && !link.hasAttribute('data-no-loading') && 
+        link.href && !link.href.startsWith('javascript:') &&
+        !link.href.startsWith('#')) {
+      e.preventDefault();
+      
       const loading = this.startAction(
-        'Submitting Form', 
-        'Processing your data...'
+        'Loading Page', 
+        `Preparing ${link.textContent.trim()}...`
       );
       
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 40; 
+        if (progress >= 90) clearInterval(progressInterval);
+        loading.updateProgress(Math.min(progress, 100));
+      }, 300); 
+      
+      const minLoadTime = 2000;
+      const startTime = Date.now();
+      
       setTimeout(() => {
-        loading.complete();
-      }, 1500);
-    });
+        window.location.href = link.href;
+      }, minLoadTime);
+    }
+  });
+
+  document.addEventListener('submit', (e) => {
+    // Skip if form is inside SweetAlert or modal
+    if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
+      return;
+    }
+    
+    const loading = this.startAction(
+      'Submitting Form', 
+      'Processing your data...'
+    );
+    
+    setTimeout(() => {
+      loading.complete();
+    }, 1500);
+  });
+}
     
     
   },
