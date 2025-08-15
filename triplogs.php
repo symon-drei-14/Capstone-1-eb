@@ -2165,7 +2165,7 @@ function updateTableInfo(totalItems, currentItemsCount) {
 }
     
     
-  },
+
   
   startAction(actionName, message) {
     this.show(actionName, message);
