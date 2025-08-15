@@ -13,11 +13,11 @@ $alloverduetrucks = getOverdueTrucks();
 $allrepairtrucks = getRepairTrucks();
 
 require_once 'include/handlers/dbhandler.php';
-$maintenanceQuery = "SELECT licence_plate, remarks, date_mtnce, status 
-                    FROM maintenance 
-                    WHERE is_deleted = 0 
+$maintenanceQuery = "SELECT licence_plate, remarks, date_mtnce, status
+                    FROM maintenance
+                    WHERE is_deleted = 0
                     AND status != 'completed'
-                    ORDER BY date_mtnce ASC 
+                    ORDER BY date_mtnce ASC
                     LIMIT 5";
 $maintenanceResult = $conn->query($maintenanceQuery);
 $maintenanceRecords = [];
@@ -35,11 +35,11 @@ if ($maintenanceResult->num_rows > 0) {
     <title>Dashboard</title>
     <link rel="stylesheet" href="include/css/sidenav.css">
     <link rel="stylesheet" href="include/css/loading.css">
-    <link rel="stylesheet" href="include/dashboard.css">
+    <link rel="stylesheet" href="include/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
- 
-   
+
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 
@@ -49,955 +49,331 @@ if ($maintenanceResult->num_rows > 0) {
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
 <style>
-.grid-item.card.statistic {
+
+ .shipments-container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .shipment-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 45px;
+        margin-bottom: 20px;
+    }
+
+    .shipment-card {
+        flex: 1 1 calc(33.333% - 20px);
+        max-width: 350px;
+        height:430px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
+        padding: 10px;
+        contain:content;
+        white-space:wrap;
+        flex-shrink:0.8
+    }
+
+
+
+    .no-shipments {
+        text-align: center;
+        padding: 40px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        color: #666;
+    }
+
+.shipment-header {
     display: flex;
-    align-items: flex-start; /* Align items to the top */
-    padding: 20px;
-    border-radius: 10px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
-}
-
-.grid-item.card.statistic .content,
-.grid-item.card.statistic .content2,
-.grid-item.card.statistic .content3,
-.grid-item.card.statistic .content4 {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-    text-align:center;
-}
-
-.grid-item.card.statistic .icon-container,
-.grid-item.card.statistic .icon-container2,
-.grid-item.card.statistic .icon-container3,
-.grid-item.card.statistic .icon-container4 {
-    margin-right: 15px;
-    display: flex;
-    align-items: center;
-    margin-top:5px;
-}
-
-.grid-item.card.statistic .content h2,
-.grid-item.card.statistic .content2 h2,
-.grid-item.card.statistic .content3 h2,
-.grid-item.card.statistic .content4 h2 {
-    color: inherit;
-    margin: 0;
-    font-size: 45px;
-    text-shadow: 0 1px 3px rgba(108, 103, 103, 0.8); 
-    text-align:center;
-    justify-content:center;
-    display:flex;
-    width:100%;
-    order: 1; 
-
-}
-
-.grid-item.card.statistic .content p,
-.grid-item.card.statistic .content2 p,
-.grid-item.card.statistic .content3 p,
-.grid-item.card.statistic .content4 p {
-    color: inherit;
-    margin: 10px 0 0 0; 
-    text-align:center;
-    justify-content:center;
-    display:flex; 
-    width:100%;
-    font-size: 16px;
-    text-shadow: 0 1px 3px rgba(111, 108, 108, 0.8);
-    order: 2; 
-    
-}
-
-
-.grid-item.card.statistic .content-wrapper {
-    display: flex;
-    align-items: flex-start;
-    width: 100%;
-}
-
-.on-route {
-    background: linear-gradient(to bottom, 
-        rgba(27, 123, 19, 0.8) 0%, 
-        rgba(69, 137, 63, 0.5) 100%);
-    color: white;
-    text-shadow: 0 1px 3px rgba(27, 26, 26, 0.8);
-}
-.on-route .icon-container i {
-    color: white;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.error {
-    background: linear-gradient(to bottom, 
-        rgba(180, 30, 30, 0.9) 0%,  /* Darker red at top */
-        rgba(255, 120, 120, 0.5) 100%);
-    color: white;
-    text-shadow: 0 1px 3px rgba(27, 26, 26, 0.8);
-}
-.error .icon-container2 i {
-    color: white;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
-}
-
-.late {
-    background: linear-gradient(to bottom, 
-        rgba(200, 150, 0, 0.8) 0%,  /* Darker gold at top */
-        rgba(235, 224, 190, 1) 100%);
-    color: white;
-    text-shadow: 0 1px 3px rgba(27, 26, 26, 0.8);
-}
-.late .icon-container3 i {
-    color: rgba(255, 255, 255, 1);
-    filter: drop-shadow(0 1px 1px rgba(4, 0, 0, 0.5));
-}
-
-.deviated {
-    background: linear-gradient(to bottom, 
-        rgba(200, 80, 20, 0.8) 0%,  /* Darker orange at top */
-        rgba(255, 190, 150, 0.5) 100%);
-    color: white;
-    text-shadow: 0 1px 3px rgba(27, 26, 26, 0.8);
-}
-.deviated .icon-container4 i {
-    color: white;
-    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-
-
-    
-    .pagination-controls {
-    display: flex;
-    justify-content: center;
     align-items: center;
     gap: 15px;
-    margin-top: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
 }
 
-.pagination-btn {
-    padding: 5px 10px;
-    background-color: #1b1963;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
 
-.grid-item.card.statistic {
+    .shipment-number {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-label {
+        font-weight: bold;
+        color: #555;
+        display: block;
+        margin-bottom: 5px;
+        font-size: 14px;
+    }
+    .info-value {
+        font-weight:bolder;
+        color: #333;
+        font-size: 20px;
+    }
+
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+        .shipment-card {
+            flex: 1 1 calc(50% - 20px);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .shipment-card {
+            flex: 1 1 100%;
+        }
+    }
+
+.shipment-content {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px;
-    border-radius: 10px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
+.left-section {
+    flex: 2;
+    position: relative;
+    padding-left: 30px;
 
-.grid-item.card.statistic:hover {
-    transform: scale(1.05); 
-   box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
 }
-
-
-.card-large {
-    flex: 3;
-    background: #fff;
-    padding: 15px;
-    border-radius: 15px;
-    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
-    margin-top:15px;
-     border: 1px solid #ffffff29;
-}
-
-.card-large2 {
-    flex: 3;
-    background: #fff;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
-}
-.card-small {
+.right-section {
     flex: 1;
-    background: #fff;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
 }
 
-.fa.fa-user.icon-bg {
-    height: 5px; 
-    width: 5px; 
-    font-size: 24px; 
-    color: #B82132; 
-    background-color: rgba(184, 33, 50, 0.1); 
-    border-radius: 50%; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px; 
-}
+.info-label {
 
-.table-container {
-    padding: 10px;
-}
-
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
-padding:20px;
-border-radius:15px;
-}
-
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 15px;
-    text-align: center;
-    border:none;
-    border-bottom: 2px solid rgba(235, 233, 233, 0.88);
-
-}
-
-
-th {
-    background-color: #f8f8f8; 
-    padding:10px;
-    border-bottom: none;
-    border-bottom: 3px double #B82132; 
-    padding-bottom: 12px;
-    height:30px; 
-}
-
-tr:not(:last-child) td {
-    border-bottom: 1px solid #f0f0f0; 
-}
-
-tr:hover td {
-    background-color: rgba(115, 81, 84, 0.07); 
-}
-
-tr:first-child th:first-child {
-    border-top-left-radius: 15px;
-}
-
-tr:first-child th:last-child {
-    border-top-right-radius: 15px;
-}
-
-tr:last-child td:first-child {
-    border-bottom-left-radius: 15px;
-}
-
-tr:last-child td:last-child {
-    border-bottom-right-radius: 15px;
-}
-
-.icon-bg2 {
-    display: flex;  /* Enables flexbox */
-    align-items: center;  /* Centers vertically */
-    justify-content: center;
-width: 35px;
-height: 22px;
-border-radius: 20px;
-padding:  5px 10px;
-text-align: center;
-line-height: 40px;
-margin-right: 15px;
-   color: #B82132; 
-    background-color: rgba(184, 33, 50, 0.1); 
-}
-
-.maintenance-section {
-    margin-top: 30px;
-}
-
-.maintenance-container {
-    margin-top: 20px;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.maintenance-header {
-    display: grid;
-    grid-template-columns: 2fr 2fr 1fr 1fr;
-    padding: 15px 20px;
-    background-color: #f8f8f8;
-    font-weight: 600;
-    color: #555;
-    border-bottom: 2px solid #e0e0e0;
-}
-
-.maintenance-item {
-    display: grid;
-    grid-template-columns: 1fr;
-    padding: 0;
-    border-bottom: 1px solid #f0f0f0;
-    transition: all 0.3s ease;
-}
-
-.maintenance-item:hover {
-    background-color: rgba(184, 33, 50, 0.03);
-}
-
-.maintenance-details {
-    display: grid;
-    grid-template-columns: 2fr 2fr 1fr 1fr;
-    padding: 15px 20px;
-    align-items: center;
-}
-
-.maintenance-progress {
-    height: 4px;
-    background-color: #f0f0f0;
-    width: 100%;
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 70%;
-}   
-
-
-.status-badge {
-    padding: 6px 12px;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    border-radius: 12px;
-    font-weight: 600;
-}
-.pending-badge {
-    background-color: rgba(255, 201, 8, 0.2);
-    color: #BB9407;
-}
-
-.in-progress-badge {
-    background-color: rgba(0, 123, 255, 0.2);
-    color: #0062cc;
-}
-
-.completed-badge {
-    background-color: rgba(40, 167, 69, 0.2);
-    color: #28a745;
-}
-
-.overdue-badge {
-    background-color: rgba(220, 53, 69, 0.2);
-    color: #dc3545;
-}
-
-
-.pending-bar {
-    background-color: #FFC107; 
-    width: 30%; 
-}
-
-.in-progress-bar {
-    background-color: #17A2B8; 
-    width: 60%; 
-}
-
-.completed-bar {
-    background-color: #28A745; 
-    width: 100%; 
-}
-
-.overdue-bar {
-    background-color: #DC3545; 
-    width: 100%; 
-}
-
-.view-all-btn {
+    color: #8d8b8bff;
     display: block;
-    width:20%;
-    padding: 12px;
-    margin-top: 20px;
-    background-color: #B82132;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  
+    margin-bottom: 5px;
+     font-size: 14px;
+
+
 }
 
-.view-all-btn:hover {
-    background-color: #9a1c2a;
-}
-
-/*@media (max-width: 768px) {
-    .maintenance-header,
-    .maintenance-details {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    .maintenance-header span:nth-child(3),
-    .maintenance-details span:nth-child(3) {
-        display: none;
-    }
-    
-    .status-badge {
-        justify-self: end;
-    }
-}
-    */
-
-.quick-stats {
-    background: #f8f9fa;
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-around;
-    margin-top: 50px; 
-    border-bottom: 1px solid #e0e0e0;
-box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em;
-}
-
-.quick-stats span {
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.quick-stats i {
-    margin-right: 8px;
-    color: #B82132;
-}
-/* ------------------------------------------------------------------------------------------------------------ */
-
-.pagination-btn:hover:not(:disabled) {
-    background-color: #2a277a;
-}
-
-.pagination-btn:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
-.page-info {
-    font-size: 14px;
-    color: #555;
-}
-
-    .toggle-sidebar-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    margin-left: 1rem;
+.plate-number {
+    font-size: 20px;
+    font-weight: 700;
     color: #333;
 }
 
-@media (max-width: 768px) {
-    .sidebar {
-        display: none;
-        position: absolute;
-        z-index: 999;
-        background-color: #fff;
-        width: 250px;
-        height: 100%;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    }
 
-    .sidebar.show {
-        display: block;
-    }
+.divider {
+    border-top: 1px dashed #ccc;
+    margin: 15px 0;
+    width: 300%;
 }
 
-
-
-.logo-container {
+.route-container {
     display: flex;
-    align-content:left;
+    gap: 20px;
+    margin-bottom: 20px;
+    position: relative;
 }
 
-.logo {
-    height: 80px;
+
+.route-section {
+    flex: 1;
+    position: relative;
+    padding-right: 30px;
+
+}
+.client-section {
+    flex: 1;
+    padding-left: 30px;
+
 }
 
-
-
-/* .search-container {
-    display: flex;
-    justify-content: center;
-    flex-grow: 1;
-    align-items: center;
-}
-
-.search-bar {
-    padding: 8px;
-    width: 200px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
-    transition: width 0.3s ease;
-}
-
-    .search-bar:focus {
-        width: 300px;
-    }
-*/
-   
-.profile-icon {
-    width: 40px;
+.route-visual {
+    position: relative;
     height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-    
-}
-
-.profile-name {
-    font-size: 14px;
-    font-weight: bold;
-    
-    
-}
-
-/*.sidebar {
-    position: fixed;
-  
-    top: 1rem;
-    left: 0;
-    width: 80px;
-    height: 100%;
-    background-color: #edf1ed;
-    color: #161616 !important;
-    padding: 20px;
-    box-sizing: border-box;
-    transition: width 0.3s ease;
-    overflow-x: hidden;
-    overflow-y: hidden;
-    z-index: 1100;
-    border-right: 2px solid #16161627;
-}
-
-    .sidebar:hover {
-        width: 300px;
-        box-shadow: 100px 0 100px rgba(0, 0, 0, 0.1);
-        transition: 0.5s ease;
-    }*/
-
-
-
-.icon {
-    margin-right: 10px;
-    color: white !important;
-}
-
-.icon2 {
-    margin-right: 10px;
-    /* font-size: 16px; */
-    filter: grayscale(0%); 
-    height:1.5em;
-}
-
-/* .icon2 {
-    margin-right: 10px;
-    color: black; 
-    opacity: 1; 
-    filter: grayscale(100%) brightness(0);
-} */
-
-    .sidebar {
-    position: fixed;
-    top: 1.7rem;
-    left: 0;
-    width: 300px; 
-    height: 100%;
-    background-color: #edf1ed;
-    color: #161616 !important;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1100;
-    border-right: 2px solid #16161627;
-    transform: translateX(-100%); 
-    transition: transform 0.3s ease;
-}
-
-
-.container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100vh;
-}
-
-.main-content {
-    margin-top:20px;
-    margin-left: 75px; /* Same as the sidebar width */
-    transition: margin-left 0.3s ease;
-}
-
-.main-content2 {
-    margin-top: 40px;
-    /*margin-left: 85px;*/ /* Same as the sidebar width */
-    margin-left: 200px; /* Adjust based on your sidebar width */
-    margin-right: 40px; /* Increased right margin to prevent touching scrollbar */
-    width: calc(100% - 320px);
-    transition: margin-left 0.3s ease;
-    overflow-y: auto;
-}
-
-.main-content3 {
-    margin-top: 80px;
-    margin-left: 100px; /* Reduced left margin from 200px to 100px */
-    margin-right: 20px; /* Reduced right margin from 40px to 20px */
-    width: calc(100% - 140px); /* Adjusted width calculation based on new margins */
-    transition: margin-left 0.3s ease;
-    overflow-y: auto;
-}
-
-.main-content4 {
-    margin-top: 80px;
-    margin-left: 100px;
-    margin-right: 10px;
-    width: calc(100% - 110px);
-}
-
-.main-content5 {
-    margin-top: 30px;
-    margin-left: 100px;
-    margin-right: 10px;
-    width: calc(100% - 110px);
-    
-}
-
-/* Toggle Button Styles */
-.toggle-sidebar-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 1300;
-       color: #F6F0F0;
+    margin: 10px 0;
 }
 
 
 
-
-
-body{
-   background-color:#FCFAEE;
-    font-family: 'Open Sans', sans-serif;
-    line-height: 1.2;
+.info-section {
+    background-color: #ffffffff;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+       flex-shrink:1.2;
 }
 
-/* Footer Styles */
-.site-footer {
-    background-color: #B82132;
-    color: white;
-    padding: 30px 0 0;
-    margin-top: 40px;
-    position: relative;
-    bottom: 0;
-    width: 100%;
-}
-
-
-.footer-bottom {
-    text-align: center;
-    display:block;
-    justify-items:center;
-    align-items:center;
-    padding: 10px 0;
-
-    
-}
-
-.footer-bottom p {
-    margin: 0;
-    color: #ddd;
-    font-size: 16px;
-    display:block;
-    
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 11000;
-    left: 0;
+.vertical-route {
+    position: absolute;
+    left: 50%;
     top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    overflow-y: auto; /* Allow background scrolling if needed */
-    padding: 20px 0; /* Add padding to prevent modal from touching edges */
-}
-
-.modal-content {
-    background-color: #fff;
-    margin: 2% auto; /* Reduced margin for better visibility */
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    max-width: 700px; /* Increased width slightly */
-    max-height: 100vh; /* Increased max height */
-    overflow-y: auto; /* Make content scrollable */
-    position: relative;
-    width: 90%; /* Responsive width */
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close:hover {
-    color: black;
-}
-  .datetime-container {
-        display: inline-flex;
-        flex-direction: row;
-        align-items: right;
-        justify-content: right;
-        margin-left: 45em;
-        gap: 20px;  
-    }
-    
-    .date-display {
-        font-size: 14px;
-        color: #DDDAD0;
-        font-weight:bold;   
-    }
-    
-    .time-display {
-        font-size: 14px;
-        color: #DDDAD0;
-          font-weight:bold;   
-    }
-    
-   
-  
-    .profile {
-    display: flex;
-    align-items: center;
-    position: relative;
-    right: 50px;
-    
-}
-
-#tripDetailsContent {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    max-height: calc(120vh - 120px); /* Account for header and padding */
-    overflow-y: auto; /* Make the content area scrollable */
-    padding-right: 10px; /* Space for scrollbar */
-}
-
-#tripDetailsContent p {
-    margin: 8px 0;
-    padding: 5px;
-    background-color: #f9f9f9;
-    border-radius: 4px;
-}
-
-#tripDetailsContent strong {
-    color: #555;
-    display: inline-block;
-    min-width: 120px;
-}
-
-#tripDetailsContent .status {
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-weight: bold;
-}
-
-#tripDetailsContent .status.completed {
-    background-color: #28a745;
-    color: white;
-}
-
-#tripDetailsContent .status.pending {
-    background-color: #ffc107;
-    color: black;
-}
-
-#tripDetailsContent .status.cancelled {
-    background-color: #dc3545;
-    color: white;
-}
-
-#tripDetailsContent .status.enroute {
-    background-color: #007bff;
-    color: white;
-}
-
-.trip-details {
-    background-color: #B82132;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: background-color 0.3s;
-}
-
-.trip-details:hover {
-    background-color: #9a1c2a;
-}
-.company {
-    margin-left:-90px;
-    height: 110px;
-}
-
-#calendar {
-    width: 96%;
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: rgba(0, 0, 0, 0.15) 0px 15px 25px, rgba(0, 0, 0, 0.05) 0px 5px 10px;
-    height:auto;
-
-}
-
-.fc-event {
-    max-width: 120px !important;
-    border: none !important;
-    border-radius: 4px !important;
-    padding: 2px 4px !important;
-    margin: 1px 0 !important;
-    font-size: 0.85em !important;
-    line-height: 1.2;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    display: inline-block;
-}
-
-.fc-event .fc-content {
+    bottom: 0;
+    width: 20px;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    transform: translateX(-50%);
+    z-index: 1;
 }
 
-.fc-event .fc-time {
-    font-weight: bold;
-    margin-right: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+
+.route-line {
+        width: 2px;
+    flex-grow: 1;
+    background: linear-gradient(to bottom, #4CAF50, #2196F3);
+    z-index: 1;
+    margin: 0 auto;
+}
+.pointer {
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 12px solid #4CAF50;
+    margin-bottom: -1px;
+    z-index: 2;
+     position: absolute;
+    top: 0;
+
 }
 
-.fc-event .fc-title {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
+.pin {
+    width: 12px;
+    height: 12px;
+    background-color: #2196F3;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
+    margin-top: -1px;
+    z-index: 2;
+      position: absolute;
+    bottom: 0;
+
 }
 
-.fc-day-selected {
-    background-color: #d5d5d8 !important;
-    color: white !important;
+
+.departure {
+    margin-bottom: 15px;
 }
 
-.fc-day:hover {
-    background-color: #d5d5d8;
-    color: white;
+.destination {
+    margin-top: 15px;
+
 }
 
-.status.completed {
-    background-color: #28a745;
-    color: white;
+
+
+.platenum{
+  margin-top:40px;
+}
+.truck-image {
+    width: 150px;
+    flex-shrink: 0;
+    margin-right:20px
+}
+.header-columns {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 5px;
 }
 
-.status.pending {
-    background-color: #ffc107;
-    color: black;
+.header-column {
+    flex: 1;
+    padding: 0 10px;
 }
 
-.status.cancelled {
-    background-color: #dc3545;
-    color: white;
+
+.status {
+    font-size: 14px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-top:10px;
 }
 
-.status.enroute, 
-.status.en-route {
-    background-color: #007bff;
-    color: white;
+.horizontal-route-container {
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+    position: relative;
+    margin: 20px 0;
 }
 
-  .calendar-legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 20px;
-        padding: 10px;
-        background-color: #ffffffff;
-        border-radius: 8px;
-    }
-    
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .legend-color {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border-radius: 4px;
-    }
-    
-    .legend-color.pending {
-        background-color: #ffc107; 
-    }
-    
-    .legend-color.enroute {
-        background-color: #007bff; 
-    }
-    
-    .legend-color.completed {
-        background-color: #28a745; 
-    }
-    
-    .legend-color.cancelled {
-        background-color: #dc3545; 
-    }
-    
-    .legend-label {
-        font-size: 14px;
-        color: #333;
-    }
+.horizontal-top-section {
+    display: flex;
+    justify-content: space-between;
+    align-content:center;
+}
 
-    .quick-actions-bar {
+.horizontal-bottom-section {
+    margin-top: 30px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     display: flex;
     gap: 10px;
-    margin: 15px 0;
-    padding: 10px 0;
-    border-bottom: 1px solid #d5d2d2ff;
+    flex-wrap: wrap;
 }
 
-.quick-action-btn {
-    padding: 10px 15px;
-    background-color:#FCFAEE;
-    color: black;
-    border: none;
-    border-radius: 10px;
-    font-size:14px;
-    cursor: pointer;
-    transition: background 0.3s;
-    border: 1px solid #00000027;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+.line {
+    position: relative;
+    height: 2px;
+    background: linear-gradient(to right, #4CAF50, #2196F3);
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+   margin-bottom:20px;
 }
 
-.quick-action-btn:hover {
-    background: #ff7777da;
+.horizontal-pointer {
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 12px solid #4CAF50;
+    position: absolute;
+    left: 0;
+    transform: translateY(20%);
+}
+
+.horizontal-pin {
+    width: 12px;
+    height: 12px;
+    background-color: #2196F3;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
+    position: absolute;
+    right: 0;
+    transform: translateY(-220%);
+}
+
+
+.shipment-row.single-card {
+    justify-content: center;
+}
+
+.shipment-row.single-card .shipment-card {
+    flex: 1 1 100%;
+    max-width: 80%;
+    height: auto;
+    min-height: 40px;
+}
+.info-section-client,
+.info-section-platenum,
+.info-section-driver,
+.info-section-helper {
+    flex: 1;
+    min-width: 120px;
+    padding: 5px;
 }
 
 
@@ -1038,7 +414,7 @@ if ($result->num_rows > 0) {
             'modifiedat' => $row['last_modified_at'],
             'truck_plate_no' => $row['truck_plate_no'],
             'truck_capacity' => $row['truck_capacity'],
-            'edit_reasons' => $row['edit_reasons'] 
+            'edit_reasons' => $row['edit_reasons']
         ];
     }
 }
@@ -1053,7 +429,7 @@ $eventsDataJson = json_encode($eventsData);
         <i class="fa fa-bars"></i>
     </button>
     <div class="logo-container">
-       
+
         <img src="include/img/mansar2.png" alt="Company Name" class="company">
     </div>
 
@@ -1065,7 +441,7 @@ $eventsDataJson = json_encode($eventsData);
     <div class="profile">
         <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
         <div class="profile-name">
-            <?php 
+            <?php
                 echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
             ?>
         </div>
@@ -1130,7 +506,7 @@ $eventsDataJson = json_encode($eventsData);
 </div>
 
 <div class="dashboard-grid">
-    
+
  <div class="grid-item card statistic on-route">
     <div class="icon-container">
         <i class="fa fa-truck"></i>
@@ -1174,7 +550,7 @@ $eventsDataJson = json_encode($eventsData);
 
 <!-- On going vehicles -->
 
-<div class="card-large">
+<!-- <div class="card-large">
     <div class="table-container">
         <h3>Ongoing Vehicles</h3>
         <table>
@@ -1188,11 +564,142 @@ $eventsDataJson = json_encode($eventsData);
                  <th>Date of Departure</th>
                 <th>Actions</th>
             </tr>
-           
+
         </table>
     </div>
-</div>
+</div> -->
+<div class="card-large">
+    <div class="shipments-container">
+    <?php
 
+    $enrouteTrips = array_filter($eventsData, function($trip) {
+        return strtolower($trip['status']) === 'en route';
+    });
+
+    if (!empty($enrouteTrips)):
+        $isSingleCard = count($enrouteTrips) === 1;
+        $singleCardClass = $isSingleCard ? 'single-card' : '';
+
+        $chunkSize = $isSingleCard ? 1 : 3;
+        $chunkedTrips = array_chunk($enrouteTrips, $chunkSize);
+
+        foreach ($chunkedTrips as $tripRow): ?>
+            <div class="shipment-row <?php echo $singleCardClass; ?>">
+                <?php foreach ($tripRow as $trip):
+                    $departureDate = date('d-m-y g:ia', strtotime($trip['date']));
+                    $statusClass = strtolower(str_replace(' ', '-', $trip['status']));
+                ?>
+                <div class="shipment-card">
+                    <div class="shipment-header">
+                        <img src="include/img/truck.png" alt="Truck" class="truck-image">
+                        <div class="header-details">
+                            <div class="plate-column">
+                                <span class="info-label">Container Number</span>
+                                <span class="plate-number"><?php echo htmlspecialchars($trip['containerNo']); ?></span>
+                            </div>
+                            <div class="status-column">
+                                <span class="status <?php echo $statusClass; ?>"><?php echo htmlspecialchars($trip['status']); ?></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <?php if ($isSingleCard): ?>
+                        <!-- Horizontal layout for single card -->
+                        <div class="horizontal-route-container">
+                            <div class="horizontal-top-section">
+                                <div class="info-section departure">
+                                    <span class="info-label">Departure</span>
+                                    <span class="info-value"><?php echo $departureDate; ?></span>
+                                </div>
+                                <div class="info-section destination">
+                                    <span class="info-label">Destination</span>
+                                    <span class="info-value"><?php echo htmlspecialchars($trip['destination']); ?></span>
+                                </div>
+                            </div>
+
+                            <div class="horizontal-route-line">
+                                <div class="horizontal-pointer"></div>
+                                <div class="line"></div>
+                                <div class="horizontal-pin"></div>
+                            </div>
+
+                            <div class="horizontal-bottom-section">
+                                <div class="info-section-client">
+                                    <span class="info-label">Client</span>
+                                    <span class="info-value"><?php echo htmlspecialchars($trip['client']); ?></span>
+                                    </div>
+                                <div class="info-section-platenum">
+                                    <span class="info-label">Plate Number</span>
+                                    <span class="info-value"><?php echo htmlspecialchars($trip['plateNo']); ?></span>
+                                    </div>
+                                <div class="info-section-driver">
+                                    <span class="info-label">Driver</span>
+                                    <span class="info-value"><?php echo htmlspecialchars($trip['driver']); ?></span>
+                                    </div>
+                                <div class="info-section-helper">
+                                    <span class="info-label">Helper</span>
+                                    <span class="info-value"><?php echo htmlspecialchars($trip['helper']); ?></span>
+                                </div>
+
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <!-- Vertical layout for multiple cards -->
+                        <div class="route-container">
+                            <div class="vertical-route">
+                                <div class="pointer"></div>
+                                <div class="route-line"></div>
+                                <div class="pin"></div>
+                            </div>
+
+                            <div class="route-section">
+                                <div class="info-section departure">
+                                    <span class="info-label">Departure</span>
+                                    <span class="info-value"><?php echo $departureDate; ?></span>
+                                </div>
+                                <div class="info-section destination">
+                                    <span class="info-label">Destination</span>
+                                    <span class="info-value"><?php echo htmlspecialchars($trip['destination']); ?></span>
+                                </div>
+                            </div>
+
+                            <div class="client-section">
+                                <div class="info-section client">
+                                    <span class="info-label">Client</span>
+                                    <span class="info-value"><?php echo htmlspecialchars($trip['client']); ?></span>
+                            </div>
+                            <div class="info-section platenum">
+                                    <span class="info-label">Plate Number</span>
+                                    <span class="info-value"><?php echo htmlspecialchars($trip['plateNo']); ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="info-grid">
+                            <div class="info-section">
+                                <span class="info-label">Driver</span>
+                                <span class="info-value"><?php echo htmlspecialchars($trip['driver']); ?></span>
+                            </div>
+                            <div class="info-section">
+                                <span class="info-label">Helper</span>
+                                <span class="info-value"><?php echo htmlspecialchars($trip['helper']); ?></span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endforeach;
+    else: ?>
+        <div class="no-shipments">
+            <p>There are currently no active shipments</p>
+        </div>
+    <?php endif; ?>
+</div>
+</div>
+    </div>
 <div class="dashboard-section">
     <div class="card-large2">
         <h3>Shipment Statistics</h3>
@@ -1202,9 +709,9 @@ $eventsDataJson = json_encode($eventsData);
     <div class="card-small">
         <h3>Active Drivers</h3>
         <?php
-      
+
         if (count($drivingDrivers) > 0) {
-           
+
             foreach ($drivingDrivers as $driver) {
                 echo '<div class="performance">
                         <i class="fa fa-user icon-bg"></i>
@@ -1212,7 +719,7 @@ $eventsDataJson = json_encode($eventsData);
                       </div>';
             }
         } else {
-           
+
             echo '<div class="performance">
                     <i class="fa fa-info-circle icon-bg"></i>
                     <p>No active drivers currently on duty</p>
@@ -1231,22 +738,22 @@ $eventsDataJson = json_encode($eventsData);
                 <span class="header-date">Due Date</span>
                 <span class="header-status">Status</span>
             </div>
-            
+
             <?php if (!empty($maintenanceRecords)): ?>
-              <?php foreach ($maintenanceRecords as $record): 
-   
+              <?php foreach ($maintenanceRecords as $record):
+
     $statusClass = strtolower(str_replace(' ', '-', $record['status']));
     $badgeClass = $statusClass . '-badge';
     $barClass = $statusClass . '-bar';
-    
-   
+
+
     $dueDate = date('M j, Y', strtotime($record['date_mtnce']));
     $today = new DateTime();
     $dueDateTime = new DateTime($record['date_mtnce']);
     $interval = $today->diff($dueDateTime);
     $daysDifference = $interval->format('%r%a');
-    
-  
+
+
     if ($daysDifference == 0) {
         $dateString = 'Today';
                }elseif ($daysDifference == 1) {
@@ -1281,7 +788,7 @@ $eventsDataJson = json_encode($eventsData);
                 </div>
             <?php endif; ?>
         </div>
-        
+
         <button class="view-all-btn" onclick="window.location.href='maintenance.php'">View All Maintenance Records</button>
     </div>
 </section>
@@ -1289,7 +796,7 @@ $eventsDataJson = json_encode($eventsData);
 <section class="calendar-section">
     <div class="card-large">
         <h3>Event Calendar</h3>
-        
+
         <div class="calendar-legend">
             <div class="legend-item">
                 <span class="legend-color pending"></span>
@@ -1308,14 +815,14 @@ $eventsDataJson = json_encode($eventsData);
                 <span class="legend-label">Cancelled</span>
             </div>
         </div>
-        
+
         <div id="calendar"></div>
     </div>
 </section>
 
 
 <script>
-  
+
 
 
     var shipmentOptions = {
@@ -1392,10 +899,10 @@ $eventsDataJson = json_encode($eventsData);
     };
 
 
-    
+
      var calendarEvents = <?php echo $eventsDataJson; ?>;
-    
-    
+
+
     var formattedEvents = calendarEvents.map(function(event) {
         return {
             id: event.id,
@@ -1418,26 +925,26 @@ $eventsDataJson = json_encode($eventsData);
         };
     });
 
-  
+
    $(document).ready(function() {
     $('#calendar').fullCalendar({
-        header: { 
-            left: 'prev,next today', 
-            center: 'title', 
-            right: 'month,agendaWeek,agendaDay' 
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'month,agendaWeek,agendaDay'
         },
         events: formattedEvents,
-        timeFormat: 'h:mm A', 
-        displayEventTime: true, 
-        displayEventEnd: false, 
+        timeFormat: 'h:mm A',
+        displayEventTime: true,
+        displayEventEnd: false,
         eventRender: function(event, element) {
             element.find('.fc-title').css({
                 'white-space': 'normal',
                 'overflow': 'visible'
             });
-            
+
             element.find('.fc-title').html(event.client + ' - ' + event.destination);
-            
+
             var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
             element.addClass(statusClass);
         },
@@ -1447,14 +954,14 @@ $eventsDataJson = json_encode($eventsData);
             clickedDay.addClass('fc-day-selected');
         },
         eventClick: function(calEvent, jsEvent, view) {
-           
+
             var dateObj = new Date(calEvent.start);
             var formattedDate = dateObj.toLocaleString();
-            
-          
+
+
             var modifiedDate = calEvent.modifiedat ? new Date(calEvent.modifiedat).toLocaleString() : 'N/A';
-            
-          
+
+
             $('#td-plate').text(calEvent.plateNo || 'N/A');
             $('#td-date').text(formattedDate);
             $('#td-driver').text(calEvent.driver || 'N/A');
@@ -1472,16 +979,16 @@ $eventsDataJson = json_encode($eventsData);
                           .addClass('status ' + (calEvent.status ? calEvent.status.toLowerCase().replace(/\s+/g, '') : ''));
             $('#td-modifiedby').text(calEvent.modifiedby || 'System');
             $('#td-modifiedat').text(modifiedDate);
-            
-           
+
+
             $('#tripDetailsModal').show();
-            
-            
+
+
             return false;
         }
     });
 });
- 
+
 </script>
 
 
@@ -1495,10 +1002,10 @@ $eventsDataJson = json_encode($eventsData);
 
      function updateDateTime() {
         const now = new Date();
-        
+
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, options);
-        
+
         document.getElementById('current-time').textContent = now.toLocaleTimeString();
     }
 
@@ -1507,7 +1014,7 @@ $eventsDataJson = json_encode($eventsData);
     setInterval(updateDateTime, 1000);
 $(document).ready(function() {
     let currentPage = 1;
-    
+
     // Function to load trips for a specific page
    function loadTrips(page) {
     $.ajax({
@@ -1521,13 +1028,13 @@ $(document).ready(function() {
         success: function(response) {
             if (response.success) {
                 $('.table-container table tr:not(:first)').remove();
-                
+
                 if (response.trips.length > 0) {
                     response.trips.forEach(function(trip) {
                         var dateObj = new Date(trip.date);
                         var formattedDate = dateObj.toLocaleDateString();
                         var formattedTime = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        
+
                         var row = `
                             <tr>
                                 <td><i class="fa fa-automobile icon-bg2"></i></td>
@@ -1549,7 +1056,7 @@ $(document).ready(function() {
                         </tr>
                     `);
                 }
-                
+
                 updatePaginationControls(response.pagination);
                 currentPage = page;
             }
@@ -1569,15 +1076,15 @@ function fetchTripDetails(tripId) {
             action: 'get_trip_details',
             tripId: tripId
         })
-        
+
     });
 }
-    
+
     // Function to update pagination controls
     function updatePaginationControls(pagination) {
         // Remove existing pagination controls if they exist
         $('.pagination-controls').remove();
-        
+
         // Create new pagination controls
         var controls = `
             <div class="pagination-controls" style="margin-top: 10px; text-align: center;">
@@ -1592,20 +1099,20 @@ function fetchTripDetails(tripId) {
                 </button>
             </div>
         `;
-        
+
         $('.table-container').append(controls);
     }
-    
+
     // Initial load
     loadTrips(currentPage);
-    
+
     // Pagination button click handlers
     $(document).on('click', '.pagination-btn.prev', function() {
         if (currentPage > 1) {
             loadTrips(currentPage - 1);
         }
     });
-    
+
     $(document).on('click', '.pagination-btn.next', function() {
         loadTrips(currentPage + 1);
     });
@@ -1613,13 +1120,13 @@ function fetchTripDetails(tripId) {
 
 $(document).on('click', '.trip-details', function() {
     var tripId = $(this).data('id');
-    
+
     fetchTripDetails(tripId).then(function(response) {
         if (response.success) {
             var trip = response.trip;
             var dateObj = new Date(trip.date);
             var modifiedDateObj = new Date(trip.last_modified_at);
-            
+
             $('#td-plate').text(trip.plate_no || 'N/A');
             $('#td-date').text(dateObj.toLocaleString());
             $('#td-driver').text(trip.driver || 'N/A');
@@ -1635,7 +1142,7 @@ $(document).on('click', '.trip-details', function() {
             $('#td-status').text(trip.status || 'N/A').removeClass().addClass('status ' + (trip.status ? trip.status.toLowerCase().replace(/\s+/g, '') : ''));
             $('#td-modifiedby').text(trip.last_modified_by || 'System');
             $('#td-modifiedat').text(modifiedDateObj.toLocaleString());
-            
+
             $('#tripDetailsModal').show();
         } else {
             alert('Error loading trip details: ' + response.message);
@@ -1678,18 +1185,18 @@ $('a[href*="#"]').on('click', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     // Get current page filename
     const currentPage = window.location.pathname.split('/').pop();
-    
+
     // Find all sidebar links
     const sidebarLinks = document.querySelectorAll('.sidebar-item a');
-    
+
     // Check each link
     sidebarLinks.forEach(link => {
         const linkPage = link.getAttribute('href').split('/').pop();
-        
+
         // If this link matches current page, add active class
         if (linkPage === currentPage) {
             link.parentElement.classList.add('active');
-            
+
             // Also highlight the icon
             const icon = link.parentElement.querySelector('.icon2');
             if (icon) {
@@ -1760,67 +1267,67 @@ document.addEventListener('DOMContentLoaded', function() {
     this.messageEl = document.querySelector('.loading-message');
     this.progressBar = document.querySelector('.progress-bar');
     this.progressText = document.querySelector('.progress-text');
-    
+
     this.setupNavigationInterception();
   },
-  
+
   show(title = 'Processing Request', message = 'Please wait while we complete this action...') {
     this.titleEl.textContent = title;
     this.messageEl.textContent = message;
-    
+
     // Start the sequence with longer delays
     this.loadingEl.style.display = 'flex';
     setTimeout(() => {
       this.loadingEl.classList.add('active');
     }, 50);
   },
-  
+
   hide() {
     // Longer fade out
     this.loadingEl.classList.remove('active');
     setTimeout(() => {
       this.loadingEl.style.display = 'none';
-    }, 800); 
+    }, 800);
   },
-  
+
   updateProgress(percent) {
     this.progressBar.style.width = `${percent}%`;
     this.progressText.textContent = `${percent}%`;
   },
-  
+
    setupNavigationInterception() {
   document.addEventListener('click', (e) => {
     // Skip if click is inside SweetAlert modal
     if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal')) {
       return;
     }
-    
+
     // Skip if click is on any modal element
     if (e.target.closest('.modal, .modal-content')) {
       return;
     }
-    
+
     const link = e.target.closest('a');
-    if (link && !link.hasAttribute('data-no-loading') && 
+    if (link && !link.hasAttribute('data-no-loading') &&
         link.href && !link.href.startsWith('javascript:') &&
         !link.href.startsWith('#')) {
       e.preventDefault();
-      
+
       const loading = this.startAction(
-        'Loading Page', 
+        'Loading Page',
         `Preparing ${link.textContent.trim()}...`
       );
-      
+
       let progress = 0;
       const progressInterval = setInterval(() => {
-        progress += Math.random() * 40; 
+        progress += Math.random() * 40;
         if (progress >= 90) clearInterval(progressInterval);
         loading.updateProgress(Math.min(progress, 100));
-      }, 300); 
-      
+      }, 300);
+
       const minLoadTime = 2000;
       const startTime = Date.now();
-      
+
       setTimeout(() => {
         window.location.href = link.href;
       }, minLoadTime);
@@ -1832,20 +1339,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
       return;
     }
-    
+
     const loading = this.startAction(
-      'Submitting Form', 
+      'Submitting Form',
       'Processing your data...'
     );
-    
+
     setTimeout(() => {
       loading.complete();
     }, 1500);
   });
 }
-    
 
-  
+
+
   startAction(actionName, message) {
     this.show(actionName, message);
     return {
@@ -1870,7 +1377,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
-  
+
   // Add smooth transition to the GIF
   const loadingGif = document.querySelector('.loading-gif');
   if (loadingGif) {
