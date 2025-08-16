@@ -1,4 +1,4 @@
-    <?php
+<?php
     require_once __DIR__ . '/include/check_access.php';
     checkAccess(); // No role needed—logic is handled internally
 
@@ -91,6 +91,11 @@
                         <i class="fas fa-search"></i>
                         <input type="text" id="driverSearch" placeholder="Search drivers..." onkeyup="searchDrivers()">
                     </div>
+                    <div style="float: right; margin-top: 10px; margin-right: 20px;">
+                        <button class="btn-primary" onclick="openAddDriverModal()">
+                            <i class="fas fa-plus"></i> Add New Driver
+                        </button>
+                    </div>
                 </div>
                 <br />
 
@@ -125,38 +130,38 @@
         </section>
     </div>
 
-    <!-- Modal Structure (Edit Only) -->
+    <!-- Modal Structure (Add/Edit) -->
     <div id="driverModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">×</span>
-            <h2>Edit Driver</h2>
+            <h2 id="modalTitle">Add Driver</h2>
             <form id="driverForm">
                 <input type="hidden" id="driverId" name="driverId">
-                
+                <input type="hidden" id="modalMode" name="modalMode" value="add">
                 
                 <div class="form-group">
-                    <label for="driverName">Name</label>
+                    <label for="driverName">Name *</label>
                     <input type="text" id="driverName" name="driverName" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="driverEmail">Email</label>
+                    <label for="driverEmail">Email *</label>
                     <input type="email" id="driverEmail" name="driverEmail" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password">
-                    <small>Leave blank to keep current password</small>
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" name="password" required>
+                    <small id="passwordHelp">Leave blank to keep current password</small>
                 </div>
                 
                 <div class="form-group">
                     <label for="assignedTruck">Assigned Truck ID</label>
-                    <input type="text" id="assignedTruck" name="assignedTruck">
+                    <input type="number" id="assignedTruck" name="assignedTruck" placeholder="Enter truck ID or leave blank">
                 </div>
 
                 <button type="submit" id="saveButton" class="btn-primary">
-                    <i class="fas fa-save"></i> Save Changes
+                    <i class="fas fa-save"></i> <span id="saveButtonText">Add Driver</span>
                 </button>
                 <button type="button" class="cancelbtn" onclick="closeModal()">
                     <i class="fas fa-times"></i> Cancel
@@ -188,6 +193,22 @@
         updateDateTime();
         setInterval(updateDateTime, 1000);
 
+        function openAddDriverModal() {
+            document.getElementById("modalTitle").textContent = "Add New Driver";
+            document.getElementById("modalMode").value = "add";
+            document.getElementById("saveButtonText").textContent = "Add Driver";
+            document.getElementById("passwordHelp").style.display = "none";
+            document.getElementById("password").required = true;
+            
+            // Clear all fields
+            document.getElementById("driverId").value = "";
+            document.getElementById("driverName").value = "";
+            document.getElementById("driverEmail").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("assignedTruck").value = "";
+            
+            document.getElementById("driverModal").style.display = "block";
+        }
 
        function fetchDrivers() {
     $.ajax({
@@ -265,7 +286,7 @@ function fetchTripCounts() {
             $('#driverTableBody').append(row);
         });
     } else {
-        $('#driverTableBody').append("<tr><td colspan='8'>No drivers found</td></tr>");
+        $('#driverTableBody').append("<tr><td colspan='10'>No drivers found</td></tr>");
     }
     
     updatePagination();
@@ -348,14 +369,17 @@ function fetchTripCounts() {
                 if (data.success) {
                     const driver = data.driver;
                     
+                    document.getElementById("modalTitle").textContent = "Edit Driver";
+                    document.getElementById("modalMode").value = "edit";
+                    document.getElementById("saveButtonText").textContent = "Save Changes";
+                    document.getElementById("passwordHelp").style.display = "block";
+                    document.getElementById("password").required = false;
+                    
                     document.getElementById("driverId").value = driver.driver_id;
                     document.getElementById("driverName").value = driver.name;
                     document.getElementById("driverEmail").value = driver.email;
                     document.getElementById("password").value = '';
                     document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
-                    
-                
-                    
                     
                     document.getElementById("driverModal").style.display = "block";
                 } else {
@@ -368,7 +392,6 @@ function fetchTripCounts() {
             }
         });
     }
-
 
         function deleteDriver(driverId) {
             if (confirm("Are you sure you want to delete this driver?")) {
@@ -396,46 +419,88 @@ function fetchTripCounts() {
       document.getElementById("driverForm").addEventListener("submit", function(e) {
         e.preventDefault();
         
+        const mode = document.getElementById("modalMode").value;
         const formData = {
-            driverId: document.getElementById("driverId").value,
             name: document.getElementById("driverName").value,
             email: document.getElementById("driverEmail").value,
             password: document.getElementById("password").value,
-            assignedTruck: document.getElementById("assignedTruck").value,
-            mode: 'edit' // This matches your old version's logic
+            assigned_truck_id: document.getElementById("assignedTruck").value ? parseInt(document.getElementById("assignedTruck").value) : null
         };
         
-        $.ajax({
-            url: 'include/handlers/save_driver.php',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(formData),
-            success: function(data) {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Driver updated successfully!'
-                    });
-                    fetchDrivers();
-                    closeModal();
-                } else {
+        if (mode === 'add') {
+            // For adding new driver, use the same structure as register.js
+            const driver_id = Date.now().toString();
+            formData.driver_id = driver_id;
+            formData.firebase_uid = driver_id;
+            
+            $.ajax({
+                url: 'include/handlers/add_driver.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(data) {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Driver added successfully!'
+                        });
+                        fetchDrivers();
+                        closeModal();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error adding driver'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: data.message || 'Error updating driver'
+                        text: 'An error occurred while adding the driver.'
                     });
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred while updating the driver data.'
-                });
-            }
-        });
+            });
+        } else {
+            // For editing existing driver
+            formData.driverId = document.getElementById("driverId").value;
+            formData.mode = 'edit';
+            
+            $.ajax({
+                url: 'include/handlers/save_driver.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(data) {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Driver updated successfully!'
+                        });
+                        fetchDrivers();
+                        closeModal();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error updating driver'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while updating the driver data.'
+                    });
+                }
+            });
+        }
     });
 
         function searchDrivers() {
@@ -483,17 +548,19 @@ function fetchTripCounts() {
                         "<td>" + highlightText(driver.name) + "</td>" +
                         "<td>" + highlightText(driver.email) + "</td>" +
                         "<td>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
+                        "<td>" + highlightText(driver.total_completed || 0) + "</td>" +
+                        "<td>" + highlightText(driver.monthly_completed || 0) + "</td>" +
                         "<td>" + highlightText(driver.created_at) + "</td>" +
                         "<td>" + highlightText(formattedLastLogin) + "</td>" +
                         "<td class='actions'>" +
-                        "<button class='action-btn.edit-btn' data-tooltip='Edit Driver' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
-                        "<button class='action-btn.delete-btn' data-tooltip ='Delete Driver' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
+                        "<button class='action-btn edit-btn' data-tooltip='Edit Driver' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
+                        "<button class='action-btn delete-btn' data-tooltip='Delete Driver' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
                         "</td>" +
                         "</tr>";
                     $('#driverTableBody').append(row);
                 });
             } else {
-                $('#driverTableBody').append("<tr><td colspan='8'>No matching drivers found</td></tr>");
+                $('#driverTableBody').append("<tr><td colspan='10'>No matching drivers found</td></tr>");
             }
             
             $('#page-numbers').empty();
@@ -503,7 +570,7 @@ function fetchTripCounts() {
         }
         
         // Preview profile image when selected
-        document.getElementById('driverProfile').addEventListener('change', function(e) {
+        document.getElementById('driverProfile') && document.getElementById('driverProfile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();

@@ -25,7 +25,7 @@ try {
                                VALUES (?, ?, ?, ?, NOW())");
         
         $assignedTruck = !empty($data['assignedTruck']) ? $data['assignedTruck'] : null;
-        $password = !empty($data['password']) ? $data['password'] : null;
+        $password = !empty($data['password']) ? password_hash($data['password'], PASSWORD_DEFAULT) : null;
         
         $stmt->bind_param("ssss", $data['name'], $data['email'], $password, $assignedTruck);
         
@@ -53,9 +53,10 @@ try {
             $types .= "s";
         }
         
-        if (isset($data['password'])) {
+        // Handle password update - only update if password is provided
+        if (!empty($data['password'])) {
             $updateFields[] = "password = ?";
-            $params[] = $data['password'] ?: null;
+            $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
             $types .= "s";
         }
         
@@ -80,6 +81,10 @@ try {
         $stmt->bind_param($types, ...$params);
         
         if ($stmt->execute()) {
+            // If password was updated, also update Firebase
+            if (!empty($data['password'])) {
+                updateFirebaseDriver($data['driverId'], $data);
+            }
             echo json_encode(["success" => true, "message" => "Driver updated successfully"]);
         } else {
             echo json_encode(["success" => false, "message" => "Error updating driver: " . $stmt->error]);
@@ -89,6 +94,56 @@ try {
     $stmt->close();
 } catch (Exception $e) {
     echo json_encode(["success" => false, "message" => $e->getMessage()]);
+}
+
+function updateFirebaseDriver($driverId, $data) {
+    try {
+        $firebase_url = "https://mansartrucking1-default-rtdb.asia-southeast1.firebasedatabase.app/drivers/" . $driverId . ".json?auth=Xtnh1Zva11o8FyDEA75gzep6NUeNJLMZiCK6mXB7";
+        
+        // Get current data from Firebase first
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $firebase_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        $current_data = curl_exec($ch);
+        curl_close($ch);
+        
+        if ($current_data) {
+            $firebase_data = json_decode($current_data, true);
+            
+            // Update only the fields that were changed
+            if (!empty($data['name'])) {
+                $firebase_data['name'] = $data['name'];
+            }
+            if (!empty($data['email'])) {
+                $firebase_data['email'] = $data['email'];
+            }
+            if (!empty($data['password'])) {
+                $firebase_data['password'] = $data['password']; // Store plain password in Firebase
+            }
+            if (isset($data['assignedTruck'])) {
+                $firebase_data['assigned_truck_id'] = $data['assignedTruck'] ? intval($data['assignedTruck']) : null;
+            }
+            
+            // Update Firebase
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $firebase_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($firebase_data));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json'
+            ));
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            
+            curl_exec($ch);
+            curl_close($ch);
+        }
+    } catch (Exception $e) {
+        // Log error but don't fail the main operation
+        error_log("Firebase update failed: " . $e->getMessage());
+    }
 }
 
 $conn->close();

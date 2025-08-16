@@ -1,0 +1,206 @@
+<?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+file_put_contents('add_driver_log.txt', 
+    date('Y-m-d H:i:s') . " - Add Driver Request received\n" . 
+    file_get_contents("php://input") . "\n\n", 
+    FILE_APPEND);
+
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    echo json_encode(["success" => false, "message" => "Unauthorized access"]);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["success" => false, "message" => "Method not allowed"]);
+    exit;
+}
+
+require_once 'dbhandler.php';
+
+$host = "localhost";
+$db_name = "capstonedb"; 
+$username = "root";
+$password = ""; 
+
+try {
+    $input = file_get_contents("php://input");
+    $data = json_decode($input);
+    
+    if (!$data) {
+        throw new Exception("Invalid JSON input: " . $input);
+    }
+
+    file_put_contents('add_driver_log.txt', 
+        date('Y-m-d H:i:s') . " - JSON parsed successfully\n", 
+        FILE_APPEND);
+
+    // Validate required fields
+    if (
+        empty($data->name) ||
+        empty($data->email) ||
+        empty($data->password) ||
+        !isset($data->assigned_truck_id)
+    ) {
+        throw new Exception("Missing required fields");
+    }
+
+    file_put_contents('add_driver_log.txt', 
+        date('Y-m-d H:i:s') . " - Data validation passed\n", 
+        FILE_APPEND);
+
+    // Generate driver_id and firebase_uid (same as register.js)
+    $driver_id = $data->driver_id;
+    $firebase_uid = $data->firebase_uid;
+
+    // Connect to MySQL
+    $mysql_conn = new mysqli($host, $username, $password, $db_name);
+    
+    if ($mysql_conn->connect_error) {
+        throw new Exception("MySQL Connection failed: " . $mysql_conn->connect_error);
+    }
+
+    file_put_contents('add_driver_log.txt', 
+        date('Y-m-d H:i:s') . " - MySQL connection successful\n", 
+        FILE_APPEND);
+
+    // Check if email already exists
+    $check_email = "SELECT email FROM drivers_table WHERE email = ?";
+    $stmt = $mysql_conn->prepare($check_email);
+    
+    if (!$stmt) {
+        throw new Exception("Email check prepare failed: " . $mysql_conn->error);
+    }
+    
+    $stmt->bind_param("s", $data->email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        throw new Exception("Email already exists");
+    }
+
+    file_put_contents('add_driver_log.txt', 
+        date('Y-m-d H:i:s') . " - Email check passed\n", 
+        FILE_APPEND);
+
+    // Hash password for MySQL
+    $hashed_password = password_hash($data->password, PASSWORD_DEFAULT);
+
+    // Insert into MySQL
+    $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, password, assigned_truck_id, created_at) 
+              VALUES (?, ?, ?, ?, ?, ?, NOW())";
+              
+    $stmt = $mysql_conn->prepare($query);
+    
+    if (!$stmt) {
+        throw new Exception("MySQL Prepare statement failed: " . $mysql_conn->error);
+    }
+
+    file_put_contents('add_driver_log.txt', 
+        date('Y-m-d H:i:s') . " - MySQL SQL prepared successfully\n", 
+        FILE_APPEND);
+    
+    $stmt->bind_param(
+        "sssssi",
+        $driver_id,
+        $firebase_uid,
+        $data->name,
+        $data->email,
+        $hashed_password,
+        $data->assigned_truck_id
+    );
+
+    if (!$stmt->execute()) {
+        throw new Exception("MySQL Execute failed: " . $stmt->error);
+    }
+
+    file_put_contents('add_driver_log.txt', 
+        date('Y-m-d H:i:s') . " - MySQL insert successful\n", 
+        FILE_APPEND);
+
+    // Now save to Firebase
+    $firebase_url = "https://mansartrucking1-default-rtdb.asia-southeast1.firebasedatabase.app/drivers/" . $driver_id . ".json?auth=Xtnh1Zva11o8FyDEA75gzep6NUeNJLMZiCK6mXB7";
+    
+    $firebase_data = array(
+        "driver_id" => $driver_id,
+        "name" => $data->name,
+        "email" => $data->email,
+        "password" => $data->password, // Store plain password in Firebase as per your register.js logic
+        "assigned_truck_id" => intval($data->assigned_truck_id),
+        "created_at" => date('c'), // ISO 8601 format
+        "last_login" => null,
+        "location" => array(
+            "latitude" => 0,
+            "longitude" => 0,
+            "last_updated" => null
+        )
+    );
+
+    $firebase_json = json_encode($firebase_data);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $firebase_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $firebase_json);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Content-Type: application/json',
+        'Content-Length: ' . strlen($firebase_json)
+    ));
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+    $firebase_response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    if (curl_errno($ch)) {
+        $curl_error = curl_error($ch);
+        curl_close($ch);
+        throw new Exception("Firebase cURL Error: " . $curl_error);
+    }
+
+    curl_close($ch);
+
+    if ($http_code !== 200) {
+        throw new Exception("Firebase request failed with HTTP code: " . $http_code . " Response: " . $firebase_response);
+    }
+
+    file_put_contents('add_driver_log.txt', 
+        date('Y-m-d H:i:s') . " - Firebase save successful\n", 
+        FILE_APPEND);
+
+    http_response_code(201);
+    echo json_encode([
+        "success" => true,
+        "message" => "Driver added successfully to both MySQL and Firebase",
+        "driver_id" => $driver_id
+    ]);
+
+} catch (Exception $e) {
+    file_put_contents('add_driver_log.txt', 
+        date('Y-m-d H:i:s') . " - ERROR: " . $e->getMessage() . "\n", 
+        FILE_APPEND);
+    
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "Error: " . $e->getMessage()
+    ]);
+}
+?>
