@@ -49,333 +49,77 @@ if ($maintenanceResult->num_rows > 0) {
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
 <style>
-
- .shipments-container {
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .shipment-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 45px;
-        margin-bottom: 20px;
-    }
-
-    .shipment-card {
-        flex: 1 1 calc(33.333% - 20px);
-        max-width: 350px;
-        height:430px;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
-        padding: 10px;
-        contain:content;
-        white-space:wrap;
-        flex-shrink:0.8
-    }
-
-
-
-    .no-shipments {
-        text-align: center;
-        padding: 40px;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        color: #666;
-    }
-
-.shipment-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-}
-
-
-    .shipment-number {
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 5px;
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-    .info-label {
-        font-weight: bold;
-        color: #555;
-        display: block;
-        margin-bottom: 5px;
-        font-size: 14px;
-    }
-    .info-value {
-        font-weight:bolder;
-        color: #333;
-        font-size: 20px;
-    }
-
-
-    /* Responsive adjustments */
-    @media (max-width: 1024px) {
-        .shipment-card {
-            flex: 1 1 calc(50% - 20px);
-        }
-    }
-
-    @media (max-width: 768px) {
-        .shipment-card {
-            flex: 1 1 100%;
-        }
-    }
-
-.shipment-content {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.left-section {
-    flex: 2;
-    position: relative;
-    padding-left: 30px;
-
-}
-.right-section {
-    flex: 1;
-}
-
-.info-label {
-
-    color: #8d8b8bff;
-    display: block;
-    margin-bottom: 5px;
-     font-size: 14px;
-
-
-}
-
-.plate-number {
-    font-size: 20px;
-    font-weight: 700;
-    color: #333;
-}
-
-
-.divider {
-    border-top: 1px dashed #ccc;
-    margin: 15px 0;
-    width: 300%;
-}
-
-.route-container {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-    position: relative;
-}
-
-
-.route-section {
-    flex: 1;
-    position: relative;
-    padding-right: 30px;
-
-}
-.client-section {
-    flex: 1;
-    padding-left: 30px;
-
-}
-
-.route-visual {
-    position: relative;
-    height: 40px;
-    margin: 10px 0;
-}
-
-
-
-.info-section {
-    background-color: #ffffffff;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-       flex-shrink:1.2;
-}
-
-.vertical-route {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transform: translateX(-50%);
-    z-index: 1;
-}
-
-
-.route-line {
-        width: 2px;
-    flex-grow: 1;
-    background: linear-gradient(to bottom, #4CAF50, #2196F3);
-    z-index: 1;
-    margin: 0 auto;
-}
-.pointer {
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-bottom: 12px solid #4CAF50;
-    margin-bottom: -1px;
-    z-index: 2;
-     position: absolute;
-    top: 0;
-
-}
-
-.pin {
-    width: 12px;
-    height: 12px;
-    background-color: #2196F3;
-    border-radius: 50%;
-    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
-    margin-top: -1px;
-    z-index: 2;
-      position: absolute;
-    bottom: 0;
-
-}
-
-
-.departure {
-    margin-bottom: 15px;
-}
-
-.destination {
-    margin-top: 15px;
-
-}
-
-
-
-.platenum{
-  margin-top:40px;
-}
-.truck-image {
-    width: 150px;
-    flex-shrink: 0;
-    margin-right:20px
-}
-.header-columns {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    margin-top: 5px;
-}
-
-.header-column {
-    flex: 1;
-    padding: 0 10px;
-}
-
-
-.status {
-    font-size: 14px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    display: inline-block;
-    margin-top:10px;
-}
-
-.horizontal-route-container {
-    display: flex;
-    flex-direction: column;
-    height: 200px;
-    position: relative;
-    margin: 20px 0;
-}
-
-.horizontal-top-section {
-    display: flex;
-    justify-content: space-between;
-    align-content:center;
-}
-
-.horizontal-bottom-section {
-    margin-top: 30px;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.line {
-    position: relative;
-    height: 2px;
-    background: linear-gradient(to right, #4CAF50, #2196F3);
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-   margin-bottom:20px;
-}
-
-.horizontal-pointer {
-    width: 0;
-    height: 0;
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
-    border-left: 12px solid #4CAF50;
-    position: absolute;
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 11000;
     left: 0;
-    transform: translateY(20%);
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    overflow-y: auto; 
+    padding: 20px 0; 
 }
 
-.horizontal-pin {
-    width: 12px;
-    height: 12px;
-    background-color: #2196F3;
-    border-radius: 50%;
-    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
-    position: absolute;
-    right: 0;
-    transform: translateY(-220%);
+.modal-content {
+    background-color: #fff;
+    margin: 2% auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    max-width: 700px; 
+    max-height: 100vh; 
+    overflow-y: auto; 
+    position: relative;
+    width: 90%; 
 }
 
-
-.shipment-row.single-card {
-    justify-content: center;
+.trip-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
 }
 
-.shipment-row.single-card .shipment-card {
-    flex: 1 1 100%;
-    max-width: 80%;
-    height: auto;
-    min-height: 40px;
+.details-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
-.info-section-client,
-.info-section-platenum,
-.info-section-driver,
-.info-section-helper {
-    flex: 1;
+
+.section-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #333;
+    font-size: 16px;
+}
+
+.detail-row {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #555;
     min-width: 120px;
-    padding: 5px;
+    display: inline-block;
+    margin-right:5px;
 }
 
+.detail-value {
+    color: #333;
+    word-break: break-word;
+}
+
+.system-info {
+    grid-column: span 2;
+    background: #f0f7ff;
+}
 
 
 </style>
@@ -570,6 +314,7 @@ $eventsDataJson = json_encode($eventsData);
 </div> -->
 <div class="card-large">
     <div class="shipments-container">
+        <h4 class="shipment-title">Ongoing Trips <span class="otw-trips"><?php echo htmlspecialchars($ongoingCount); ?> </span></h4>
     <?php
 
     $enrouteTrips = array_filter($eventsData, function($trip) {
@@ -589,7 +334,7 @@ $eventsDataJson = json_encode($eventsData);
                     $departureDate = date('d-m-y g:ia', strtotime($trip['date']));
                     $statusClass = strtolower(str_replace(' ', '-', $trip['status']));
                 ?>
-                <div class="shipment-card">
+                <div class="shipment-card" data-trip-id="<?php echo htmlspecialchars($trip['id']); ?>">
                     <div class="shipment-header">
                         <img src="include/img/truck.png" alt="Truck" class="truck-image">
                         <div class="header-details">
@@ -1118,8 +863,9 @@ function fetchTripDetails(tripId) {
     });
 
 
-$(document).on('click', '.trip-details', function() {
-    var tripId = $(this).data('id');
+
+ $('.shipment-card').on('click', function() {
+     const tripId = $(this).data('trip-id');
 
     fetchTripDetails(tripId).then(function(response) {
         if (response.success) {
@@ -1218,25 +964,91 @@ document.addEventListener('DOMContentLoaded', function() {
 </footer>
 
 <div id="tripDetailsModal" class="modal">
-    <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-x: none;">
         <span class="close">&times;</span>
         <h3>Trip Details</h3>
-        <div id="tripDetailsContent" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <p><strong>Plate No:</strong> <span id="td-plate"></span></p>
-            <p><strong>Date:</strong> <span id="td-date"></span></p>
-            <p><strong>Driver:</strong> <span id="td-driver"></span></p>
-            <p><strong>Helper:</strong> <span id="td-helper"></span></p>
-            <p><strong>Dispatcher:</strong> <span id="td-dispatcher"></span></p>
-            <p><strong>Container No:</strong> <span id="td-container"></span></p>
-            <p><strong>Client:</strong> <span id="td-client"></span></p>
-            <p><strong>Destination:</strong> <span id="td-destination"></span></p>
-            <p><strong>Shipping Line:</strong> <span id="td-shipping"></span></p>
-            <p><strong>Consignee:</strong> <span id="td-consignee"></span></p>
-            <p><strong>Size:</strong> <span id="td-size"></span></p>
-            <p><strong>Cash Advance:</strong> <span id="td-cashadvance"></span></p>
-            <p><strong>Status:</strong> <span id="td-status" class="status"></span></p>
-            <p><strong>Last Modified By:</strong> <span id="td-modifiedby"></span></p>
-            <p><strong>Last Modified At:</strong> <span id="td-modifiedat"></span></p>
+        
+        <div class="trip-details-grid">
+            <div class="details-section">
+                <h4 class="section-title">Vehicle Informationisnm</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Plate No: </span>
+                    <span class="detail-value" id="td-plate"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Container No: </span>
+                    <span class="detail-value" id="td-container"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Size: </span>
+                    <span class="detail-value" id="td-size"></span>
+                </div>
+            </div>
+            
+            <div class="details-section">
+                <h4 class="section-title">Trip Information</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Date: </span>
+                    <span class="detail-value" id="td-date"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status: </span>
+                    <span class="detail-value"><span id="td-status" class="status"></span></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Destination: </span>
+                    <span class="detail-value" id="td-destination"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Cash Advance: </span>
+                    <span class="detail-value" id="td-cashadvance"></span>
+                </div>
+            </div>
+            
+            <div class="details-section">
+                <h4 class="section-title">Personnel sheneve</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Driver:  </span>
+                    <span class="detail-value" id="td-driver"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Helper: </span>
+                    <span class="detail-value" id="td-helper"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Dispatcher: </span>
+                    <span class="detail-value" id="td-dispatcher"></span>
+                </div>
+            </div>
+            
+            <div class="details-section">
+                <h4 class="section-title">Client Information</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Client: </span>
+                    <span class="detail-value" id="td-client"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Shipping Line: </span>
+                    <span class="detail-value" id="td-shipping"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Consignee: </span>
+                    <span class="detail-value" id="td-consignee"></span>
+                </div>
+            </div>
+            
+            <!-- System Information Section -->
+            <div class="details-section system-info">
+                <h4 class="section-title">System Information</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Last Modified By: </span>
+                    <span class="detail-value" id="td-modifiedby"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Last Modified At: </span>
+                    <span class="detail-value" id="td-modifiedat"></span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
