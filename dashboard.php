@@ -336,7 +336,7 @@ $eventsDataJson = json_encode($eventsData);
                 ?>
                 <div class="shipment-card" data-trip-id="<?php echo htmlspecialchars($trip['id']); ?>">
                     <div class="shipment-header">
-                        <img src="include/img/truck.png" alt="Truck" class="truck-image">
+                        <img src="include/img/truck2.png" alt="Truck" class="truck-image">
                         <div class="header-details">
                             <div class="plate-column">
                                 <span class="info-label">Container Number</span>

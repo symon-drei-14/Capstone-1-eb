@@ -51,7 +51,9 @@ while ($row = $result->fetch_assoc()) {
 echo json_encode([
     "success" => true,
     "admins" => $admins,
-    "total" => $total
+    "total" => $total,
+      "page" => $page,
+    "limit" => $limit
 ]);
 
 $stmt->close();

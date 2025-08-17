@@ -16,7 +16,53 @@ checkAccess();
     <link rel="stylesheet" href="include/css/adminmanagement.css">
 
 </head>
+<style>
+    .deleted-only {
+    display: none;
+}
 
+.show-deleted .deleted-only {
+    display: table-cell;
+}
+
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.table-info {
+    font-size: 14px;
+    color: #555;
+}
+
+
+.rows-per-page-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right:30px;
+}
+
+.rows-per-page-container label {
+    font-size: 14px;
+    color: #333;
+    margin-right: 5px;
+    border-radius:20px;
+}
+.rows-per-page-container select {
+    font-size: 14px;
+    color: black;
+    border-color: #33333328;
+    margin-right: 5px;
+    border-radius:10px;
+    padding: 5px;
+    margin: 5px;
+    max-width:200px;
+    width:auto;
+}
+    </style>
 
  <h3><i class="fa-solid fa-truck"></i>Admin Management</h3>
 <body>
@@ -103,7 +149,20 @@ checkAccess();
         Show Deleted Admins
     </label>
 </div>
-
+<div class="table-controls">
+    <div class="table-info" id="showingInfo"></div>
+   
+    <div class="rows-per-page-container">
+        <label for="rowsPerPage">Rows per page:</label>
+        <select id="rowsPerPage" onchange="changeRowsPerPage()">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+    </div>
+</div>
                 <br />
                
                 <div class="table-container">
@@ -171,6 +230,8 @@ checkAccess();
     </div>
 
     <script>
+
+        
         // Modal functions
         function openModal(modalId) {
             document.getElementById(modalId).style.display = "block";
@@ -271,9 +332,9 @@ function renderAdminsTable(admins, isSearchResult = false) {
     <td>${highlightText(admin.username)}</td>
     <td>${highlightText(admin.role || 'Full Admin')}</td>
     <td>${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
-    <td class="deleted-only">${highlightText(admin.deleted_by || '')}</td>
-    <td class="deleted-only">${highlightText(deletedAt)}</td>
-    <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
+   <td class="deleted-only">${highlightText(admin.deleted_by || '')}</td>
+<td class="deleted-only">${highlightText(deletedAt)}</td>
+<td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
     <td class="actions">
         ${admin.is_deleted ? '' : `<button class="icon-btn edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i></button>`}
         ${admin.is_deleted ? '' : `<button class="icon-btn delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i></button>`}
@@ -392,8 +453,9 @@ function restoreAdmin(adminId) {
 
         // Pagination variables
         let currentAdminPage = 1;
-        const rowsPerPage = 5;
+        let rowsPerPage = parseInt(document.getElementById('rowsPerPage').value) || 5;
         let totalAdmins = 0;
+        
 
         // Change admin page
         function changeAdminPage(direction) {
@@ -420,11 +482,15 @@ function restoreAdmin(adminId) {
     } else {
         table.classList.remove('show-deleted');
     }
+    
+    fetchAdminsPaginated(showDeleted);
 }
 
         // Fetch admins with pagination
 function fetchAdminsPaginated(showDeleted = false) {
-    fetch(`include/handlers/get_admins.php?page=${currentAdminPage}&limit=${rowsPerPage}&show_deleted=${showDeleted}`)
+    const searchTerm = document.getElementById('adminSearch').value.toLowerCase();
+ const url = `include/handlers/get_admins.php?page=${currentAdminPage}&limit=${rowsPerPage}&show_deleted=${showDeleted}&search=${encodeURIComponent(searchTerm)}`;    
+    fetch(url)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -439,7 +505,9 @@ function fetchAdminsPaginated(showDeleted = false) {
                 const totalPages = Math.ceil(totalAdmins / rowsPerPage);
                 document.getElementById("admin-page-info").textContent = `Page ${currentAdminPage} of ${totalPages || 1}`;
                 
-                // Update the checkbox state to match the current view
+
+                updateShowingInfo(data.admins.length, data.total);
+ 
                 document.getElementById('showDeletedCheckbox').checked = showDeleted;
             } else {
                 alert('Error fetching admins: ' + data.message);
@@ -480,10 +548,11 @@ function searchAdmins() {
         )});
                 
                 renderAdminsTable(filteredAdmins, true);
-                
                 // Update pagination info to show filtered results
+                 document.getElementById("showingInfo").textContent = 
+                    `Showing ${data.admins.length} of ${data.total} results`;
                 document.getElementById("admin-page-info").textContent = 
-                    `Showing ${filteredAdmins.length} result(s)`;
+                    `Showing search results`;
             } else {
                 alert('Error fetching admins: ' + data.message);
             }
@@ -573,6 +642,34 @@ function fullDeleteAdmin(adminId) {
         .catch(error => console.error('Error:', error));
     }
 }
+
+function changeRowsPerPage() {
+    rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+    currentAdminPage = 1; 
+    fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
+}
+
+function updateShowingInfo(currentCount, total) {
+    if (total === 0) {
+        document.getElementById('showingInfo').textContent = 'Showing 0 of 0';
+        return;
+    }
+    
+    const start = ((currentAdminPage - 1) * rowsPerPage) + 1;
+    const end = Math.min(start + currentCount - 1, total);
+    document.getElementById('showingInfo').textContent = `Showing ${start} to ${end} of ${total}`;
+}
+
+window.onload = function() {
+    document.getElementById('showDeletedCheckbox').addEventListener('change', toggleDeletedAdmins);
+    
+    // Initialize rows per page selector
+    const rowsPerPageSelect = document.getElementById('rowsPerPage');
+    rowsPerPageSelect.value = rowsPerPage;
+    rowsPerPageSelect.addEventListener('change', changeRowsPerPage);
+    
+    fetchAdminsPaginated();
+};
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
@@ -717,6 +814,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
 });
+
+
 </script>
 <footer class="site-footer">
 

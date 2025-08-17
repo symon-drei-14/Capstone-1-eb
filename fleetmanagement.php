@@ -85,6 +85,7 @@ checkAccess();
 <div class="stats-container-wrapper">
     <div class="stats-container" id="statsContainer">
                     <div class="stat-card">
+                         
                         <div class="stat-icon icon-terminal">
                             <i class="fas fa-truck-loading"></i>
                         </div>
@@ -92,6 +93,7 @@ checkAccess();
                             <div class="stat-value">8</div>
                             <div class="stat-label">In Terminal</div>
                         </div>
+                        
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon icon-enroute">
@@ -133,15 +135,17 @@ checkAccess();
 </div>
     <div class="main-content4">
             <div class="container">
-              
+                <div class="status-filter">
                 <div class="button-row">
                     <button class="add_trip" onclick="openTruckModal()">Add a truck</button>
                 </div>
-                <br>
-        
-                <div class="status-filter">
 
-    <select id="statusFilter" onchange="filterTrucksByStatus()">
+
+    <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
+    </div>
+        <select id="statusFilter" onchange="filterTrucksByStatus()">
         <option value="" disabled selected>Status Filter</option>
         <option value="all">All Statuses</option>
         <option value="In Terminal">In Terminal</option>
@@ -150,11 +154,6 @@ checkAccess();
         <option value="Overdue">Overdue</option>
         <option value="deleted">Deleted</option>
     </select>
-
-    <div class="search-container">
-        <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
-    </div>
 </div>
 
 <div class="table-controls">
@@ -177,7 +176,8 @@ checkAccess();
                         <thead>
                             <tr>
                                 <th onclick="sortTrucks('truck_id')">ID <span id="sortIndicator">↑</span></th>
-                                <th>Plate Number</th>
+                                <th>Optimum pride</th>
+                                <th>Plate No.</th>
                                 <th>Capacity</th>
                                 <th>Status</th>
                                 <th>Last Modified</th>
@@ -476,7 +476,9 @@ function searchTrucks() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         
         if (!searchTerm) {
-            renderTrucksTable();
+             currentStatusFilter = 'all';
+            document.getElementById('statusFilter').value = 'all';
+             fetchTrucks();
             return;
         }
     
@@ -493,12 +495,11 @@ function searchTrucks() {
         );
     });
     
-    // Temporarily use the filtered trucks for rendering
     const originalTrucks = trucksData;
     trucksData = filteredTrucks;
-    currentTruckPage = 1; // Reset to first page when searching
-    renderTrucksTable();
-    trucksData = originalTrucks; // Restore original data
+    currentTruckPage = 1; 
+    renderTrucksTable(searchTerm);
+    trucksData = originalTrucks; a
 }, 300);
 }
 
@@ -542,11 +543,17 @@ function renderTrucksTable() {
     tableBody.innerHTML = "";
 
      if (filteredTrucks.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center;">No trucks found matching your search</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center;">No trucks found matching your search</td></tr>`;
         updatePagination(0);
         updateShowingInfo(filteredTrucks);
         return;
     }
+     const highlightMatches = (text) => {
+        if (!searchTerm || !text) return text;
+        const str = text.toString();
+        const regex = new RegExp(searchTerm, 'gi');
+        return str.replace(regex, match => `<span class="highlight">${match}</span>`);
+    };
     
     pageData.forEach(truck => {
         const tr = document.createElement("tr");
@@ -561,40 +568,47 @@ function renderTrucksTable() {
         }
      
           tr.innerHTML = `
-    <td>${truck.truck_id}</td>
-    <td>${truck.plate_no}</td>
-    <td>${truck.capacity}</td>
-    <td><span class="status-${statusClass}">${statusText}</span></td>
-    <td>${truck.last_modified_by}<br>${formatDateTime(truck.last_modified_at)}</td>
-    <td>
-        <button class="icon-btn history" data-tooltip="View History" onclick="viewMaintenanceHistory(${truck.truck_id})">
-            <i class="fas fa-history"></i>
-        </button>
-    </td>
-    <td class="actions">
-        ${truck.is_deleted == 1 ? `
-            <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreTruck(${truck.truck_id})">
-              <i class="fas fa-trash-restore"></i>
-            </button>
-            ${window.userRole === 'Full Admin' ? 
-              `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
-                      <i class="fa-solid fa-ban"></i>
-              </button>` : ''}
-            <button class="icon-btn view-reason" data-tooltip="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
-                <i class="fas fa-info-circle"></i>
-            </button>
-        ` : `
-            <button class="icon-btn edit" data-tooltip="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteTruck(${truck.truck_id})">
-            
-                 <i class='fas fa-trash-alt'></i>
-            </button>
-        `}
-    </td>
-`;
-    tableBody.appendChild(tr);
+       <td>${highlightMatches(truck.truck_id)}</td>
+            <td>
+                <div class="truck-image-container">
+                    <img src="include/img/truck${truck.capacity == 20 ? '1' : '2'}.png" 
+                         alt="Truck ${truck.plate_no}" 
+                         class="truck-image"
+                         title="Plate: ${truck.plate_no}\nCapacity: ${truck.capacity}">
+                </div>
+            </td>
+            <td>${highlightMatches(truck.plate_no)}</td>
+            <td>${highlightMatches(truck.capacity)}</td>
+            <td><span class="status-${statusClass}">${highlightMatches(statusText)}</span></td>
+            <td>${highlightMatches(truck.last_modified_by)}<br>${formatDateTime(truck.last_modified_at)}</td>
+            <td>
+                <button class="icon-btn history" data-tooltip="View History" onclick="viewMaintenanceHistory(${truck.truck_id})">
+                    <i class="fas fa-history"></i>
+                </button>
+            </td>
+            <td class="actions">
+                ${truck.is_deleted == 1 ? `
+                    <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreTruck(${truck.truck_id})">
+                      <i class="fas fa-trash-restore"></i>
+                    </button>
+                    ${window.userRole === 'Full Admin' ? 
+                      `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
+                              <i class="fa-solid fa-ban"></i>
+                      </button>` : ''}
+                    <button class="icon-btn view-reason" data-tooltip="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                ` : `
+                    <button class="icon-btn edit" data-tooltip="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteTruck(${truck.truck_id})">
+                        <i class='fas fa-trash-alt'></i>
+                    </button>
+                `}
+            </td>
+        `;
+        tableBody.appendChild(tr);
     });
     updatePagination(filteredTrucks.length);
     updateShowingInfo(filteredTrucks);
