@@ -15,7 +15,7 @@ session_start();
         // Session expires after 30 minutes of inactivity
         session_unset();
         session_destroy();
-        header("Location: ../../login.php");
+        header("Location: ../login.php");
         exit();
     }
     
@@ -23,7 +23,7 @@ session_start();
     
     // Redirect to login if not logged in
     if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-        header("Location: ../../login.php");
+        header("Location: ../login.php");
         exit();
     }
 

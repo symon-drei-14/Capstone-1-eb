@@ -124,7 +124,7 @@ if ($maintenanceResult->num_rows > 0) {
 
 </style>
 <?php
-require_once __DIR__ . '/include/check_access.php';
+
 require 'include/handlers/dbhandler.php';
 
 // Fetch trip data
