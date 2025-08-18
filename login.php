@@ -68,7 +68,7 @@
         formData.append('action', 'login');
         
         // Add CSRF token in a real implementation
-        // formData.append('csrf_token', '<?php echo $_SESSION['csrf_token'] ?? ''; ?>');
+         formData.append('csrf_token', '<?php echo $_SESSION['csrf_token'] ?? ''; ?>');
         
         // Send login request to server
         fetch('include/handlers/login_process.php', {
