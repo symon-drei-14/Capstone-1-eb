@@ -12,9 +12,18 @@ checkAccess();
     <link rel="stylesheet" href="include/css/loading.css">
     <link rel="stylesheet" href="include/css/fleetmanagement.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
  
 </head>
+<style>
+.swal2-container {
+  z-index: 999999 !important;
+}    
+
+
+</style>
+
 <body>
     <header class="header">
     <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
@@ -370,7 +379,11 @@ function fetchTrucks() {
         function validatePlateNumber(plateNo) {
             const plateRegex = /^[A-Za-z]{2,3}-?\d{3,4}$/;
             if (!plateRegex.test(plateNo)) {
-                alert("Invalid plate number format. Please use format like ABC123 or ABC-1234");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Plate Number',
+                    text: 'Please use format like ABC123 or ABC-1234'
+                });
                 return false;
             }
             return true;
@@ -399,12 +412,22 @@ function fetchTrucks() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(isEditMode ? 'Truck updated successfully!' : 'Truck added successfully!');
+                   Swal.fire({
+                    icon: 'success',
+                    title: isEditMode ? 'Truck Updated' : 'Truck Added',
+                    text: isEditMode ? 'Truck updated successfully!' : 'Truck added successfully!',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
                     closeModal('truckModal');
                     fetchTrucks();
                      fetchTruckCounts();
                 } else {
-                    alert('Error: ' + data.message);
+                    Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message
+                });
                 }
             })
             .catch(error => {
@@ -420,7 +443,11 @@ function fetchTrucks() {
     if (truck) {
         // Check if truck is Enroute
         if (truck.display_status === 'Enroute' || truck.status === 'Enroute') {
-            alert("Cannot delete a truck that is currently Enroute. Please change its status first.");
+           Swal.fire({
+            icon: 'warning',
+            title: 'Cannot Delete Truck',
+            text: 'Cannot delete a truck that is currently Enroute. Please change its status first.'
+        });
             return;
         }
         
@@ -437,7 +464,11 @@ function performSoftDelete() {
     const deleteReason = document.getElementById('deleteReason').value;
     
     if (!deleteReason) {
-        alert("Please provide a reason for deletion");
+        Swal.fire({
+        icon: 'error',
+        title: 'Reason Required',
+        text: 'Please provide a reason for deletion'
+    });
         return;
     }
 
@@ -453,9 +484,14 @@ function performSoftDelete() {
     .then(response => response.json())
     .then(data => {
           if (data.success) {
-            alert('Truck has been deleted successfully!');
+              Swal.fire({
+            icon: 'error',
+            title: 'Soft Delete',
+            text: 'Truck has been deleted successfully!'
+        });
+            
             closeModal('deleteModal');
-            currentTruckPage = 1; // Reset to first page
+            currentTruckPage = 1; 
             fetchTrucks().then(() => {
                 updateShowingInfo(trucksData);
             });
@@ -619,30 +655,74 @@ function renderTrucksTable() {
 
 // Add this new function for full delete
 function fullDeleteTruck(truckId) {
-    if (confirm("Are you sure you want to PERMANENTLY delete this truck? This cannot be undone!")) {
-        fetch('include/handlers/truck_handler.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                action: 'fullDeleteTruck', 
-                truck_id: truckId
+    Swal.fire({
+        title: 'Permanent Deletion',
+        html: '<strong>Are you sure you want to PERMANENTLY delete this truck?</strong><br><br>This action cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete permanently!',
+        cancelButtonText: 'Cancel',
+        backdrop: 'rgba(0,0,0,0.8)',
+        allowOutsideClick: false,
+        customClass: {
+            container: 'swal2-top-container'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading indicator
+            Swal.fire({
+                title: 'Deleting Truck',
+                html: 'Permanently removing truck from system...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch('include/handlers/truck_handler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'fullDeleteTruck', 
+                    truck_id: truckId
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Truck has been permanently deleted!');
-                fetchTrucks();
-                  fetchTruckCounts();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Permanently Deleted',
+                        text: 'Truck has been permanently removed from the system',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        fetchTrucks();
+                        fetchTruckCounts();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Deletion Failed',
+                        text: data.message || 'Could not delete truck',
+                        footer: 'Please try again or contact support'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'Failed to connect to server',
+                    footer: 'Check your internet connection'
+                });
+            });
+        }
+    });
 }
-
-
 function viewMaintenanceHistory(truckId) {
     fetch(`include/handlers/maintenance_handler.php?action=getHistory&truckId=${truckId}`)
         .then(response => response.json())
@@ -807,30 +887,78 @@ function updateStatsCards(counts) {
         });
 
 
-        function restoreTruck(truckId) {
-    if (confirm("Are you sure you want to restore this truck?")) {
-        fetch('include/handlers/truck_handler.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                action: 'restoreTruck', 
-                truck_id: truckId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Truck has been restored successfully!');
-                fetchTrucks();
-                fetchTruckCounts();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-}
+       function restoreTruck(truckId) {
+    Swal.fire({
+        title: 'Restore Truck',
+        text: 'Are you sure you want to restore this truck?',
+        icon: 'question',
+        showCancelButton: true,
+         confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, restore it!',
+        cancelButtonText: 'No, keep it',
+        confirmButtonColor: '#28a745', 
+        cancelButtonColor: '#6c757d',  // Gray for cancel
+        customClass: {
+            confirmButton: 'btn-confirm',
+            cancelButton: 'btn-cancel',
+            popup: 'swal-restore-popup' 
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading indicator
+            Swal.fire({
+                title: 'Restoring Truck',
+                html: 'Please wait while we restore the truck...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
+            fetch('include/handlers/truck_handler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'restoreTruck', 
+                    truck_id: truckId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Truck has been restored successfully!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        fetchTrucks();
+                        fetchTruckCounts();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to restore truck'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while restoring the truck'
+                });
+            });
+        }
+    });
+}
 document.addEventListener('DOMContentLoaded', function() {
     // Get current page filename
     const currentPage = window.location.pathname.split('/').pop();

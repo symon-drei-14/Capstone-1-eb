@@ -20,9 +20,14 @@
         <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     </head>
-
+<style>
+    .swal2-container {
+  z-index: 999999 !important;
+}   
+    </style>
     <body>
         <?php
         require 'include/handlers/dbhandler.php';
@@ -702,7 +707,12 @@ let filteredEvents = [];
             }
         },
         error: function() {
-            alert('Server error occurred while loading trips');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Server error occurred while loading trips',
+                    });
+ 
         }
     });
 }
@@ -761,7 +771,7 @@ let filteredEvents = [];
                         <button class="icon-btn restore" data-tooltip="Restore" data-id="${trip.trip_id}">
                         <i class="fas fa-trash-restore"></i>
                         ${window.userRole === 'Full Admin' ? 
-                        `<button class="icon-btn full-delete" data-tooltip="Permanently Delete">
+                        `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" data-id="${trip.trip_id}" > 
                             <i class="fa-solid fa-ban"></i>
                         </button>` : ''}
                         </button>
@@ -991,7 +1001,12 @@ let filteredEvents = [];
                 }
             },
             error: function() {
-                alert('Server error occurred');
+                 Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Server error occurred',
+                    });
+            
             }
         });
     });
@@ -1439,7 +1454,12 @@ if (event.driver_id && event.status !== 'Cancelled') {
                 }
             },
             error: function() {
-                alert('Server error occurred while loading expenses');
+                 Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Server error occurred while loading expenses',
+                    });
+           
             }
         });
     });
@@ -1484,22 +1504,40 @@ if (event.driver_id && event.status !== 'Cancelled') {
                 cashAdvance: $('#addEventCashAdvance').val(),
                 status: $('#addEventStatus').val()
             }),
-            success: function(response) {
-                console.log('Raw response:', response);
-                if (response.success) {
-                    alert('Trip added successfully!');
+             success: function(response) {
+        console.log('Raw response:', response);
+        if (response.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Trip added successfully!',
+                timer: 2000,
+                showConfirmButton: false,
+                willClose: () => {
                     $('#addScheduleModal').hide();
                     location.reload();
-                } else {
-                    alert('Error: ' + response.message);
                 }
-            },
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: `Failed to add trip:<br><br>${response.message || 'Unknown error occurred'}`,
+                confirmButtonColor: '#3085d6'
+            });
+        }
+    },
             error: function(xhr, status, error) {
                 console.log('XHR:', xhr);
                 console.log('Status:', status);
                 console.log('Error:', error);
                 console.log('Response Text:', xhr.responseText);
-                alert('Server error occurred. Check console for details.');
+                 Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Server error occurred. Check console for details.',
+                    });
+             
             }
         });
 
@@ -1577,10 +1615,10 @@ function validateEditReasons() {
 
 
             // Edit form submit handler
-       $('#editForm').on('submit', function(e) {
+      $('#editForm').on('submit', function(e) {
     e.preventDefault();
     
-   
+    // Validate edit reasons
     if ($('input[name="editReason"]:checked').length === 0) {
         Swal.fire({
             icon: 'error',
@@ -1589,6 +1627,18 @@ function validateEditReasons() {
             confirmButtonColor: '#3085d6'
         });
         return; 
+    }
+    
+    // Check if "Other" is selected but textarea is empty
+    if ($('#reason6').is(':checked') && $('#otherReasonText').val().trim() === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing Information',
+            text: 'Please specify the "Other" reason for editing this trip',
+            confirmButtonColor: '#3085d6'
+        });
+        $('#otherReasonText').focus();
+        return;
     }
     
     var selectedDriver = $('#editEventDriver').val();
@@ -1601,13 +1651,12 @@ function validateEditReasons() {
 
         var editReasons = [];
         $('input[name="editReason"]:checked').each(function() {
-            editReasons.push($(this).val());
+            if ($(this).val() === 'Other') {
+                editReasons.push('Other: ' + $('#otherReasonText').val().trim());
+            } else {
+                editReasons.push($(this).val());
+            }
         });
-        
-        var otherReason = $('#otherReasonText').val();
-        if (otherReason && editReasons.includes('Other')) {
-            editReasons[editReasons.indexOf('Other')] = 'Other: ' + otherReason;
-        }
         
         $.ajax({
             url: 'include/handlers/trip_operations.php',
@@ -1633,17 +1682,17 @@ function validateEditReasons() {
             }),
             success: function(response) {
                 if (response.success) {
-                   
                     Swal.fire({
                         icon: 'success',
-                        title: 'Success',
-                        text: 'Trip updated successfully!',
+                        title: 'Success!',
+                        text: 'Trip has been updated successfully',
                         timer: 2000,
-                        showConfirmButton: false
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    }).then(() => {
+                        $('#editModal').hide();
+                        location.reload();
                     });
-                  
-                    $('#editModal').hide();
-                    location.reload(); 
                 } else {
                     Swal.fire({  
                         icon: 'error',
@@ -1651,13 +1700,6 @@ function validateEditReasons() {
                         text: response.message || 'Failed to update trip'
                     });
                 }
-            },
-            error: function() {
-                Swal.fire({  
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Server error occurred'
-                });
             }
         });
     });
@@ -1668,32 +1710,51 @@ function validateEditReasons() {
         var deleteReason = $('#deleteReason').val();
         
         if (!deleteReason) {
-            alert('Please provide a reason for deletion');
-            return;
+        Swal.fire({
+            icon: 'warning',
+            title: 'Required',
+            text: 'Please provide a reason for deletion'
+        });
+        return;
         }
         
-        $.ajax({
-            url: 'include/handlers/trip_operations.php',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                action: 'delete',
-                id: eventId,
-                reason: deleteReason
-            }),
-            success: function(response) {
-                if (response.success) {
-                    alert('Trip marked as deleted successfully!');
-                    $('#deleteConfirmModal').hide();
-                    location.reload(); 
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            },
-            error: function() {
-                alert('Server error occurred');
-            }
+       $.ajax({
+    url: 'include/handlers/trip_operations.php',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+        action: 'delete',
+        id: eventId,
+        reason: deleteReason
+    }),
+    success: function(response) {
+        if (response.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Trip marked as deleted successfully!',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                $('#deleteConfirmModal').hide();
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: response.message || 'Failed to delete trip'
+            });
+        }
+    },
+    error: function() {
+        Swal.fire({
+            icon: 'error',
+            title: 'Server Error',
+            text: 'An error occurred while processing your request'
         });
+    }
+});
     });
             // Initial render
             renderTable();
@@ -1743,67 +1804,68 @@ function validateEditReasons() {
         }
     }
 
+$(document).on('click', '.icon-btn.full-delete', function(e) {
+    e.stopPropagation(); // Prevent event bubbling to parent elements
+    
+    const tripId = $(this).data('id');
+    const $row = $(this).closest('tr');
 
-    $(document).on('click', '.icon-btn.full-delete', function() {
-        const tripId = $(this).closest('.icon-btn.restore').data('id');
-        const $row = $(this).closest('tr');
+    Swal.fire({
+        title: 'Permanently Delete Trip?',
+        text: "This action cannot be undone! The trip will be permanently deleted from the database.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete permanently!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'include/handlers/trip_operations.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'full_delete',
+                    id: tripId
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        // Update stats cards with the returned data
+                        $('.stat-value').eq(0).text(response.stats.pending);
+                        $('.stat-value').eq(1).text(response.stats.enroute);
+                        $('.stat-value').eq(2).text(response.stats.completed);
+                        $('.stat-value').eq(3).text(response.stats.cancelled);
+                        $('.stat-value').eq(4).text(response.stats.total);
 
-        Swal.fire({
-            title: 'Permanently Delete Trip?',
-            text: "This action cannot be undone! The trip will be permanently deleted from the database.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete permanently!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: 'include/handlers/trip_operations.php',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        action: 'full_delete',
-                        id: tripId
-                    }),
-                    success: function(response) {
-                        if (response.success) {
-                            // Update stats cards with the returned data
-                            $('.stat-value').eq(0).text(response.stats.pending);
-                            $('.stat-value').eq(1).text(response.stats.enroute);
-                            $('.stat-value').eq(2).text(response.stats.completed);
-                            $('.stat-value').eq(3).text(response.stats.cancelled);
-                            $('.stat-value').eq(4).text(response.stats.total);
-
-                            // Remove the row from the table
-                            $row.remove();
-                            
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted!',
-                                text: 'The trip has been permanently deleted.',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: response.message || 'Failed to delete trip'
-                            });
-                        }
-                    },
-                    error: function() {
+                        // Remove the row from the table
+                        $row.remove();
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: 'The trip has been permanently deleted.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Server error occurred'
+                            text: response.message || 'Failed to delete trip'
                         });
                     }
-                });
-            }
-        });
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Server error occurred'
+                    });
+                }
+            });
+        }
     });
+});
 
     function loadDeletedTrips() {
         $.ajax({
@@ -1848,11 +1910,21 @@ function validateEditReasons() {
         });
     }
 
-    $(document).on('click', '.icon-btn.restore', function() {
-        const tripId = $(this).data('id');
+  $(document).on('click', '.icon-btn.restore', function() {
+    const tripId = $(this).data('id');
     const $row = $(this).closest('tr');
 
-        if (confirm('Are you sure you want to restore this trip?')) {
+    Swal.fire({
+        title: 'Restore Trip?',
+        text: "Are you sure you want to restore this trip?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, restore it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
             $.ajax({
                 url: 'include/handlers/trip_operations.php',
                 type: 'POST',
@@ -1881,16 +1953,24 @@ function validateEditReasons() {
                         });
                         renderTable(); // Refresh the table
                     } else {
-                        alert('Error: ' + response.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to restore trip'
+                        });
                     }
                 },
                 error: function() {
-                    alert('Server error occurred');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Server error occurred while restoring trip'
+                    });
                 }
             });
         }
     });
-
+});
 
     document.addEventListener('DOMContentLoaded', function() {
         // Get current page filename
@@ -1940,12 +2020,25 @@ function validateEditReasons() {
         const otherCheckbox = document.getElementById('reason6');
         const otherReasonText = document.getElementById('otherReasonText').value.trim();
         
-        if (otherCheckbox.checked && otherReasonText === '') {
-            e.preventDefault();
-            alert('Please specify the other reason');
-            document.getElementById('otherReasonText').focus();
-        }
-    });
+       if (otherCheckbox.checked && otherReasonText === '') {
+        e.preventDefault();
+        
+        // Use SweetAlert instead of basic alert
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please specify the other reason for editing this trip',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3085d6',
+            didClose: () => {
+                // Focus on the textarea after alert is closed
+                document.getElementById('otherReasonText').focus();
+            }
+        });
+        
+        return false;
+    }
+});
 
 $('#viewChecklistBtn').on('click', function() {
     var tripId = $('#editEventId').val();
@@ -1985,11 +2078,20 @@ $('#viewChecklistBtn').on('click', function() {
                 
                 $('#checklistModal').show();
             } else {
-                alert('No checklist data found for this trip');
+                Swal.fire({
+                icon: 'info',
+                title: 'No Data',
+                text: 'No checklist data found for this trip'
+                });
+               
             }
         },
         error: function() {
-            alert('Server error occurred while loading checklist');
+            Swal.fire({
+            icon: 'error',
+            title: 'Server Error',
+            text: 'Failed to load checklist data'
+            });
         }
     });
 });
@@ -2052,7 +2154,7 @@ function updateTableInfo(totalItems, currentItemsCount) {
 
 
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script src="include/js/logout-confirm.js"></script>
 <div id="admin-loading" class="admin-loading">
   <div class="admin-loading-container">

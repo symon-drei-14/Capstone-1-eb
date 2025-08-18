@@ -459,7 +459,7 @@ button[type="submit"]:hover {
 
         .main-content3 {
             width: 98vw;
-            height: 120vh; 
+            height: auto; 
             background-color: #ffffff;
             border-radius: 10px;
             box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;

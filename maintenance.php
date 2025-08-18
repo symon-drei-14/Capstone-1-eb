@@ -16,8 +16,14 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
     </head>
-
+<style>
+    .swal2-container {
+  z-index: 999999 !important;
+}   
+    </style>
     <body>
 
    <header class="header">
@@ -451,6 +457,7 @@
     for (const field of requiredFields) {
         const element = document.getElementById(field.id);
         if (!element || !element.value) {
+            
             alert(`Please fill in the ${field.name} field`);
             if (element) element.focus();
             return false;
@@ -460,7 +467,12 @@
     // Check at least one remark is selected
     const remarkCheckboxes = document.querySelectorAll('input[name="remarks[]"]:checked');
     if (remarkCheckboxes.length === 0) {
-        alert("Please select at least one maintenance remark.");
+        Swal.fire({
+    title: 'Please select at least one maintenance remark.',
+    icon: 'info',
+    confirmButtonText: 'OK'
+});
+
         return false;
     }
     
@@ -469,7 +481,12 @@
         const today = new Date();
         const inspectionDate = new Date(document.getElementById("date").value);
         if (inspectionDate < today) {
-            alert("Inspection date must be today or in the future");
+            Swal.fire({
+            title: 'Inspection date must be today if emergency keneme or in the future kung preventive chuvabels',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+                
             document.getElementById("date").focus();
             return false;
         }
@@ -669,24 +686,69 @@
     }
 
     // Add this new function for full delete
-    function fullDeleteMaintenance(id) {
-        if (confirm("Are you sure you want to PERMANENTLY delete this maintenance record? This cannot be undone!")) {
-            fetch(`include/handlers/maintenance_handler.php?action=fullDelete&id=${id}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Maintenance record permanently deleted!");
-                    loadMaintenanceData();
-                } else {
-                    alert("Error: " + (data.message || "Unknown error"));
-                }
-            })
-            .catch(error => {
-                console.error("Error deleting record: " + error);
-                alert("Failed to delete maintenance record.");
-            });
+   function fullDeleteMaintenance(id) {
+    Swal.fire({
+        title: 'Permanent Deletion',
+        html: '<strong>Are you sure you want to PERMANENTLY delete this maintenance record?</strong><br><br>This action cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete permanently!',
+        cancelButtonText: 'Cancel',
+        backdrop: 'rgba(0,0,0,0.7)',
+        allowOutsideClick: false,
+        customClass: {
+            container: 'swal2-top-container',
+            popup: 'swal2-delete-popup'
         }
-    }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+                title: 'Deleting Record',
+                html: 'Please wait while we permanently remove this record...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`include/handlers/maintenance_handler.php?action=fullDelete&id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    Swal.close();
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success',
+                            text: 'Maintenance record has been permanently deleted!',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            loadMaintenanceData();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || "Failed to delete record",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error deleting record:", error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to delete maintenance record. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                });
+        }
+    });
+}
 
 
             function formatDateTime(datetimeString) {
@@ -965,9 +1027,16 @@
             });
             
             if (editReasons.length === 0) {
-                alert("Please select at least one reason for editing this record.");
-                return;
-            }
+            swalInstance.close();
+            Swal.fire({
+                title: 'Edit Reason Required',
+                text: 'Please select at least one reason for editing this record.',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
         }
         
         // Collect remarks
@@ -985,7 +1054,12 @@
         });
         
         if (remarks.length === 0) {
-            alert("Please select at least one maintenance remark.");
+            Swal.fire({
+            title: 'Please select at least one maintenance remark.',
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+    
             return;
         }
         
@@ -998,7 +1072,7 @@
             truckId: parseInt(document.getElementById("truckId").value),
             licensePlate: document.getElementById("licensePlate").value,
             date: document.getElementById("date").value,
-            remarks: JSON.stringify(remarks), // Convert array to JSON string
+            remarks: JSON.stringify(remarks), 
             status: document.getElementById("status").value,
             supplier: document.getElementById("supplier").value,
             cost: parseFloat(document.getElementById("cost").value || 0),
@@ -1007,27 +1081,51 @@
         };
         
         $.ajax({
-            url: 'include/handlers/maintenance_handler.php?action=' + action,
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(formData),
-            success: function(response) {
-                if (response.success) {
+        url: 'include/handlers/maintenance_handler.php?action=' + (isEditing ? 'edit' : 'add'),
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            Swal.close();
+            if (response.success) {
+                Swal.fire({
+                    title: 'Success',
+                    text: isEditing ? 'Maintenance record updated successfully!' : 'Maintenance record added successfully!',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
                     closeModal();
                     loadMaintenanceData();
                     updateStatsCards();
-                    alert(isEditing ? "Maintenance record updated successfully!" : "Maintenance record added successfully!");
-                } else {
-                    alert("Error: " + (response.message || "Unknown error"));
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error saving record: " + error);
-                alert("Failed to save maintenance record. Please check console for details.");
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: response.message || 'An unknown error occurred',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn-confirm-error'
+                    }
+                });
             }
-        });
-    }
-
+        },
+        error: function(xhr, status, error) {
+            Swal.close();
+            Swal.fire({
+                title: 'Error',
+                html: 'Failed to save maintenance record.<br><br>Error details: ' + error,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn-confirm-error'
+                }
+            });
+            console.error("Error saving record:", error);
+        }
+    });
+}
     document.getElementById('otherRemarkText').addEventListener('input', function() {
         const otherCheckbox = document.querySelector('input[name="remarks[]"][value="Other"]');
         if (this.value.trim() !== '') {
@@ -1074,7 +1172,12 @@
             })
             .catch(error => {
                 console.error("Error searching records:", error);
-                alert("Failed to search maintenance records.");
+                Swal.fire({
+                    title: 'Failed to search maintenance records.',
+                    icon: 'info',
+                    confirmButtonText: 'OK'
+                });
+        
             });
     }
             
@@ -1086,7 +1189,12 @@
         const deleteReason = prompt("Please enter the reason for deleting this record:");
         if (deleteReason === null) return; // User cancelled
         if (deleteReason.trim() === "") {
-            alert("You must provide a reason for deletion.");
+            Swal.fire({
+                title: 'You must provide a reason for deletion.',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+    
             return;
         }
         
@@ -1098,14 +1206,23 @@
                 if (response.success) {
                     loadMaintenanceData();
                     updateStatsCards();
-                    alert("Maintenance record deleted successfully!");
+                    Swal.fire({
+                        title: 'Maintenance record deleted successfully!',
+                        icon: 'info',
+                        confirmButtonText: 'OK'
+                    });
                 } else {
                     alert("Error: " + (response.message || "Unknown error"));
                 }
             },
             error: function(xhr, status, error) {
                 console.error("Error deleting record: " + error);
-                alert("Failed to delete maintenance record.");
+                Swal.fire({
+                    title: 'Failed to delete maintenance record',
+                    icon: 'info',
+                    confirmButtonText: 'OK'
+                });
+            
             }
         });
     }
@@ -1159,7 +1276,11 @@
                     },
                     error: function(xhr, status, error) {
                         console.error("Error loading history: " + error);
-                        alert("Failed to load maintenance history.");
+                        Swal.fire({
+                            title: 'Failed to load maintenance history.',
+                            icon: 'info',
+                            confirmButtonText: 'OK'
+                        });
                     }
                 });
             }
@@ -1273,30 +1394,79 @@
     }
 
             function restoreMaintenance(id) {
-        if (!confirm("Are you sure you want to restore this maintenance record?")) {
-            return;
+    Swal.fire({
+        title: 'Restore Maintenance Record',
+        html: 'Are you sure you want to restore this maintenance record?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, restore it',
+        cancelButtonText: 'No, cancel',
+        allowOutsideClick: false,
+        customClass: {
+            container: 'swal2-top-container',
+            popup: 'swal2-restore-popup'
         }
-        
-        $.ajax({
-            url: `include/handlers/maintenance_handler.php?action=restore&id=${id}`,
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    loadMaintenanceData();
-                    updateStatsCards();
-                    alert("Maintenance record restored successfully!");
-                } else {
-                    alert("Error: " + (response.message || "Unknown error"));
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading indicator
+            Swal.fire({
+                title: 'Restoring...',
+                html: 'Please wait while we restore the record',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error restoring record: " + error);
-                alert("Failed to restore maintenance record.");
-            }
-        });
-    }
+            });
 
+            $.ajax({
+                url: `include/handlers/maintenance_handler.php?action=restore&id=${id}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    Swal.close();
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Maintenance record restored successfully',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false,
+                            willClose: () => {
+                                loadMaintenanceData();
+                                updateStatsCards();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: response.message || 'Failed to restore record',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn-confirm-error'
+                            }
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.close();
+                    Swal.fire({
+                        title: 'Error',
+                        html: `Failed to restore maintenance record<br><br>${error}`,
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn-confirm-error'
+                        }
+                    });
+                    console.error("Error restoring record:", error);
+                }
+            });
+        }
+    });
+}
     function toggleDeletedRecords() {
         loadMaintenanceData();
     }
@@ -1345,7 +1515,7 @@ function updateShowingInfo(totalRecords, currentPageRecordsCount) {
     showingInfo.textContent = `Showing ${start} to ${end} of ${totalRecords} entries`;
 }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script src="include/js/logout-confirm.js"></script>
 <div id="admin-loading" class="admin-loading">
   <div class="admin-loading-container">
