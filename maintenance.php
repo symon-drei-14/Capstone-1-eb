@@ -222,17 +222,14 @@
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="maintenanceType">Maintenance Type:</label>
-                    <select id="maintenanceType" name="maintenanceType" required>
-                        <option value="preventive">Preventive Maintenance</option>
-                        <option value="emergency">Emergency Repair</option>
-                    </select>
+                    <label for="maintenanceTypeId">Maintenance Type:</label>
+                        <select id="maintenanceTypeId" name="maintenanceTypeId" required>
+                        </select>
                 </div>
                 
                 <div class="form-group">
                     <label for="truckId">Truck ID:</label>
                     <select id="truckId" name="truckId" required>
-                        <!-- Will be populated by JavaScript -->
                     </select>
                 </div>
             </div>
@@ -250,45 +247,9 @@
             </div>
             
             <div class="form-group2">
-                <label>Remarks:</label>
-                <div class="checkbox-grid">
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="remarks[]" value="Change Oil" id="remark-oil">
-                        <label for="remark-oil">Change Oil</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="remarks[]" value="Change Tires" id="remark-tires">
-                        <label for="remark-tires">Change Tires</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="remarks[]" value="Brake Inspection" id="remark-brake">
-                        <label for="remark-brake">Brake Inspection</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="remarks[]" value="Engine Check" id="remark-engine">
-                        <label for="remark-engine">Engine Check</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="remarks[]" value="Transmission Check" id="remark-transmission">
-                        <label for="remark-transmission">Transmission Check</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="remarks[]" value="Electrical System Check" id="remark-electrical">
-                        <label for="remark-electrical">Electrical System Check</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="remarks[]" value="Suspension Check" id="remark-suspension">
-                        <label for="remark-suspension">Suspension Check</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="remarks[]" value="Other" id="remark-other">
-                        <label for="remark-other">Other</label>
-                    </div>
-                </div>
-                
-                <div class="other-remark">
-                    <label for="otherRemarkText">Specify other remark:</label>
-                    <textarea id="otherRemarkText" name="otherRemarkText" rows="3" placeholder="Enter specific remark"></textarea>
+                <div class="form-group">
+                    <label for="remarks">Remarks:</label>
+                    <textarea id="remarks" name="remarks" rows="3" placeholder="Enter maintenance remarks"></textarea>
                 </div>
             </div>
             
@@ -304,8 +265,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="supplier">Supplier:</label>
-                    <input type="text" id="supplier" name="supplier">
+                    <label for="supplierId">Supplier:</label>
+                        <select id="supplierId" name="supplierId" required>
+                        </select>
                 </div>
             </div>
             
@@ -373,7 +335,6 @@
                 <span class="close" onclick="closeHistoryModal()">&times;</span>
                 <h2>Maintenance History</h2>
                 <div class="history-list" id="historyList">
-                    <!-- Will be populated by JavaScript -->
                 </div>
             </div>
         </div>
@@ -384,7 +345,6 @@
                 <span class="close" onclick="closeRemindersModal()">&times;</span>
                 <h2>Maintenance Reminders</h2>
                 <div class="reminders-list" id="remindersList">
-                    <!-- Will be populated by JavaScript -->
                 </div>
             </div>
         </div>
@@ -426,12 +386,13 @@
         }
 
  
-
-    $(document).ready(function() {
-        loadMaintenanceData();
-        fetchTrucksList();
-         updateStatsCards();
-    });
+$(document).ready(function() {
+    loadMaintenanceData();
+    fetchTrucksList();
+    loadMaintenanceTypes();
+    loadSuppliers();
+    updateStatsCards();
+});
 
       function updateDateTime() {
         const now = new Date();
@@ -446,53 +407,198 @@
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
-            function validateMaintenanceForm() {
+function validateMaintenanceForm() {
     const requiredFields = [
+        {id: 'maintenanceTypeId', name: 'Maintenance Type'},
         {id: 'truckId', name: 'Truck ID'},
+        {id: 'supplierId', name: 'Supplier'},
         {id: 'date', name: 'Date of Inspection'},
-        {id: 'status', name: 'Status'},
-        {id: 'maintenanceType', name: 'Maintenance Type'}
+        {id: 'status', name: 'Status'}
     ];
     
+    // Check each required field
     for (const field of requiredFields) {
         const element = document.getElementById(field.id);
-        if (!element || !element.value) {
-            
-            alert(`Please fill in the ${field.name} field`);
-            if (element) element.focus();
+        
+        if (!element) {
+            console.error(`Element with ID '${field.id}' not found`);
+            Swal.fire({
+                title: 'Form Error',
+                text: `Form field '${field.name}' is missing. Please refresh the page and try again.`,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+            return false;
+        }
+        
+        const value = element.value ? element.value.trim() : '';
+        
+        if (!value || value === '' || value === '0' || value === 'null') {
+            Swal.fire({
+                title: 'Required Field Missing',
+                text: `Please select/enter ${field.name}`,
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+            element.focus();
             return false;
         }
     }
-    
-    // Check at least one remark is selected
-    const remarkCheckboxes = document.querySelectorAll('input[name="remarks[]"]:checked');
-    if (remarkCheckboxes.length === 0) {
-        Swal.fire({
-    title: 'Please select at least one maintenance remark.',
-    icon: 'info',
-    confirmButtonText: 'OK'
-});
 
-        return false;
-    }
-    
-    // Additional validation - check if date is in the future for new records
-    if (!isEditing) {
-        const today = new Date();
-        const inspectionDate = new Date(document.getElementById("date").value);
-        if (inspectionDate < today) {
-            Swal.fire({
-            title: 'Inspection date must be today if emergency keneme or in the future kung preventive chuvabels',
+    // Validate remarks
+    const remarks = document.getElementById('remarks').value.trim();
+    if (!remarks) {
+        Swal.fire({
+            title: 'Remarks Required',
+            text: 'Please enter maintenance remarks',
             icon: 'warning',
             confirmButtonText: 'OK'
         });
-                
+        document.getElementById("remarks").focus();
+        return false;
+    }
+
+    // Validate date for new records
+    if (!isEditing) {
+        const today = new Date();
+        const inspectionDate = new Date(document.getElementById("date").value);
+        
+        today.setHours(0, 0, 0, 0);
+        inspectionDate.setHours(0, 0, 0, 0);
+
+        if (inspectionDate < today) {
+            Swal.fire({
+                title: 'Invalid Date',
+                text: 'Inspection date must be today or in the future',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
             document.getElementById("date").focus();
             return false;
         }
     }
     
     return true;
+}
+
+
+function loadMaintenanceTypes() {
+    fetch('include/handlers/maintenance_handler.php?action=getMaintenanceTypes')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.error('Non-JSON response from getMaintenanceTypes:', text);
+                    throw new Error('Server returned non-JSON response for maintenance types');
+                });
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.types) {
+                const select = document.getElementById('maintenanceTypeId');
+                if (select) {
+                    select.innerHTML = '<option value="">Select Maintenance Type</option>';
+                    data.types.forEach(type => {
+                        select.innerHTML += `<option value="${type.maintenance_type_id}">${type.type_name}</option>`;
+                    });
+                }
+            } else {
+                console.error('Invalid maintenance types data:', data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading maintenance types:', error);
+            const select = document.getElementById('maintenanceTypeId');
+            if (select) {
+                select.innerHTML = '<option value="">Error loading types</option>';
+            }
+        });
+}
+
+function loadSuppliers() {
+    fetch('include/handlers/maintenance_handler.php?action=getSuppliers')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.error('Non-JSON response from getSuppliers:', text);
+                    throw new Error('Server returned non-JSON response for suppliers');
+                });
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.suppliers) {
+                const select = document.getElementById('supplierId');
+                if (select) {
+                    select.innerHTML = '<option value="">Select Supplier</option>';
+                    data.suppliers.forEach(supplier => {
+                        select.innerHTML += `<option value="${supplier.supplier_id}">${supplier.name}</option>`;
+                    });
+                }
+            } else {
+                console.error('Invalid suppliers data:', data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading suppliers:', error);
+            // Show user-friendly error
+            const select = document.getElementById('supplierId');
+            if (select) {
+                select.innerHTML = '<option value="">Error loading suppliers</option>';
+            }
+        });
+}
+
+function testEndpoint() {
+    fetch('include/handlers/maintenance_handler.php?action=getCounts')
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            const contentType = response.headers.get('content-type');
+            console.log('Content-Type:', contentType);
+            
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.log('Non-JSON response body:', text);
+                    throw new Error('Server returned non-JSON response');
+                });
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch(error => {
+            console.error('Test error:', error);
+        });
+}
+
+console.log('To test your maintenance handler, run: testEndpoint()');
+
+function loadSuppliers() {
+    fetch('include/handlers/maintenance_handler.php?action=getSuppliers')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('supplierId');
+            select.innerHTML = '<option value="">Select Supplier</option>';
+            data.suppliers.forEach(supplier => {
+                select.innerHTML += `<option value="${supplier.supplier_id}">${supplier.name}</option>`;
+            });
+        });
 }
 
 
@@ -573,27 +679,21 @@
         });
 }
 
-        function changeRowsPerPage() {
-            const newRowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-            if (!isNaN(newRowsPerPage) && newRowsPerPage > 0) {
-                rowsPerPage = newRowsPerPage;
-                currentPage = 1; 
-                loadMaintenanceData();
-               
-                document.getElementById('rowsPerPage').value = rowsPerPage;
-            }
-        }
-
-    window.onload = function() {
-
-        rowsPerPage = parseInt(document.getElementById('rowsPerPage').value) || 5;
-        document.getElementById('rowsPerPage').value = rowsPerPage;
-        
-
-        document.getElementById('showDeletedCheckbox').addEventListener('change', toggleDeletedRecords);
+function changeRowsPerPage() {
+    const newRowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+    if (!isNaN(newRowsPerPage) && newRowsPerPage > 0) {
+        rowsPerPage = newRowsPerPage;
+        currentPage = 1; 
         loadMaintenanceData();
-        updateStatsCards();
-    };
+    }
+}
+
+window.onload = function() {
+    rowsPerPage = parseInt(document.getElementById('rowsPerPage').value) || 5;
+    document.getElementById('rowsPerPage').value = rowsPerPage;
+    loadMaintenanceData();
+    updateStatsCards();
+};
 
     function fetchAllRecordsForSearch() {
         let url = `include/handlers/maintenance_handler.php?action=getAllRecordsForSearch`;
@@ -611,79 +711,80 @@
             });
     }
 
-        function renderTable(data) {
-        const tableBody = document.querySelector("#maintenanceTable tbody");
-        tableBody.innerHTML = ""; 
-        
-        if (data.length === 0) {
-            const tr = document.createElement("tr");
-            tr.innerHTML = '<td colspan="9" class="text-center">No maintenance records found</td>';
-            tableBody.appendChild(tr);
-            return;
-        }
+function renderTable(data) {
+    const tableBody = document.querySelector("#maintenanceTable tbody");
+    tableBody.innerHTML = ""; 
+    
+    if (data.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = '<td colspan="9" class="text-center">No maintenance records found</td>';
+        tableBody.appendChild(tr);
+        return;
+    }
 
-        data.forEach(row => {
-            const tr = document.createElement("tr");
-            tr.setAttribute('data-status', row.status);
-            if (row.is_deleted) {
-                tr.classList.add('deleted-row');
-            }   
-            const actionsCell = row.is_deleted 
-                ? `
-                    <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreMaintenance(${row.maintenance_id})">
-                       <i class="fas fa-trash-restore"></i>
-                    </button>
-                    ${window.userRole === 'Full Admin' ? 
-                    `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenance_id})">
-                        <i class="fa-solid fa-ban"></i>
-                    </button>` : ''}
-                    <button class="icon-btn history" data-tooltip="View History" onclick="openHistoryModal(${row.truck_id})">
-                        <i class="fas fa-history"></i>
-                    </button>
-                `
-                : `
-                    <button class="icon-btn edit" data-tooltip="Edit" onclick="openEditModal(${row.maintenance_id}, ${row.truck_id}, '${row.licence_plate || ''}', '${row.date_mtnce}', '${row.remarks}', '${row.status}', '${row.supplier || ''}', ${row.cost}, '${row.maintenance_type || 'preventive'}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenance_id})">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                    <button class="icon-btn history" data-tooltip="View History" onclick="openHistoryModal(${row.truck_id})">
-                        <i class="fas fa-history"></i>
-                    </button>
-                `;
-            
-            tr.innerHTML = `
-                <td>${row.truck_id}</td>
-                <td>${row.licence_plate || 'N/A'}</td>
-                <td>${formatDate(row.date_mtnce)}</td>
-                <td>${row.remarks}</td>
-                <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-                <td>${row.supplier || 'N/A'}</td>
-                <td>₱ ${parseFloat(row.cost).toFixed(2)}</td>
-                <td>
-                    <strong>${row.last_modified_by}</strong><br>
-                    ${formatDateTime(row.last_modified_at)}<br>
-                    ${(row.edit_reasons || row.delete_reason) ? 
+    data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.setAttribute('data-status', row.status);
+        if (row.isDeleted) {
+            tr.classList.add('deleted-row');
+        }   
+        
+        const actionsCell = row.isDeleted 
+            ? `
+                <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreMaintenance(${row.maintenanceId})">
+                   <i class="fas fa-trash-restore"></i>
+                </button>
+                ${window.userRole === 'Full Admin' ? 
+                `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenanceId})">
+                    <i class="fa-solid fa-ban"></i>
+                </button>` : ''}
+                <button class="icon-btn history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
+                    <i class="fas fa-history"></i>
+                </button>
+            `
+            : `
+                <button class="icon-btn edit" data-tooltip="Edit" onclick="openEditModal(${row.maintenanceId}, ${row.truckId}, '${row.licensePlate || ''}', '${row.maintenanceDate}', '${row.remarks || ''}', '${row.status}', ${row.supplierId || 'null'}, ${row.cost || 0}, ${row.maintenanceTypeId || 'null'})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenanceId})">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <button class="icon-btn history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
+                    <i class="fas fa-history"></i>
+                </button>
+            `;
+        
+        tr.innerHTML = `
+            <td>${row.truckId}</td>
+            <td>${row.licensePlate || 'N/A'}</td>
+            <td>${formatDate(row.maintenanceDate)}</td>
+            <td>${row.remarks || 'N/A'}</td>
+            <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
+            <td>${row.supplierName || 'N/A'}</td>
+            <td>₱ ${parseFloat(row.cost || 0).toFixed(2)}</td>
+            <td>
+                <strong>${row.lastUpdatedBy || 'System'}</strong><br>
+                ${formatDateTime(row.lastUpdatedAt)}<br>
+                ${(row.editReason || row.deleteReason) ? 
                     `<button class="view-remarks-btn" 
                         data-reasons='${JSON.stringify({
-                            editReasons: row.edit_reasons ? JSON.parse(row.edit_reasons) : null,
-                            deleteReason: row.delete_reason
-                        })}'>View Remarks</button>` : ''}
-                </td>
-                <td class="actions">
-                    ${actionsCell}
-                </td>
-            `;
-            tableBody.appendChild(tr);
-        });
+                            editReasons: row.editReason ? [row.editReason] : null,
+                            deleteReason: row.deleteReason
+                        })}'>View Remarks</button>` : ''
+                }
+            </td>
+            <td class="actions">${actionsCell}</td>
+        `;
+        tableBody.appendChild(tr);
+    });
 
-        document.querySelectorAll('.view-remarks-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                showEditRemarks(this.getAttribute('data-reasons'));
-            });
+    // Add event listeners for view remarks buttons
+    document.querySelectorAll('.view-remarks-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            showEditRemarks(this.getAttribute('data-reasons'));
         });
-    }
+    });
+}
 
     // Add this new function for full delete
    function fullDeleteMaintenance(id) {
@@ -882,90 +983,28 @@
         }
     }
 
-   function openEditModal(id, truckId, licensePlate, date, remarks, status, supplier, cost, maintenanceType) {
+function openEditModal(id, truckId, licensePlate, date, remarks, status, supplierId, cost, maintenanceTypeId) {
     isEditing = true;
     document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
     document.getElementById("maintenanceId").value = id;
     document.getElementById("truckId").value = truckId;
     document.getElementById("licensePlate").value = licensePlate || '';
     document.getElementById("date").value = date;
+    document.getElementById("remarks").value = remarks || '';
     document.getElementById("status").value = status;
-    document.getElementById("supplier").value = supplier;
     document.getElementById("cost").value = cost;
-    document.getElementById("maintenanceType").value = maintenanceType || 'preventive';
-    
-    // Parse the remarks and set checkboxes
-    if (remarks) {
-        try {
-            // Try to parse as JSON first
-            let remarksArray;
-            try {
-                remarksArray = JSON.parse(remarks);
-            } catch (e) {
-                // If not JSON, treat as comma-separated string
-                remarksArray = remarks.split(',').map(item => item.trim());
-            }
-            
-            // Uncheck all checkboxes first
-            document.querySelectorAll('input[name="remarks[]"]').forEach(checkbox => {
-                checkbox.checked = false;
-            });
-            
-            // Check the appropriate checkboxes
-            remarksArray.forEach(remark => {
-                // Check if remark starts with "Other:"
-                if (typeof remark === 'string' && remark.startsWith("Other:")) {
-                    document.querySelector('input[name="remarks[]"][value="Other"]').checked = true;
-                    document.getElementById('otherRemarkText').value = remark.replace("Other:", "").trim();
-                } else {
-                    // Try to find exact match first
-                    const exactMatch = document.querySelector(`input[name="remarks[]"][value="${remark}"]`);
-                    if (exactMatch) {
-                        exactMatch.checked = true;
-                    } else {
-                        // If no exact match, check if it's one of our standard options
-                        const standardRemarks = [
-                            "Change Oil", "Change Tires", "Brake Inspection", 
-                            "Engine Check", "Transmission Check", 
-                            "Electrical System Check", "Suspension Check"
-                        ];
-                        
-                        if (standardRemarks.includes(remark)) {
-                            document.querySelector(`input[name="remarks[]"][value="${remark}"]`).checked = true;
-                        } else {
-                            // If not a standard option, put in Other
-                            document.querySelector('input[name="remarks[]"][value="Other"]').checked = true;
-                            document.getElementById('otherRemarkText').value = remark;
-                        }
-                    }
-                }
-            });
-        } catch (e) {
-            console.error("Error parsing remarks:", e);
-            // Fallback: if parsing fails, treat as single value
-            const checkbox = document.querySelector(`input[name="remarks[]"][value="${remarks}"]`);
-            if (checkbox) {
-                checkbox.checked = true;
-            } else if (remarks) {
-                document.querySelector('input[name="remarks[]"][value="Other"]').checked = true;
-                document.getElementById('otherRemarkText').value = remarks;
-            }
-        }
-    } else {
-        // Reset if no remarks
-        document.querySelectorAll('input[name="remarks[]"]').forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        document.getElementById('otherRemarkText').value = '';
-    }
-    
+
+    document.getElementById("maintenanceTypeId").value = maintenanceTypeId;
+    document.getElementById("supplierId").value = supplierId;
+
     document.getElementById("status").disabled = false;
+
     document.querySelector('.edit-reasons-section').style.display = 'block';
     document.querySelectorAll('input[name="editReason"]').forEach(checkbox => {
         checkbox.checked = false;
     });
     document.getElementById('otherReasonText').value = '';
-    
+
     document.getElementById("maintenanceModal").style.display = "block";
 }
 
@@ -1007,27 +1046,26 @@
         document.querySelector('.edit-reasons-section').style.display = 'none';
     }
             
-        function saveMaintenanceRecord() {
-        if (!validateMaintenanceForm()) {
-            return;
-        }
+function saveMaintenanceRecord() {
+    if (!validateMaintenanceForm()) {
+        return;
+    }
 
-        let editReasons = [];
-        if (isEditing) {
-            const checkboxes = document.querySelectorAll('input[name="editReason"]:checked');
-            checkboxes.forEach(checkbox => {
-                if (checkbox.value === "Other") {
-                    const otherReason = document.getElementById('otherReasonText').value.trim();
-                    if (otherReason) {
-                        editReasons.push("Other: " + otherReason);
-                    }
-                } else {
-                    editReasons.push(checkbox.value);
+    let editReasons = [];
+    if (isEditing) {
+        const checkboxes = document.querySelectorAll('input[name="editReason"]:checked');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.value === "Other") {
+                const otherReason = document.getElementById('otherReasonText').value.trim();
+                if (otherReason) {
+                    editReasons.push("Other: " + otherReason);
                 }
-            });
-            
-            if (editReasons.length === 0) {
-            swalInstance.close();
+            } else {
+                editReasons.push(checkbox.value);
+            }
+        });
+        
+        if (editReasons.length === 0) {
             Swal.fire({
                 title: 'Edit Reason Required',
                 text: 'Please select at least one reason for editing this record.',
@@ -1037,149 +1075,97 @@
             });
             return;
         }
-        }
-        
-        // Collect remarks
-        let remarks = [];
-        const remarkCheckboxes = document.querySelectorAll('input[name="remarks[]"]:checked');
-        remarkCheckboxes.forEach(checkbox => {
-            if (checkbox.value === "Other") {
-                const otherRemark = document.getElementById('otherRemarkText').value.trim();
-                if (otherRemark) {
-                    remarks.push("Other: " + otherRemark);
-                }
-            } else {
-                remarks.push(checkbox.value);
-            }
-        });
-        
-        if (remarks.length === 0) {
-            Swal.fire({
-            title: 'Please select at least one maintenance remark.',
-            icon: 'info',
-            confirmButtonText: 'OK'
-        });
+    }
     
-            return;
+    const maintenanceId = document.getElementById("maintenanceId").value;
+
+    const formData = {
+        truckId: parseInt(document.getElementById("truckId").value),
+        maintenanceTypeId: parseInt(document.getElementById("maintenanceTypeId").value),
+        supplierId: parseInt(document.getElementById("supplierId").value),
+        date: document.getElementById("date").value,
+        remarks: document.getElementById("remarks").value.trim(),
+        status: document.getElementById("status").value,
+        cost: parseFloat(document.getElementById("cost").value || 0),
+        editReasons: editReasons
+    };
+
+    if (isEditing && maintenanceId) {
+        formData.maintenanceId = parseInt(maintenanceId);
+    }
+
+    Swal.fire({
+        title: isEditing ? 'Updating Record' : 'Adding Record',
+        html: 'Please wait while we process your request...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
         }
-        
-        const form = document.getElementById("maintenanceForm");
-        const maintenanceId = document.getElementById("maintenanceId").value;
-        const action = isEditing ? 'edit' : 'add';
-        
-        const formData = {
-            maintenanceId: maintenanceId ? parseInt(maintenanceId) : null,
-            truckId: parseInt(document.getElementById("truckId").value),
-            licensePlate: document.getElementById("licensePlate").value,
-            date: document.getElementById("date").value,
-            remarks: JSON.stringify(remarks), 
-            status: document.getElementById("status").value,
-            supplier: document.getElementById("supplier").value,
-            cost: parseFloat(document.getElementById("cost").value || 0),
-            maintenanceType: document.getElementById("maintenanceType").value,
-            editReasons: editReasons
-        };
-        
-        $.ajax({
-        url: 'include/handlers/maintenance_handler.php?action=' + (isEditing ? 'edit' : 'add'),
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(formData),
-        success: function(response) {
-            Swal.close();
-            if (response.success) {
-                Swal.fire({
-                    title: 'Success',
-                    text: isEditing ? 'Maintenance record updated successfully!' : 'Maintenance record added successfully!',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    closeModal();
-                    loadMaintenanceData();
-                    updateStatsCards();
-                });
-            } else {
-                Swal.fire({
-                    title: 'Error',
-                    text: response.message || 'An unknown error occurred',
-                    icon: 'error',
-                    confirmButtonText: 'OK',
-                    customClass: {
-                        confirmButton: 'btn-confirm-error'
-                    }
-                });
-            }
+    });
+
+    const action = isEditing ? 'edit' : 'add';
+    
+    fetch(`include/handlers/maintenance_handler.php?action=${action}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         },
-        error: function(xhr, status, error) {
-            Swal.close();
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                console.error('Non-JSON response:', text);
+                throw new Error('Server returned non-JSON response. Check console for details.');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        Swal.close();
+        
+        if (data.success) {
+            Swal.fire({
+                title: 'Success!',
+                text: isEditing ? 'Maintenance record updated successfully!' : 'Maintenance record added successfully!',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                closeModal();
+                loadMaintenanceData();
+                updateStatsCards();
+            });
+        } else {
             Swal.fire({
                 title: 'Error',
-                html: 'Failed to save maintenance record.<br><br>Error details: ' + error,
+                text: data.message || 'An unknown error occurred',
                 icon: 'error',
-                confirmButtonText: 'OK',
-                customClass: {
-                    confirmButton: 'btn-confirm-error'
-                }
+                confirmButtonText: 'OK'
             });
-            console.error("Error saving record:", error);
         }
+    })
+    .catch(error => {
+        Swal.close();
+        console.error('Save error:', error);
+        
+        let errorMessage = 'Failed to save maintenance record.';
+        if (error.message.includes('non-JSON response')) {
+            errorMessage += ' The server may be experiencing issues. Please check the browser console and try again.';
+        } else {
+            errorMessage += ' Error: ' + error.message;
+        }
+        
+        Swal.fire({
+            title: 'Error',
+            html: errorMessage,
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
     });
 }
-    document.getElementById('otherRemarkText').addEventListener('input', function() {
-        const otherCheckbox = document.querySelector('input[name="remarks[]"][value="Other"]');
-        if (this.value.trim() !== '') {
-            otherCheckbox.checked = true;
-        }
-    });
-    
-
-    document.querySelector('input[name="remarks[]"][value="Other"]').addEventListener('change', function() {
-        if (!this.checked) {
-            document.getElementById('otherRemarkText').value = '';
-        }
-    });
-
-    function searchMaintenance() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        
-        if (searchTerm.trim() === '') {
-            // If search is empty, reload normal paginated data
-            currentPage = 1;
-            loadMaintenanceData();
-            return;
-        }
-        
-        // Fetch all records for searching
-        fetchAllRecordsForSearch()
-            .then(data => {
-                const filteredRecords = data.records.filter(record => {
-                    return (
-                        String(record.truck_id).toLowerCase().includes(searchTerm) ||
-                        (record.licence_plate && record.licence_plate.toLowerCase().includes(searchTerm)) ||
-                        (record.date_mtnce && formatDate(record.date_mtnce).toLowerCase().includes(searchTerm)) ||
-                        (record.remarks && record.remarks.toLowerCase().includes(searchTerm)) ||
-                        (record.status && record.status.toLowerCase().includes(searchTerm)) ||
-                        (record.supplier && record.supplier.toLowerCase().includes(searchTerm)) ||
-                        (record.cost && String(record.cost).toLowerCase().includes(searchTerm))
-                    );
-                });
-                
-                renderTable(filteredRecords);
-                updateShowingInfo(filteredRecords.length, filteredRecords.length);
-                // Hide pagination during search
-                document.querySelector('.pagination').style.display = 'none';
-            })
-            .catch(error => {
-                console.error("Error searching records:", error);
-                Swal.fire({
-                    title: 'Failed to search maintenance records.',
-                    icon: 'info',
-                    confirmButtonText: 'OK'
-                });
-        
-            });
-    }
             
     function deleteMaintenance(id) {
         if (!confirm("Are you sure you want to delete this maintenance record?")) {

@@ -3,6 +3,9 @@ body {
     background-color: #FCFAEE;
     width: 100%;
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100%;
 }
 
 .sidebar {
@@ -59,7 +62,7 @@ body {
 }
 
 .main-content {
-    margin: 30px 50px 44px 40px;
+    margin: 30px 40px 44px 20px;
     width: calc(100% - 0px);
     width: 96vw;
     height: 80vh;
@@ -68,7 +71,7 @@ body {
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     overflow-x: hidden;
     overflow-y: hidden;
-    padding-bottom: 791px;
+    padding-bottom: 700px;
 }
 
 .header2 {

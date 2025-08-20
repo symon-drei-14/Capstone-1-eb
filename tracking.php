@@ -23,7 +23,6 @@ checkAccess(); // No role needed—logic is handled internally
     font-size: 1.8rem;
     font-weight: 600;
     color: #2c3e50;
-    margin-left: -4rem;
     padding-bottom: 10px;
     border-bottom: 2px solid #a93129;
     width:97%;

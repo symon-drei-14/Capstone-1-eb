@@ -1,3 +1,12 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #FCFAEE;
+    width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
 
 h3 {
     font-family: 'Arial', sans-serif;

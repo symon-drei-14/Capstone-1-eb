@@ -2,54 +2,94 @@
 header("Content-Type: application/json");
 session_start();
 require 'dbhandler.php';
-
 // Get all maintenance records with pagination
 function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all', $showDeleted = false) {
     // First, update any pending records that are now overdue
-    $updateOverdue = $conn->prepare("UPDATE maintenance SET status = 'Overdue' 
+    $updateOverdue = $conn->prepare("UPDATE maintenance_table m SET status = 'Overdue' 
                                    WHERE status IN ('Pending', 'In Progress') 
-                                   AND date_mtnce < CURDATE()");
-    $updateOverdue->execute();
+                                   AND date_mtnce < CURDATE()
+                                   AND NOT EXISTS (
+                                       SELECT 1 FROM audit_logs_maintenance al 
+                                       WHERE al.maintenance_id = m.maintenance_id 
+                                       AND al.is_deleted = 1
+                                   )");
+    
+    if (!$updateOverdue) {
+        error_log("Failed to prepare updateOverdue query: " . $conn->error);
+    } else {
+        $updateOverdue->execute();
+    }
     
     // Then update truck statuses for any newly overdue maintenance
     $getOverdueTrucks = $conn->query("SELECT DISTINCT m.truck_id, t.plate_no 
-                                    FROM maintenance m
+                                    FROM maintenance_table m
                                     JOIN truck_table t ON m.truck_id = t.truck_id
                                     WHERE m.status = 'Overdue' 
-                                    AND m.is_deleted = 0
-                                    AND t.is_deleted = 0");
-    while ($row = $getOverdueTrucks->fetch_assoc()) {
-        // Update truck status to Overdue
-        $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Overdue' 
-                                     WHERE truck_id = ?");
-        $updateTruck->bind_param("i", $row['truck_id']);
-        $updateTruck->execute();
+                                    AND NOT EXISTS (
+                                        SELECT 1 FROM audit_logs_maintenance al 
+                                        WHERE al.maintenance_id = m.maintenance_id 
+                                        AND al.is_deleted = 1
+                                    )
+                                    AND NOT EXISTS (
+                                        SELECT 1 FROM audit_logs_trucks alt 
+                                        WHERE alt.truck_id = t.truck_id 
+                                        AND alt.is_deleted = 1
+                                    )");
+    
+    if ($getOverdueTrucks) {
+        while ($row = $getOverdueTrucks->fetch_assoc()) {
+            // Update truck status to Overdue
+            $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Overdue' 
+                                         WHERE truck_id = ?");
+            if ($updateTruck) {
+                $updateTruck->bind_param("i", $row['truck_id']);
+                $updateTruck->execute();
+            }
+        }
     }
 
     $offset = ($page - 1) * $rowsPerPage;
     
-    $sql = "SELECT 
-            m.maintenance_id,
-            m.truck_id,
-            m.maintenance_type,
-            m.licence_plate,
-            m.date_mtnce,
-            m.remarks,
-            m.status,
-            m.supplier,
-            m.cost,
-            m.last_modified_by,
-            m.last_modified_at,
-            m.edit_reasons,
-            m.is_deleted,
-            m.delete_reason
-            FROM maintenance m
-            LEFT JOIN truck_table t ON m.truck_id = t.truck_id";
+$sql = "SELECT 
+    m.maintenance_id AS maintenanceId,
+    m.truck_id AS truckId,
+    t.plate_no AS licensePlate,
+    m.date_mtnce AS maintenanceDate,
+    m.remarks,
+    m.status,
+    s.name AS supplierName,
+    m.supplier_id AS supplierId,
+    mt.type_name AS maintenanceTypeName,
+    m.maintenance_type_id AS maintenanceTypeId,
+    m.cost,
+    al.is_deleted AS isDeleted,
+    al.delete_reason AS deleteReason,
+    al.modified_by AS lastUpdatedBy,
+    al.modified_at AS lastUpdatedAt,
+    al.edit_reason AS editReason
+FROM maintenance_table m
+LEFT JOIN truck_table t 
+    ON m.truck_id = t.truck_id
+LEFT JOIN maintenance_types mt 
+    ON m.maintenance_type_id = mt.maintenance_type_id
+LEFT JOIN suppliers s 
+    ON m.supplier_id = s.supplier_id
+LEFT JOIN (
+    SELECT 
+        maintenance_id,
+        modified_by,
+        modified_at,
+        edit_reason,
+        is_deleted,
+        delete_reason,
+        ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) AS rn
+    FROM audit_logs_maintenance
+) al 
+    ON m.maintenance_id = al.maintenance_id 
+   AND al.rn = 1";
     
     $params = [];
     $types = '';
-    
-    // Add status filter
     $whereClauses = [];
     
     if ($statusFilter !== 'all') {
@@ -59,12 +99,13 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     }
     
     // Handle deleted records filter
-    if ($showDeleted) {
-        $whereClauses[] = "m.is_deleted = 1";
-    } else {
-        $whereClauses[] = "m.is_deleted = 0";
-    }
-    
+// Handle deleted records filter
+if ($showDeleted) {
+    $whereClauses[] = "COALESCE(al.is_deleted, 0) = 1";
+} else {
+    $whereClauses[] = "COALESCE(al.is_deleted, 0) = 0";
+}
+
     if (!empty($whereClauses)) {
         $sql .= " WHERE " . implode(" AND ", $whereClauses);
     }
@@ -89,10 +130,9 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     }
     
     // Get total count for pagination with the same filter
-    $countSql = "SELECT COUNT(*) as total FROM maintenance m";
+    $countSql = "SELECT COUNT(*) as total FROM maintenance_table m";
     $countParams = [];
     $countTypes = '';
-    
     $countWhereClauses = [];
     
     if ($statusFilter !== 'all') {
@@ -101,22 +141,29 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
         $countTypes .= "s";
     }
     
-    if ($showDeleted) {
-        $countWhereClauses[] = "m.is_deleted = 1";
-    } else {
-        $countWhereClauses[] = "m.is_deleted = 0";
-    }
+if ($showDeleted) {
+    $countWhereClauses[] = "EXISTS (
+        SELECT 1 FROM audit_logs_maintenance al 
+        WHERE al.maintenance_id = m.maintenance_id 
+          AND al.is_deleted = 1
+    )";
+} else {
+    $countWhereClauses[] = "NOT EXISTS (
+        SELECT 1 FROM audit_logs_maintenance al 
+        WHERE al.maintenance_id = m.maintenance_id 
+          AND al.is_deleted = 1
+    )";
+}
+
     
     if (!empty($countWhereClauses)) {
         $countSql .= " WHERE " . implode(" AND ", $countWhereClauses);
     }
     
     $countStmt = $conn->prepare($countSql);
-    
     if (!empty($countParams)) {
         $countStmt->bind_param($countTypes, ...$countParams);
     }
-    
     $countStmt->execute();
     $countResult = $countStmt->get_result();
     $totalRows = $countResult->fetch_assoc()['total'];
@@ -127,34 +174,53 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
         "totalPages" => $totalPages,
         "currentPage" => $page,
         "totalRecords" => $totalRows 
-        
     ];
 }
 
 function getMaintenanceCounts($conn) {
     $sql = "SELECT 
-            COUNT(*) as total,
-            SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending,
-            SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as in_progress,
-            SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed,
-            SUM(CASE WHEN status = 'Overdue' THEN 1 ELSE 0 END) as overdue,
-            SUM(CASE WHEN status = 'Completed' AND MONTH(date_mtnce) = MONTH(CURRENT_DATE()) 
-                      AND YEAR(date_mtnce) = YEAR(CURRENT_DATE()) THEN 1 ELSE 0 END) as completed_this_month
-            FROM maintenance
-            WHERE is_deleted = 0";
+    COUNT(*) as total,
+    SUM(CASE WHEN m.status = 'Pending' THEN 1 ELSE 0 END) as pending,
+    SUM(CASE WHEN m.status = 'In Progress' THEN 1 ELSE 0 END) as in_progress,
+    SUM(CASE WHEN m.status = 'Completed' THEN 1 ELSE 0 END) as completed,
+    SUM(CASE WHEN m.status = 'Overdue' THEN 1 ELSE 0 END) as overdue,
+    SUM(CASE WHEN m.status = 'Completed' 
+             AND MONTH(m.date_mtnce) = MONTH(CURRENT_DATE()) 
+             AND YEAR(m.date_mtnce) = YEAR(CURRENT_DATE()) 
+        THEN 1 ELSE 0 END) as completed_this_month
+FROM maintenance_table m
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM audit_logs_maintenance a
+    WHERE a.maintenance_id = m.maintenance_id
+      AND a.is_deleted = 1
+      AND a.modified_at = (
+            SELECT MAX(a2.modified_at)
+            FROM audit_logs_maintenance a2
+            WHERE a2.maintenance_id = m.maintenance_id
+      )
+);";
     
     $result = $conn->query($sql);
+    if (!$result) {
+    die("SQL Error in getMaintenanceCounts: " . $conn->error . " | SQL: " . $sql);
+}
     return $result->fetch_assoc();
 }
 
 // Get maintenance history for a specific truck
 function getMaintenanceHistory($conn, $truckId) {
-    $sql = "SELECT m.maintenance_id, m.date_mtnce, m.remarks, m.status, m.supplier, m.cost, 
-            m.last_modified_by, m.last_modified_at, t.plate_no as licence_plate
-            FROM maintenance m
-            LEFT JOIN truck_table t ON m.truck_id = t.truck_id
-           WHERE m.truck_id = ? AND t.is_deleted = 0
-            ORDER BY m.date_mtnce DESC";
+    $sql = "SELECT m.maintenance_id, m.date_mtnce, m.remarks, m.status, m.cost, 
+        mt.type_name as maintenance_type_name, s.name as supplier_name,
+        al.modified_by as last_modified_by, al.modified_at as last_modified_at, 
+        t.plate_no as licence_plate
+        FROM maintenance_table m
+        LEFT JOIN truck_table t ON m.truck_id = t.truck_id
+        LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+        LEFT JOIN suppliers s ON m.supplier_id = s.supplier_id
+        LEFT JOIN audit_logs_maintenance al ON m.maintenance_id = al.maintenance_id
+        WHERE m.truck_id = ? AND t.is_deleted = 0
+        ORDER BY m.date_mtnce DESC";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $truckId);
@@ -173,7 +239,13 @@ function getMaintenanceHistory($conn, $truckId) {
 
 
 function getMaintenanceReminders($conn) {
-    // First get all maintenance records that are due soon or overdue
+    // Debug: Check what records exist
+    $debugSql = "SELECT COUNT(*) as total_records FROM maintenance_table m LEFT JOIN truck_table t ON m.truck_id = t.truck_id";
+    $debugResult = $conn->query($debugSql);
+    $totalRecords = $debugResult->fetch_assoc()['total_records'];
+    error_log("Total maintenance records: " . $totalRecords);
+    
+    // Main query
     $sql = "SELECT 
             m.maintenance_id, 
             m.truck_id, 
@@ -182,14 +254,14 @@ function getMaintenanceReminders($conn) {
             m.remarks, 
             m.status, 
             DATEDIFF(m.date_mtnce, CURDATE()) as days_remaining
-            FROM maintenance m
+            FROM maintenance_table m
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id
             WHERE m.status != 'Completed' 
-            AND m.is_deleted = 0
             AND t.is_deleted = 0
             AND (DATEDIFF(m.date_mtnce, CURDATE()) <= 7 OR m.date_mtnce < CURDATE())
             ORDER BY days_remaining ASC";
     
+    error_log("Reminders query: " . $sql);
     $result = $conn->query($sql);
     
     if (!$result) {
@@ -197,8 +269,10 @@ function getMaintenanceReminders($conn) {
         return [];
     }
     
+    error_log("Reminders found: " . $result->num_rows);
+    
     $reminders = [];
-    $updateStmt = $conn->prepare("UPDATE maintenance SET status = 'Overdue' WHERE maintenance_id = ?");
+    $updateStmt = $conn->prepare("UPDATE maintenance_table SET status = 'Overdue' WHERE maintenance_id = ?");
     $updateTruckStmt = $conn->prepare("UPDATE truck_table SET status = 'Overdue' WHERE truck_id = ?");
     
     while ($row = $result->fetch_assoc()) {
@@ -276,27 +350,37 @@ case 'getRecords':
         echo json_encode(["reminders" => $reminders]);
         break;
 
-case 'getAllRecordsForSearch':
+    case 'getAllRecordsForSearch':
     $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
     $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
     
-    $sql = "SELECT 
-            m.maintenance_id,
-            m.truck_id,
-            m.maintenance_type,
-            m.licence_plate,
-            m.date_mtnce,
-            m.remarks,
-            m.status,
-            m.supplier,
-            m.cost,
-            m.last_modified_by,
-            m.last_modified_at,
-            m.edit_reasons,
-            m.is_deleted,
-            m.delete_reason
-            FROM maintenance m
-            LEFT JOIN truck_table t ON m.truck_id = t.truck_id";
+$sql = "SELECT 
+        m.maintenance_id,
+        m.truck_id,
+        m.maintenance_type_id,
+        mt.type_name AS maintenance_type,
+        t.plate_no AS licence_plate,
+        m.date_mtnce,
+        m.remarks,
+        m.status,
+        m.supplier_id,
+        s.name AS supplier,
+        m.cost,
+        m.is_deleted,
+        al.modified_by AS last_modified_by,
+        al.modified_at AS last_modified_at,
+        al.edit_reason AS edit_reasons,
+        al.delete_reason
+        FROM maintenance_table m
+        LEFT JOIN truck_table t ON m.truck_id = t.truck_id
+        LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+        LEFT JOIN suppliers s ON m.supplier_id = s.supplier_id
+        LEFT JOIN (
+            SELECT maintenance_id, modified_by, modified_at, edit_reason, delete_reason,
+                   ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
+            FROM audit_logs_maintenance
+        ) al ON m.maintenance_id = al.maintenance_id AND al.rn = 1";
+
     
     $params = [];
     $types = '';
@@ -341,97 +425,52 @@ case 'getAllRecordsForSearch':
   case 'add':
     $data = json_decode(file_get_contents("php://input"));
     
-    // First check if the truck exists and isn't deleted
-    $truckCheck = $conn->prepare("SELECT truck_id FROM truck_table WHERE truck_id = ? AND is_deleted = 0");
-    $truckCheck->bind_param("i", $data->truckId);
-    $truckCheck->execute();
-    $truckResult = $truckCheck->get_result();
-    
-    if ($truckResult->num_rows === 0) {
-        echo json_encode(["success" => false, "message" => "Truck not found or has been deleted"]);
-        exit;
-    }
-    
-    if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
-        $missing = [];
-        if (!isset($data->truckId)) $missing[] = 'truckId';
-        if (!isset($data->date)) $missing[] = 'date';
-        if (!isset($data->remarks)) $missing[] = 'remarks';
-        if (!isset($data->status)) $missing[] = 'status';
-        if (!isset($data->maintenanceType)) $missing[] = 'maintenanceType';
-        
-        echo json_encode(["success" => false, "message" => "Incomplete data. Missing: " . implode(', ', $missing)]);
+    if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceTypeId, $data->supplierId)) {
+        echo json_encode(["success" => false, "message" => "Missing required fields"]);
         exit;
     }
 
-    // Validate maintenance type
-    $validTypes = ['preventive', 'emergency'];
-    if (!in_array($data->maintenanceType, $validTypes)) {
-        echo json_encode(["success" => false, "message" => "Invalid maintenance type"]);
-        exit;
-    }
-
-    // Check for preventive maintenance frequency if not emergency
-    if ($data->maintenanceType === 'preventive') {
-        $checkStmt = $conn->prepare("SELECT date_mtnce FROM maintenance 
-                                    WHERE truck_id = ? AND status = 'Completed' 
-                                    AND maintenance_type = 'preventive'
-                                    ORDER BY date_mtnce DESC LIMIT 1");
-        $checkStmt->bind_param("i", $data->truckId);
-        $checkStmt->execute();
-        $checkResult = $checkStmt->get_result();
+    $username = $_SESSION['username'] ?? 'System'; 
+    $cost = isset($data->cost) ? floatval($data->cost) : 0;
+    
+    $conn->begin_transaction();
+    
+    try {
+        $stmt = $conn->prepare("INSERT INTO maintenance_table (truck_id, maintenance_type_id, supplier_id, date_mtnce, remarks, status, cost) 
+                               VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiisssd", 
+            $data->truckId,
+            $data->maintenanceTypeId,
+            $data->supplierId,
+            $data->date, 
+            $data->remarks,
+            $data->status,
+            $cost
+        );
         
-        if ($checkResult->num_rows > 0) {
-            $lastMaintenance = $checkResult->fetch_assoc()['date_mtnce'];
-            $lastDate = new DateTime($lastMaintenance);
-            $currentDate = new DateTime($data->date);
-            $interval = $lastDate->diff($currentDate);
-            
-            // Check if less than 6 months since last preventive maintenance
-            if ($interval->m < 6 && $interval->y == 0) {
-                echo json_encode([
-                    "success" => false, 
-                    "message" => "Preventive maintenance can only be scheduled every 6 months. Last maintenance was on " . 
-                                date('Y-m-d', strtotime($lastMaintenance)) . 
-                                ". Please mark as emergency repair if needed."
-                ]);
-                exit;
-            }
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to insert maintenance record: " . $stmt->error);
         }
-    }
+        
+        $maintenanceId = $conn->insert_id;
 
-    $username = $_SESSION['username']; 
-    
-    $licensePlate = isset($data->licensePlate) ? $data->licensePlate : '';
-    $supplier = isset($data->supplier) ? $data->supplier : '';
-    $cost = isset($data->cost) ? $data->cost : 0;
-    
-    // Process remarks
-    $remarksArray = json_decode($data->remarks);
-    $remarksString = implode(", ", $remarksArray);
-    
-    $stmt = $conn->prepare("INSERT INTO maintenance (truck_id, licence_plate, date_mtnce, remarks, status, supplier, cost, last_modified_by, maintenance_type) 
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isssssdss", 
-        $data->truckId,
-        $licensePlate,
-        $data->date, 
-        $remarksString,
-        $data->status,
-        $supplier,
-        $cost,
-        $username,
-        $data->maintenanceType
-    );
-    
-    if ($stmt->execute()) {
-        // Update truck status based on maintenance status
-        updateTruckStatusFromMaintenance($conn, $data->truckId, $data->status);
-        echo json_encode(["success" => true]);
-    } else {
-        echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+        $auditStmt = $conn->prepare("INSERT INTO audit_logs_maintenance (maintenance_id, modified_by, modified_at, edit_reason, is_deleted) 
+                                   VALUES (?, ?, NOW(), ?, 0)");
+        $editReason = "Record created";
+        $auditStmt->bind_param("iss", $maintenanceId, $username, $editReason);
+        
+        if (!$auditStmt->execute()) {
+            throw new Exception("Failed to create audit log: " . $auditStmt->error);
+        }
+        
+        $conn->commit();
+        echo json_encode(["success" => true, "message" => "Maintenance record created successfully"]);
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Maintenance add error: " . $e->getMessage());
+        echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
     }
-    $stmt->close();
     break;
 
     case 'fullDelete':
@@ -442,7 +481,7 @@ case 'getAllRecordsForSearch':
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM maintenance WHERE maintenance_id = ?");
+    $stmt = $conn->prepare("DELETE FROM maintenance_table WHERE maintenance_id = ?");
     $stmt->bind_param("i", $id);
     
     if ($stmt->execute()) {
@@ -456,143 +495,90 @@ case 'getAllRecordsForSearch':
 case 'edit':
     $data = json_decode(file_get_contents("php://input"));
     
-    // Check if truck exists and isn't deleted
-    $truckCheck = $conn->prepare("SELECT truck_id FROM truck_table WHERE truck_id = ? AND is_deleted = 0");
-    $truckCheck->bind_param("i", $data->truckId);
-    $truckCheck->execute();
-    $truckResult = $truckCheck->get_result();
-    
-    if ($truckResult->num_rows === 0) {
-        echo json_encode(["success" => false, "message" => "Cannot edit - truck has been deleted"]);
-        exit;
-    }
-    
-    if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceType)) {
-        $missing = [];
-        if (!isset($data->truckId)) $missing[] = 'truckId';
-        if (!isset($data->date)) $missing[] = 'date';
-        if (!isset($data->remarks)) $missing[] = 'remarks';
-        if (!isset($data->status)) $missing[] = 'status';
-        if (!isset($data->maintenanceType)) $missing[] = 'maintenanceType';
-        
-        echo json_encode(["success" => false, "message" => "Incomplete data. Missing: " . implode(', ', $missing)]);
+    if (!isset($data->maintenanceId, $data->truckId, $data->maintenanceTypeId, $data->supplierId)) {
+        echo json_encode(["success" => false, "message" => "Missing required fields"]);
         exit;
     }
 
-   
-    $validTypes = ['preventive', 'emergency'];
-    if (!in_array($data->maintenanceType, $validTypes)) {
-        echo json_encode(["success" => false, "message" => "Invalid maintenance type"]);
-        exit;
-    }
-
-    $username = $_SESSION['username']; 
+    $username = $_SESSION['username'] ?? 'System'; 
+    $cost = isset($data->cost) ? floatval($data->cost) : 0;
+    $editReasons = isset($data->editReasons) && is_array($data->editReasons) ? implode(", ", $data->editReasons) : "";
     
-    $licensePlate = isset($data->licensePlate) ? $data->licensePlate : '';
-    $supplier = isset($data->supplier) ? $data->supplier : '';
-    $cost = isset($data->cost) ? $data->cost : 0;
-    $editReasons = isset($data->editReasons) ? json_encode($data->editReasons) : null;
+    $conn->begin_transaction();
     
-    
-    $remarksArray = json_decode($data->remarks);
-    $remarksString = implode(", ", $remarksArray);
-    
-    $stmt = $conn->prepare("UPDATE maintenance SET truck_id = ?, licence_plate = ?, date_mtnce = ?, remarks = ?, 
-                           status = ?, supplier = ?, cost = ?, last_modified_by = ?, maintenance_type = ?, edit_reasons = ?
-                           WHERE maintenance_id = ?");
-    $stmt->bind_param("isssssdsssi", 
-        $data->truckId,
-        $licensePlate,
-        $data->date, 
-        $remarksString,
-        $data->status,
-        $supplier,
-        $cost,
-        $username,
-        $data->maintenanceType,
-        $editReasons,
-        $data->maintenanceId
-    );
-    
-    if ($stmt->execute()) {
+    try {
+        // Update maintenance_table
+        $stmt = $conn->prepare("UPDATE maintenance_table SET 
+                               truck_id = ?, maintenance_type_id = ?, supplier_id = ?, 
+                               date_mtnce = ?, remarks = ?, status = ?, cost = ?
+                               WHERE maintenance_id = ?");
+        $stmt->bind_param("iiisssdi", 
+            $data->truckId,
+            $data->maintenanceTypeId,
+            $data->supplierId,
+            $data->date, 
+            $data->remarks,
+            $data->status,
+            $cost,
+            $data->maintenanceId
+        );
         
-        updateTruckStatusFromMaintenance($conn, $data->truckId, $data->status);
-        echo json_encode(["success" => true]);
-    } else {
-        echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to update maintenance record: " . $stmt->error);
+        }
+        
+        // Insert audit log entry
+        $auditStmt = $conn->prepare("INSERT INTO audit_logs_maintenance (maintenance_id, modified_by, modified_at, edit_reason, is_deleted) 
+                                   VALUES (?, ?, NOW(), ?, 0)");
+        $auditStmt->bind_param("iss", $data->maintenanceId, $username, $editReasons);
+        
+        if (!$auditStmt->execute()) {
+            throw new Exception("Failed to create audit log: " . $auditStmt->error);
+        }
+        
+        $conn->commit();
+        echo json_encode(["success" => true, "message" => "Maintenance record updated successfully"]);
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Maintenance edit error: " . $e->getMessage());
+        echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
     }
-    $stmt->close();
     break;
     
- case 'delete':
+case 'delete':
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     $deleteReason = isset($_GET['reason']) ? $_GET['reason'] : '';
-    
+
     if ($id <= 0) {
         echo json_encode(["success" => false, "message" => "Invalid ID"]);
         exit;
     }
 
-    // Get the truck ID and maintenance status first
-    $getMaintenance = $conn->prepare("SELECT m.truck_id, m.status, t.plate_no 
-                                    FROM maintenance m
-                                    JOIN truck_table t ON m.truck_id = t.truck_id
-                                    WHERE m.maintenance_id = ?");
-    $getMaintenance->bind_param("i", $id);
-    $getMaintenance->execute();
-    $maintenance = $getMaintenance->get_result()->fetch_assoc();
-    
-    // Then soft delete the maintenance record
-    $stmt = $conn->prepare("UPDATE maintenance SET is_deleted = 1, delete_reason = ?, 
-                          last_modified_by = ?, last_modified_at = NOW() 
-                          WHERE maintenance_id = ?");
-    $stmt->bind_param("ssi", 
-        $deleteReason,
-        $_SESSION['username'],
-        $id
-    );
-    
-    if ($stmt->execute()) {
-        // Update truck status based on other active maintenance records
-        $checkActiveMaintenance = $conn->prepare("SELECT status FROM maintenance 
-                                                WHERE truck_id = ? AND is_deleted = 0
-                                                ORDER BY date_mtnce DESC LIMIT 1");
-        $checkActiveMaintenance->bind_param("i", $maintenance['truck_id']);
-        $checkActiveMaintenance->execute();
-        $activeMaintenance = $checkActiveMaintenance->get_result()->fetch_assoc();
-        
-        $newTruckStatus = 'In Terminal'; // Default
-        
-        if ($activeMaintenance) {
-            // If there are other active maintenance records, use their status
-            if ($activeMaintenance['status'] === 'In Progress') {
-                $newTruckStatus = 'In Repair';
-            } elseif ($activeMaintenance['status'] === 'Overdue') {
-                $newTruckStatus = 'Overdue';
-            }
+    $username = $_SESSION['username'] ?? 'System';
+
+    $conn->begin_transaction();
+
+    try {
+        $auditStmt = $conn->prepare("INSERT INTO audit_logs_maintenance 
+            (maintenance_id, modified_by, modified_at, delete_reason, is_deleted) 
+            VALUES (?, ?, NOW(), ?, 1)");
+        $auditStmt->bind_param("iss", $id, $username, $deleteReason);
+
+        if (!$auditStmt->execute()) {
+            throw new Exception("Failed to create delete audit log: " . $auditStmt->error);
         }
-        
-        // Also check trip status
-        $checkTrip = $conn->prepare("SELECT status FROM assign 
-                                   WHERE plate_no = ? 
-                                   ORDER BY date DESC LIMIT 1");
-        $checkTrip->bind_param("s", $maintenance['plate_no']);
-        $checkTrip->execute();
-        $tripStatus = $checkTrip->get_result()->fetch_assoc();
-        
-        if ($tripStatus && $tripStatus['status'] === 'Enroute') {
-            $newTruckStatus = 'Enroute';
-        }
-        
-        $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
-        $updateTruck->bind_param("si", $newTruckStatus, $maintenance['truck_id']);
-        $updateTruck->execute();
-        
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $stmt->error]);
+
+        $conn->commit();
+        echo json_encode(['success' => true, 'message' => 'Maintenance record deleted successfully']);
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Maintenance delete error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
     break;
+
 
 case 'restore':
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -603,7 +589,7 @@ case 'restore':
     }
 
     // First get the maintenance record to restore
-    $getMaintenance = $conn->prepare("SELECT truck_id, status FROM maintenance WHERE maintenance_id = ?");
+    $getMaintenance = $conn->prepare("SELECT truck_id, status FROM maintenance_table WHERE maintenance_id = ?");
     $getMaintenance->bind_param("i", $id);
     $getMaintenance->execute();
     $maintenance = $getMaintenance->get_result()->fetch_assoc();
@@ -614,7 +600,9 @@ case 'restore':
     }
 
     // Restore the maintenance record
-    $stmt = $conn->prepare("UPDATE maintenance SET is_deleted = 0, delete_reason = NULL WHERE maintenance_id = ?");
+    $stmt = $conn->prepare("UPDATE audit_logs_maintenance
+                        SET is_deleted = 0, delete_reason = NULL 
+                        WHERE maintenance_id = ?");
     $stmt->bind_param("i", $id);
     
     if ($stmt->execute()) {
@@ -645,12 +633,18 @@ case 'restore':
     }
     
     // Check for maintenance within 7 days before or after the trip date
-    $stmt = $conn->prepare("SELECT date_mtnce, remarks, maintenance_type 
-                           FROM maintenance 
-                           WHERE licence_plate = ? 
-                           AND is_deleted = 0
-                           AND status != 'Completed'
-                           AND DATEDIFF(date_mtnce, ?) BETWEEN -7 AND 7");
+$stmt = $conn->prepare("SELECT 
+                        m.date_mtnce, 
+                        m.remarks, 
+                        mt.type_name AS maintenance_type,
+                        t.plate_no AS licence_plate
+                       FROM maintenance_table m
+                       LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+                       LEFT JOIN truck_table t ON m.truck_id = t.truck_id
+                       WHERE t.plate_no = ? 
+                       AND m.is_deleted = 0
+                       AND m.status != 'Completed'
+                       AND DATEDIFF(m.date_mtnce, ?) BETWEEN -7 AND 7");
     $stmt->bind_param("ss", $plateNo, $tripDate);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -667,6 +661,26 @@ case 'restore':
     } else {
         echo json_encode(['success' => true, 'hasConflict' => false]);
     }
+    break;
+    
+case 'getMaintenanceTypes':
+    $sql = "SELECT maintenance_type_id, type_name FROM maintenance_types ORDER BY type_name";
+    $result = $conn->query($sql);
+    $types = [];
+    while ($row = $result->fetch_assoc()) {
+        $types[] = $row;
+    }
+    echo json_encode(["success" => true, "types" => $types]);
+    break;
+
+case 'getSuppliers':
+    $sql = "SELECT supplier_id, name FROM suppliers ORDER BY name";
+    $result = $conn->query($sql);
+    $suppliers = [];
+    while ($row = $result->fetch_assoc()) {
+        $suppliers[] = $row;
+    }
+    echo json_encode(["success" => true, "suppliers" => $suppliers]);
     break;
         
     default:
