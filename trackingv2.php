@@ -13,24 +13,21 @@ checkAccess(); // No role needed—logic is handled internally
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="include/css/loading.css">
     <link rel="stylesheet" href="include/css/sidenav.css">
-    <link rel="stylesheet" href="include/css/dashboard.css">
     <link rel="stylesheet" href="include/css/tracking.css">
-    <link rel="stylesheet" href="include/css/tracking-page.css">
 </head>
 <style>
-  h3 {
+h3 {
     font-family: 'Arial', sans-serif;
     font-size: 1.8rem;
     font-weight: 600;
     color: #2c3e50;
-    margin-left: -4rem;
+    margin-left: 20px;
     padding-bottom: 10px;
     border-bottom: 2px solid #a93129;
-    width:97%;
+    width: calc(100% - 40px);
     display: flex;
     align-items: center;
     gap: 10px;
-    position:relative
 }
 
   </style>
@@ -107,9 +104,6 @@ checkAccess(); // No role needed—logic is handled internally
                 <div class="card drivers-card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Drivers</h5>
-                        <button id="refresh-btn" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
                     </div>
                     <div class="card-body">
                         <div id="drivers-list"></div>
@@ -194,7 +188,7 @@ checkAccess(); // No role needed—logic is handled internally
 <script>
 
     
-   const AdminLoading = {
+  const AdminLoading = {
   init() {
     this.loadingEl = document.getElementById('admin-loading');
     this.titleEl = document.querySelector('.loading-title');
@@ -202,51 +196,14 @@ checkAccess(); // No role needed—logic is handled internally
     this.progressBar = document.querySelector('.progress-bar');
     this.progressText = document.querySelector('.progress-text');
     
-    // Show loading immediately if coming from another page
-    // this.checkForIncomingNavigation();
     this.setupNavigationInterception();
   },
   
-  checkForIncomingNavigation() {
-    // Check if we're coming from another page in the same site
-    const referrer = document.referrer;
-    const currentDomain = window.location.origin;
-    
-    // Also check sessionStorage for loading state
-    const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
-    
-    if ((referrer && referrer.startsWith(currentDomain)) || shouldShowLoading) {
-      // Clear the flag
-      sessionStorage.removeItem('showAdminLoading');
-      
-      // Show loading animation for incoming navigation
-      this.show('Loading Page', 'Loading content...');
-      
-      // Simulate realistic loading progress
-      let progress = 0;
-      const progressInterval = setInterval(() => {
-        progress += Math.random() * 25 + 10;
-        this.updateProgress(Math.min(progress, 100));
-        
-        if (progress >= 100) {
-          clearInterval(progressInterval);
-          setTimeout(() => {
-            this.hide();
-          }, 600);
-        }
-      }, 180);
-    }
-  },
-  
   show(title = 'Processing Request', message = 'Please wait while we complete this action...') {
-    if (!this.loadingEl) return;
-    
     this.titleEl.textContent = title;
     this.messageEl.textContent = message;
     
-    // Reset progress
-    this.updateProgress(0);
-    
+    // Start the sequence with longer delays
     this.loadingEl.style.display = 'flex';
     setTimeout(() => {
       this.loadingEl.classList.add('active');
@@ -254,154 +211,99 @@ checkAccess(); // No role needed—logic is handled internally
   },
   
   hide() {
-    if (!this.loadingEl) return;
-    
+    // Longer fade out
     this.loadingEl.classList.remove('active');
     setTimeout(() => {
       this.loadingEl.style.display = 'none';
-    }, 800);
+    }, 800); 
   },
   
   updateProgress(percent) {
-    if (this.progressBar) {
-      this.progressBar.style.width = `${percent}%`;
-    }
-    if (this.progressText) {
-      this.progressText.textContent = `${Math.round(percent)}%`;
-    }
+    this.progressBar.style.width = `${percent}%`;
+    this.progressText.textContent = `${percent}%`;
   },
   
-  setupNavigationInterception() {
-    document.addEventListener('click', (e) => {
-      // Skip if click is inside SweetAlert modal, regular modals, or calendar
-      if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal, .modal, .modal-content, .fc-event, #calendar')) {
-        return;
-      }
-      
-      const link = e.target.closest('a');
-      if (link && !link.hasAttribute('data-no-loading') && 
-          link.href && !link.href.startsWith('javascript:') &&
-          !link.href.startsWith('#') && !link.href.startsWith('mailto:') &&
-          !link.href.startsWith('tel:')) {
-        
-        // Only intercept internal links
-        try {
-          const linkUrl = new URL(link.href);
-          const currentUrl = new URL(window.location.href);
-          
-          if (linkUrl.origin !== currentUrl.origin) {
-            return; // Let external links work normally
-          }
-          
-          // Skip if it's the same page
-          if (linkUrl.pathname === currentUrl.pathname) {
-            return;
-          }
-          
-        } catch (e) {
-          return; // Invalid URL, let it work normally
-        }
-        
-        e.preventDefault();
-        
-        // Set flag for next page
-        sessionStorage.setItem('showAdminLoading', 'true');
-        
-        const loading = this.startAction(
-          'Loading Page', 
-          `Preparing ${link.textContent.trim() || 'page'}...`
-        );
-        
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-          progress += Math.random() * 15 + 8;
-          if (progress >= 85) {
-            clearInterval(progressInterval);
-            progress = 90; // Stop at 90% until page actually loads
-          }
-          loading.updateProgress(Math.min(progress, 90));
-        }, 150);
-        
-        // Minimum delay to show animation
-        const minLoadTime = 1200;
-        
-        setTimeout(() => {
-          // Complete the progress bar
-          loading.updateProgress(100);
-          setTimeout(() => {
-            window.location.href = link.href;
-          }, 300);
-        }, minLoadTime);
-      }
-    });
-
-    // Handle form submissions
-    document.addEventListener('submit', (e) => {
-      // Skip if form is inside SweetAlert or modal
-      if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
-        return;
-      }
-      
-      // Only show loading for forms that will cause page navigation
-      const form = e.target;
-      if (form.method && form.method.toLowerCase() === 'post' && form.action) {
-        const loading = this.startAction(
-          'Submitting Form', 
-          'Processing your data...'
-        );
-        
-        setTimeout(() => {
-          loading.complete();
-        }, 2000);
-      }
-    });
+   setupNavigationInterception() {
+  document.addEventListener('click', (e) => {
+    // Skip if click is inside SweetAlert modal
+    if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal')) {
+      return;
+    }
     
-    // Handle browser back/forward buttons
-    window.addEventListener('popstate', () => {
-      this.show('Loading Page', 'Loading previous page...');
+    // Skip if click is on any modal element
+    if (e.target.closest('.modal, .modal-content')) {
+      return;
+    }
+    
+    const link = e.target.closest('a');
+    if (link && !link.hasAttribute('data-no-loading') && 
+        link.href && !link.href.startsWith('javascript:') &&
+        !link.href.startsWith('#')) {
+      e.preventDefault();
+      
+      const loading = this.startAction(
+        'Loading Page', 
+        `Preparing ${link.textContent.trim()}...`
+      );
+      
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 40; 
+        if (progress >= 90) clearInterval(progressInterval);
+        loading.updateProgress(Math.min(progress, 100));
+      }, 300); 
+      
+      const minLoadTime = 2000;
+      const startTime = Date.now();
+      
       setTimeout(() => {
-        this.hide();
-      }, 800);
-    });
-  },
+        window.location.href = link.href;
+      }, minLoadTime);
+    }
+  });
+
+  document.addEventListener('submit', (e) => {
+    // Skip if form is inside SweetAlert or modal
+    if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
+      return;
+    }
+    
+    const loading = this.startAction(
+      'Submitting Form', 
+      'Processing your data...'
+    );
+    
+    setTimeout(() => {
+      loading.complete();
+    }, 1500);
+  });
+},
+    
+    
+  
   
   startAction(actionName, message) {
     this.show(actionName, message);
     return {
       updateProgress: (percent) => this.updateProgress(percent),
       updateMessage: (message) => {
-        if (this.messageEl) {
-          this.messageEl.textContent = message;
-          this.messageEl.style.opacity = 0;
-          setTimeout(() => {
-            this.messageEl.style.opacity = 1;
-            this.messageEl.style.transition = 'opacity 0.5s ease';
-          }, 50);
-        }
+        this.messageEl.textContent = message;
+        this.messageEl.style.opacity = 0;
+        setTimeout(() => {
+          this.messageEl.style.opacity = 1;
+          this.messageEl.style.transition = 'opacity 0.5s ease';
+        }, 50);
       },
       complete: () => {
+
         this.updateProgress(100);
         this.updateMessage('Done!');
         setTimeout(() => this.hide(), 800);
       }
     };
-  },
-  
-  // Public methods for manual control
-  showManual: function(title, message) {
-    this.show(title, message);
-  },
-  
-  hideManual: function() {
-    this.hide();
-  },
-  
-  setProgress: function(percent) {
-    this.updateProgress(percent);
   }
 };
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
   
@@ -410,26 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loadingGif) {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
-  
-  // Hide loading on page show (handles browser back button)
-  window.addEventListener('pageshow', (event) => {
-    if (event.persisted) {
-      // Page was loaded from cache (back/forward button)
-      setTimeout(() => {
-        AdminLoading.hideManual();
-      }, 500);
-    }
-  });
 });
-
-// Handle page unload
-// window.addEventListener('beforeunload', () => {
-//   // Set flag that we're navigating
-//   sessionStorage.setItem('showAdminLoading', 'true');
-// });
-
-// Export for global access (optional)
-window.AdminLoading = AdminLoading;
 </script>
 <footer class="site-footer">
 

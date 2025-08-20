@@ -188,24 +188,14 @@
 2025-08-06 08:21:26 - Email check passed
 2025-08-06 08:21:26 - SQL prepared successfully
 2025-08-06 08:21:26 - Driver registered successfully
-2025-08-16 15:16:54 - Request received
-{"driverId":"","name":"Test name","email":"testemail@gmail.com","password":"12345678","assignedTruck":"7","mode":"add"}
+2025-08-18 13:19:03 - Request received
+{"driver_id":"1755515941135","firebase_uid":"1755515941135","name":"Andrew","email":"Zxc@gmail.com","password":"Asdasd","assigned_truck_id":2}
 
-2025-08-16 15:16:54 - JSON parsed successfully
-2025-08-16 15:16:54 - ERROR: Missing required fields
-2025-08-16 15:18:43 - Request received
-{"driverId":"","name":"Testemail","email":"testemail@gmail.com","password":"12345678","assignedTruck":"7","mode":"add"}
-
-2025-08-16 15:18:43 - JSON parsed successfully
-2025-08-16 15:18:43 - ERROR: Missing required fields
-2025-08-16 15:23:51 - Request received
-{"driver_id":"admin_1755350631887","firebase_uid":"admin_1755350631887","name":"Testemail","email":"testemail@gmail.com","password":"12345678","assigned_truck_id":7,"mode":"add"}
-
-2025-08-16 15:23:51 - JSON parsed successfully
-2025-08-16 15:23:51 - Data validation passed
-2025-08-16 15:23:51 - Database connection successful
-2025-08-16 15:23:51 - Table 'drivers_table' exists
-2025-08-16 15:23:51 - Table columns: driver_id, firebase_uid, name, email, password, assigned_truck_id, created_at, last_login
-2025-08-16 15:23:51 - Email check passed
-2025-08-16 15:23:52 - SQL prepared successfully
-2025-08-16 15:23:52 - Driver registered successfully
+2025-08-18 13:19:03 - JSON parsed successfully
+2025-08-18 13:19:03 - Data validation passed
+2025-08-18 13:19:03 - Database connection successful
+2025-08-18 13:19:03 - Table 'drivers_table' exists
+2025-08-18 13:19:03 - Table columns: driver_id, firebase_uid, name, email, password, assigned_truck_id, created_at, last_login
+2025-08-18 13:19:03 - Email check passed
+2025-08-18 13:19:03 - SQL prepared successfully
+2025-08-18 13:19:03 - Driver registered successfully

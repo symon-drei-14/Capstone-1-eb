@@ -50,19 +50,23 @@ async function getTripDetails(tripId) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                action: 'get_trip_details',
+                action: 'get_trips_with_drivers', 
                 trip_id: tripId
             }),
         });
 
         const data = await response.json();
+        console.log('Trip details response:', data);
 
-        if (data.success && data.trip) {
-            return {
-                destination: data.trip.destination || data.trip.destination_address || data.trip.end_location || 'Unknown Destination',
-                origin: data.trip.origin || data.trip.pickup_address || data.trip.start_location || 'Unknown Origin',
-                status: data.trip.status || 'Unknown Status'
-            };
+        if (data.success && data.trips && data.trips.length > 0) {
+            const trip = data.trips.find(t => t.trip_id == tripId);
+            if (trip) {
+                return {
+                    destination: trip.destination || 'Unknown Destination',
+                    origin: trip.client || 'Unknown Origin',
+                    status: trip.status || 'Unknown Status'
+                };
+            }
         }
     } catch (error) {
         console.error('Error fetching trip details:', error);
@@ -76,28 +80,23 @@ async function getActiveTrip(driverId, driverName) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                action: 'get_trips_with_drivers',
+                action: 'get_driver_current_trip',
                 driver_id: driverId,
                 driver_name: driverName,
             }),
         });
 
         const data = await response.json();
+        console.log('Active trip response for', driverName, ':', data);
 
-        if (data.success) {
-            const allTrips = data.trips || [];
-
-            const activeTrip = allTrips.find(trip => trip.status === 'En Route');
-            
-            if (activeTrip) {
-                const tripDetails = await getTripDetails(activeTrip.trip_id);
-                return {
-                    trip_id: activeTrip.trip_id,
-                    destination: tripDetails?.destination || activeTrip.destination || 'Unknown Destination',
-                    origin: tripDetails?.origin || activeTrip.origin || 'Unknown Origin',
-                    status: tripDetails?.status || activeTrip.status || 'En Route'
-                };
-            }
+        if (data.success && data.trip) {
+            const trip = data.trip;
+            return {
+                trip_id: trip.trip_id,
+                destination: trip.destination || 'Unknown Destination',
+                origin: trip.client || 'Unknown Origin',
+                status: trip.status || 'En Route'
+            };
         }
     } catch (error) {
         console.error('Error fetching active trip for driver:', driverId, error);
@@ -198,7 +197,6 @@ async function enhanceDriversWithDestinations(drivers) {
     });
     
     const results = await Promise.all(driverPromises);
-    
     
     results.forEach(([driverId, driverData]) => {
         enhancedDrivers[driverId] = driverData;
