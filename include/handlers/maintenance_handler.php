@@ -30,11 +30,7 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
                                         WHERE al.maintenance_id = m.maintenance_id 
                                         AND al.is_deleted = 1
                                     )
-                                    AND NOT EXISTS (
-                                        SELECT 1 FROM audit_logs_trucks alt 
-                                        WHERE alt.truck_id = t.truck_id 
-                                        AND alt.is_deleted = 1
-                                    )");
+                                    AND t.is_deleted = 0");
     
     if ($getOverdueTrucks) {
         while ($row = $getOverdueTrucks->fetch_assoc()) {

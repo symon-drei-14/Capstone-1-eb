@@ -535,13 +535,13 @@ button[type="submit"]:hover {
         }
         .main-content3 {
             margin-top: 10px;
-            margin-left: 10px; 
+            margin-left: 5px; 
             margin-right: 20px; 
                 background-color: #ffffff;
             width: calc(100% - 50px); 
             height: auto;
             max-height: 900vh;
-            min-height:50vh;
+            min-height: 80vh;
             transition: margin-left 0.3s ease;
             overflow-y: hidden;
             border-radius: 10px;
@@ -1304,7 +1304,7 @@ button[type="submit"]:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 20px;
+    margin-top: 100px;
     gap: 5px;
 }
 
