@@ -18,43 +18,158 @@ function validatePlateNumber($plateNo) {
 
 // Function to update truck status based on maintenance and trip logs
 function updateTruckStatus($conn, $truckId, $plateNo) {
-    // Check maintenance status
-    $maintenanceStatus = null;
-    $maintenanceQuery = $conn->prepare("SELECT status FROM maintenance WHERE truck_id = ? ORDER BY date_mtnce DESC LIMIT 1");
-    $maintenanceQuery->bind_param("i", $truckId);
-    $maintenanceQuery->execute();
-    $maintenanceResult = $maintenanceQuery->get_result();
-    if ($maintenanceResult->num_rows > 0) {
-        $maintenanceStatus = $maintenanceResult->fetch_assoc()['status'];
-    }
-    
-    // Check trip status
     $tripStatus = null;
-    $tripQuery = $conn->prepare("SELECT status FROM assign WHERE plate_no = ? ORDER BY date DESC LIMIT 1");
+    $tripQuery = $conn->prepare("
+        SELECT status 
+        FROM assign 
+        WHERE plate_no = ? 
+        ORDER BY date DESC 
+        LIMIT 1
+    ");
     $tripQuery->bind_param("s", $plateNo);
     $tripQuery->execute();
     $tripResult = $tripQuery->get_result();
     if ($tripResult->num_rows > 0) {
         $tripStatus = $tripResult->fetch_assoc()['status'];
     }
-    
-    // Determine the new status based on the rules
-    $newStatus = 'In Terminal'; // Default status
-    
+
+    $maintenanceStatus = null;
+    $maintenanceQuery = $conn->prepare("
+        SELECT m.status 
+        FROM maintenance_table m
+        WHERE m.truck_id = ? 
+        AND m.status IN ('In Progress', 'Overdue', 'Pending', 'Completed')
+        AND NOT EXISTS (
+            SELECT 1 FROM audit_logs_maintenance al 
+            WHERE al.maintenance_id = m.maintenance_id 
+            AND al.is_deleted = 1
+            AND al.modified_at = (
+                SELECT MAX(al2.modified_at)
+                FROM audit_logs_maintenance al2
+                WHERE al2.maintenance_id = m.maintenance_id
+            )
+        )
+        ORDER BY 
+            CASE m.status 
+                WHEN 'In Progress' THEN 1 
+                WHEN 'Overdue' THEN 2 
+                WHEN 'Pending' THEN 3 
+                WHEN 'Completed' THEN 4
+            END,
+            m.date_mtnce DESC 
+        LIMIT 1
+    ");
+    $maintenanceQuery->bind_param("i", $truckId);
+    $maintenanceQuery->execute();
+    $maintenanceResult = $maintenanceQuery->get_result();
+    if ($maintenanceResult->num_rows > 0) {
+        $maintenanceStatus = $maintenanceResult->fetch_assoc()['status'];
+    }
+
+    $newStatus = 'In Terminal';
+
     if ($tripStatus === 'Enroute') {
         $newStatus = 'Enroute';
     } elseif ($maintenanceStatus === 'In Progress') {
         $newStatus = 'In Repair';
     } elseif ($maintenanceStatus === 'Overdue') {
         $newStatus = 'Overdue';
+    } elseif ($maintenanceStatus === 'Pending') {
+        $newStatus = 'Pending Maintenance';
+    } elseif ($maintenanceStatus === 'Completed' || $maintenanceStatus === null) {
+        $newStatus = 'In Terminal';
     }
-    // For all other cases (Pending, Completed, or null), status remains 'In Terminal'
-    
-    // Update the truck status
-    $updateStmt = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
+
+    $updateStmt = $conn->prepare("
+        UPDATE truck_table 
+        SET status = ?, last_modified_by = 'System', last_modified_at = NOW() 
+        WHERE truck_id = ?
+    ");
     $updateStmt->bind_param("si", $newStatus, $truckId);
     $updateStmt->execute();
 }
+
+function updateAllTruckStatuses($conn) {
+    $trucksQuery = $conn->query("SELECT truck_id, plate_no FROM truck_table WHERE is_deleted = 0");
+    
+    while ($truck = $trucksQuery->fetch_assoc()) {
+        $truckId = $truck['truck_id'];
+        $plateNo = $truck['plate_no'];
+
+        $tripStatus = null;
+        $tripQuery = $conn->prepare("
+            SELECT status 
+            FROM assign 
+            WHERE plate_no = ? 
+            ORDER BY date DESC 
+            LIMIT 1
+        ");
+        $tripQuery->bind_param("s", $plateNo);
+        $tripQuery->execute();
+        $tripResult = $tripQuery->get_result();
+        if ($tripResult->num_rows > 0) {
+            $tripStatus = $tripResult->fetch_assoc()['status'];
+        }
+
+        $maintenanceStatus = null;
+        $maintenanceQuery = $conn->prepare("
+            SELECT m.status 
+            FROM maintenance_table m
+            WHERE m.truck_id = ? 
+            AND m.status IN ('In Progress', 'Overdue', 'Pending', 'Completed')
+            AND NOT EXISTS (
+                SELECT 1 FROM audit_logs_maintenance al 
+                WHERE al.maintenance_id = m.maintenance_id 
+                AND al.is_deleted = 1
+                AND al.modified_at = (
+                    SELECT MAX(al2.modified_at)
+                    FROM audit_logs_maintenance al2
+                    WHERE al2.maintenance_id = m.maintenance_id
+                )
+            )
+            ORDER BY 
+                CASE m.status 
+                    WHEN 'In Progress' THEN 1 
+                    WHEN 'Overdue' THEN 2 
+                    WHEN 'Pending' THEN 3 
+                    WHEN 'Completed' THEN 4
+                END,
+                m.date_mtnce DESC 
+            LIMIT 1
+        ");
+        $maintenanceQuery->bind_param("i", $truckId);
+        $maintenanceQuery->execute();
+        $maintenanceResult = $maintenanceQuery->get_result();
+        if ($maintenanceResult->num_rows > 0) {
+            $maintenanceStatus = $maintenanceResult->fetch_assoc()['status'];
+        }
+
+        $newStatus = 'In Terminal';
+
+        if ($tripStatus === 'Enroute') {
+            $newStatus = 'Enroute';
+        } elseif ($maintenanceStatus === 'In Progress') {
+            $newStatus = 'In Repair';
+        } elseif ($maintenanceStatus === 'Overdue') {
+            $newStatus = 'Overdue';
+        } elseif ($maintenanceStatus === 'Pending') {
+            $newStatus = 'Pending Maintenance';
+        } elseif ($maintenanceStatus === 'Completed' || $maintenanceStatus === null) {
+            $newStatus = 'In Terminal';
+        }
+
+        $updateStmt = $conn->prepare("
+            UPDATE truck_table 
+            SET status = ?, last_modified_by = 'System', last_modified_at = NOW() 
+            WHERE truck_id = ? AND status <> ?
+        ");
+        $updateStmt->bind_param("sis", $newStatus, $truckId, $newStatus);
+        $updateStmt->execute();
+    }
+}
+
+
+
 
 try {
     switch ($action) {

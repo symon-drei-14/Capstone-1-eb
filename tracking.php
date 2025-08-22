@@ -17,22 +17,6 @@ checkAccess(); // No role needed—logic is handled internally
     <link rel="stylesheet" href="include/css/tracking.css">
     <link rel="stylesheet" href="include/css/tracking-page.css">
 </head>
-<style>
-  h3 {
-    font-family: 'Arial', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: #2c3e50;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #a93129;
-    width:97%;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position:relative
-}
-
-  </style>
 <body>
 <header class="header2">
       <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
@@ -96,8 +80,7 @@ checkAccess(); // No role needed—logic is handled internally
         <a href="include/handlers/logout.php" data-no-loading="true">Logout</a>
     </div>
 </div>
-
- <h3><i class="fa-solid fa-location-dot"></i>Tracking</h3>
+   <h3><i class="fa-solid fa-location-dot"></i>Tracking</h3>
 <div class="main-content">
     <div class="container-fluid mt-4">
 

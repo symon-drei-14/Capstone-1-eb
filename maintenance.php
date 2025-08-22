@@ -376,11 +376,13 @@
             let isEditing = false;
             let trucksList = [];
             let sortTruckIdAsc = true; 
-            let rowsPerPage = 5; // Default value
+            let rowsPerPage = 5;
+            let searchTimeout;
+            let maintenanceData = [];
             
         function getLocalDate() {
         const now = new Date();
-        const offset = now.getTimezoneOffset() * 60000; // offset in milliseconds
+        const offset = now.getTimezoneOffset() * 60000;
         const localISOTime = (new Date(now - offset)).toISOString().slice(0, 10);
         return localISOTime;
         }
@@ -481,6 +483,48 @@ function validateMaintenanceForm() {
     return true;
 }
 
+function searchMaintenance() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        if (!searchTerm) {
+            currentPage = 1;
+            loadMaintenanceData();
+            document.querySelector('.pagination').style.display = 'flex';
+            return;
+        }
+
+        if (maintenanceData.length === 0) {
+            loadAllMaintenanceData().then(() => {
+                performSearch(searchTerm);
+            });
+        } else {
+            performSearch(searchTerm);
+        }
+    }, 300);
+}
+
+function performSearch(searchTerm) {
+    const filteredRecords = maintenanceData.filter(record => {
+        return (
+            String(record.truckId).toLowerCase().includes(searchTerm) ||
+            (record.licensePlate && record.licensePlate.toLowerCase().includes(searchTerm)) ||
+            (record.maintenanceDate && formatDate(record.maintenanceDate).toLowerCase().includes(searchTerm)) ||
+            (record.remarks && record.remarks.toLowerCase().includes(searchTerm)) ||
+            (record.status && record.status.toLowerCase().includes(searchTerm)) ||
+            (record.supplierName && record.supplierName.toLowerCase().includes(searchTerm)) ||
+            (record.cost && String(record.cost).toLowerCase().includes(searchTerm)) ||
+            (record.lastUpdatedBy && record.lastUpdatedBy.toLowerCase().includes(searchTerm)) ||
+            (record.editReason && record.editReason.toLowerCase().includes(searchTerm)) ||
+            (record.deleteReason && record.deleteReason.toLowerCase().includes(searchTerm))
+        );
+    });
+    
+    renderTable(filteredRecords);
+    updateShowingInfo(filteredRecords.length, filteredRecords.length);
+    document.querySelector('.pagination').style.display = 'none';
+}
 
 function loadMaintenanceTypes() {
     fetch('include/handlers/maintenance_handler.php?action=getMaintenanceTypes')
@@ -639,16 +683,18 @@ function loadSuppliers() {
 
             let currentStatusFilter = 'all';
 
-    function filterTableByStatus() {
-        currentStatusFilter = document.getElementById('statusFilter').value;
-        currentPage = 1; 
-        loadMaintenanceData();
-    }
+function filterTableByStatus() {
+    currentStatusFilter = document.getElementById('statusFilter').value;
+    currentPage = 1;
+    maintenanceData = [];
+    loadMaintenanceData();
+
+    document.getElementById('searchInput').value = '';
+}
 
     
-    function loadMaintenanceData() {
-    
-   let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}&limit=${rowsPerPage}`;
+function loadMaintenanceData() {
+    let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}&limit=${rowsPerPage}`;
     
     if (currentStatusFilter === 'deleted') {
         url += `&showDeleted=1`;
@@ -665,17 +711,42 @@ function loadSuppliers() {
             return response.json();
         })
         .then(response => {
+            maintenanceData = response.records || [];
+            
             renderTable(response.records || []);
             totalPages = response.totalPages || 1;
             currentPage = response.currentPage || 1;
             updatePagination();
-             updateShowingInfo(response.totalRecords, response.records.length);
+            updateShowingInfo(response.totalRecords, response.records.length);
         })
         .catch(error => {
             console.error("Error loading data:", error);
             const tableBody = document.querySelector("#maintenanceTable tbody");
             tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading data</td></tr>';
-             document.getElementById('showingInfo').textContent = 'Showing 0 to 0 of 0 entries';
+            document.getElementById('showingInfo').textContent = 'Showing 0 to 0 of 0 entries';
+        });
+}
+
+function loadAllMaintenanceData() {
+    let url = `include/handlers/maintenance_handler.php?action=getRecords&page=1&limit=1000`;
+    
+    if (currentStatusFilter === 'deleted') {
+        url += `&showDeleted=1`;
+    } 
+    else if (currentStatusFilter !== 'all') {
+        url += `&status=${encodeURIComponent(currentStatusFilter)}`;
+    }
+    
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(response => {
+            maintenanceData = response.records || [];
+            return maintenanceData;
         });
 }
 

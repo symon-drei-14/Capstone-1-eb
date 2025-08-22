@@ -13,19 +13,37 @@ $alloverduetrucks = getOverdueTrucks();
 $allrepairtrucks = getRepairTrucks();
 
 require_once 'include/handlers/dbhandler.php';
-$maintenanceQuery = "SELECT licence_plate, remarks, date_mtnce, status
-                    FROM maintenance
-                    WHERE is_deleted = 0
-                    AND status != 'completed'
-                    ORDER BY date_mtnce ASC
-                    LIMIT 5";
+$maintenanceQuery = "
+    SELECT 
+        t.plate_no, 
+        mt.type_name AS service_type, 
+        m.remarks, 
+        m.date_mtnce, 
+        m.status
+    FROM maintenance_table m
+    INNER JOIN truck_table t 
+        ON m.truck_id = t.truck_id
+    INNER JOIN maintenance_types mt 
+        ON m.maintenance_type_id = mt.maintenance_type_id
+    WHERE m.status != 'Completed'
+      AND m.maintenance_id NOT IN (
+          SELECT maintenance_id 
+          FROM audit_logs_maintenance 
+          WHERE is_deleted = 1
+      )
+    ORDER BY m.date_mtnce ASC
+    LIMIT 5
+";
+
 $maintenanceResult = $conn->query($maintenanceQuery);
+
 $maintenanceRecords = [];
-if ($maintenanceResult->num_rows > 0) {
-    while($row = $maintenanceResult->fetch_assoc()) {
+if ($maintenanceResult && $maintenanceResult->num_rows > 0) {
+    while ($row = $maintenanceResult->fetch_assoc()) {
         $maintenanceRecords[] = $row;
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -513,8 +531,9 @@ $eventsDataJson = json_encode($eventsData);
             ?>
         <div class="maintenance-item">
          <div class="maintenance-details">
-             <span class="vehicle"><?php echo htmlspecialchars($record['licence_plate']); ?></span>
-             <span class="service"><?php echo htmlspecialchars($record['remarks']); ?></span>
+             <span class="vehicle"><?php echo htmlspecialchars($record['plate_no']); ?></span>
+<span class="service"><?php echo htmlspecialchars($record['service_type']); ?></span>
+
              <span class="date"><?php echo $dateString; ?></span>
               <span class="status-badge <?php echo $badgeClass; ?>">
             <?php echo htmlspecialchars($record['status']); ?>

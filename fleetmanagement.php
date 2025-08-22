@@ -559,8 +559,7 @@ function renderTrucksTable() {
             );
         });
     }
-    
-   // Replace the showDeleted checkbox logic with status filter logic
+
     if (currentStatusFilter !== 'all' && currentStatusFilter !== 'deleted') {
         filteredTrucks = filteredTrucks.filter(truck => 
             (truck.display_status === currentStatusFilter || 
@@ -578,13 +577,14 @@ function renderTrucksTable() {
     const tableBody = document.getElementById("trucksTableBody");
     tableBody.innerHTML = "";
 
-     if (filteredTrucks.length === 0) {
+    if (filteredTrucks.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center;">No trucks found matching your search</td></tr>`;
         updatePagination(0);
         updateShowingInfo(filteredTrucks);
         return;
     }
-     const highlightMatches = (text) => {
+    
+    const highlightMatches = (text) => {
         if (!searchTerm || !text) return text;
         const str = text.toString();
         const regex = new RegExp(searchTerm, 'gi');
@@ -603,8 +603,8 @@ function renderTrucksTable() {
             statusText = truck.display_status;
         }
      
-          tr.innerHTML = `
-       <td>${highlightMatches(truck.truck_id)}</td>
+        tr.innerHTML = `
+            <td>${highlightMatches(truck.truck_id)}</td>
             <td>
                 <div class="truck-image-container">
                     <img src="include/img/truck${truck.capacity == 20 ? '1' : '2'}.png" 
@@ -646,11 +646,15 @@ function renderTrucksTable() {
         `;
         tableBody.appendChild(tr);
     });
+    
     updatePagination(filteredTrucks.length);
     updateShowingInfo(filteredTrucks);
-    document.getElementById("truck-page-info").textContent = 
-        `Page ${currentTruckPage} of ${Math.ceil(filteredTrucks.length / rowsPerPage)}`;
     
+    const pageInfoElement = document.getElementById("truck-page-info");
+    if (pageInfoElement) {
+        const totalPages = Math.ceil(filteredTrucks.length / rowsPerPage);
+        pageInfoElement.textContent = `Page ${currentTruckPage} of ${totalPages}`;
+    }
 }
 
 // Add this new function for full delete
@@ -723,23 +727,37 @@ function fullDeleteTruck(truckId) {
         }
     });
 }
+
 function viewMaintenanceHistory(truckId) {
     fetch(`include/handlers/maintenance_handler.php?action=getHistory&truckId=${truckId}`)
         .then(response => response.json())
         .then(data => {
-            if (data.history && data.history.length > 0) {
+            console.log('API Response:', data);
+
+            let historyRecords = [];
+            if (Array.isArray(data)) {
+                historyRecords = data;
+            } else if (data.history) {
+                historyRecords = data.history;
+            } else if (data.maintenance_id) {
+                historyRecords = [data];
+            }
+            
+            if (historyRecords.length > 0) {
                 let historyHTML = '<div class="history-modal-content"><h3>Maintenance History</h3><ul>';
                 
-                data.history.forEach(item => {
-                    if (item.status === 'Completed') {
-                        historyHTML += `
-                            <li>
-                                <strong>Date Completed:</strong> ${formatDateTime(item.last_modified_at)}<br>
-                                <strong>Remarks:</strong> ${item.remarks}<br>
-                                <hr>
-                            </li>
-                        `;
-                    }
+                historyRecords.forEach(item => {
+                    historyHTML += `
+                        <li>
+                            <strong>Date:</strong> ${formatDateTime(item.date_since || item.last_modified_at)}<br>
+                            <strong>Status:</strong> ${item.status}<br>
+                            <strong>Type:</strong> ${item.maintenance_type_name || 'N/A'}<br>
+                            <strong>Supplier:</strong> ${item.supplier_name || 'N/A'}<br>
+                            <strong>Cost:</strong> ₱${item.cost ? item.cost.toLocaleString() : 'N/A'}<br>
+                            <strong>Remarks:</strong> ${item.remarks}<br>
+                            <hr>
+                        </li>
+                    `;
                 });
                 
                 historyHTML += '</ul><button onclick="document.getElementById(\'historyModal\').style.display=\'none\'">Close</button></div>';
@@ -748,7 +766,7 @@ function viewMaintenanceHistory(truckId) {
                 document.getElementById('historyModal').style.display = 'block';
             } else {
                 document.getElementById('historyModalContent').innerHTML = 
-                    '<div class="history-modal-content"><p>No completed maintenance history found for this truck.</p></div>';
+                    '<div class="history-modal-content"><p>No maintenance history found for this truck.</p></div>';
                 document.getElementById('historyModal').style.display = 'block';
             }
         })
@@ -786,10 +804,8 @@ function sortTrucks(sortBy) {
 
 
 function changeTruckPage(direction) {
-    
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     
-   
     let filteredTrucks = [...trucksData];
   
     if (searchTerm) {
@@ -802,10 +818,7 @@ function changeTruckPage(direction) {
                 (truck.status && truck.status.toLowerCase().includes(searchTerm)) ||
                 (truck.last_modified_by && truck.last_modified_by.toLowerCase().includes(searchTerm)) ||
                 (truck.delete_reason && truck.delete_reason.toLowerCase().includes(searchTerm))
-                
             );
-            const totalPages = Math.ceil(filteredTrucks.length / rowsPerPage);
-    currentTruckPage += direction;
         });
     }
     
@@ -820,7 +833,6 @@ function changeTruckPage(direction) {
             );
         }
     } else {
-       
         if (!showDeleted) {
             filteredTrucks = filteredTrucks.filter(truck => truck.is_deleted == 0);
         }
