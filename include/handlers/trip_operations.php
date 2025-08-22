@@ -208,7 +208,7 @@ case 'get_active_trips':
     $statusFilter = $data['statusFilter'] ?? 'all';
     $sortOrder = $data['sortOrder'] ?? 'desc';
     $page = $data['page'] ?? 1;
-    $perPage = $data['perPage'] ?? 10; // Default to 10 items per page
+    $perPage = $data['perPage'] ?? 10; 
     
     $query = "SELECT * FROM assign WHERE is_deleted = 0";
     
@@ -238,7 +238,7 @@ case 'get_active_trips':
         $trips[] = $row;
     }
     
-    // Get total count for pagination
+    // total count for pagination
     $countQuery = "SELECT COUNT(*) as total FROM assign WHERE is_deleted = 0";
     if ($statusFilter !== 'all') {
         $countQuery .= " AND status = ?";
@@ -318,7 +318,7 @@ case 'get_deleted_trips':
     break;
     
 case 'get_driver_trip_counts':
-    // Get total completed trips for all drivers
+    // total completed trips for all drivers
     $totalQuery = "SELECT driver_id, COUNT(*) as total_completed 
                   FROM assign 
                   WHERE status = 'Completed' AND is_deleted = 0
@@ -329,7 +329,7 @@ case 'get_driver_trip_counts':
         $totalCounts[$row['driver_id']] = $row['total_completed'];
     }
     
-    // Get monthly completed trips for all drivers
+    // monthly completed trips for all drivers
     $monthlyQuery = "SELECT driver_id, COUNT(*) as monthly_completed 
                     FROM assign 
                     WHERE status = 'Completed' 
@@ -343,7 +343,7 @@ case 'get_driver_trip_counts':
         $monthlyCounts[$row['driver_id']] = $row['monthly_completed'];
     }
     
-    // Combine results
+    // Combined results
     $allDrivers = $conn->query("SELECT driver_id FROM drivers_table");
     $tripCounts = [];
     while ($driver = $allDrivers->fetch_assoc()) {
