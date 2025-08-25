@@ -221,11 +221,14 @@
             <input type="hidden" id="maintenanceId" name="maintenanceId">
             
             <div class="form-row">
-                <div class="form-group">
-                    <label for="maintenanceTypeId">Maintenance Type:</label>
-                        <select id="maintenanceTypeId" name="maintenanceTypeId" required>
-                        </select>
-                </div>
+               <div class="form-group">
+    <label for="maintenanceTypeId">Maintenance Type:</label>
+    <select id="maintenanceTypeId" name="maintenanceTypeId" required onchange="checkMaintenanceType()">
+        <option value="">Select Maintenance Type</option>
+        <option value="1">Preventive Maintenance</option>
+        <option value="2">Emergency Maintenance</option>
+    </select>
+</div>
                 
                 <div class="form-group">
                     <label for="truckId">Truck ID:</label>
@@ -246,12 +249,20 @@
                 </div>
             </div>
             
-            <div class="form-group2">
-                <div class="form-group">
-                    <label for="remarks">Remarks:</label>
-                    <textarea id="remarks" name="remarks" rows="3" placeholder="Enter maintenance remarks"></textarea>
-                </div>
-            </div>
+          <div class="form-group2">
+    <div class="form-group">
+        <label>Maintenance Purpose(s):</label>
+        <div class="checkbox-grid" id="maintenancePurposes">
+        
+            <!-- Checkboxes will be populated by JavaScript -->
+        </div>
+            <input type="hidden" id="remarks" name="remarks">
+        <div class="other-purpose" style="display: none;">
+            <label for="otherPurposeText">Specify other purpose:</label>
+            <textarea id="otherPurposeText" name="otherPurposeText" rows="2" placeholder="Enter specific maintenance purpose"></textarea>
+        </div>
+    </div>
+</div>
             
             <div class="form-row">
                 <div class="form-group">
@@ -391,7 +402,7 @@
 $(document).ready(function() {
     loadMaintenanceData();
     fetchTrucksList();
-    loadMaintenanceTypes();
+    loadMaintenancePurposes();
     loadSuppliers();
     updateStatsCards();
 });
@@ -447,16 +458,27 @@ function validateMaintenanceForm() {
         }
     }
 
-    // Validate remarks
-    const remarks = document.getElementById('remarks').value.trim();
-    if (!remarks) {
+    // REMOVED THE OLD REMARKS VALIDATION
+    // Validate maintenance purposes instead
+    const selectedPurposes = [];
+    document.querySelectorAll('input[name="maintenancePurpose"]:checked').forEach(checkbox => {
+        if (checkbox.value === "Other") {
+            const otherPurpose = document.getElementById('otherPurposeText').value.trim();
+            if (otherPurpose) {
+                selectedPurposes.push("Other: " + otherPurpose);
+            }
+        } else {
+            selectedPurposes.push(checkbox.value);
+        }
+    });
+    
+    if (selectedPurposes.length === 0) {
         Swal.fire({
-            title: 'Remarks Required',
-            text: 'Please enter maintenance remarks',
+            title: 'Purpose Required',
+            text: 'Please select at least one maintenance purpose',
             icon: 'warning',
             confirmButtonText: 'OK'
         });
-        document.getElementById("remarks").focus();
         return false;
     }
 
@@ -1069,6 +1091,7 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
     document.getElementById("supplierId").value = supplierId;
 
     document.getElementById("status").disabled = false;
+    populateMaintenancePurposes(remarks);
 
     document.querySelector('.edit-reasons-section').style.display = 'block';
     document.querySelectorAll('input[name="editReason"]').forEach(checkbox => {
@@ -1079,6 +1102,38 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
     document.getElementById("maintenanceModal").style.display = "block";
 }
 
+function populateMaintenancePurposes(remarks) {
+    if (!remarks) return;
+    
+    // Reset all checkboxes
+    document.querySelectorAll('input[name="maintenancePurpose"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.getElementById('otherPurposeText').value = '';
+    document.querySelector('.other-purpose').style.display = 'none';
+    
+    // Split remarks by commas to get individual purposes
+    const purposes = remarks.split(',').map(p => p.trim());
+    
+    purposes.forEach(purpose => {
+        // Check if it's an "Other" purpose
+        if (purpose.startsWith('Other:')) {
+            const otherText = purpose.replace('Other:', '').trim();
+            document.getElementById('purpose-other').checked = true;
+            document.getElementById('otherPurposeText').value = otherText;
+            document.querySelector('.other-purpose').style.display = 'block';
+        } else {
+            // Find and check the matching checkbox
+            const checkboxes = document.querySelectorAll('input[name="maintenancePurpose"]');
+            for (let checkbox of checkboxes) {
+                if (checkbox.value === purpose) {
+                    checkbox.checked = true;
+                    break;
+                }
+            }
+        }
+    });
+}
 
     function showEditRemarks(reasonsJson) {
         try {
@@ -1115,12 +1170,47 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
         document.getElementById("status").disabled = false;
         // Hide edit reasons section when closing
         document.querySelector('.edit-reasons-section').style.display = 'none';
+         document.querySelectorAll('input[name="maintenancePurpose"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.getElementById('otherPurposeText').value = '';
+    document.querySelector('.other-purpose').style.display = 'none';
     }
+
+    
             
 function saveMaintenanceRecord() {
     if (!validateMaintenanceForm()) {
         return;
     }
+
+    // Collect selected maintenance purposes
+    const selectedPurposes = [];
+    document.querySelectorAll('input[name="maintenancePurpose"]:checked').forEach(checkbox => {
+        if (checkbox.value === "Other") {
+            const otherPurpose = document.getElementById('otherPurposeText').value.trim();
+            if (otherPurpose) {
+                selectedPurposes.push("Other: " + otherPurpose);
+            }
+        } else {
+            selectedPurposes.push(checkbox.value);
+        }
+    });
+    
+    // Validate that at least one purpose is selected
+    if (selectedPurposes.length === 0) {
+        Swal.fire({
+            title: 'Purpose Required',
+            text: 'Please select at least one maintenance purpose',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    // Join purposes into a string for the remarks field
+    const remarks = selectedPurposes.join(', ');
+    document.getElementById('remarks').value = remarks;
 
     let editReasons = [];
     if (isEditing) {
@@ -1570,7 +1660,98 @@ function updateShowingInfo(totalRecords, currentPageRecordsCount) {
     const end = start + currentPageRecordsCount - 1;
     
     showingInfo.textContent = `Showing ${start} to ${end} of ${totalRecords} entries`;
+    
 }
+
+function loadMaintenancePurposes() {
+    fetch('include/handlers/maintenance_handler.php?action=getMaintenanceTypes')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.types) {
+                const container = document.getElementById('maintenancePurposes');
+                container.innerHTML = '';
+                
+                data.types.forEach(type => {
+                    const checkboxId = `purpose-${type.maintenance_type_id}`;
+                    const checkboxItem = document.createElement('div');
+                    checkboxItem.className = 'checkbox-item';
+                    checkboxItem.innerHTML = `
+                        <input type="checkbox" name="maintenancePurpose" value="${type.type_name}" 
+                               id="${checkboxId}" onchange="toggleOtherPurpose()">
+                        <label for="${checkboxId}">${type.type_name}</label>
+                    `;
+                    container.appendChild(checkboxItem);
+                });
+                
+                // Add the "Other" option
+                const otherItem = document.createElement('div');
+                otherItem.className = 'checkbox-item';
+                otherItem.innerHTML = `
+                    <input type="checkbox" name="maintenancePurpose" value="Other" 
+                           id="purpose-other" onchange="toggleOtherPurpose()">
+                    <label for="purpose-other">Other</label>
+                `;
+                container.appendChild(otherItem);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading maintenance purposes:', error);
+        });
+}
+
+// Function to toggle the other purpose textarea
+function toggleOtherPurpose() {
+    const otherCheckbox = document.getElementById('purpose-other');
+    const otherPurposeSection = document.querySelector('.other-purpose');
+    
+    if (otherCheckbox.checked) {
+        otherPurposeSection.style.display = 'block';
+    } else {
+        otherPurposeSection.style.display = 'none';
+        document.getElementById('otherPurposeText').value = '';
+    }
+}
+
+// Function to check maintenance type and validate date for preventive maintenance
+function checkMaintenanceType() {
+    const maintenanceType = document.getElementById('maintenanceTypeId').value;
+    const dateInput = document.getElementById('date');
+    const truckId = document.getElementById('truckId').value;
+    
+    if (maintenanceType === '1' && truckId) { // Preventive Maintenance
+        // Check if date is at least 6 months after last preventive maintenance
+        fetch(`include/handlers/maintenance_handler.php?action=checkPreventiveDate&truckId=${truckId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.lastDate) {
+                    const lastDate = new Date(data.lastDate);
+                    const minDate = new Date(lastDate);
+                    minDate.setMonth(minDate.getMonth() + 6);
+                    
+                    // Set the minimum date for the date input
+                    dateInput.min = minDate.toISOString().split('T')[0];
+                    
+                    // Show warning if selected date is before minimum date
+                    if (new Date(dateInput.value) < minDate) {
+                        dateInput.value = minDate.toISOString().split('T')[0];
+                        Swal.fire({
+                            title: 'Date Adjusted',
+                            text: `Preventive maintenance must be at least 6 months after the last one (${formatDate(data.lastDate)}). Date has been adjusted accordingly.`,
+                            icon: 'info',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking preventive maintenance date:', error);
+            });
+    } else {
+        // Remove restriction for emergency maintenance
+        dateInput.removeAttribute('min');
+    }
+}
+
     </script>
 
 <script src="include/js/logout-confirm.js"></script>

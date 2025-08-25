@@ -844,6 +844,43 @@ try {
                 echo json_encode(['success' => true, 'hasConflict' => false]);
             }
             break;
+
+            case 'checkPreventiveDate':
+    $truckId = isset($_GET['truckId']) ? intval($_GET['truckId']) : 0;
+    
+    if ($truckId <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid truck ID"]);
+        exit;
+    }
+    
+    $sql = "SELECT MAX(date_mtnce) as last_date 
+            FROM maintenance_table 
+            WHERE truck_id = ? 
+            AND maintenance_type_id = 1 
+            AND status = 'Completed'
+            AND NOT EXISTS (
+                SELECT 1 FROM audit_logs_maintenance al 
+                WHERE al.maintenance_id = maintenance_table.maintenance_id 
+                AND al.is_deleted = 1
+            )";
+    
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+        break;
+    }
+    
+    $stmt->bind_param("i", $truckId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        echo json_encode(["success" => true, "lastDate" => $row['last_date']]);
+    } else {
+        echo json_encode(["success" => true, "lastDate" => null]);
+    }
+    break;
             
         case 'getMaintenanceTypes':
             $sql = "SELECT maintenance_type_id, type_name FROM maintenance_types ORDER BY type_name";
