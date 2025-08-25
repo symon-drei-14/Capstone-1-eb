@@ -9,172 +9,400 @@ $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 $action = $data['action'] ?? '';
 
+function getOrCreateClientId($conn, $clientName) {
+    $stmt = $conn->prepare("SELECT client_id FROM clients WHERE name = ?");
+    $stmt->bind_param("s", $clientName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['client_id'];
+    } else {
+        $insertStmt = $conn->prepare("INSERT INTO clients (name) VALUES (?)");
+        $insertStmt->bind_param("s", $clientName);
+        $insertStmt->execute();
+        return $conn->insert_id;
+    }
+}
+
+
+
+function insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance = 0, $diesel = 0) {
+    $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance, additional_cash_advance, diesel) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("iddd", $tripId, $cashAdvance, $additionalCashAdvance, $diesel);
+    return $stmt->execute();
+}
+
+function updateTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance = 0, $diesel = 0) {
+    $checkStmt = $conn->prepare("SELECT expense_id FROM trip_expenses WHERE trip_id = ?");
+    $checkStmt->bind_param("i", $tripId);
+    $checkStmt->execute();
+    $exists = $checkStmt->get_result()->num_rows > 0;
+    
+    if ($exists) {
+        $stmt = $conn->prepare("UPDATE trip_expenses SET cash_advance = ?, additional_cash_advance = ?, diesel = ? WHERE trip_id = ?");
+        $stmt->bind_param("dddi", $cashAdvance, $additionalCashAdvance, $diesel, $tripId);
+    } else {
+        $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance, additional_cash_advance, diesel) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("iddd", $tripId, $cashAdvance, $additionalCashAdvance, $diesel);
+    }
+    
+    return $stmt->execute();
+}
+
+function getHelperId($conn, $helperName) {
+    if (empty($helperName)) return null;
+    
+    $stmt = $conn->prepare("SELECT helper_id FROM helpers WHERE name = ?");
+    $stmt->bind_param("s", $helperName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['helper_id'];
+    }
+    return null;
+}
+
+function getDispatcherId($conn, $dispatcherName) {
+    if (empty($dispatcherName)) return null;
+    
+    $stmt = $conn->prepare("SELECT dispatcher_id FROM dispatchers WHERE name = ?");
+    $stmt->bind_param("s", $dispatcherName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['dispatcher_id'];
+    }
+    return null;
+}
+
+function getOrCreateDestinationId($conn, $destinationName) {
+    $stmt = $conn->prepare("SELECT destination_id FROM destinations WHERE name = ?");
+    $stmt->bind_param("s", $destinationName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['destination_id'];
+    } else {
+        $insertStmt = $conn->prepare("INSERT INTO destinations (name) VALUES (?)");
+        $insertStmt->bind_param("s", $destinationName);
+        $insertStmt->execute();
+        return $conn->insert_id;
+    }
+}
+
+function getOrCreateShippingLineId($conn, $shippingLineName) {
+    $stmt = $conn->prepare("SELECT shipping_line_id FROM shipping_lines WHERE name = ?");
+    $stmt->bind_param("s", $shippingLineName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['shipping_line_id'];
+    } else {
+        $insertStmt = $conn->prepare("INSERT INTO shipping_lines (name) VALUES (?)");
+        $insertStmt->bind_param("s", $shippingLineName);
+        $insertStmt->execute();
+        return $conn->insert_id;
+    }
+}
+
+function getConsigneeId($conn, $consigneeName) {
+    if (empty($consigneeName)) return null;
+    
+    $stmt = $conn->prepare("SELECT consignee_id FROM consignees WHERE name = ?");
+    $stmt->bind_param("s", $consigneeName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['consignee_id'];
+    }
+    return null;
+}
+
+function getTruckIdByPlateNo($conn, $plateNo) {
+    $stmt = $conn->prepare("SELECT truck_id FROM truck_table WHERE plate_no = ?");
+    $stmt->bind_param("s", $plateNo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['truck_id'];
+    }
+    return null;
+}
+
+function getDriverIdByName($conn, $driverName) {
+    $stmt = $conn->prepare("SELECT driver_id FROM drivers_table WHERE name = ?");
+    $stmt->bind_param("s", $driverName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['driver_id'];
+    }
+    return null;
+}
+
 try {
     switch ($action) {
         case 'add':
-            $driverId = $data['driver_id'] ?? null;
-            $driverName = $data['driver'] ?? null;
+            $conn->begin_transaction();
             
-            if (empty($driverId) && !empty($driverName)) {
-                $getDriverId = $conn->prepare("SELECT driver_id FROM drivers_table WHERE name = ? LIMIT 1");
-                $getDriverId->bind_param("s", $driverName);
-                $getDriverId->execute();
-                $driverResult = $getDriverId->get_result();
-                if ($driverResult->num_rows > 0) {
-                    $driverId = $driverResult->fetch_assoc()['driver_id'];
+            try {
+                $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
+                $clientId = getOrCreateClientId($conn, $data['client']);
+                $helperId = getHelperId($conn, $data['helper']);
+                $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
+                $destinationId = getOrCreateDestinationId($conn, $data['destination']);
+                $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
+                $consigneeId = getConsigneeId($conn, $data['consignee']);
+                $driverId = getDriverIdByName($conn, $data['driver']);
+                
+                if (!$truckId) {
+                    throw new Exception("Truck with plate number {$data['plateNo']} not found");
                 }
-                $getDriverId->close();
+                if (!$driverId) {
+                    throw new Exception("Driver {$data['driver']} not found");
+                }
+                
+                $stmt = $conn->prepare("INSERT INTO trips 
+                    (truck_id, driver_id, helper_id, dispatcher_id, client_id, 
+                    destination_id, shipping_line_id, consignee_id, container_no, 
+                    trip_date, status, fcl_status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("iiiiiiiissss",
+                    $truckId,
+                    $driverId,
+                    $helperId,
+                    $dispatcherId,
+                    $clientId,
+                    $destinationId,
+                    $shippingLineId,
+                    $consigneeId,
+                    $data['containerNo'],
+                    $data['date'],
+                    $data['status'],
+                    $data['size']
+                );
+                
+                if (!$stmt->execute()) {
+                    throw new Exception("Failed to insert trip: " . $stmt->error);
+                }
+                
+                $tripId = $conn->insert_id;
+
+                $cashAdvance = floatval($data['cashAdvance'] ?? 0);
+                $additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
+                $diesel = floatval($data['diesel'] ?? 0);
+                
+                if ($cashAdvance > 0 || $additionalCashAdvance > 0 || $diesel > 0) {
+                    if (!insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance, $diesel)) {
+                        throw new Exception("Failed to insert trip expenses");
+                    }
+                }
+
+                $auditStmt = $conn->prepare("INSERT INTO audit_logs_trips (trip_id, modified_by, edit_reason) VALUES (?, ?, 'Trip created')");
+                $auditStmt->bind_param("is", $tripId, $currentUser);
+                if (!$auditStmt->execute()) {
+                    throw new Exception("Failed to insert audit log: " . $auditStmt->error);
+                }
+
+                if ($data['status'] === 'En Route') {
+                    $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
+                    $updateTruck->bind_param("i", $truckId);
+                    $updateTruck->execute();
+                }
+
+                $conn->commit();
+                echo json_encode(['success' => true, 'trip_id' => $tripId]);
+                
+            } catch (Exception $e) {
+                $conn->rollback();
+                throw $e;
             }
+            break;
+
+        case 'edit':
+            $conn->begin_transaction();
             
-            $stmt = $conn->prepare("INSERT INTO assign 
-                (plate_no, date, driver, driver_id, helper, dispatcher, container_no, client, 
-                destination, shippine_line, consignee, size, cash_adv, status,
-                last_modified_by) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssssssssssssss",
-                $data['plateNo'],
-                $data['date'],
-                $driverName,
-                $driverId, 
-                $data['helper'],
-                $data['dispatcher'],
-                $data['containerNo'],
-                $data['client'],
-                $data['destination'],
-                $data['shippingLine'],
-                $data['consignee'],
-                $data['size'],
-                $data['cashAdvance'],
-                $data['status'],
-                $currentUser  
+            try {
+                $getCurrent = $conn->prepare("SELECT status, truck_id FROM trips WHERE trip_id = ?");
+                $getCurrent->bind_param("i", $data['id']);
+                $getCurrent->execute();
+                $current = $getCurrent->get_result()->fetch_assoc();
+                
+                if (!$current) {
+                    throw new Exception("Trip not found");
+                }
+                
+                $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
+                $clientId = getOrCreateClientId($conn, $data['client']);
+                $helperId = getHelperId($conn, $data['helper']);
+                $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
+                $destinationId = getOrCreateDestinationId($conn, $data['destination']);
+                $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
+                $consigneeId = getConsigneeId($conn, $data['consignee']);
+                $driverId = getDriverIdByName($conn, $data['driver']);
+                
+                // Update the trip
+                $stmt = $conn->prepare("UPDATE trips SET 
+                    truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, 
+                    destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
+                    trip_date=?, status=?, fcl_status=?
+                    WHERE trip_id=?");
+                $stmt->bind_param("iiiiiiissssi",
+                    $truckId,
+                    $driverId,
+                    $helperId,
+                    $dispatcherId,
+                    $clientId,
+                    $destinationId,
+                    $shippingLineId,
+                    $consigneeId,
+                    $data['containerNo'],
+                    $data['date'],
+                    $data['status'],
+                    $data['size'],
+                    $data['id']
+                );
+                $stmt->execute();
+                
+                // Update trip expenses with all three fields
+                $cashAdvance = floatval($data['cashAdvance'] ?? 0);
+                $additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
+                $diesel = floatval($data['diesel'] ?? 0);
+                
+                updateTripExpenses($conn, $data['id'], $cashAdvance, $additionalCashAdvance, $diesel);
+                
+                // Update audit log
+                $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
+                $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
+                $auditStmt->bind_param("ssi", $currentUser, $editReasons, $data['id']);
+                $auditStmt->execute();
+                
+                // Update truck status logic
+                if ($current['status'] !== $data['status']) {
+                    $newTruckStatus = 'In Terminal';
+                    if ($data['status'] === 'En Route') {
+                        $newTruckStatus = 'Enroute';
+                    }
+                    
+                    $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
+                    $updateTruck->bind_param("si", $newTruckStatus, $truckId);
+                    $updateTruck->execute();
+                }
+                
+                $conn->commit();
+                echo json_encode(['success' => true]);
+                
+            } catch (Exception $e) {
+                $conn->rollback();
+                throw $e;
+            }
+            break;
+
+        case 'delete':
+            // Mark trip as deleted in audit log
+            $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
+                is_deleted = 1,
+                delete_reason = ?,
+                modified_by = ?,
+                modified_at = NOW()
+                WHERE trip_id = ? AND is_deleted = 0");
+            $stmt->bind_param("ssi", 
+                $data['reason'],
+                $currentUser,
+                $data['id']
             );
             $stmt->execute();
-
-            if ($data['status'] === 'En Route') {
-                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE plate_no = ?");
-                $updateTruck->bind_param("s", $data['plateNo']);
+            
+            // Get trip details for truck status update
+            $getTrip = $conn->prepare("
+                SELECT t.status, tr.truck_id 
+                FROM trips t 
+                JOIN truck_table tr ON t.truck_id = tr.truck_id 
+                WHERE t.trip_id = ?
+            ");
+            $getTrip->bind_param("i", $data['id']);
+            $getTrip->execute();
+            $trip = $getTrip->get_result()->fetch_assoc();
+            
+            if ($trip) {
+                $newTruckStatus = 'In Terminal';
+                $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
+                $updateTruck->bind_param("si", $newTruckStatus, $trip['truck_id']);
                 $updateTruck->execute();
             }
             
             echo json_encode(['success' => true]);
             break;
 
-      case 'edit':
-    $getCurrent = $conn->prepare("SELECT status, plate_no FROM assign WHERE trip_id = ?");
-    $getCurrent->bind_param("i", $data['id']);
-    $getCurrent->execute();
-    $current = $getCurrent->get_result()->fetch_assoc();
-
-    $driverId = $data['driver_id'] ?? null;
-    $driverName = $data['driver'] ?? null;
-    
-    if (empty($driverId) && !empty($driverName)) {
-        $getDriverId = $conn->prepare("SELECT driver_id FROM drivers_table WHERE name = ? LIMIT 1");
-        $getDriverId->bind_param("s", $driverName);
-        $getDriverId->execute();
-        $driverResult = $getDriverId->get_result();
-        if ($driverResult->num_rows > 0) {
-            $driverId = $driverResult->fetch_assoc()['driver_id'];
-        }
-        $getDriverId->close();
-    }
-    
-    $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
-    
-    $stmt = $conn->prepare("UPDATE assign SET 
-        plate_no=?, date=?, driver=?, driver_id=?, helper=?, dispatcher=?, container_no=?, client=?, 
-        destination=?, shippine_line=?, consignee=?, size=?, cash_adv=?, status=?,
-        edit_reasons=?, last_modified_by=?, last_modified_at=NOW()
-        WHERE trip_id=?");
-    $stmt->bind_param("ssssssssssssssssi",
-        $data['plateNo'],
-        $data['date'],
-        $driverName,
-        $driverId,
-        $data['helper'],
-        $data['dispatcher'],
-        $data['containerNo'],
-        $data['client'],
-        $data['destination'],
-        $data['shippingLine'],
-        $data['consignee'],
-        $data['size'],
-        $data['cashAdvance'],
-        $data['status'],
-        $editReasons,
-        $currentUser,  
-        $data['id']
-    );
-    $stmt->execute();
-    
-    // Update truck status based on trip status
-    if ($current['status'] !== $data['status']) {
-        $newTruckStatus = 'In Terminal'; // Default status
-        
-        if ($data['status'] === 'En Route') {
-            $newTruckStatus = 'Enroute';
-        } elseif ($data['status'] === 'Pending') {
-            $newTruckStatus = 'In Terminal'; // Changed from 'Pending' to 'In Terminal'
-        }
-        
-        $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE plate_no = ?");
-        $updateTruck->bind_param("ss", $newTruckStatus, $data['plateNo']);
-        $updateTruck->execute();
-    }
-    
-    echo json_encode(['success' => true]);
-    break;
-
-       case 'delete':
-    $getPlate = $conn->prepare("SELECT plate_no, status FROM assign WHERE trip_id = ?");
-    $getPlate->bind_param("i", $data['id']);
-    $getPlate->execute();
-    $trip = $getPlate->get_result()->fetch_assoc();
-    
-    // Soft delete instead of hard delete
-    $stmt = $conn->prepare("UPDATE assign SET 
-        is_deleted = 1,
-        delete_reason = ?,
-        last_modified_by = ?,
-        last_modified_at = NOW()
-        WHERE trip_id = ?");
-    $stmt->bind_param("ssi", 
-        $data['reason'],
-        $currentUser,
-        $data['id']
-    );
-    $stmt->execute();
-    
-    if ($trip) {
-        $newTruckStatus = 'In Terminal'; // Reset to In Terminal when trip is deleted
-        $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE plate_no = ?");
-        $updateTruck->bind_param("ss", $newTruckStatus, $trip['plate_no']);
-        $updateTruck->execute();
-    }
-    
-    echo json_encode(['success' => true]);
-    break;
-
-        case 'get_drivers':
-            $stmt = $conn->prepare("SELECT driver_id, name, email FROM drivers_table ORDER BY name");
-            $stmt->execute();
-            $result = $stmt->get_result();
+        case 'get_active_trips':
+            $statusFilter = $data['statusFilter'] ?? 'all';
+            $sortOrder = $data['sortOrder'] ?? 'desc';
+            $page = $data['page'] ?? 1;
+            $perPage = $data['perPage'] ?? 10;
             
-            $drivers = [];
-            while ($row = $result->fetch_assoc()) {
-                $drivers[] = $row;
+            $query = "SELECT 
+                        t.trip_id,
+                        t.container_no,
+                        t.trip_date,
+                        t.status,
+                        t.fcl_status,
+                        t.created_at,
+                        tr.plate_no, 
+                        tr.capacity as truck_capacity,
+                        d.name as driver,
+                        d.driver_id,
+                        h.name as helper,
+                        disp.name as dispatcher,
+                        c.name as client,
+                        dest.name as destination,
+                        sl.name as shipping_line,
+                        cons.name as consignee,
+                        al.modified_by as last_modified_by,
+                        al.modified_at as last_modified_at,
+                        al.edit_reason,
+                        COALESCE(te.cash_advance, 0) as cash_advance,
+                        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+                        COALESCE(te.diesel, 0) as diesel
+                      FROM trips t
+                      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+                      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+                      LEFT JOIN helpers h ON t.helper_id = h.helper_id
+                      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+                      LEFT JOIN clients c ON t.client_id = c.client_id
+                      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+                      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+                      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+                      LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
+                      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+                      WHERE NOT EXISTS (
+                          SELECT 1 FROM audit_logs_trips al2 
+                          WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+                      )";
+            
+            if ($statusFilter !== 'all') {
+                $query .= " AND t.status = ?";
             }
             
-            echo json_encode(['success' => true, 'drivers' => $drivers]);
-            break;
-
-        case 'get_trips_with_drivers':
-            $stmt = $conn->prepare("
-                SELECT a.*, d.name as driver_name, d.email as driver_email 
-                FROM assign a 
-                LEFT JOIN drivers_table d ON a.driver_id = d.driver_id 
-                ORDER BY a.date DESC
-            ");
+            $query .= " ORDER BY t.trip_date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
+            $offset = ($page - 1) * $perPage;
+            $query .= " LIMIT ? OFFSET ?";
+            
+            if ($statusFilter !== 'all') {
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("sii", $statusFilter, $perPage, $offset);
+            } else {
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("ii", $perPage, $offset);
+            }
+            
             $stmt->execute();
             $result = $stmt->get_result();
             
@@ -183,277 +411,372 @@ try {
                 $trips[] = $row;
             }
             
-            echo json_encode(['success' => true, 'trips' => $trips]);
-            break;
-
-        case 'fix_missing_driver_ids':
-            $stmt = $conn->prepare("
-                UPDATE assign a 
-                SET driver_id = (
-                    SELECT d.driver_id 
-                    FROM drivers_table d 
-                    WHERE d.name = a.driver 
-                    LIMIT 1
-                ) 
-                WHERE a.driver_id IS NULL AND a.driver IS NOT NULL
-            ");
-            $stmt->execute();
-            $affectedRows = $stmt->affected_rows;
+            // Get total count
+            $countQuery = "SELECT COUNT(*) as total FROM trips t
+                          WHERE NOT EXISTS (
+                              SELECT 1 FROM audit_logs_trips al2 
+                              WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+                          )";
             
-            echo json_encode(['success' => true, 'updated_records' => $affectedRows]);
+            if ($statusFilter !== 'all') {
+                $countQuery .= " AND t.status = ?";
+                $countStmt = $conn->prepare($countQuery);
+                $countStmt->bind_param("s", $statusFilter);
+            } else {
+                $countStmt = $conn->prepare($countQuery);
+            }
+            
+            $countStmt->execute();
+            $total = $countStmt->get_result()->fetch_assoc()['total'];
+            
+            echo json_encode([
+                'success' => true, 
+                'trips' => $trips,
+                'total' => $total,
+                'perPage' => $perPage,
+                'currentPage' => $page
+            ]);
             break;
 
-// Update the 'get_active_trips' and 'get_deleted_trips' cases to include status filtering
-case 'get_active_trips':
-    $statusFilter = $data['statusFilter'] ?? 'all';
-    $sortOrder = $data['sortOrder'] ?? 'desc';
-    $page = $data['page'] ?? 1;
-    $perPage = $data['perPage'] ?? 10; // Default to 10 items per page
-    
-    $query = "SELECT * FROM assign WHERE is_deleted = 0";
-    
-    if ($statusFilter !== 'all') {
-        $query .= " AND status = ?";
-    }
-    
-    $query .= " ORDER BY date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
-    
-    // Add pagination
-    $offset = ($page - 1) * $perPage;
-    $query .= " LIMIT ? OFFSET ?";
-    
-    if ($statusFilter !== 'all') {
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param("sii", $statusFilter, $perPage, $offset);
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param("ii", $perPage, $offset);
-    }
-    
+        case 'get_deleted_trips':
+            $statusFilter = $data['statusFilter'] ?? 'all';
+            $sortOrder = $data['sortOrder'] ?? 'desc';
+            $page = $data['page'] ?? 1;
+            $perPage = $data['perPage'] ?? 10;
+            
+            $query = "SELECT 
+                        t.trip_id,
+                        t.container_no,
+                        t.trip_date,
+                        t.status,
+                        t.fcl_status,
+                        t.created_at,
+                        tr.plate_no, 
+                        tr.capacity as truck_capacity,
+                        d.name as driver,
+                        h.name as helper,
+                        disp.name as dispatcher,
+                        c.name as client,
+                        dest.name as destination,
+                        sl.name as shipping_line,
+                        cons.name as consignee,
+                        al.modified_by as last_modified_by,
+                        al.modified_at as last_modified_at,
+                        al.delete_reason,
+                        1 as is_deleted,
+                        COALESCE(te.cash_advance, 0) as cash_advance,
+                        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+                        COALESCE(te.diesel, 0) as diesel
+                      FROM trips t
+                      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+                      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+                      LEFT JOIN helpers h ON t.helper_id = h.helper_id
+                      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+                      LEFT JOIN clients c ON t.client_id = c.client_id
+                      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+                      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+                      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+                      LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 1
+                      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+                      WHERE EXISTS (
+                          SELECT 1 FROM audit_logs_trips al2 
+                          WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+                      )";
+            
+            if ($statusFilter !== 'all') {
+                $query .= " AND t.status = ?";
+            }
+            
+            $query .= " ORDER BY t.trip_date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
+            $offset = ($page - 1) * $perPage;
+            $query .= " LIMIT ? OFFSET ?";
+            
+            if ($statusFilter !== 'all') {
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("sii", $statusFilter, $perPage, $offset);
+            } else {
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("ii", $perPage, $offset);
+            }
+            
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $trips = [];
+            while ($row = $result->fetch_assoc()) {
+                $trips[] = $row;
+            }
+            
+            // Get total count for deleted trips
+            $countQuery = "SELECT COUNT(*) as total FROM trips t
+                          WHERE EXISTS (
+                              SELECT 1 FROM audit_logs_trips al2 
+                              WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+                          )";
+            
+            if ($statusFilter !== 'all') {
+                $countQuery .= " AND t.status = ?";
+                $countStmt = $conn->prepare($countQuery);
+                $countStmt->bind_param("s", $statusFilter);
+            } else {
+                $countStmt = $conn->prepare($countQuery);
+            }
+            
+            $countStmt->execute();
+            $total = $countStmt->get_result()->fetch_assoc()['total'];
+            
+            echo json_encode([
+                'success' => true, 
+                'trips' => $trips,
+                'total' => $total,
+                'perPage' => $perPage,
+                'currentPage' => $page
+            ]);
+            break;
+
+        case 'restore':
+            // Restore trip by marking as not deleted
+            $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
+                is_deleted = 0,
+                delete_reason = NULL,
+                modified_by = ?,
+                modified_at = NOW()
+                WHERE trip_id = ? AND is_deleted = 1");
+            $stmt->bind_param("si", $currentUser, $data['id']);
+            $stmt->execute();
+            
+            // Get trip details for truck status update
+            $getTrip = $conn->prepare("
+                SELECT t.status, tr.truck_id 
+                FROM trips t 
+                JOIN truck_table tr ON t.truck_id = tr.truck_id 
+                WHERE t.trip_id = ?
+            ");
+            $getTrip->bind_param("i", $data['id']);
+            $getTrip->execute();
+            $trip = $getTrip->get_result()->fetch_assoc();
+            
+            // Update truck status if needed
+            if ($trip && $trip['status'] === 'En Route') {
+                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
+                $updateTruck->bind_param("i", $trip['truck_id']);
+                $updateTruck->execute();
+            }
+            
+            // Get updated stats
+            require 'triplogstats.php';
+            $stats = getTripStatistics($conn);
+            
+            echo json_encode([
+                'success' => true,
+                'stats' => $stats
+            ]);
+            break;
+
+        case 'full_delete':
+            // First mark as deleted in audit log (if not already)
+            $checkStmt = $conn->prepare("SELECT is_deleted FROM audit_logs_trips WHERE trip_id = ? AND is_deleted = 1");
+            $checkStmt->bind_param("i", $data['id']);
+            $checkStmt->execute();
+            $isDeleted = $checkStmt->get_result()->num_rows > 0;
+            
+            if (!$isDeleted) {
+                throw new Exception("Trip must be soft-deleted first");
+            }
+            
+            // Permanently delete the trip and related records
+            $conn->begin_transaction();
+            
+            try {
+                // Delete trip expenses first (if any)
+                $deleteExpenses = $conn->prepare("DELETE FROM trip_expenses WHERE trip_id = ?");
+                $deleteExpenses->bind_param("i", $data['id']);
+                $deleteExpenses->execute();
+                
+                // Delete audit logs (foreign key constraint)
+                $deleteAudit = $conn->prepare("DELETE FROM audit_logs_trips WHERE trip_id = ?");
+                $deleteAudit->bind_param("i", $data['id']);
+                $deleteAudit->execute();
+                
+                // Delete the trip
+                $deleteTrip = $conn->prepare("DELETE FROM trips WHERE trip_id = ?");
+                $deleteTrip->bind_param("i", $data['id']);
+                $deleteTrip->execute();
+                
+                $conn->commit();
+                
+                // Get updated stats
+                require 'triplogstats.php';
+                $stats = getTripStatistics($conn);
+                
+                echo json_encode([
+                    'success' => true,
+                    'stats' => $stats,
+                    'message' => 'Trip permanently deleted'
+                ]);
+            } catch (Exception $e) {
+                $conn->rollback();
+                throw $e;
+            }
+            break;
+
+        case 'get_expenses':
+            $tripId = $data['tripId'] ?? 0;
+            
+            // Get expenses from the trip_expenses table
+            $stmt = $conn->prepare("
+                SELECT 
+                    'Cash Advance' as expense_type,
+                    CONCAT('₱', FORMAT(cash_advance, 2)) as amount
+                FROM trip_expenses 
+                WHERE trip_id = ? AND cash_advance > 0
+                
+                UNION ALL
+                
+                SELECT 
+                    'Additional Cash Advance' as expense_type,
+                    CONCAT('₱', FORMAT(additional_cash_advance, 2)) as amount
+                FROM trip_expenses 
+                WHERE trip_id = ? AND additional_cash_advance > 0
+                
+                UNION ALL
+                
+                SELECT 
+                    'Diesel' as expense_type,
+                    CONCAT('₱', FORMAT(diesel, 2)) as amount
+                FROM trip_expenses 
+                WHERE trip_id = ? AND diesel > 0
+                
+                UNION ALL
+                
+                SELECT 
+                    expense_type,
+                    CONCAT('₱', FORMAT(amount, 2)) as amount
+                FROM expenses 
+                WHERE trip_id = ?
+                
+                ORDER BY 
+                    CASE expense_type 
+                        WHEN 'Cash Advance' THEN 1
+                        WHEN 'Additional Cash Advance' THEN 2
+                        WHEN 'Diesel' THEN 3
+                        ELSE 4
+                    END
+            ");
+            
+            $stmt->bind_param("iiii", $tripId, $tripId, $tripId, $tripId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $expenses = [];
+            while ($row = $result->fetch_assoc()) {
+                $expenses[] = $row;
+            }
+            
+            echo json_encode(['success' => true, 'expenses' => $expenses]);
+            break;
+
+            // Add these new cases to your switch statement:
+
+case 'get_helpers':
+    $stmt = $conn->prepare("SELECT helper_id, name FROM helpers ORDER BY name");
     $stmt->execute();
     $result = $stmt->get_result();
     
-    $trips = [];
+    $helpers = [];
     while ($row = $result->fetch_assoc()) {
-        $trips[] = $row;
+        $helpers[] = $row;
     }
     
-    // Get total count for pagination
-    $countQuery = "SELECT COUNT(*) as total FROM assign WHERE is_deleted = 0";
-    if ($statusFilter !== 'all') {
-        $countQuery .= " AND status = ?";
-    }
-    
-    if ($statusFilter !== 'all') {
-        $countStmt = $conn->prepare($countQuery);
-        $countStmt->bind_param("s", $statusFilter);
-    } else {
-        $countStmt = $conn->prepare($countQuery);
-    }
-    $countStmt->execute();
-    $total = $countStmt->get_result()->fetch_assoc()['total'];
-    
-    echo json_encode([
-        'success' => true, 
-        'trips' => $trips,
-        'total' => $total,
-        'perPage' => $perPage,
-        'currentPage' => $page
-    ]);
+    echo json_encode(['success' => true, 'helpers' => $helpers]);
     break;
 
-case 'get_deleted_trips':
-    $statusFilter = $data['statusFilter'] ?? 'all';
-    $sortOrder = $data['sortOrder'] ?? 'desc';
-    $page = $data['page'] ?? 1;
-    $perPage = $data['perPage'] ?? 10;
-    
-    $query = "SELECT * FROM assign WHERE is_deleted = 1";
-    
-    if ($statusFilter !== 'all') {
-        $query .= " AND status = ?";
-    }
-    
-    $query .= " ORDER BY date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
-    $offset = ($page - 1) * $perPage;
-    $query .= " LIMIT ? OFFSET ?";
-    
-    if ($statusFilter !== 'all') {
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param("sii", $statusFilter, $perPage, $offset);
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param("ii", $perPage, $offset);
-    }
-    
+    case 'get_clients':
+    $stmt = $conn->prepare("SELECT client_id, name FROM clients ORDER BY name");
     $stmt->execute();
     $result = $stmt->get_result();
-    
-    $trips = [];
+
+    $clients = [];
     while ($row = $result->fetch_assoc()) {
-        $trips[] = $row;
+        $clients[] = $row;
     }
-    
-    $countQuery = "SELECT COUNT(*) as total FROM assign WHERE is_deleted = 1";
-    if ($statusFilter !== 'all') {
-        $countQuery .= " AND status = ?";
-    }
-    
-    if ($statusFilter !== 'all') {
-        $countStmt = $conn->prepare($countQuery);
-        $countStmt->bind_param("s", $statusFilter);
-    } else {
-        $countStmt = $conn->prepare($countQuery);
-    }
-    $countStmt->execute();
-    $total = $countStmt->get_result()->fetch_assoc()['total'];
-    
-    echo json_encode([
-        'success' => true, 
-        'trips' => $trips,
-        'total' => $total,
-        'perPage' => $perPage,
-        'currentPage' => $page
-    ]);
-    break;
-    
-case 'get_driver_trip_counts':
-    // Get total completed trips for all drivers
-    $totalQuery = "SELECT driver_id, COUNT(*) as total_completed 
-                  FROM assign 
-                  WHERE status = 'Completed' AND is_deleted = 0
-                  GROUP BY driver_id";
-    $totalResult = $conn->query($totalQuery);
-    $totalCounts = [];
-    while ($row = $totalResult->fetch_assoc()) {
-        $totalCounts[$row['driver_id']] = $row['total_completed'];
-    }
-    
-    // Get monthly completed trips for all drivers
-    $monthlyQuery = "SELECT driver_id, COUNT(*) as monthly_completed 
-                    FROM assign 
-                    WHERE status = 'Completed' 
-                    AND is_deleted = 0
-                    AND MONTH(date) = MONTH(CURRENT_DATE())
-                    AND YEAR(date) = YEAR(CURRENT_DATE())
-                    GROUP BY driver_id";
-    $monthlyResult = $conn->query($monthlyQuery);
-    $monthlyCounts = [];
-    while ($row = $monthlyResult->fetch_assoc()) {
-        $monthlyCounts[$row['driver_id']] = $row['monthly_completed'];
-    }
-    
-    // Combine results
-    $allDrivers = $conn->query("SELECT driver_id FROM drivers_table");
-    $tripCounts = [];
-    while ($driver = $allDrivers->fetch_assoc()) {
-        $driverId = $driver['driver_id'];
-        $tripCounts[] = [
-            'driver_id' => $driverId,
-            'total_completed' => $totalCounts[$driverId] ?? 0,
-            'monthly_completed' => $monthlyCounts[$driverId] ?? 0
-        ];
-    }
-    
-    echo json_encode([
-        'success' => true,
-        'trip_counts' => $tripCounts
-    ]);
+
+    echo json_encode(['success' => true, 'clients' => $clients]);
     break;
 
-
-case 'restore':
-    $getTrip = $conn->prepare("SELECT plate_no, status FROM assign WHERE trip_id = ?");
-    $getTrip->bind_param("i", $data['id']);
-    $getTrip->execute();
-    $trip = $getTrip->get_result()->fetch_assoc();
-    
-    $stmt = $conn->prepare("UPDATE assign SET 
-        is_deleted = 0,
-        delete_reason = NULL,
-        last_modified_by = ?,
-        last_modified_at = NOW()
-        WHERE trip_id = ?");
-    $stmt->bind_param("si", $currentUser, $data['id']);
-    $stmt->execute();
-    
-    // Update truck status if needed
-    if ($trip && $trip['status'] === 'En Route') {
-        $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE plate_no = ?");
-        $updateTruck->bind_param("s", $trip['plate_no']);
-        $updateTruck->execute();
-    }
-    
-    // Get updated stats
-    require 'triplogstats.php';
-    $stats = getTripStatistics($conn);
-    
-    echo json_encode([
-        'success' => true,
-        'stats' => $stats
-    ]);
-    break;
-
-    case 'get_expenses':
-    $tripId = $data['tripId'] ?? 0;
-    
-    $stmt = $conn->prepare("SELECT expense_type, amount FROM expenses WHERE trip_id = ?");
-    $stmt->bind_param("i", $tripId);
+case 'get_destinations':
+    $stmt = $conn->prepare("SELECT destination_id, name FROM destinations ORDER BY name");
     $stmt->execute();
     $result = $stmt->get_result();
-    
-    $expenses = [];
+
+    $destinations = [];
     while ($row = $result->fetch_assoc()) {
-        $expenses[] = $row;
+        $destinations[] = $row;
     }
-    
-    echo json_encode(['success' => true, 'expenses' => $expenses]);
+
+    echo json_encode(['success' => true, 'destinations' => $destinations]);
     break;
 
-    case 'full_delete':
-    // First get the trip details
-    $getTrip = $conn->prepare("SELECT * FROM assign WHERE trip_id = ?");
-    $getTrip->bind_param("i", $data['id']);
-    $getTrip->execute();
-    $trip = $getTrip->get_result()->fetch_assoc();
-    
-    // Permanently delete the trip
-    $stmt = $conn->prepare("DELETE FROM assign WHERE trip_id = ?");
-    $stmt->bind_param("i", $data['id']);
+case 'get_shipping_lines':
+    $stmt = $conn->prepare("SELECT shipping_line_id, name FROM shipping_lines ORDER BY name");
     $stmt->execute();
-    
-    // Get updated stats
-    require 'triplogstats.php';
-    $stats = getTripStatistics($conn);
-    
-    echo json_encode([
-        'success' => true,
-        'stats' => $stats,
-        'message' => 'Trip permanently deleted'
-    ]);
+    $result = $stmt->get_result();
+
+    $shipping_lines = [];
+    while ($row = $result->fetch_assoc()) {
+        $shipping_lines[] = $row;
+    }
+
+    echo json_encode(['success' => true, 'shipping_lines' => $shipping_lines]);
     break;
 
-    case 'get_checklist':
-    $stmt = $conn->prepare("SELECT * FROM driver_checklist WHERE trip_id = ?");
-    if ($stmt === false) {
-        throw new Exception("Failed to prepare checklist query: " . $conn->error);
-    }
-    
-    $stmt->bind_param("i", $data['trip_id']);
-    if (!$stmt->execute()) {
-        throw new Exception("Failed to execute checklist query: " . $stmt->error);
-    }
-    
+case 'get_dispatchers':
+    $stmt = $conn->prepare("SELECT dispatcher_id, name FROM dispatchers ORDER BY name");
+    $stmt->execute();
     $result = $stmt->get_result();
-    $checklist = $result->fetch_assoc();
-    $stmt->close();
     
-    if ($checklist) {
-        echo json_encode(['success' => true, 'checklist' => $checklist]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'No checklist data found']);
+    $dispatchers = [];
+    while ($row = $result->fetch_assoc()) {
+        $dispatchers[] = $row;
     }
+    
+    echo json_encode(['success' => true, 'dispatchers' => $dispatchers]);
     break;
+
+case 'get_consignees':
+    $stmt = $conn->prepare("SELECT consignee_id, name FROM consignees ORDER BY name");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $consignees = [];
+    while ($row = $result->fetch_assoc()) {
+        $consignees[] = $row;
+    }
+    
+    echo json_encode(['success' => true, 'consignees' => $consignees]);
+    break;
+
+        case 'get_checklist':
+            $stmt = $conn->prepare("SELECT * FROM driver_checklist WHERE trip_id = ?");
+            if ($stmt === false) {
+                throw new Exception("Failed to prepare checklist query: " . $conn->error);
+            }
+            
+            $stmt->bind_param("i", $data['trip_id']);
+            if (!$stmt->execute()) {
+                throw new Exception("Failed to execute checklist query: " . $stmt->error);
+            }
+            
+            $result = $stmt->get_result();
+            $checklist = $result->fetch_assoc();
+            $stmt->close();
+            
+            if ($checklist) {
+                echo json_encode(['success' => true, 'checklist' => $checklist]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No checklist data found']);
+            }
+            break;
 
         default:
             throw new Exception("Invalid action");
@@ -461,13 +784,8 @@ case 'restore':
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } finally {
-    try { if (isset($stmt)) { @$stmt->close(); } } catch (Throwable $e) {}
-    try { if (isset($getCurrent)) { @$getCurrent->close(); } } catch (Throwable $e) {}
-    try { if (isset($getPlate)) { @$getPlate->close(); } } catch (Throwable $e) {}
-    try { if (isset($updateTruck)) { @$updateTruck->close(); } } catch (Throwable $e) {}
-    try { if (isset($getDriverId)) { @$getDriverId->close(); } } catch (Throwable $e) {}
-
-    $conn->close();
+    if (isset($conn)) {
+        $conn->close();
+    }
 }
-
 ?>

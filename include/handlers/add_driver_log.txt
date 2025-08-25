@@ -28,3 +28,13 @@
 2025-08-19 17:03:03 - MySQL SQL prepared successfully
 2025-08-19 17:03:03 - MySQL insert successful
 2025-08-19 17:03:03 - Firebase save successful
+2025-08-25 10:15:09 - Add Driver Request received
+{"name":"sad","email":"Test313er@gmail.com","password":"123","assigned_truck_id":3,"driver_id":"1756109709153","firebase_uid":"1756109709153"}
+
+2025-08-25 10:15:09 - JSON parsed successfully
+2025-08-25 10:15:09 - Data validation passed
+2025-08-25 10:15:09 - MySQL connection successful
+2025-08-25 10:15:09 - Email check passed
+2025-08-25 10:15:09 - MySQL SQL prepared successfully
+2025-08-25 10:15:09 - MySQL insert successful
+2025-08-25 10:15:09 - Firebase save successful

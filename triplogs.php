@@ -1,4 +1,4 @@
-    <?php
+<?php
     require_once __DIR__ . '/include/check_access.php';
     checkAccess(); // No role needed—logic is handled internally
 
@@ -38,40 +38,70 @@
         session_start();
 
     
-    $sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity, a.edit_reasons,d.driver_id
-            FROM assign a
-            LEFT JOIN drivers_table d ON a.driver = d.name
-            LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id
-            WHERE a.is_deleted = 0"; // Add this WHERE clause
+$sql = "SELECT 
+            t.*,
+            tr.plate_no as truck_plate_no, 
+            tr.capacity as truck_capacity,
+            d.name as driver,
+            h.name as helper,
+            disp.name as dispatcher,
+            c.name as client,
+            dest.name as destination,
+            sl.name as shipping_line,
+            cons.name as consignee,
+            al.edit_reason as edit_reasons,
+            al.modified_by as last_modified_by,
+            al.modified_at as last_modified_at,
+            COALESCE(te.cash_advance, 0) as cash_advance,
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+            COALESCE(te.diesel, 0) as diesel
+        FROM trips t
+        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+        LEFT JOIN helpers h ON t.helper_id = h.helper_id
+        LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+        LEFT JOIN clients c ON t.client_id = c.client_id
+        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+        LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
+        LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+        WHERE NOT EXISTS (
+            SELECT 1 FROM audit_logs_trips al2 
+            WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+        )";
+        
     $result = $conn->query($sql);
     $eventsData = [];
 
-    if ($result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $eventsData[] = [
-                'id' => $row['trip_id'],
-                'plateNo' => $row['plate_no'],
-                'date' => $row['date'],
-                'driver' => $row['driver'],
-                'driver_id' => $row['driver_id'], // eto yung driver_id
-                'helper' => $row['helper'],
-                'dispatcher' => $row['dispatcher'],
-                'containerNo' => $row['container_no'],
-                'client' => $row['client'],
-                'destination' => $row['destination'],
-                'shippingLine' => $row['shippine_line'],
-                'consignee' => $row['consignee'],
-                'size' => $row['size'],
-                'cashAdvance' => $row['cash_adv'],
-                'status' => $row['status'],
-                'modifiedby' => $row['last_modified_by'],
-                'modifiedat' => $row['last_modified_at'],
-                'truck_plate_no' => $row['truck_plate_no'],
-                'truck_capacity' => $row['truck_capacity'],
-                'edit_reasons' => $row['edit_reasons'] 
-            ];
-        }
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $eventsData[] = [
+            'id' => $row['trip_id'],
+            'plateNo' => $row['truck_plate_no'],
+            'date' => $row['trip_date'],
+            'driver' => $row['driver'],
+            'driver_id' => $row['driver_id'],
+            'helper' => $row['helper'],
+            'dispatcher' => $row['dispatcher'],
+            'containerNo' => $row['container_no'],
+            'client' => $row['client'],
+            'destination' => $row['destination'],
+            'shippingLine' => $row['shipping_line'],
+            'consignee' => $row['consignee'],
+            'size' => $row['fcl_status'],
+            'cashAdvance' => $row['cash_advance'], // Now from trip_expenses table
+            'additionalCashAdvance' => $row['additional_cash_advance'],
+            'diesel' => $row['diesel'],
+            'status' => $row['status'],
+            'modifiedby' => $row['last_modified_by'],
+            'modifiedat' => $row['last_modified_at'],
+            'truck_plate_no' => $row['truck_plate_no'],
+            'truck_capacity' => $row['truck_capacity'],
+            'edit_reasons' => $row['edit_reasons']
+        ];
     }
+}
 
     // Fetch drivers with their assigned truck capacity
     $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capacity, d.assigned_truck_id 
@@ -233,151 +263,170 @@
 
      <!-- Edit Modal -->
      <div id="editModal" class="modal">
-        <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: scroll;">
-            <span class="close">&times;</span>
-            <h3 style="margin-top: 0;">Edit Trip</h3>
-            <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
-                <input type="hidden" id="editEventId" name="eventId">
-                
-                <!-- Column 1 -->
-                <div style="display: flex; flex-direction: column;">
-                    <label for="editEventSize">Shipment Size:</label>
-                    <select id="editEventSize" name="eventSize" required style="width: 100%;">
-                        <option value="">Select Size</option>
-                        <option value="20ft">20ft</option>
-                        <option value="40ft">40ft</option>
-                        <option value="40ft HC">40ft HC</option>
-                        <option value="45ft">45ft</option>
-                    </select>
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: scroll;">
+        <span class="close">&times;</span>
+        <h3 style="margin-top: 0;">Edit Trip</h3>
+        <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
+            <input type="hidden" id="editEventId" name="eventId">
+            
+            <!-- Column 1 -->
+            <div style="display: flex; flex-direction: column;">
+                <label for="editEventSize">Container Size:</label>
+                <select id="editEventSize" name="eventSize" required style="width: 100%;">
+                    <option value="">Select Size</option>
+                    <option value="20ft">20ft</option>
+                    <option value="40ft">40ft</option>
+                    <option value="40ft HC">40ft HC</option>
+                    <option value="45ft">45ft</option>
+                </select>
 
-                    <label for="editEventPlateNo">Plate No.:</label>
-                    <input type="text" id="editEventPlateNo" name="eventPlateNo" required style="width: 100%;">
+                <label for="editEventPlateNo">Plate No.:</label>
+                <input type="text" id="editEventPlateNo" name="eventPlateNo" required style="width: 100%;">
 
-                    <label for="editEventDate">Date & Time:</label>
-                    <input type="datetime-local" id="editEventDate" name="editEventDate" required style="width: 100%;">
+                <label for="editEventDate">Date & Time:</label>
+                <input type="datetime-local" id="editEventDate" name="editEventDate" required style="width: 100%;">
 
-                    <label for="editEventDriver">Driver:</label>
-                    <select id="editEventDriver" name="eventDriver" required style="width: 100%;">
-                        <option value="">Select Driver</option>
-                    </select>
+                <label for="editEventDriver">Driver:</label>
+                <select id="editEventDriver" name="eventDriver" required style="width: 100%;">
+                    <option value="">Select Driver</option>
+                </select>
 
-                    <label for="editEventHelper">Helper:</label>
-                    <input type="text" id="editEventHelper" name="eventHelper" required style="width: 100%;">
+                <label for="editEventHelper">Helper:</label>
+                <select id="editEventHelper" name="eventHelper" required style="width: 100%;">
+                    <option value="">Select Helper</option>
+                </select>
+
+                <label for="editEventFCL">FCL Status:</label>
+                <select id="editEventFCL" name="eventFCL" required style="width: 100%;">
+                    <option value="">Select FCL</option>
+                    <option value="MIP">MIP</option>
+                </select>
+            </div>
+
+            <!-- Column 2 -->
+            <div style="display: flex; flex-direction: column;">
+                <label for="editEventDispatcher">Dispatcher:</label>
+                <select id="editEventDispatcher" name="eventDispatcher" required style="width: 100%;">
+                    <option value="">Select Dispatcher</option>
+                </select>
+
+                <label for="editEventContainerNo">Container No.:</label>
+                <input type="text" id="editEventContainerNo" name="eventContainerNo" required style="width: 100%;">
+
+                <label for="editEventClient">Client:</label>
+                <select id="editEventClient" name="eventClient" required style="width: 100%;">
+                    <option value="">Select Client</option>
+                </select>
+
+                <label for="editEventDestination">Destination:</label>
+                <select id="editEventDestination" name="eventDestination" required style="width: 100%;">
+                    <option value="">Select Destination</option>
+                </select>
+
+                <label for="editEventStatus">Status:</label>
+                <select id="editEventStatus" name="eventStatus" required style="width: 100%;">
+                    <option value="Pending">Pending</option>
+                    <option value="En Route">En Route</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+
+            <!-- Full width fields -->
+            <div style="grid-column: span 2;">
+                <label for="editEventShippingLine">Shipping Line:</label>
+                <select id="editEventShippingLine" name="eventShippingLine" required style="width: 35%;">
+                    <option value="">Select Shipping Line</option>
+                </select>
+            
+                <label for="editEventConsignee">Consignee:</label>
+                <select id="editEventConsignee" name="eventConsignee" required style="width: 25%;">
+                    <option value="">Select Consignee</option>
+                </select>
+            </div>
+
+            <!-- Expense Fields Section -->
+            <div style="grid-column: span 2; border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Expense Information</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label for="editEventCashAdvance">Cash Advance:</label>
+                        <input type="number" id="editEventCashAdvance" name="eventCashAdvance" 
+                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label for="editEventAdditionalCashAdvance">Additional Cash:</label>
+                        <input type="number" id="editEventAdditionalCashAdvance" name="eventAdditionalCashAdvance" 
+                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label for="editEventDiesel">Diesel:</label>
+                        <input type="number" id="editEventDiesel" name="eventDiesel" 
+                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+                    </div>
                 </div>
+            </div>
 
-                <!-- Column 2 -->
-                <div style="display: flex; flex-direction: column;">
-                    <label for="editEventDispatcher">Dispatcher:</label>
-                    <input type="text" id="editEventDispatcher" name="eventDispatcher" required style="width: 100%;">
-
-                    <label for="editEventContainerNo">Container No.:</label>
-                    <input type="text" id="editEventContainerNo" name="eventContainerNo" required style="width: 100%;">
-
-                    <label for="editEventClient">Client:</label>
-                    <select id="editEventClient" name="eventClient" required style="width: 100%;">
-                        <option value="">Select Client</option>
-                        <option value="Maersk">Maersk</option>
-                        <option value="MSC">MSC</option>
-                        <option value="COSCO">COSCO</option>
-                        <option value="CMA CGM">CMA CGM</option>
-                        <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-                        <option value="Evergreen">Evergreen</option>
-                    </select>
-
-                    <label for="editEventDestination">Destination:</label>
-                    <select id="editEventDestination" name="eventDestination" required style="width: 100%;">
-                        <option value="">Select Destination</option>
-                        <option value="Manila Port">Manila Port</option>
-                        <option value="Batangas Port">Batangas Port</option>
-                        <option value="Subic Port">Subic Port</option>
-                        <option value="Cebu Port">Cebu Port</option>
-                        <option value="Davao Port">Davao Port</option>
-                    </select>
-
-                    <label for="editEventStatus">Status:</label>
-                    <select id="editEventStatus" name="eventStatus" required style="width: 100%;">
-                        <option value="Pending">Pending</option>
-                        <option value="En Route">En Route</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-
-                <!-- Full width fields -->
-                <div style="grid-column: span 2;">
-                    <label for="editEventShippingLine">Shipping Line:</label>
-                    <select id="editEventShippingLine" name="eventShippingLine" required style="width: 35%;">
-                        <option value="">Select Shipping Line</option>
-                        <option value="Maersk Line">Maersk Line</option>
-                        <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
-                        <option value="COSCO Shipping">COSCO Shipping</option>
-                        <option value="CMA CGM">CMA CGM</option>
-                        <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-                    </select>
+            <!-- Edit Reasons Section -->
+            <div class="edit-reasons-section" style="grid-column: span 2; margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #ddd; width: 100%;">
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Reason for Edit</h4>
+                <p style="margin-top: 0; margin-bottom: 10px; color: #666;">Select all that apply:</p>
                 
-                    <label for="editEventConsignee">Consignee:</label>
-                    <input type="text" id="editEventConsignee" name="eventConsignee" required style="width: 25%;">
-                    <br>
-                    <label for="editEventCashAdvance">Cash Advance:</label>
-                    <input type="text" id="editEventCashAdvance" name="eventCashAdvance" required style="width: 20%;">
-                </div>
-
-                
-        <div class="edit-reasons-section" style="grid-column: span 2; margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #ddd; width: 100%;">
-        <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Reason for Edit</h4>
-        <p style="margin-top: 0; margin-bottom: 10px; color: #666;">Select all that apply:</p>
-        
-        <div class="reasons-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason1" style="margin: 0; cursor: pointer; flex: 1;">Changed schedule as per client request</label>
-                <input type="checkbox" name="editReason" value="Changed schedule as per client request" id="reason1" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason2" style="margin: 0; cursor: pointer; flex: 1;">Updated driver assignment due to availability</label>
-                <input type="checkbox" name="editReason" value="Updated driver assignment due to availability" id="reason2" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason3" style="margin: 0; cursor: pointer; flex: 1;">Modified vehicle assignment for capacity requirements</label>
-                <input type="checkbox" name="editReason" value="Modified vehicle assignment for capacity requirements" id="reason3" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason4" style="margin: 0; cursor: pointer; flex: 1;">Adjusted destination based on new instructions</label>
-                <input type="checkbox" name="editReason" value="Adjusted destination based on new instructions" id="reason4" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason5" style="margin: 0; cursor: pointer; flex: 1;">Updated container details for accuracy</label>
-                <input type="checkbox" name="editReason" value="Updated container details for accuracy" id="reason5" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason6" style="margin: 0; cursor: pointer; flex: 1;">Other (please specify below)</label>
-                <input type="checkbox" name="editReason" value="Other" id="reason6" style="margin-left: 10px;">
-            </div>
-            
-            <div class="other-reason" style="width: 90%;" id="otherReasonContainer">
-                <label for="otherReasonText" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Specify other reason:</label>
-                <textarea id="otherReasonText" name="otherReasonText" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; min-height: 80px;"></textarea>
-            </div>
-        </div>
-     </div>
-
-                <!-- Form buttons -->
-                <div class="buttons"style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
-                    <button type="button" id="viewChecklistBtn" class="save-btn" style="background-color: #17a2b8; display: none;">
-            View Driver Checklist
-        </button>
-        <button type="button" id="viewExpensesBtn" class="save-btn" style="padding: 8px 15px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;">Expense Reports</button>
-                    <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <div class="reasons-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+                        <label for="reason1" style="margin: 0; cursor: pointer; flex: 1;">Changed schedule as per client request</label>
+                        <input type="checkbox" name="editReason" value="Changed schedule as per client request" id="reason1" style="margin-left: 10px;">
+                    </div>
                     
-                    <button type="submit" class="save-btn"style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+                        <label for="reason2" style="margin: 0; cursor: pointer; flex: 1;">Updated driver assignment due to availability</label>
+                        <input type="checkbox" name="editReason" value="Updated driver assignment due to availability" id="reason2" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+                        <label for="reason3" style="margin: 0; cursor: pointer; flex: 1;">Modified vehicle assignment for capacity requirements</label>
+                        <input type="checkbox" name="editReason" value="Modified vehicle assignment for capacity requirements" id="reason3" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+                        <label for="reason4" style="margin: 0; cursor: pointer; flex: 1;">Adjusted destination based on new instructions</label>
+                        <input type="checkbox" name="editReason" value="Adjusted destination based on new instructions" id="reason4" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+                        <label for="reason5" style="margin: 0; cursor: pointer; flex: 1;">Updated container details for accuracy</label>
+                        <input type="checkbox" name="editReason" value="Updated container details for accuracy" id="reason5" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+                        <label for="reason6" style="margin: 0; cursor: pointer; flex: 1;">Updated expense information</label>
+                        <input type="checkbox" name="editReason" value="Updated expense information" id="reason6" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
+                        <label for="reason7" style="margin: 0; cursor: pointer; flex: 1;">Other (please specify below)</label>
+                        <input type="checkbox" name="editReason" value="Other" id="reason7" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="other-reason" style="width: 90%;" id="otherReasonContainer">
+                        <label for="otherReasonText" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Specify other reason:</label>
+                        <textarea id="otherReasonText" name="otherReasonText" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; min-height: 80px;"></textarea>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- Form buttons -->
+            <div class="buttons" style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
+                <button type="button" id="viewChecklistBtn" class="save-btn" style="background-color: #17a2b8; display: none;">
+                    View Driver Checklist
+                </button>
+                <button type="button" id="viewExpensesBtn" class="save-btn" style="padding: 8px 15px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;">Expense Reports</button>
+                <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
+            </div>
+        </form>
     </div>
+</div>
 
     
 
@@ -403,107 +452,137 @@
         </div>
     </div>
 
-        <div id="addScheduleModal" class="modal">
-        <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow: hidden;">
-            <span class="close">&times;</span>
-            <h2 style="margin-top: 0;">Add Schedule</h2>
-            <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
-                <!-- Column 1 -->
-                <div style="display: flex; flex-direction: column;">
-                    <label for="addEventSize">Shipment Size:</label>
-                    <select id="addEventSize" name="eventSize" required style="width: 100%;">
-                        <option value="">Select Size</option>
-                        <option value="20ft">20ft</option>
-                        <option value="40ft">40ft</option>
-                        <option value="40ft HC">40ft HC</option>
-                        <option value="45ft">45ft</option>
-                    </select>
+<div id="addScheduleModal" class="modal">
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow: hidden;">
+        <span class="close">&times;</span>
+        <h2 style="margin-top: 0;">Add Schedule</h2>
+        <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
+            <!-- Column 1 -->
+            <div style="display: flex; flex-direction: column;">
+                <label for="addEventSize">Shipment Size:</label>
+                <select id="addEventSize" name="eventSize" required style="width: 100%;">
+                    <option value="">Select Size</option>
+                    <option value="20ft">20ft</option>
+                    <option value="40ft">40ft</option>
+                    <option value="40ft HC">40ft HC</option>
+                    <option value="45ft">45ft</option>
+                </select>
 
-                    <label for="addEventPlateNo">Plate No.:</label>
-                    <input type="text" id="addEventPlateNo" name="eventPlateNo" required style="width: 100%;">
+                <label for="addEventPlateNo">Plate No.:</label>
+                <input type="text" id="addEventPlateNo" name="eventPlateNo" required style="width: 100%;">
 
-                    <label for="addEventDate">Date & Time:</label>
-                    <input type="datetime-local" id="addEventDate" name="eventDate" required style="width: 100%;">
+                <label for="addEventDate">Date & Time:</label>
+                <input type="datetime-local" id="addEventDate" name="eventDate" required style="width: 100%;">
 
-                    <label for="addEventDriver">Driver:</label>
-                    <select id="addEventDriver" name="eventDriver" required style="width: 100%;">
-                        <option value="">Select Driver</option>
-                    </select>
+                <label for="addEventDriver">Driver:</label>
+                <select id="addEventDriver" name="eventDriver" required style="width: 100%;">
+                    <option value="">Select Driver</option>
+                </select>
 
-                    <label for="addEventHelper">Helper:</label>
-                    <input type="text" id="addEventHelper" name="eventHelper" required style="width: 100%;">
-                </div>
+                <label for="addEventHelper">Helper:</label>
+                <select id="addEventHelper" name="eventHelper" required style="width: 100%;">
+                    <option value="">Select Helper</option>
+                </select>
 
-                <!-- Column 2 -->
-                <div style="display: flex; flex-direction: column;">
-                    <label for="addEventDispatcher">Dispatcher:</label>
-                    <input type="text" id="addEventDispatcher" name="eventDispatcher" required style="width: 100%;">
+                <label for="addEventFCL">FCL Status:</label>
+                <select id="addEventFCL" name="eventFCL" required style="width: 100%;">
+                    <option value="">Select FCL Status</option>
+                    <option value="MIP">MIP</option>
+                </select>
+            </div>
 
-                    <label for="addEventContainerNo">Container No.:</label>
-                    <input type="text" id="addEventContainerNo" name="eventContainerNo" required style="width: 100%;">
+            <!-- Column 2 -->
+            <div style="display: flex; flex-direction: column;">
+                <label for="addEventDispatcher">Dispatcher:</label>
+                <select id="addEventDispatcher" name="eventDispatcher" required style="width: 100%;">
+                    <option value="">Select Dispatcher</option>
+                </select>
 
-                    <label for="addEventClient">Client:</label>
-                    <select id="addEventClient" name="eventClient" required style="width: 100%;">
-                        <option value="">Select Client</option>
-                        <option value="Maersk">Maersk</option>
-                        <option value="MSC">MSC</option>
-                        <option value="COSCO">COSCO</option>
+                <label for="addEventContainerNo">Container No.:</label>
+                <input type="text" id="addEventContainerNo" name="eventContainerNo" required style="width: 100%;">
+
+                <label for="addEventClient">Client:</label>
+                <select id="addEventClient" name="eventClient" required style="width: 100%;">
+                    <option value="">Select Client</option>
+                    <option value="Maersk">Maersk</option>
+                    <option value="MSC">MSC</option>
+                    <option value="COSCO">COSCO</option>
+                    <option value="CMA CGM">CMA CGM</option>
+                    <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+                    <option value="Evergreen">Evergreen</option>
+                </select>
+
+                <label for="addEventDestination">Destination:</label>
+                <select id="addEventDestination" name="eventDestination" required style="width: 100%;">
+                    <option value="">Select Destination</option>
+                    <option value="Manila Port">Manila Port</option>
+                    <option value="Batangas Port">Batangas Port</option>
+                    <option value="Subic Port">Subic Port</option>
+                    <option value="Cebu Port">Cebu Port</option>
+                    <option value="Davao Port">Davao Port</option>
+                </select>
+
+                <label for="addEventStatus">Status:</label>
+                <select id="addEventStatus" name="eventStatus" required style="width: 100%;">
+                    <option value="Pending">Pending</option>
+                    <option value="En Route">En Route</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+
+            <!-- Full width fields -->
+            <div style="grid-column: span 2; display: flex; gap: 15px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label for="addEventShippingLine">Shipping Line:</label>
+                    <select id="addEventShippingLine" name="eventShippingLine" required style="width: 100%;">
+                        <option value="">Select Shipping Line</option>
+                        <option value="Maersk Line">Maersk Line</option>
+                        <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
+                        <option value="COSCO Shipping">COSCO Shipping</option>
                         <option value="CMA CGM">CMA CGM</option>
                         <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-                        <option value="Evergreen">Evergreen</option>
-                    </select>
-
-                    <label for="addEventDestination">Destination:</label>
-                    <select id="addEventDestination" name="eventDestination" required style="width: 100%;">
-                        <option value="">Select Destination</option>
-                        <option value="Manila Port">Manila Port</option>
-                        <option value="Batangas Port">Batangas Port</option>
-                        <option value="Subic Port">Subic Port</option>
-                        <option value="Cebu Port">Cebu Port</option>
-                        <option value="Davao Port">Davao Port</option>
-                    </select>
-
-                    <label for="addEventStatus">Status:</label>
-                    <select id="addEventStatus" name="eventStatus" required style="width: 100%;">
-                        <option value="Pending">Pending</option>
-                        <option value="En Route">En Route</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
                     </select>
                 </div>
-
-            <div style="grid-column: span 2; display: flex; gap: 15px; align-items: flex-end;">
-        <div style="flex: 1;">
-            <label for="addEventShippingLine">Shipping Line:</label>
-            <select id="addEventShippingLine" name="eventShippingLine" required style="width: 100%;">
-                <option value="">Select Shipping Line</option>
-                <option value="Maersk Line">Maersk Line</option>
-                <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
-                <option value="COSCO Shipping">COSCO Shipping</option>
-                <option value="CMA CGM">CMA CGM</option>
-                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-            </select>
-        </div>
-        
-        <div style="flex: 1;">
-            <label for="addEventConsignee">Consignee:</label>
-            <input type="text" id="addEventConsignee" name="eventConsignee" required style="width: 100%;">
-        </div>
-    </div>
-
-    <div style="grid-column: span 2;">
-        <label for="addEventCashAdvance">Cash Advance:</label>
-        <input type="text" id="addEventCashAdvance" name="eventCashAdvance" required style="width: 100%;">
-    </div>
-
-                <!-- Form buttons -->
-                <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
-                    <button type="button" class="close-btn cancel-btn" style="padding: 5px 10px;">Cancel</button>
-                    <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
+                
+                <div style="flex: 1;">
+                    <label for="addEventConsignee">Consignee:</label>
+                    <select id="addEventConsignee" name="eventConsignee" required style="width: 100%;">
+                        <option value="">Select Consignee</option>
+                    </select>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- Expense Fields Section -->
+            <div style="grid-column: span 2; border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Expense Information</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label for="addEventCashAdvance">Cash Advance:</label>
+                        <input type="number" id="addEventCashAdvance" name="eventCashAdvance" 
+                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label for="addEventAdditionalCashAdvance">Additional Cash:</label>
+                        <input type="number" id="addEventAdditionalCashAdvance" name="eventAdditionalCashAdvance" 
+                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label for="addEventDiesel">Diesel:</label>
+                        <input type="number" id="addEventDiesel" name="eventDiesel" 
+                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form buttons -->
+            <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                <button type="button" class="close-btn cancel-btn" style="padding: 5px 10px;">Cancel</button>
+                <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
+            </div>
+        </form>
     </div>
+</div>
 
     <div id="checklistModal" class="modal">
     <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
@@ -570,35 +649,29 @@
 </div>
 
 
-            <table class="events-table" id="eventsTable"> 
-                <thead>
-                    <tr>
-                        <th>Plate No.</th>
-                    <th>
-                Date 
-                <button id="dateSortBtn" style="background: none; border: none; cursor: pointer;">
-                    <i class="fa fa-sort"></i>
-                </button>
-            </th>
-                        <th>Time</th>
-                        <th>Driver</th>
-                        <th>Helper</th>
-                        <th>Dispatcher</th>
-                        <th>Container No.</th>
-                        <th>Client</th>
-                        <th>Destination</th>
-                        <th>Shipping Line</th>
-                        <th>Consignee</th>
-                        <th>Size</th>
-                        <th>Cash Advance</th>
-                        <th>Status</th>
-                        <th>Last Modified</th>
-                            
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="eventTableBody"></tbody>
-            </table>
+<table class="events-table" id="eventsTable"> 
+    <thead>
+        <tr>
+            <th>Driver</th>
+            <th>Helper</th>
+            <th>Dispatcher</th>
+            <th>Container No.</th>
+            <th>Client</th>
+            <th>Destination</th>
+            <th>Shipping Line</th>
+            <th>Consignee</th>
+            <th>Container Size</th>
+            <th>FCL Status</th>
+            <th>Cash Advance</th>
+            <th>Additional Cash Advance</th>
+            <th>Diesel</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="eventTableBody"></tbody>
+</table>
             <div class="pagination-container">
                 <div class="pagination">
                     <button class="prev" id="prevPageBtn">&laquo</button> 
@@ -755,73 +828,165 @@ let filteredEvents = [];
     }
 
 
-    function renderTripRows(trips, showDeleted) {
-        trips.forEach(function(trip) {
-            const dateObj = new Date(trip.date);
-            const formattedDate = dateObj.toLocaleDateString();
-            const formattedTime = moment(dateObj).format('h:mm A');
-            
-            let statusCell = '';
-            let actionCell = '';
-            
-            if (showDeleted || trip.is_deleted == 1) {
-                statusCell = `<td><span class="status cancelled">Deleted</span></td>`;
-                actionCell = `
-                    <td class="actions">
-                        <button class="icon-btn restore" data-tooltip="Restore" data-id="${trip.trip_id}">
-                        <i class="fas fa-trash-restore"></i>
-                        ${window.userRole === 'Full Admin' ? 
-                        `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" data-id="${trip.trip_id}" > 
-                            <i class="fa-solid fa-ban"></i>
-                        </button>` : ''}
-                        </button>
-                    </td>
-                `;
-            } else {
-                statusCell = `<td><span class="status ${trip.status.toLowerCase().replace(/\s+/g, '')}">${trip.status}</span></td>`;
-                actionCell = `
-                    <td class="actions">
-                        <button class="icon-btn edit" data-tooltip="Edit" data-id="${trip.trip_id}"><i class="fas fa-edit"></i></button>
-                        <button class="icon-btn delete" data-tooltip="Delete" data-id="${trip.trip_id}"><i class="fas fa-trash-alt"></i></button>
-                        ${trip.edit_reasons && trip.edit_reasons !== 'null' && trip.edit_reasons !== '' ? 
-                        `<button class="icon-btn view-reasons" data-tooltip="View Edit History" data-id="${trip.trip_id}">
-                            <i class="fas fa-history"></i>
-                        </button>` : ''}
-                    </td>
-                `;
-            }
-
-            const row = `
-                 <tr class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
-                    <td>${trip.plate_no || 'N/A'}</td>
-                    <td>${formattedDate}</td>
-                    <td>${formattedTime}</td>
-                    <td>${trip.driver || 'N/A'}</td>
-                    <td>${trip.helper || 'N/A'}</td>
-                    <td>${trip.dispatcher || 'N/A'}</td>
-                    <td>${trip.container_no || 'N/A'}</td>
-                    <td>${trip.client || 'N/A'}</td>
-                    <td>${trip.destination || 'N/A'}</td>
-                    <td>${trip.shippine_line || 'N/A'}</td>
-                    <td>${trip.consignee || 'N/A'}</td>
-                    <td>${trip.size || 'N/A'}</td>
-                    <td>${trip.cash_adv || 'N/A'}</td>
-                    ${statusCell}
-                    <td>
-                        <strong>${trip.last_modified_by || 'System'}</strong><br>
-                        ${formatDateTime(trip.last_modified_at)}
-                    </td>
-                    ${actionCell}
-                </tr>
+function renderTripRows(trips, showDeleted) {
+    trips.forEach(function(trip) {
+        let statusCell = '';
+        let actionCell = '';
+        
+        if (showDeleted || trip.is_deleted == 1) {
+            statusCell = `<td><span class="status cancelled">Deleted</span></td>`;
+            actionCell = `
+                <td class="actions">
+                    <button class="icon-btn restore" data-tooltip="Restore" data-id="${trip.trip_id}">
+                    <i class="fas fa-trash-restore"></i>
+                    ${window.userRole === 'Full Admin' ? 
+                    `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" data-id="${trip.trip_id}" > 
+                        <i class="fa-solid fa-ban"></i>
+                    </button>` : ''}
+                    </button>
+                </td>
             `;
-            $('#eventTableBody').append(row);
-        });
-    }
+        } else {
+            statusCell = `<td><span class="status ${trip.status.toLowerCase().replace(/\s+/g, '')}">${trip.status}</span></td>`;
+            actionCell = `
+                <td class="actions">
+                    <button class="icon-btn edit" data-tooltip="Edit" data-id="${trip.trip_id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="icon-btn delete" data-tooltip="Delete" data-id="${trip.trip_id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    ${trip.edit_reason && trip.edit_reason !== 'null' && trip.edit_reason !== '' ? 
+                    `<button class="icon-btn view-reasons" data-tooltip="View Edit History" data-id="${trip.trip_id}">
+                        <i class="fas fa-history"></i>
+                    </button>` : ''}
+                </td>
+            `;
+        }
 
+        const row = `
+             <tr class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
+                <td>${trip.driver || 'N/A'}</td>
+                <td>${trip.helper || 'N/A'}</td>
+                <td>${trip.dispatcher || 'N/A'}</td>
+                <td>${trip.container_no || 'N/A'}</td>
+                <td>${trip.client || 'N/A'}</td>
+                <td>${trip.destination || 'N/A'}</td>
+                <td>${trip.shipping_line || 'N/A'}</td>
+                <td>${trip.consignee || 'N/A'}</td>
+                <td>${trip.truck_capacity ? trip.truck_capacity + 'ft' : 'N/A'}</td>
+                <td>${trip.fcl_status || 'N/A'}</td>
+                <td>₱${parseFloat(trip.cash_advance || 0).toFixed(2)}</td>
+                <td>₱${parseFloat(trip.additional_cash_advance || 0).toFixed(2)}</td>
+                <td>₱${parseFloat(trip.diesel || 0).toFixed(2)}</td>
+                ${statusCell}
+                <td>
+                    ${formatDateTime(trip.created_at)}
+                </td>
+                ${actionCell}
+            </tr>
+        `;
+        $('#eventTableBody').append(row);
+    });
+}
 
 
             var eventsData = <?php echo $eventsDataJson; ?>;
             var driversData = <?php echo $driversDataJson; ?>;
+
+
+
+function populateDropdowns(action, responseKey, targetSelectors, defaultText) {
+    if ($('#editEventHelper option').length <= 1 || $('#addEventHelper option').length <= 1) {
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ action: action }),
+        success: function(response) {
+            if (response.success && response[responseKey]) {
+                var options = `<option value="">${defaultText}</option>`;
+                response[responseKey].forEach(function(item) {
+                    options += `<option value="${item.name}">${item.name}</option>`;
+                });
+                $(targetSelectors).html(options);
+            }
+        },
+        error: function() {
+            console.error(`Error fetching ${responseKey}`);
+        }
+    });
+    }
+}
+
+
+function populateHelperDropdowns() {
+    populateDropdowns('get_helpers', 'helpers', '#editEventHelper, #addEventHelper', 'Select Helper');
+}
+
+function populateClientDropdowns() {
+    populateDropdowns('get_clients', 'clients', '#editEventClient, #addEventClient', 'Select Client');
+}
+
+function populateDestinationDropdowns() {
+    populateDropdowns('get_destinations', 'destinations', '#editEventDestination, #addEventDestination', 'Select Destination');
+}
+
+function populateShippingLineDropdowns() {
+    populateDropdowns('get_shipping_lines', 'shipping_lines', '#editEventShippingLine, #addEventShippingLine', 'Select Shipping Line');
+}
+
+function populateDispatcherDropdowns() {
+    populateDropdowns('get_dispatchers', 'dispatchers', '#editEventDispatcher, #addEventDispatcher', 'Select Dispatcher');
+}
+
+function populateConsigneeDropdowns() {
+    populateDropdowns('get_consignees', 'consignees', '#editEventConsignee, #addEventConsignee', 'Select Consignee');
+}
+
+
+$(document).ready(function() {
+    populateHelperDropdowns();
+    populateDispatcherDropdowns();
+    populateConsigneeDropdowns();
+    populateClientDropdowns();
+    populateDestinationDropdowns();
+    populateShippingLineDropdowns();
+
+});
+
+$('#addScheduleBtnTable').on('click', function() {
+    resetAddScheduleForm();
+    populateDriverDropdowns();
+    populateHelperDropdowns();        
+    populateDispatcherDropdowns();
+    populateConsigneeDropdowns();
+    populateClientDropdowns();
+    populateDestinationDropdowns();
+    populateShippingLineDropdowns();
+    $('#addScheduleModal').show();
+});
+
+$(document).on('click', '.icon-btn.edit', function() {
+
+    populateHelperDropdowns();
+    populateDispatcherDropdowns();
+    populateConsigneeDropdowns();
+    populateClientDropdowns();
+    populateDestinationDropdowns();
+    populateShippingLineDropdowns();
+
+    setTimeout(() => {
+        $('#editEventHelper').val(event.helper);
+        $('#editEventDispatcher').val(event.dispatcher || '');
+        $('#editEventConsignee').val(event.consignee);
+        $('#editEventClient').val(event.client);
+        $('#editEventDestination').val(event.destination);
+        $('#editEventShippingLine').val(event.shipping_line);
+    }, 100);
+    
+    $('#editModal').show();
+});
             
 
 
@@ -1059,20 +1224,23 @@ let filteredEvents = [];
         };
     });
 
-    function resetAddScheduleForm() {
-        $('#addEventPlateNo').val('');
-        $('#addEventDate').val('');
-        $('#addEventDriver').val('').trigger('change');
-        $('#addEventHelper').val('');
-        $('#addEventContainerNo').val('');
-        $('#addEventClient').val('');
-        $('#addEventDestination').val('');
-        $('#addEventShippingLine').val('');
-        $('#addEventConsignee').val('');
-        $('#addEventSize').val('');
-        $('#addEventCashAdvance').val('');
-        $('#addEventStatus').val('Pending'); // Set default status
-    }
+function resetAddScheduleForm() {
+    $('#addEventPlateNo').val('');
+    $('#addEventDate').val('');
+    $('#addEventDriver').val('').trigger('change');
+    $('#addEventHelper').val('');
+    $('#addEventContainerNo').val('');
+    $('#addEventClient').val('');
+    $('#addEventDestination').val('');
+    $('#addEventShippingLine').val('');
+    $('#addEventConsignee').val('');
+    $('#addEventSize').val('');
+    $('#addEventFCL').val('');
+    $('#addEventCashAdvance').val('');
+    $('#addEventAdditionalCashAdvance').val('');
+    $('#addEventDiesel').val('');
+    $('#addEventStatus').val('Pending');
+}
             // Close modal handlers
         $('.close, .close-btn.cancel-btn').on('click', function() {
         $('.modal').hide();
@@ -1215,7 +1383,7 @@ let filteredEvents = [];
         var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
         element.addClass(statusClass);
     },
-    // Add this to automatically select today's date
+    // Add this to automatically select tod   
     viewRender: function(view, element) {
         if (view.name === 'month') {
             // Trigger a click on today's cell
@@ -1371,7 +1539,7 @@ setTimeout(function() {
         renderTable();
     });
             // Edit button click handler
-   $(document).on('click', '.icon-btn.edit', function() {
+$(document).on('click', '.icon-btn.edit', function() {
     var eventId = $(this).data('id');
     var event = eventsData.find(function(e) { return e.id == eventId; });
     
@@ -1379,10 +1547,15 @@ setTimeout(function() {
         $('#editEventId').val(event.id);
         $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
         
-        var eventDate = event.date.includes(':00.') 
-            ? event.date.replace(/:00\.\d+Z$/, '') 
-            : event.date;
+        var eventDate = event.date || event.trip_date;
+
+        if (eventDate) {
+            if (eventDate.includes('T')) {
+                eventDate = eventDate.substring(0, 16); 
+            }
+        }
         $('#editEventDate').val(eventDate);
+ 
 
         populateDriverDropdowns(event.size);
         setTimeout(() => {
@@ -1396,25 +1569,26 @@ setTimeout(function() {
         $('#editEventDestination').val(event.destination);
         $('#editEventShippingLine').val(event.shippingLine);
         $('#editEventConsignee').val(event.consignee);
-        $('#editEventSize').val(event.size);
+        $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
+        $('#editEventFCL').val(event.fcl_status || event.size);
+        $('#editEventSize').val(event.fcl_status);
         $('#editEventCashAdvance').val(event.cashAdvance);
+        $('#editEventAdditionalCashAdvance').val(event.additionalCashAdvance);
+        $('#editEventDiesel').val(event.diesel);
         $('#editEventStatus').val(event.status);
 
-        // Check for both Completed status AND if driver_id exists
         if (event.status === 'Completed') {
-    $('#viewExpensesBtn').show();
-} else {
-    $('#viewExpensesBtn').hide();
-}
+            $('#viewExpensesBtn').show();
+        } else {
+            $('#viewExpensesBtn').hide();
+        }
 
-// Show checklist button if we have a driver_id and status is not Cancelled
-if (event.driver_id && event.status !== 'Cancelled') {
-    $('#viewChecklistBtn').show();
-} else {
-    $('#viewChecklistBtn').hide();
-}
+        if (event.driver_id && event.status !== 'Cancelled') {
+            $('#viewChecklistBtn').show();
+        } else {
+            $('#viewChecklistBtn').hide();
+        }
        
-        
         $('#editModal').show();
     }
 });
@@ -1471,78 +1645,79 @@ if (event.driver_id && event.status !== 'Cancelled') {
                 $('#deleteConfirmModal').show();
             });
             
-        $('#addScheduleForm').on('submit', function(e) {
-        e.preventDefault();
+$('#addScheduleForm').on('submit', function(e) {
+    e.preventDefault();
 
-        var selectedDriver = $('#addEventDriver').val();
-        var driver = driversData.find(d => d.name === selectedDriver);
-        var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#addEventPlateNo').val();
-        var tripDate = $('#addEventDate').val();
+    var selectedDriver = $('#addEventDriver').val();
+    var driver = driversData.find(d => d.name === selectedDriver);
+    var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#addEventPlateNo').val();
+    var tripDate = $('#addEventDate').val();
 
-        checkMaintenanceConflict(truckPlateNo, tripDate, function(shouldProceed) {
-            if (!shouldProceed) {
-                return; // User cancelled after seeing maintenance warning
+    checkMaintenanceConflict(truckPlateNo, tripDate, function(shouldProceed) {
+        if (!shouldProceed) {
+            return;
+        }
+    
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'add',
+            plateNo: truckPlateNo,
+            date: $('#addEventDate').val(),
+            driver: selectedDriver,
+            helper: $('#addEventHelper').val(),
+            dispatcher: $('#addEventDispatcher').val(),
+            containerNo: $('#addEventContainerNo').val(),
+            client: $('#addEventClient').val(),
+            destination: $('#addEventDestination').val(),
+            shippingLine: $('#addEventShippingLine').val(),
+            consignee: $('#addEventConsignee').val(),
+            size: $('#addEventSize').val(),
+            fclStatus: $('#addEventFCL').val(),
+            cashAdvance: $('#addEventCashAdvance').val(),
+            additionalCashAdvance: $('#addEventAdditionalCashAdvance').val(),
+            diesel: $('#addEventDiesel').val(),
+            status: $('#addEventStatus').val()
+        }),
+        success: function(response) {
+            console.log('Raw response:', response);
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Trip added successfully!',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    willClose: () => {
+                        $('#addScheduleModal').hide();
+                        location.reload();
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: `Failed to add trip:<br><br>${response.message || 'Unknown error occurred'}`,
+                    confirmButtonColor: '#3085d6'
+                });
             }
-        
-        $.ajax({
-            url: 'include/handlers/trip_operations.php',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                action: 'add',
-                plateNo: truckPlateNo,
-                date: $('#addEventDate').val(),
-                driver: selectedDriver,
-                helper: $('#addEventHelper').val(),
-                dispatcher: $('#addEventDispatcher').val(),
-                containerNo: $('#addEventContainerNo').val(),
-                client: $('#addEventClient').val(),
-                destination: $('#addEventDestination').val(),
-                shippingLine: $('#addEventShippingLine').val(),
-                consignee: $('#addEventConsignee').val(),
-                size: $('#addEventSize').val(),
-                cashAdvance: $('#addEventCashAdvance').val(),
-                status: $('#addEventStatus').val()
-            }),
-             success: function(response) {
-        console.log('Raw response:', response);
-        if (response.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Trip added successfully!',
-                timer: 2000,
-                showConfirmButton: false,
-                willClose: () => {
-                    $('#addScheduleModal').hide();
-                    location.reload();
-                }
-            });
-        } else {
+        },
+        error: function(xhr, status, error) {
+            console.log('XHR:', xhr);
+            console.log('Status:', status);
+            console.log('Error:', error);
+            console.log('Response Text:', xhr.responseText);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                html: `Failed to add trip:<br><br>${response.message || 'Unknown error occurred'}`,
-                confirmButtonColor: '#3085d6'
+                text: 'Server error occurred. Check console for details.',
             });
         }
-    },
-            error: function(xhr, status, error) {
-                console.log('XHR:', xhr);
-                console.log('Status:', status);
-                console.log('Error:', error);
-                console.log('Response Text:', xhr.responseText);
-                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Server error occurred. Check console for details.',
-                    });
-             
-            }
-        });
-
-        });
     });
+    });
+});
 
     $(document).on('click', '.icon-btn.view-reasons', function() {
         var eventId = $(this).data('id');
@@ -1615,7 +1790,7 @@ function validateEditReasons() {
 
 
             // Edit form submit handler
-      $('#editForm').on('submit', function(e) {
+$('#editForm').on('submit', function(e) {
     e.preventDefault();
     
     // Validate edit reasons
@@ -1630,7 +1805,7 @@ function validateEditReasons() {
     }
     
     // Check if "Other" is selected but textarea is empty
-    if ($('#reason6').is(':checked') && $('#otherReasonText').val().trim() === '') {
+    if ($('#reason7').is(':checked') && $('#otherReasonText').val().trim() === '') {
         Swal.fire({
             icon: 'error',
             title: 'Missing Information',
@@ -1676,7 +1851,10 @@ function validateEditReasons() {
                 shippingLine: $('#editEventShippingLine').val(),
                 consignee: $('#editEventConsignee').val(),
                 size: $('#editEventSize').val(),
+                fclStatus: $('#editEventFCL').val(),
                 cashAdvance: $('#editEventCashAdvance').val(),
+                additionalCashAdvance: $('#editEventAdditionalCashAdvance').val(),
+                diesel: $('#editEventDiesel').val(),
                 status: $('#editEventStatus').val(),
                 editReasons: editReasons
             }),
