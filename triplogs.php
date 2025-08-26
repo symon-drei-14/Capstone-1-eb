@@ -23,11 +23,7 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     </head>
-<style>
-    .swal2-container {
-  z-index: 999999 !important;
-}   
-    </style>
+
     <body>
         <?php
         require 'include/handlers/dbhandler.php';
@@ -211,36 +207,57 @@
         </div>
 </div>
 </div>
- <div class="main-container">   
+   <div class="main-container">   
         <div class="calendar-container">
             <section class="calendar-section">
-                <div class="toggle-btns">
-                    <button id="calendarViewBtn" class="toggle-btn active"> <i class="fa fa-calendar"> Calendar</i></button>
-                    <button id="tableViewBtn" class="toggle-btn">  <i class="fa fa-tasks"> Table</i></button>
-                
+                <!-- Updated controls section -->
+                <div class="calendar-controls">
+                    <button id="addScheduleBtnTable"> <i class="fa-solid fa-calendar-plus" style="margin-right:5px;"></i>Add Schedule</button>
+                    
+                        
+                        <div class="status-filter-container">
+                            <select id="statusFilter" onchange="filterTableByStatus()">
+                                <option value="" disabled selected>Status Filter</option>
+                                <option value="all">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="En Route">En Route</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="deleted">Deleted</option>
+                            </select>
+                            
+                            <div class="search-container">
+                                <i class="fa fa-search"></i>
+                                <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()">
+                            </div>
+                        </div>
+                        <div class="filter-toggle-container">
+                        <div class="toggle-btns">
+                            <button id="calendarViewBtn" class="toggle-btn active" data-tooltip="Calendar View"> 
+                                <i class="fa fa-calendar"></i>
+                            </button>
+                            <button id="tableViewBtn" class="toggle-btn" data-tooltip="Table View">  
+                                <i class="fa fa-tasks"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <button id="addScheduleBtnTable" class="toggle-btn">Add Schedule</button>
-        
+                
                 <div id="calendar"></div>
             </section>
-            
-            <section class="event-details-container" id="eventDetails">
-                <h4>Event Details</h4>
-                <p id="noEventsMessage" style="display: none;">No scheduled trips for this date</p>
-                <ul id="eventList" class="event-list"></ul>
-            </section>
         </div>
-
      <!-- Edit Modal -->
-     <div id="editModal" class="modal">
-        <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: scroll;">
-            <span class="close">&times;</span>
-            <h3 style="margin-top: 0;">Edit Trip</h3>
-            <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
-                <input type="hidden" id="editEventId" name="eventId">
-                
-                <!-- Column 1 -->
-                <div style="display: flex; flex-direction: column;">
+    <div id="editModal" class="modal">
+    <div class="modal-content" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: scroll; overflow-x: hidden; ">
+        <span class="close">&times;</span>
+        <h2 style="margin-top: 0; text-align: center;">Edit Trip</h2>
+        <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <input type="hidden" id="editEventId" name="eventId">
+            
+            <!-- Left Column: Shipment Information -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Shipment Information</legend>
                     <label for="editEventSize">Shipment Size:</label>
                     <select id="editEventSize" name="eventSize" required style="width: 100%;">
                         <option value="">Select Size</option>
@@ -263,16 +280,21 @@
 
                     <label for="editEventHelper">Helper:</label>
                     <input type="text" id="editEventHelper" name="eventHelper" required style="width: 100%;">
-                </div>
+                </fieldset>
+            </div>
 
-                <!-- Column 2 -->
-                <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Dispatcher & Container Information</legend>
                     <label for="editEventDispatcher">Dispatcher:</label>
                     <input type="text" id="editEventDispatcher" name="eventDispatcher" required style="width: 100%;">
 
                     <label for="editEventContainerNo">Container No.:</label>
                     <input type="text" id="editEventContainerNo" name="eventContainerNo" required style="width: 100%;">
+                </fieldset>
 
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Client & Destination</legend>
                     <label for="editEventClient">Client:</label>
                     <select id="editEventClient" name="eventClient" required style="width: 100%;">
                         <option value="">Select Client</option>
@@ -293,77 +315,82 @@
                         <option value="Cebu Port">Cebu Port</option>
                         <option value="Davao Port">Davao Port</option>
                     </select>
+                </fieldset>
+            </div>
 
-                    <label for="editEventStatus">Status:</label>
-                    <select id="editEventStatus" name="eventStatus" required style="width: 100%;">
-                        <option value="Pending">Pending</option>
-                        <option value="En Route">En Route</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
+            <!-- Full Width: Status & Shipping Line -->
+            <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                <legend style="font-weight: bold;">Status & Shipping Line</legend>
+                <label for="editEventStatus">Status:</label>
+                <select id="editEventStatus" name="eventStatus" required style="width: 100%;">
+                    <option value="Pending">Pending</option>
+                    <option value="En Route">En Route</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <label for="editEventShippingLine">Shipping Line:</label>
+                <select id="editEventShippingLine" name="eventShippingLine" required style="width: 100%;">
+                    <option value="">Select Shipping Line</option>
+                    <option value="Maersk Line">Maersk Line</option>
+                    <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
+                    <option value="COSCO Shipping">COSCO Shipping</option>
+                    <option value="CMA CGM">CMA CGM</option>
+                    <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+                </select>
+            </fieldset>
 
-                <!-- Full width fields -->
-                <div style="grid-column: span 2;">
-                    <label for="editEventShippingLine">Shipping Line:</label>
-                    <select id="editEventShippingLine" name="eventShippingLine" required style="width: 35%;">
-                        <option value="">Select Shipping Line</option>
-                        <option value="Maersk Line">Maersk Line</option>
-                        <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
-                        <option value="COSCO Shipping">COSCO Shipping</option>
-                        <option value="CMA CGM">CMA CGM</option>
-                        <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-                    </select>
+            <!-- Consignee and Cash Advance -->
+            <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                <legend style="font-weight: bold;">Consignee & Cash Advance</legend>
+                <label for="editEventConsignee">Consignee:</label>
+                <input type="text" id="editEventConsignee" name="eventConsignee" required style="width: 100%;">
+                <label for="editEventCashAdvance">Cash Advance:</label>
+                <input type="text" id="editEventCashAdvance" name="eventCashAdvance" required style="width: 100%;">
+            </fieldset>
+
+            <!-- Edit Reasons Section (Only in Edit Modal) -->
+          <div class="edit-reasons-section" style="grid-column: span 2; margin-top: 5px; padding: 15px; border-radius: 5px; border: 1px solid #ddd; width: 95%;">
+                <h4 style="margin-top: 0; margin-bottom: 5px; color: #333;">Reason for Edit <span style=" font-size:14px; color: #666;">  (Select all that apply)</span></h4>  
+              
                 
-                    <label for="editEventConsignee">Consignee:</label>
-                    <input type="text" id="editEventConsignee" name="eventConsignee" required style="width: 25%;">
-                    <br>
-                    <label for="editEventCashAdvance">Cash Advance:</label>
-                    <input type="text" id="editEventCashAdvance" name="eventCashAdvance" required style="width: 20%;">
+                <div class="reasons-container" style="display: flex; display: grid; grid-template-columns: 1fr 1fr;flex-direction: column; gap: 10px; width: 100%;">
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; ">
+                        <label for="reason1" style="margin: 0; cursor: pointer; flex: 1;">Changed schedule as per client request</label>
+                        <input type="checkbox" name="editReason" value="Changed schedule as per client request" id="reason1" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; ;">
+                        <label for="reason2" style="margin: 0; cursor: pointer; flex: 1;">Updated driver assignment due to availability</label>
+                        <input type="checkbox" name="editReason" value="Updated driver assignment due to availability" id="reason2" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; ">
+                        <label for="reason3" style="margin: 0; cursor: pointer; flex: 1;">Modified vehicle assignment for capacity requirements</label>
+                        <input type="checkbox" name="editReason" value="Modified vehicle assignment for capacity requirements" id="reason3" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; ">
+                        <label for="reason4" style="margin: 0; cursor: pointer; flex: 1;">Adjusted destination based on new instructions</label>
+                        <input type="checkbox" name="editReason" value="Adjusted destination based on new instructions" id="reason4" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; ">
+                        <label for="reason5" style="margin: 0; cursor: pointer; flex: 1;">Updated container details for accuracy</label>
+                        <input type="checkbox" name="editReason" value="Updated container details for accuracy" id="reason5" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; grid-column: span 2;">
+                        <label for="reason6" style="margin: 0; cursor: pointer; flex: 1;">Other (please specify below)</label>
+                        <input type="checkbox" name="editReason" value="Other" id="reason6" style="margin-left: 10px;">
+                    </div>
+                    
+                    <div class="other-reason" style="width: 95%;grid-column: span 2;" id="otherReasonContainer">
+                        <label for="otherReasonText" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333; grid-column: span 2;">Specify other reason:</label>
+                        <textarea id="otherReasonText" name="otherReasonText" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; min-height: 80px;"></textarea>
+                    </div>
                 </div>
+            </div>
 
-                
-        <div class="edit-reasons-section" style="grid-column: span 2; margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #ddd; width: 100%;">
-        <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Reason for Edit</h4>
-        <p style="margin-top: 0; margin-bottom: 10px; color: #666;">Select all that apply:</p>
-        
-        <div class="reasons-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason1" style="margin: 0; cursor: pointer; flex: 1;">Changed schedule as per client request</label>
-                <input type="checkbox" name="editReason" value="Changed schedule as per client request" id="reason1" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason2" style="margin: 0; cursor: pointer; flex: 1;">Updated driver assignment due to availability</label>
-                <input type="checkbox" name="editReason" value="Updated driver assignment due to availability" id="reason2" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason3" style="margin: 0; cursor: pointer; flex: 1;">Modified vehicle assignment for capacity requirements</label>
-                <input type="checkbox" name="editReason" value="Modified vehicle assignment for capacity requirements" id="reason3" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason4" style="margin: 0; cursor: pointer; flex: 1;">Adjusted destination based on new instructions</label>
-                <input type="checkbox" name="editReason" value="Adjusted destination based on new instructions" id="reason4" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason5" style="margin: 0; cursor: pointer; flex: 1;">Updated container details for accuracy</label>
-                <input type="checkbox" name="editReason" value="Updated container details for accuracy" id="reason5" style="margin-left: 10px;">
-            </div>
-            
-            <div class="reason-option" style="display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; transition: background-color 0.2s; width: 90%;">
-                <label for="reason6" style="margin: 0; cursor: pointer; flex: 1;">Other (please specify below)</label>
-                <input type="checkbox" name="editReason" value="Other" id="reason6" style="margin-left: 10px;">
-            </div>
-            
-            <div class="other-reason" style="width: 90%;" id="otherReasonContainer">
-                <label for="otherReasonText" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Specify other reason:</label>
-                <textarea id="otherReasonText" name="otherReasonText" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; min-height: 80px;"></textarea>
-            </div>
-        </div>
-     </div>
 
                 <!-- Form buttons -->
                 <div class="buttons"style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
@@ -402,14 +429,15 @@
             <button type="button" class="close-btn cancel-btn" style="margin-top: 20px;">Close</button>
         </div>
     </div>
-
-        <div id="addScheduleModal" class="modal">
-        <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow: hidden;">
-            <span class="close">&times;</span>
-            <h2 style="margin-top: 0;">Add Schedule</h2>
-            <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
-                <!-- Column 1 -->
-                <div style="display: flex; flex-direction: column;">
+<div id="addScheduleModal" class="modal">
+    <div class="modal-content" style="width: 80%; max-width: 700px; max-height: 90vh; overflow: auto; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+        <span class="close">&times;</span>
+        <h2 style="margin-top: 0; text-align: center;">Add Schedule</h2>
+        <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Left Column: Shipment Information -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Shipment Information</legend>
                     <label for="addEventSize">Shipment Size:</label>
                     <select id="addEventSize" name="eventSize" required style="width: 100%;">
                         <option value="">Select Size</option>
@@ -432,16 +460,22 @@
 
                     <label for="addEventHelper">Helper:</label>
                     <input type="text" id="addEventHelper" name="eventHelper" required style="width: 100%;">
-                </div>
+                </fieldset>
+            </div>
 
-                <!-- Column 2 -->
-                <div style="display: flex; flex-direction: column;">
+            <!-- Right Column: Dispatcher + Client -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Dispatcher & Container Information</legend>
                     <label for="addEventDispatcher">Dispatcher:</label>
                     <input type="text" id="addEventDispatcher" name="eventDispatcher" required style="width: 100%;">
 
                     <label for="addEventContainerNo">Container No.:</label>
                     <input type="text" id="addEventContainerNo" name="eventContainerNo" required style="width: 100%;">
+                </fieldset>
 
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Client & Destination</legend>
                     <label for="addEventClient">Client:</label>
                     <select id="addEventClient" name="eventClient" required style="width: 100%;">
                         <option value="">Select Client</option>
@@ -462,48 +496,49 @@
                         <option value="Cebu Port">Cebu Port</option>
                         <option value="Davao Port">Davao Port</option>
                     </select>
+                </fieldset>
+            </div>
 
-                    <label for="addEventStatus">Status:</label>
-                    <select id="addEventStatus" name="eventStatus" required style="width: 100%;">
-                        <option value="Pending">Pending</option>
-                        <option value="En Route">En Route</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
+            <!-- Full Width: Status & Shipping Line -->
+                       <!-- Status and Shipping Line -->
+            <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                <legend style="font-weight: bold;">Status & Shipping Line</legend>
+                <label for="addEventStatus">Status:</label>
+                <select id="addEventStatus" name="eventStatus" required style="width: 100%;">
+                    <option value="Pending">Pending</option>
+                    <option value="En Route">En Route</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <label for="addEventShippingLine">Shipping Line:</label>
+                <select id="addEventShippingLine" name="eventShippingLine" required style="width: 100%;">
+                    <option value="">Select Shipping Line</option>
+                    <option value="Maersk Line">Maersk Line</option>
+                    <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
+                    <option value="COSCO Shipping">COSCO Shipping</option>
+                    <option value="CMA CGM">CMA CGM</option>
+                    <option value="Hapag-Lloyd">Hapag-Lloyd</option>
+                </select>
+            </fieldset>
+            <!-- Consignee and Cash Advance -->
+            <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                <legend style="font-weight: bold;">Consignee & Cash Advance</legend>
+                <label for="addEventConsignee">Consignee:</label>
+                <input type="text" id="addEventConsignee" name="eventConsignee" required style="width: 100%;">
+                <label for="addEventCashAdvance">Cash Advance:</label>
+                <input type="text" id="addEventCashAdvance" name="eventCashAdvance" required style="width: 100%;">
+            </fieldset>
 
-            <div style="grid-column: span 2; display: flex; gap: 15px; align-items: flex-end;">
-        <div style="flex: 1;">
-            <label for="addEventShippingLine">Shipping Line:</label>
-            <select id="addEventShippingLine" name="eventShippingLine" required style="width: 100%;">
-                <option value="">Select Shipping Line</option>
-                <option value="Maersk Line">Maersk Line</option>
-                <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
-                <option value="COSCO Shipping">COSCO Shipping</option>
-                <option value="CMA CGM">CMA CGM</option>
-                <option value="Hapag-Lloyd">Hapag-Lloyd</option>
-            </select>
-        </div>
-        
-        <div style="flex: 1;">
-            <label for="addEventConsignee">Consignee:</label>
-            <input type="text" id="addEventConsignee" name="eventConsignee" required style="width: 100%;">
-        </div>
+            <!-- Form Buttons -->
+            <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px; background-color: #b22828; color: white; border: none; border-radius: 4px;">Cancel</button>
+                <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <div style="grid-column: span 2;">
-        <label for="addEventCashAdvance">Cash Advance:</label>
-        <input type="text" id="addEventCashAdvance" name="eventCashAdvance" required style="width: 100%;">
-    </div>
 
-                <!-- Form buttons -->
-                <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
-                    <button type="button" class="close-btn cancel-btn" style="padding: 5px 10px;">Cancel</button>
-                    <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div id="checklistModal" class="modal">
     <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
@@ -558,7 +593,7 @@
     <div class="table-info" id="showingInfo"></div>
     
      <div class="rows-per-page-container">
-        <label for="rowsPerPage">Rows per page:</label>
+        <label for="rowsPerPage" class="rowlabel">Rows per page:</label>
         <select id="rowsPerPage" onchange="changeRowsPerPage()">
             <option value="5">5</option>
             <option value="10">10</option>
@@ -575,12 +610,11 @@
                     <tr>
                         <th>Plate No.</th>
                     <th>
-                Date 
+                Date & Time
                 <button id="dateSortBtn" style="background: none; border: none; cursor: pointer;">
                     <i class="fa fa-sort"></i>
                 </button>
             </th>
-                        <th>Time</th>
                         <th>Driver</th>
                         <th>Helper</th>
                         <th>Dispatcher</th>
@@ -615,20 +649,156 @@
             <div id="editReasonsContent">
             
             </div>
-            <button type="button" class="close-btn cancel-btn" style="margin-top: 20px;">Close</button>
+            <button type="button" class="close-btn cancel-btn" style="margin-top: 20px; background-color:#f44336;">Close</button>
         </div>
     </div>
     </div>
 
+<div id="eventDetailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3 id="eventModalTitle" style="margin-top: 0;">Trip Details</h3>
+        
+        <div class="trip-details-grid" id="eventDetailGrid">
+            <!-- Existing trip details sections -->
+            <div class="details-section">
+                <h4 class="section-title">Vehicle Information</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Plate No:</span>
+                    <span class="detail-value" id="ed-plate"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Container No:</span>
+                    <span class="detail-value" id="ed-container"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Size:</span>
+                    <span class="detail-value" id="ed-size"></span>
+                </div>
+            </div>
+            
+            <div class="details-section">
+                <h4 class="section-title">Trip Information</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value" id="ed-date"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value"><span id="ed-status" class="status"></span></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Destination:</span>
+                    <span class="detail-value" id="ed-destination"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Cash Advance:</span>
+                    <span class="detail-value" id="ed-cashadvance"></span>
+                </div>
+            </div>
+            
+            <div class="details-section">
+                <h4 class="section-title">Personnel</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Driver:</span>
+                    <span class="detail-value" id="ed-driver"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Helper:</span>
+                    <span class="detail-value" id="ed-helper"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Dispatcher:</span>
+                    <span class="detail-value" id="ed-dispatcher"></span>
+                </div>
+            </div>
+            
+            <div class="details-section">
+                <h4 class="section-title">Client Information</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Client:</span>
+                    <span class="detail-value" id="ed-client"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Shipping Line:</span>
+                    <span class="detail-value" id="ed-shipping"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Consignee:</span>
+                    <span class="detail-value" id="ed-consignee"></span>
+                </div>
+            </div>
+            
+            <div class="details-section system-info">
+                <h4 class="section-title">System Information</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Last Modified By:</span>
+                    <span class="detail-value" id="ed-modifiedby"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Last Modified At:</span>
+                    <span class="detail-value" id="ed-modifiedat"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="event-actions-modal">
+            <button class="icon-btn edit" id="modalEditBtn" data-tooltip="Edit">
+                <i class="fas fa-edit"></i> 
+            </button>
+            <button class="icon-btn delete" id="modalDeleteBtn" data-tooltip="Delete">
+                <i class="fas fa-trash-alt"></i> 
+            </button>
+            <button class="icon-btn view-reasons" id="modalViewReasonsBtn" data-tooltip="View Edit History" style="display: none;">
+                <i class="fas fa-history"></i>
+            </button>
+            <button class="icon-btn" id="viewExpensesBtn" data-tooltip="View Expense Report" style="display: none;">
+                <i class="fas fa-file-invoice-dollar"></i> Expense Report
+            </button>
+            <button class="icon-btn" id="viewChecklistBtn" data-tooltip="View Driver Checklist" style="display: none;">
+                <i class="fas fa-check-circle"></i> Driver Checklist
+            </button>
+        </div>
+    </div>
+</div>
 
 
     <script>
 
-         function formatDateTime(datetimeString) {
-        if (!datetimeString) return 'N/A';
-        const date = new Date(datetimeString);
-        return date.toLocaleString(); 
-    }
+   function formatDateTime(datetimeString) {
+    if (!datetimeString) return 'N/A';
+    const date = new Date(datetimeString);
+    
+    // Format to "Month Day, Year" format
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12;
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    
+    return `${month} ${day}, ${year} ${formattedHours}:${formattedMinutes} ${ampm}`;
+}
+
+function formatDateOnly(datetimeString) {
+    if (!datetimeString) return 'N/A';
+    const date = new Date(datetimeString);
+    
+    // Format to "Month Day, Year" format (date only)
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    
+    return `${month} ${day}, ${year}`;
+}
  let currentPage = 1;
 let rowsPerPage = 5; 
 let totalPages = 1;
@@ -758,7 +928,7 @@ let filteredEvents = [];
     function renderTripRows(trips, showDeleted) {
         trips.forEach(function(trip) {
             const dateObj = new Date(trip.date);
-            const formattedDate = dateObj.toLocaleDateString();
+            const formattedDate = formatDateOnly(trip.date); 
             const formattedTime = moment(dateObj).format('h:mm A');
             
             let statusCell = '';
@@ -794,8 +964,10 @@ let filteredEvents = [];
             const row = `
                  <tr class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
                     <td>${trip.plate_no || 'N/A'}</td>
-                    <td>${formattedDate}</td>
-                    <td>${formattedTime}</td>
+                        <td>
+                    ${formattedDate}<br>
+                    <span class="time-display2">${formattedTime}</span>
+                </td>
                     <td>${trip.driver || 'N/A'}</td>
                     <td>${trip.helper || 'N/A'}</td>
                     <td>${trip.dispatcher || 'N/A'}</td>
@@ -832,7 +1004,7 @@ let filteredEvents = [];
         $.ajax({
             url: 'include/handlers/truck_handler.php?action=getTrucks',
             type: 'GET',
-            async: false, // We need to wait for this response
+            
             success: function(truckResponse) {
                 if (truckResponse.success) {
                     // Identify unavailable trucks (In Repair, Overdue, or Deleted)
@@ -1165,6 +1337,9 @@ let filteredEvents = [];
     }
     
     // Next button
+
+
+    
     $('#nextPageBtn').prop('disabled', currentPage === totalPages);
 }
 
@@ -1194,182 +1369,163 @@ let filteredEvents = [];
             });
 
             // Initialize calendar
-           $('#calendar').fullCalendar({
-    header: { 
-        left: 'prev,next today', 
-        center: 'title', 
-        right: 'month,agendaWeek,agendaDay' 
-    },
-    events: calendarEvents,
-    timeFormat: 'h:mm A', 
-    displayEventTime: true, 
-    displayEventEnd: false, 
-    eventRender: function(event, element) {
-        element.find('.fc-title').css({
-            'white-space': 'normal',
-            'overflow': 'visible'
-        });
-        
-        element.find('.fc-title').html(event.client + ' - ' + event.destination);
-        
-        var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
-        element.addClass(statusClass);
-    },
-    // Add this to automatically select today's date
-    viewRender: function(view, element) {
-        if (view.name === 'month') {
-            // Trigger a click on today's cell
-            setTimeout(function() {
-                $('.fc-today').trigger('click');
-            }, 100);
-        }
-    },
-    dayClick: function(date, jsEvent, view) {
-        var clickedDay = $(this);
-        
-        $('.fc-day').removeClass('fc-day-selected');
-        clickedDay.addClass('fc-day-selected');
-        
-        var eventsOnDay = $('#calendar').fullCalendar('clientEvents', function(event) {
-            return moment(event.start).isSame(date, 'day');
-        });
-        
-        var formattedDate = moment(date).format('MMMM D, YYYY');
-        $('#eventDetails h4').text('Event Details - ' + formattedDate);
-        
-        $('#eventList').empty();
-        $('#noEventsMessage').hide();
-        
-        if (eventsOnDay.length > 0) {
-            eventsOnDay.forEach(function(event) {
-                var hasEditReasons = event.edit_reasons && event.edit_reasons !== 'null' && event.edit_reasons !== '';
-                var viewRemarksButton = hasEditReasons ? 
-                    `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}" style="margin-top: 10px;">View Remarks</button>` : 
-                    '';
-                
-                var eventThumbnail = `
-                    <div class="event-thumbnail">
-                        <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
-                        <strong>Plate No:</strong> ${event.plateNo}<br>
-                        <strong>Destination:</strong> ${event.destination}
-                    </div>
-                    <div class="event-details">
-                        <p><strong>Driver:</strong> ${event.driver}</p>
-                        <p><strong>Helper:</strong> ${event.helper}</p>
-                        <p><strong>Dispatcher:</strong> ${event.dispatcher || 'N/A'}</p>
-                        <p><strong>Client:</strong> ${event.client}</p>
-                        <p><strong>Container No.:</strong> ${event.containerNo}</p>
-                        <td> <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></p></td> 
-                        <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
-                        <p><strong>Last modified by: </strong>${event.modifiedby}<br>
-                        <strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
-                        <div class="event-actions" style="margin-top: 15px;">
-                            <button class="icon-btn edit" data-tooltip="Edit" data-id="${event.id}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="icon-btn delete" data-tooltip="Delete" data-id="${event.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            ${hasEditReasons ? 
-                                `<button class="icon-btn view-reasons" data-tooltip="View Edit History" data-id="${event.id}">
-                                    <i class="fas fa-history"></i>
-                                </button>` : ''}
-                        </div>
-                    </div>
-                `;
-                $('#eventList').append(eventThumbnail);
-            });
-        } else {
-            $('#noEventsMessage').show();
-        }
+            
+       $(document).ready(function() {
 
-        // Toggle event details on thumbnail click
-        $('.event-thumbnail').on('click', function() {
-            $(this).next('.event-details').toggle();
-        });
-    }
+    $('#calendar').fullCalendar({
+        header: { 
+            left: 'prev,next today', 
+            center: 'title', 
+            right: 'month,agendaWeek,agendaDay' 
+        },
+        events: calendarEvents,
+        timeFormat: 'h:mm A', 
+        displayEventTime: true, 
+        displayEventEnd: false,
+        eventRender: function(event, element) {
+            element.find('.fc-title').css({
+                'white-space': 'normal',
+                'overflow': 'visible'
+            });
+            
+            element.find('.fc-title').html(event.client + ' - ' + event.destination);
+            
+            var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
+            element.addClass(statusClass);
+        },
+        // Add eventClick handler to show modal instead of sidebar details
+        eventClick: function(event, jsEvent, view) {
+            showEventDetailsModal(event);
+        }
+    });
+
+  $(document).on('click', '#modalEditBtn', function() {
+        var eventId = $(this).data('id');
+        $('#eventDetailsModal').hide();
+        // Trigger the existing edit functionality
+        $('.icon-btn.edit[data-id="' + eventId + '"]').click();
+    });
+
+    $(document).on('click', '#modalDeleteBtn', function() {
+        var eventId = $(this).data('id');
+        $('#eventDetailsModal').hide();
+        // Trigger the existing delete functionality
+        $('.icon-btn.delete[data-id="' + eventId + '"]').click();
+    });
+
+    $(document).on('click', '#modalViewReasonsBtn', function() {
+        var eventId = $(this).data('id');
+        $('#eventDetailsModal').hide();
+        // Trigger the existing view reasons functionality
+        $('.icon-btn.view-reasons[data-id="' + eventId + '"]').click();
+    });
 });
 
-setTimeout(function() {
-    var today = moment().startOf('day');
-    var eventsToday = $('#calendar').fullCalendar('clientEvents', function(event) {
-        return moment(event.start).isSame(today, 'day');
-    });
+// Function to show event details in modal
+function showEventDetailsModal(event) {
+    const modal = document.getElementById('eventDetailsModal');
     
-    var formattedDate = today.format('MMMM D, YYYY');
-    $('#eventDetails h4').text('Event Details - ' + formattedDate);
+    // Populate the modal with event data using the new structure
+    document.getElementById('ed-plate').textContent = event.plateNo || 'N/A';
+    document.getElementById('ed-container').textContent = event.containerNo || 'N/A';
+    document.getElementById('ed-size').textContent = event.size || 'N/A';
     
-    $('#eventList').empty();
-    $('#noEventsMessage').hide();
+    document.getElementById('ed-date').textContent = moment(event.start).format('MMMM D, YYYY - h:mm A');
+    const statusElement = document.getElementById('ed-status');
+    statusElement.textContent = event.status;
+    statusElement.className = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
+    document.getElementById('ed-destination').textContent = event.destination || 'N/A';
+    document.getElementById('ed-cashadvance').textContent = event.cashAdvance || 'N/A';
     
-    if (eventsToday.length > 0) {
-        eventsToday.forEach(function(event) {
-            var hasEditReasons = event.edit_reasons && event.edit_reasons !== 'null' && event.edit_reasons !== '';
-            var viewRemarksButton = hasEditReasons ? 
-                `<button class="edit-btn2 view-reasons-btn" data-id="${event.id}" style="margin-top: 10px;">View Remarks</button>` : 
-                '';
-            
-            var eventThumbnail = `
-                <div class="event-thumbnail">
-                    <strong>Date:</strong> ${moment(event.start).format('MMMM D, YYYY')}<br>
-                    <strong>Plate No:</strong> ${event.plateNo}<br>
-                    <strong>Destination:</strong> ${event.destination}
-                </div>
-                <div class="event-details">
-                    <p><strong>Driver:</strong> ${event.driver}</p>
-                    <p><strong>Helper:</strong> ${event.helper}</p>
-                    <p><strong>Dispatcher:</strong> ${event.dispatcher || 'N/A'}</p>
-                    <p><strong>Client:</strong> ${event.client}</p>
-                    <p><strong>Container No.:</strong> ${event.containerNo}</p>
-                    <td> <p><strong>Status:</strong> <span class="status ${event.status.toLowerCase().replace(/\s+/g, '')}">${event.status}</span></p></td> 
-                    <p><strong>Cash Advance:</strong> ${event.cashAdvance}</p>
-                    <p><strong>Last modified by: </strong>${event.modifiedby}<br>
-                    <strong>Last Modified at: </strong>${formatDateTime(event.modifiedat)}</p>
-                    <div class="event-actions" style="margin-top: 15px;">
-                        <button class="icon-btn edit" data-tooltip="Edit" data-id="${event.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="icon-btn delete" data-tooltip="Delete" data-id="${event.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        ${hasEditReasons ? 
-                            `<button class="icon-btn view-reasons" data-tooltip="View Edit History" data-id="${event.id}">
-                                <i class="fas fa-history"></i>
-                            </button>` : ''}
-                    </div>
-                </div>
-            `;
-            $('#eventList').append(eventThumbnail);
-        });
+    document.getElementById('ed-driver').textContent = event.driver || 'N/A';
+    document.getElementById('ed-helper').textContent = event.helper || 'N/A';
+    document.getElementById('ed-dispatcher').textContent = event.dispatcher || 'N/A';
+    
+    document.getElementById('ed-client').textContent = event.client || 'N/A';
+    document.getElementById('ed-shipping').textContent = event.shippingLine || 'N/A';
+    document.getElementById('ed-consignee').textContent = event.consignee || 'N/A';
+    
+    document.getElementById('ed-modifiedby').textContent = event.modifiedby || 'System';
+    document.getElementById('ed-modifiedat').textContent = formatDateTime(event.modifiedat);
+    
+    // Set up action buttons
+    document.getElementById('modalEditBtn').setAttribute('data-id', event.id);
+    document.getElementById('modalDeleteBtn').setAttribute('data-id', event.id);
+    
+    // Show/hide view reasons button
+    const viewReasonsBtn = document.getElementById('modalViewReasonsBtn');
+    if (event.edit_reasons && event.edit_reasons !== 'null' && event.edit_reasons !== '') {
+        viewReasonsBtn.style.display = 'inline-block';
+        viewReasonsBtn.setAttribute('data-id', event.id);
     } else {
-        $('#noEventsMessage').show();
+        viewReasonsBtn.style.display = 'none';
     }
     
-    // Highlight today's date
-    $('.fc-today').addClass('fc-day-selected');
-}, 500);
+    // Show/hide expense report button
+    const viewExpensesBtn = document.getElementById('viewExpensesBtn');
+    if (event.status === 'Completed') {
+        viewExpensesBtn.style.display = 'inline-block';
+    } else {
+        viewExpensesBtn.style.display = 'none';
+    }
+
+    // Show/hide checklist button
+    const viewChecklistBtn = document.getElementById('viewChecklistBtn');
+    if (event.driver_id && event.status !== 'Cancelled') {
+        viewChecklistBtn.style.display = 'inline-block';
+    } else {
+        viewChecklistBtn.style.display = 'none';
+    }
+    
+    // Show modal
+    modal.style.display = 'block';
+}
+
+
+// Handle modal close events
+$(document).on('click', '#eventDetailsModal .close', function() {
+    $('#eventDetailsModal').hide();
+});
+
+// Close modal when clicking outside of it
+$(window).on('click', function(event) {
+    if (event.target.id === 'eventDetailsModal') {
+        $('#eventDetailsModal').hide();
+    }
+});
             
             // View toggle buttons
-    $('#calendarViewBtn').on('click', function() {
-        $(this).addClass('active');
-        $('#tableViewBtn').removeClass('active');
-        $('#calendar').show();
-        $('#eventDetails').show();
-        $('#eventsTable, #eventTableBody, .pagination-container, .filter-row, .table-controls ').hide();
-        $('body').removeClass('table-view'); 
-        $('#calendar').fullCalendar('render');
-    });
+   $('#calendarViewBtn').on('click', function() {
+            $(this).addClass('active');
+            $('#tableViewBtn').removeClass('active');
+            $('#calendar').show();
+            $('#eventDetails').show();
+            $('#eventsTable, #eventTableBody, .pagination-container, .table-controls').hide();
+            $('body').removeClass('table-view'); 
+            $('#calendar').fullCalendar('render');
+            
+            // Hide the filter in calendar view
+            $('.status-filter-container').hide();
+        });
 
-    $('#tableViewBtn').on('click', function() {
-        $(this).addClass('active');
-        $('#calendarViewBtn').removeClass('active');
-        $('#calendar').hide();
-        $('#eventDetails').hide();
-        $('#eventsTable, #eventTableBody, .pagination-container, .filter-row, .rows-per-page-container, .table-controls').show(); 
-        $('body').addClass('table-view');
-        currentPage = 1;
-        renderTable();
-    });
+     $('#tableViewBtn').on('click', function() {
+            $(this).addClass('active');
+            $('#calendarViewBtn').removeClass('active');
+            $('#calendar').hide();
+            $('#eventDetails').hide();
+            $('#eventsTable, #eventTableBody, .pagination-container, .rows-per-page-container, .table-controls').show(); 
+            $('body').addClass('table-view');
+            currentPage = 1;
+            renderTable();
+            
+            // Show the filter in table view
+            $('.status-filter-container').show();
+        });
+  $(document).ready(function() {
+            if ($('#calendarViewBtn').hasClass('active')) {
+                $('.status-filter-container, rows-per-page-container, .table-controls').hide();
+            }
+        });
             // Edit button click handler
    $(document).on('click', '.icon-btn.edit', function() {
     var eventId = $(this).data('id');
@@ -2411,6 +2567,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for global access (optional)
 window.AdminLoading = AdminLoading;
+
+
 </script>
     <footer class="site-footer">
 

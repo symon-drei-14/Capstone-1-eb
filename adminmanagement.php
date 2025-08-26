@@ -12,59 +12,15 @@ checkAccess();
     <title>Admin Management</title>
     <link rel="stylesheet" href="include/css/sidenav.css">
     <link rel="stylesheet" href="include/css/loading.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="include/css/adminmanagement.css">
 
 </head>
 <style>
-    .deleted-only {
-    display: none;
-}
 
-.show-deleted .deleted-only {
-    display: table-cell;
-}
-
-.table-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-}
-
-.table-info {
-    font-size: 14px;
-    color: #555;
-}
-
-
-.rows-per-page-container {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-right:30px;
-}
-
-.rows-per-page-container label {
-    font-size: 14px;
-    color: #333;
-    margin-right: 5px;
-    border-radius:20px;
-}
-.rows-per-page-container select {
-    font-size: 14px;
-    color: black;
-    border-color: #33333328;
-    margin-right: 5px;
-    border-radius:10px;
-    padding: 5px;
-    margin: 5px;
-    max-width:200px;
-    width:auto;
-}
     </style>
 
- <h3><i class="fa-solid fa-truck"></i>Admin Management</h3>
+ <h3><i class="fa-solid fa-user-tie"></i>Admin Management</h3>
 <body>
  
   <header class="header">
@@ -133,12 +89,13 @@ checkAccess();
     <div class="main-content4">
         <section class="content-2">
             <div class="container">
-                <div class="button-row">
+              
+               <div class="filter-controls">
+                  <div class="button-row">
                     <button class="add_trip" onclick="openAdminModal()">
                     <i class="fas fa-plus"></i> Add Admin
                     </button>
                 </div>
-               <div class="filter-controls">
     <div class="search-container">
         <i class="fas fa-search"></i>
         <input type="text" id="adminSearch" placeholder="Search admins..." onkeyup="searchAdmins()">
@@ -146,7 +103,7 @@ checkAccess();
     <label class="checkbox-container">
         <input type="checkbox" id="showDeletedCheckbox" onchange="toggleDeletedAdmins()">
         <span class="checkmark"></span>
-        Show Deleted Admins
+        Show Deleted 
     </label>
 </div>
 <div class="table-controls">
@@ -188,7 +145,7 @@ checkAccess();
             </div>
             <div class="pagination2">
                 <button class="prev" onclick="changeAdminPage(-1)">◄</button>
-                <span id="admin-page-info">Page 1</span>
+                <span id="admin-page-info"></span>
                 <button class="next" onclick="changeAdminPage(1)">►</button>
             </div>
         </section>
@@ -458,18 +415,18 @@ function restoreAdmin(adminId) {
         
 
         // Change admin page
-        function changeAdminPage(direction) {
-            const totalPages = Math.ceil(totalAdmins / rowsPerPage);
-            currentAdminPage += direction;
+       function changeAdminPage(direction) {
+    const totalPages = Math.ceil(totalAdmins / rowsPerPage);
+    currentAdminPage += direction;
 
-            if (currentAdminPage < 1) {
-                currentAdminPage = 1;
-            } else if (currentAdminPage > totalPages) {
-                currentAdminPage = totalPages;
-            }
+    if (currentAdminPage < 1) {
+        currentAdminPage = 1;
+    } else if (currentAdminPage > totalPages) {
+        currentAdminPage = totalPages;
+    }
 
-            fetchAdminsPaginated();
-        }
+    fetchAdminsPaginated();
+}
 
    function toggleDeletedAdmins() {
     const showDeleted = document.getElementById('showDeletedCheckbox').checked;

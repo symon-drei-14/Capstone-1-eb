@@ -101,19 +101,22 @@ tr:hover {
 }
 
 .add_trip {
-    background-color: #4CAF50;
-    color: white;
+    background-color: rgb(4, 95, 15);
+    color: rgb(246, 245, 245);
     padding: 10px 20px;
-    border: none;
     cursor: pointer;
     font-size: 14px;
     border-radius: 10px;
     font-weight: bold;
     letter-spacing: 1px;
+     transition: all 0.2s ease;
 }
 
 .add_trip:hover {
-    background-color: #45a049;
+    transform: scale(1.05);
+    background-color: rgba(34, 204, 54, 0.488);
+    color:black;
+
 }
 
 /* Modal styles */
@@ -255,7 +258,9 @@ select.form-control {
         table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 10px;
+
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+       
    
         }
         .table-container {
@@ -272,8 +277,7 @@ select.form-control {
             margin-top: 10px;
         }
         
-            .main-content4 {
-                
+            .main-content4 { 
                 margin-left: 10px;
                 margin-right: 10px;
                 width: calc(100% - 20px);
@@ -394,21 +398,21 @@ select.form-control {
             width: 50%;
             border-radius:20px;
         }
-        .status-filter {
+        .filter-controls {
     margin-bottom: 10px;
-    padding-bottom:10px;
+
     display: flex;
     align-items: center;
     gap: 15px;
     flex-wrap: wrap;
-    border-bottom:1px solid #88888831;
+
     width:98%;
 }
 
 
 
 
-.status-filter select {
+.filter-controls select {
     padding: 8px 12px 8px 35px;
     border-radius: 4px;
     border: 1px solid #ddd;
@@ -424,12 +428,12 @@ select.form-control {
 
 }
 
-.status-filter select option {
+.filter-controls select option {
     color: #000000ff; 
 
 }
 
-.status-filter select option[disabled][selected] {
+.filter-controls select option[disabled][selected] {
     display: none;
 
 }
@@ -856,7 +860,8 @@ th[onclick]:hover {
     background-color: #9a1a28;
 }
 
-.pagination {
+
+.pagination2 {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -864,7 +869,7 @@ th[onclick]:hover {
     gap: 5px;
 }
 
-.pagination button {
+.pagination2 button {
     background-color: transparent;
     color: #000;
     border: none;
@@ -881,43 +886,33 @@ th[onclick]:hover {
     transition: all 0.3s ease;
 }
 
-.pagination button:hover {
-    background-color: #ffffffff;
+.pagination2 button:hover:not(:disabled) {
+   background-color: #ffffffff;
     
     color: black;
     font-weight:bold;
     transform: scale(1.4); 
 }
 
-.pagination button.active {
+.pagination2 button.active {
     background-color: #ffffff6a;
     color: #cb1a2fff;
     border-color: #ffffffff;    
     font-weight: bolder;
     font-size:20px;
-}   
+}
 
-.pagination button:disabled {
+.pagination2 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.pagination .nav-btn {
-    border-radius: 15%;
-    width: auto;
-    font-size:14px;
-    border:none;
-}
-.pagination .nav-btn:hover {
-     transform: scale(1.6); 
-      background-color: #ffffffff;
-      font-weight:bold;
-      border:none;  
+.pagination2 .nav-btn {
+    font-weight: bold;
 }
 
-
-.pagination .ellipsis {
-    display: flex;
+.pagination2 .ellipsis {
+      display: flex;
     align-items: center;
     padding: 0 5px;
 }
@@ -926,12 +921,14 @@ th[onclick]:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
+    padding-top: 10px;
+    border-top: 1px solid #62616151;
 }
 
 .table-info {
     font-size: 14px;
     color: #555;
+    
 }
 .rows-per-page-container {
     display: flex;
@@ -957,4 +954,17 @@ th[onclick]:hover {
     max-width:200px;
     width:auto;
 }
+
+   .deleted-only {
+    display: none;
+}
+
+.show-deleted .deleted-only {
+    display: table-cell;
+}
+.checkbox-container{
+    font-size:14px;
+    color: #6f6f6f;
+}
+
 

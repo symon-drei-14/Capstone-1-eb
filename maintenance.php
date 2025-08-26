@@ -656,7 +656,7 @@
             tr.innerHTML = `
                 <td>${row.truck_id}</td>
                 <td>${row.licence_plate || 'N/A'}</td>
-                <td>${formatDate(row.date_mtnce)}</td>
+                <td>${formatDateToWords(row.date_mtnce)}</td>
                 <td>${row.remarks}</td>
                 <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
                 <td>${row.supplier || 'N/A'}</td>
@@ -749,12 +749,35 @@
         }
     });
 }
-
-
             function formatDateTime(datetimeString) {
-                if (!datetimeString) return 'N/A';
+            if (!datetimeString) return 'N/A';
                 const date = new Date(datetimeString);
-                return date.toLocaleString(); 
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                
+                const month = months[date.getMonth()];
+                const day = date.getDate();
+                const year = date.getFullYear();
+                
+                let hours = date.getHours();
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; 
+                
+                return `${month} ${day}, ${year} at ${hours}:${minutes} ${ampm}`;
+            }
+
+            function formatDateToWords(dateString) {
+                if (!dateString) return 'N/A';
+                
+                const date = new Date(dateString);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                
+                const month = months[date.getMonth()];
+                const day = date.getDate();
+                const year = date.getFullYear();
+                
+                return `${month} ${day}, ${year}`
             }
         
             function formatDate(dateString) {
@@ -1144,20 +1167,35 @@
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         
         if (searchTerm.trim() === '') {
-            // If search is empty, reload normal paginated data
             currentPage = 1;
             loadMaintenanceData();
             return;
         }
+
+        const monthMap = {
+            'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04',
+            'may': '05', 'jun': '06', 'jul': '07', 'aug': '08',
+            'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
+        };
         
-        // Fetch all records for searching
+        let monthNumber = null;
+        if (searchTerm.length >= 3) {
+            const monthAbbr = searchTerm.substring(0, 3);
+            monthNumber = monthMap[monthAbbr];
+        }
+        
+
         fetchAllRecordsForSearch()
             .then(data => {
                 const filteredRecords = data.records.filter(record => {
+
+                    const displayDate = formatDateToWords(record.date_mtnce).toLowerCase();
+                    
                     return (
                         String(record.truck_id).toLowerCase().includes(searchTerm) ||
                         (record.licence_plate && record.licence_plate.toLowerCase().includes(searchTerm)) ||
-                        (record.date_mtnce && formatDate(record.date_mtnce).toLowerCase().includes(searchTerm)) ||
+                        (record.date_mtnce && displayDate.includes(searchTerm)) || 
+                        (monthNumber && record.date_mtnce && record.date_mtnce.includes(`-${monthNumber}-`)) || 
                         (record.remarks && record.remarks.toLowerCase().includes(searchTerm)) ||
                         (record.status && record.status.toLowerCase().includes(searchTerm)) ||
                         (record.supplier && record.supplier.toLowerCase().includes(searchTerm)) ||
@@ -1167,8 +1205,7 @@
                 
                 renderTable(filteredRecords);
                 updateShowingInfo(filteredRecords.length, filteredRecords.length);
-                // Hide pagination during search
-                document.querySelector('.pagination').style.display = 'none';
+            
             })
             .catch(error => {
                 console.error("Error searching records:", error);
@@ -1177,9 +1214,8 @@
                     icon: 'info',
                     confirmButtonText: 'OK'
                 });
-        
             });
-    }
+    }   
             
     function deleteMaintenance(id) {
         if (!confirm("Are you sure you want to delete this maintenance record?")) {
@@ -1260,7 +1296,7 @@
                                 const historyItem = document.createElement("div");
                                 historyItem.className = "history-item";
                             historyItem.innerHTML = `
-                                    <strong>Date of Inspection:</strong> ${formatDate(item.date_mtnce)}<br>
+                                    <strong>Date of Inspection:</strong> ${formatDateToWords(item.date_mtnce)}<br>
                                     <strong>Remarks:</strong> ${item.remarks}<br>
                                     <strong>Status:</strong> ${item.status}<br>
                                     <strong>Supplier:</strong> ${item.supplier || 'N/A'}<br>

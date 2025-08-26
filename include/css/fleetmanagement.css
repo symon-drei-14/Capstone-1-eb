@@ -1,6 +1,3 @@
-
-
-
 th, td {
     padding: 12px;
     text-align: center;
@@ -951,7 +948,7 @@ th[onclick]:hover {
 
 .truck-image-container {
     width: 90px;
-    height: 70px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
