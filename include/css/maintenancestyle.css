@@ -1376,3 +1376,22 @@ button[type="submit"]:hover {
     font-size: 14px;
     color: #555;
 }
+
+.table-container.loading {
+    position: relative;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.table-container.loading::after {
+    content: 'Searching...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}

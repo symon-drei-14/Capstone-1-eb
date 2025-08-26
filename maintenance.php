@@ -517,18 +517,22 @@ function searchMaintenance() {
             return;
         }
 
-        if (maintenanceData.length === 0) {
-            loadAllMaintenanceData().then(() => {
-                performSearch(searchTerm);
-            });
-        } else {
-            performSearch(searchTerm);
-        }
+      
+        document.querySelector('.table-container').classList.add('loading');
+        
+        
+        fetchAllRecordsForSearch().then(allRecords => {
+            performSearch(searchTerm, allRecords);
+            document.querySelector('.table-container').classList.remove('loading');
+        }).catch(error => {
+            console.error("Error fetching records for search:", error);
+            document.querySelector('.table-container').classList.remove('loading');
+        });
     }, 300);
 }
 
-function performSearch(searchTerm) {
-    const filteredRecords = maintenanceData.filter(record => {
+function performSearch(searchTerm, allRecords) {
+    const filteredRecords = allRecords.filter(record => {
         return (
             String(record.truckId).toLowerCase().includes(searchTerm) ||
             (record.licensePlate && record.licensePlate.toLowerCase().includes(searchTerm)) ||
@@ -788,21 +792,32 @@ window.onload = function() {
     updateStatsCards();
 };
 
-    function fetchAllRecordsForSearch() {
-        let url = `include/handlers/maintenance_handler.php?action=getAllRecordsForSearch`;
-        
-        if (currentStatusFilter !== 'all') {
-            url += `&status=${encodeURIComponent(currentStatusFilter)}`;
-        }
-        
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.statusText);
-                }
-                return response.json();
-            });
+ function fetchAllRecordsForSearch() {
+    let url = `include/handlers/maintenance_handler.php?action=getAllRecordsForSearch`;
+    
+    if (currentStatusFilter !== 'all') {
+        url += `&status=${encodeURIComponent(currentStatusFilter)}`;
     }
+    
+    if (currentStatusFilter === 'deleted') {
+        url += `&showDeleted=1`;
+    }
+    
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                return data.records;
+            } else {
+                throw new Error(data.message || 'Failed to fetch records for search');
+            }
+        });
+}
 
 function renderTable(data) {
     const tableBody = document.querySelector("#maintenanceTable tbody");
