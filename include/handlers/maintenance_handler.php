@@ -600,28 +600,45 @@ try {
             break;
 
         case 'fullDelete':
-            $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-            
-            if ($id <= 0) {
-                echo json_encode(["success" => false, "message" => "Invalid ID"]);
-                exit;
-            }
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid ID"]);
+        exit;
+    }
 
-            $stmt = $conn->prepare("DELETE FROM maintenance_table WHERE maintenance_id = ?");
-            
-            if (!$stmt) {
-                echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
-                break;
-            }
-            
-            $stmt->bind_param("i", $id);
-            
-            if ($stmt->execute()) {
-                echo json_encode(["success" => true]);
-            } else {
-                echo json_encode(["success" => false, "message" => "Database error: " . $stmt->error]);
-            }
-            break;
+    // Start transaction for data integrity
+    $conn->begin_transaction();
+    
+    try {
+        // First, delete related audit log records
+        $stmt1 = $conn->prepare("DELETE FROM audit_logs_maintenance WHERE maintenance_id = ?");
+        if (!$stmt1) {
+            throw new Exception("Database error: " . $conn->error);
+        }
+        $stmt1->bind_param("i", $id);
+        $stmt1->execute();
+        $stmt1->close();
+        
+        // Then delete the main maintenance record
+        $stmt2 = $conn->prepare("DELETE FROM maintenance_table WHERE maintenance_id = ?");
+        if (!$stmt2) {
+            throw new Exception("Database error: " . $conn->error);
+        }
+        $stmt2->bind_param("i", $id);
+        $stmt2->execute();
+        $stmt2->close();
+        
+        // Commit the transaction
+        $conn->commit();
+        echo json_encode(["success" => true]);
+        
+    } catch (Exception $e) {
+        // Rollback on error
+        $conn->rollback();
+        echo json_encode(["success" => false, "message" => $e->getMessage()]);
+    }
+    break;
             
         case 'edit':
             $data = json_decode(file_get_contents("php://input"));
