@@ -250,26 +250,26 @@ try {
                 $driverId = getDriverIdByName($conn, $data['driver']);
 
                 $stmt = $conn->prepare("UPDATE trips SET 
-                    truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, 
-                    destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
-                    trip_date=?, status=?, fcl_status=?
-                    WHERE trip_id=?");
-                $stmt->bind_param("iiiiiiiissssi",
-                    $truckId,
-                    $driverId, 
-                    $helperId,
-                    $dispatcherId,
-                    $clientId,
-                    $destinationId,
-                    $shippingLineId,
-                    $consigneeId,
-                    $data['containerNo'],
-                    $data['date'],
-                    $data['status'],
-                    $data['fclStatus'],
-                    $data['id']
-                );
-                $stmt->execute();
+            truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, 
+            destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
+            trip_date=?, status=?, fcl_status=?  
+            WHERE trip_id=?");
+        $stmt->bind_param("iiiiiiiissssi",
+            $truckId,
+            $driverId, 
+            $helperId,
+            $dispatcherId,
+            $clientId,
+            $destinationId,
+            $shippingLineId,
+            $consigneeId,
+            $data['containerNo'],
+            $data['date'],
+            $data['status'],
+            $data['fclStatus'],  // Make sure this is included
+            $data['id']
+        );
+        $stmt->execute();
                 
                 // Update trip expenses with all three fields
                 $cashAdvance = floatval($data['cashAdvance'] ?? 0);

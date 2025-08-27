@@ -39,7 +39,7 @@
 
     
 $sql = "SELECT 
-            t.*,
+          t.*,
             tr.plate_no as truck_plate_no, 
             tr.capacity as truck_capacity,
             d.name as driver,
@@ -49,12 +49,14 @@ $sql = "SELECT
             dest.name as destination,
             sl.name as shipping_line,
             cons.name as consignee,
-            al.edit_reason as edit_reasons,
+            al.edit_reason as edit_reason,
             al.modified_by as last_modified_by,
             al.modified_at as last_modified_at,
             COALESCE(te.cash_advance, 0) as cash_advance,
             COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-            COALESCE(te.diesel, 0) as diesel
+            COALESCE(te.diesel, 0) as diesel,
+            tr.plate_no,  -- Add this line
+            t.trip_date   -- Add this line
         FROM trips t
         LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
         LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
@@ -76,30 +78,31 @@ $sql = "SELECT
 
 if ($result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
-        $eventsData[] = [
-            'id' => $row['trip_id'],
-            'plateNo' => $row['truck_plate_no'],
-            'date' => $row['trip_date'],
-            'driver' => $row['driver'],
-            'driver_id' => $row['driver_id'],
-            'helper' => $row['helper'],
-            'dispatcher' => $row['dispatcher'],
-            'containerNo' => $row['container_no'],
-            'client' => $row['client'],
-            'destination' => $row['destination'],
-            'shippingLine' => $row['shipping_line'],
-            'consignee' => $row['consignee'],
-            'size' => $row['fcl_status'],
-            'cashAdvance' => $row['cash_advance'], // Now from trip_expenses table
-            'additionalCashAdvance' => $row['additional_cash_advance'],
-            'diesel' => $row['diesel'],
-            'status' => $row['status'],
-            'modifiedby' => $row['last_modified_by'],
-            'modifiedat' => $row['last_modified_at'],
-            'truck_plate_no' => $row['truck_plate_no'],
-            'truck_capacity' => $row['truck_capacity'],
-            'edit_reasons' => $row['edit_reasons']
-        ];
+       $eventsData[] = [
+    'id' => $row['trip_id'],
+    'plateNo' => $row['truck_plate_no'],
+    'date' => $row['trip_date'],  // Add this line
+    'driver' => $row['driver'],
+    'driver_id' => $row['driver_id'],
+    'helper' => $row['helper'],
+    'dispatcher' => $row['dispatcher'],
+    'containerNo' => $row['container_no'],
+    'client' => $row['client'],
+    'destination' => $row['destination'],
+    'shippingLine' => $row['shipping_line'],
+    'consignee' => $row['consignee'],
+    'size' => $row['fcl_status'],
+    'cashAdvance' => $row['cash_advance'],
+    'additionalCashAdvance' => $row['additional_cash_advance'],
+    'diesel' => $row['diesel'],
+    'status' => $row['status'],
+    'modifiedby' => $row['last_modified_by'],
+    'modifiedat' => $row['last_modified_at'],
+    'truck_plate_no' => $row['truck_plate_no'],
+    'truck_capacity' => $row['truck_capacity'],
+    'edit_reasons' => $row['edit_reason'],
+    'fcl_status' => $row['fcl_status']  // Add this line
+];
     }
 }
 
@@ -653,6 +656,8 @@ if ($result->num_rows > 0) {
 <table class="events-table" id="eventsTable"> 
     <thead>
         <tr>
+            <th>Plate Number</th> 
+            <th>Trip Date</th>
             <th>Driver</th>
             <th>Helper</th>
             <th>Dispatcher</th>
@@ -664,7 +669,7 @@ if ($result->num_rows > 0) {
             <th>Container Size</th>
             <th>FCL Status</th>
             <th>Cash Advance</th>
-            <th>Additional Cash Advance</th>
+            <th>Additional CA</th>
             <th>Diesel</th>
             <th>Status</th>
             <th>Created At</th>
@@ -867,6 +872,8 @@ function renderTripRows(trips, showDeleted) {
 
         const row = `
              <tr class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
+                <td>${trip.plate_no || 'N/A'}</td>  <!-- Add this cell -->
+                <td>${formatDateTime(trip.trip_date)}</td>  <!-- Add this cell -->
                 <td>${trip.driver || 'N/A'}</td>
                 <td>${trip.helper || 'N/A'}</td>
                 <td>${trip.dispatcher || 'N/A'}</td>
@@ -876,13 +883,14 @@ function renderTripRows(trips, showDeleted) {
                 <td>${trip.shipping_line || 'N/A'}</td>
                 <td>${trip.consignee || 'N/A'}</td>
                 <td>${trip.truck_capacity ? trip.truck_capacity + 'ft' : 'N/A'}</td>
-                <td>${trip.fcl_status || 'N/A'}</td>
+                <td>${trip.fcl_status || 'N/A'}</td>  <!-- Add FCL Status cell -->
                 <td>₱${parseFloat(trip.cash_advance || 0).toFixed(2)}</td>
                 <td>₱${parseFloat(trip.additional_cash_advance || 0).toFixed(2)}</td>
                 <td>₱${parseFloat(trip.diesel || 0).toFixed(2)}</td>
                 ${statusCell}
                 <td>
                     ${formatDateTime(trip.created_at)}
+                    ${trip.last_modified_by ? `<br><small>Modified by: ${trip.last_modified_by}</small>` : ''}
                 </td>
                 ${actionCell}
             </tr>
@@ -1221,7 +1229,8 @@ $(document).on('click', '.icon-btn.edit', function() {
             modifiedat: event.modifiedat,
             truck_plate_no: event.truck_plate_no,
             truck_capacity: event.truck_capacity,
-            edit_reasons: event.edit_reasons 
+            edit_reasons: event.edit_reason,
+             fcl_status: event.fcl_status 
         };
     });
 
@@ -1851,6 +1860,7 @@ $('#editForm').on('submit', function(e) {
                 shippingLine: $('#editEventShippingLine').val(),
                 consignee: $('#editEventConsignee').val(),
                 size: $('#editEventSize').val(),
+                 fclStatus: $('#editEventFCL').val(),
                 fclStatus: $('#editEventFCL').val(),
                 cashAdvance: $('#editEventCashAdvance').val(),
                 additionalCashAdvance: $('#editEventAdditionalCashAdvance').val(),
