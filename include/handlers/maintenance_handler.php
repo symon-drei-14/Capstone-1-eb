@@ -119,6 +119,11 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
                                        SELECT 1 FROM audit_logs_maintenance al 
                                        WHERE al.maintenance_id = m.maintenance_id 
                                        AND al.is_deleted = 1
+                                       AND al.modified_at = (
+                                           SELECT MAX(al2.modified_at)
+                                           FROM audit_logs_maintenance al2
+                                           WHERE al2.maintenance_id = m.maintenance_id
+                                       )
                                    )");
 
     if (!$updateOverdue) {
@@ -143,6 +148,11 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
                                         SELECT 1 FROM audit_logs_maintenance al 
                                         WHERE al.maintenance_id = m.maintenance_id 
                                         AND al.is_deleted = 1
+                                        AND al.modified_at = (
+                                            SELECT MAX(al2.modified_at)
+                                            FROM audit_logs_maintenance al2
+                                            WHERE al2.maintenance_id = m.maintenance_id
+                                        )
                                     )
                                     AND t.is_deleted = 0");
     
@@ -160,7 +170,8 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
 
     $offset = ($page - 1) * $rowsPerPage;
     
-        $sql = "SELECT 
+    // FIXED: Use a subquery to get the latest audit log status for each maintenance record
+    $sql = "SELECT 
             m.maintenance_id AS maintenanceId,
             m.truck_id AS truckId,
             t.plate_no AS licensePlate,
@@ -172,31 +183,30 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
             mt.type_name AS maintenanceTypeName,
             m.maintenance_type_id AS maintenanceTypeId,
             m.cost,
-            al.is_deleted AS isDeleted,
-            al.delete_reason AS deleteReason,
-            al.modified_by AS lastUpdatedBy,
-            al.modified_at AS lastUpdatedAt,
-            al.edit_reason AS editReason
+            latest_audit.is_deleted AS isDeleted,
+            latest_audit.delete_reason AS deleteReason,
+            latest_audit.modified_by AS lastUpdatedBy,
+            latest_audit.modified_at AS lastUpdatedAt,
+            latest_audit.edit_reason AS editReason
         FROM maintenance_table m
-        LEFT JOIN truck_table t 
-            ON m.truck_id = t.truck_id
-        LEFT JOIN maintenance_types mt 
-            ON m.maintenance_type_id = mt.maintenance_type_id
-        LEFT JOIN suppliers s 
-            ON m.supplier_id = s.supplier_id
+        LEFT JOIN truck_table t ON m.truck_id = t.truck_id
+        LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+        LEFT JOIN suppliers s ON m.supplier_id = s.supplier_id
         LEFT JOIN (
             SELECT 
-                maintenance_id,
-                modified_by,
-                modified_at,
-                edit_reason,
-                is_deleted,
-                delete_reason,
-                ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) AS rn
-            FROM audit_logs_maintenance
-        ) al 
-            ON m.maintenance_id = al.maintenance_id 
-        AND al.rn = 1";
+                al1.maintenance_id,
+                al1.modified_by,
+                al1.modified_at,
+                al1.edit_reason,
+                al1.is_deleted,
+                al1.delete_reason
+            FROM audit_logs_maintenance al1
+            WHERE al1.modified_at = (
+                SELECT MAX(al2.modified_at)
+                FROM audit_logs_maintenance al2
+                WHERE al2.maintenance_id = al1.maintenance_id
+            )
+        ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id";
     
     $params = [];
     $types = '';
@@ -208,11 +218,12 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
         $types .= "s";
     }
     
-    // Handle deleted records filter
+    // Handle deleted records filter - only show records that are currently deleted
     if ($showDeleted) {
-        $whereClauses[] = "COALESCE(al.is_deleted, 0) = 1";
+        $whereClauses[] = "latest_audit.is_deleted = 1";
     } else {
-        $whereClauses[] = "COALESCE(al.is_deleted, 0) = 0";
+        // Show records that are not deleted (either never deleted or restored)
+        $whereClauses[] = "(latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)";
     }
 
     if (!empty($whereClauses)) {
@@ -233,7 +244,7 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
             "totalPages" => 1,
             "currentPage" => 1,
             "totalRecords" => 0,
-            "error" => "SQL preparation error"
+            "error" => "SQL preparation error: " . $conn->error
         ];
     }
     
@@ -250,7 +261,19 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     }
     
     // Get total count for pagination with the same filter
-    $countSql = "SELECT COUNT(*) as total FROM maintenance_table m";
+    $countSql = "SELECT COUNT(*) as total FROM maintenance_table m
+                 LEFT JOIN (
+                    SELECT 
+                        al1.maintenance_id,
+                        al1.is_deleted
+                    FROM audit_logs_maintenance al1
+                    WHERE al1.modified_at = (
+                        SELECT MAX(al2.modified_at)
+                        FROM audit_logs_maintenance al2
+                        WHERE al2.maintenance_id = al1.maintenance_id
+                    )
+                 ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id";
+    
     $countParams = [];
     $countTypes = '';
     $countWhereClauses = [];
@@ -262,17 +285,9 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     }
     
     if ($showDeleted) {
-        $countWhereClauses[] = "EXISTS (
-            SELECT 1 FROM audit_logs_maintenance al 
-            WHERE al.maintenance_id = m.maintenance_id 
-              AND al.is_deleted = 1
-        )";
+        $countWhereClauses[] = "latest_audit.is_deleted = 1";
     } else {
-        $countWhereClauses[] = "NOT EXISTS (
-            SELECT 1 FROM audit_logs_maintenance al 
-            WHERE al.maintenance_id = m.maintenance_id 
-              AND al.is_deleted = 1
-        )";
+        $countWhereClauses[] = "(latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)";
     }
     
     if (!empty($countWhereClauses)) {
@@ -288,7 +303,7 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
             "totalPages" => 1,
             "currentPage" => $page,
             "totalRecords" => count($records),
-            "error" => "Count query error"
+            "error" => "Count query error: " . $conn->error
         ];
     }
     

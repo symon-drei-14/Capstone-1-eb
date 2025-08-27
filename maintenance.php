@@ -728,6 +728,8 @@ function loadMaintenanceData() {
     else if (currentStatusFilter !== 'all') {
         url += `&status=${encodeURIComponent(currentStatusFilter)}`;
     }
+
+      url += `&_=${new Date().getTime()}`;
     
     fetch(url)
         .then(response => {
@@ -1596,6 +1598,12 @@ function saveMaintenanceRecord() {
                             timer: 2000,
                             showConfirmButton: false,
                             willClose: () => {
+                                // Reset to first page and clear any filters
+                                currentPage = 1;
+                                document.getElementById('searchInput').value = '';
+                                document.getElementById('statusFilter').value = 'all';
+                                currentStatusFilter = 'all';
+                                
                                 loadMaintenanceData();
                                 updateStatsCards();
                             }
