@@ -453,7 +453,8 @@ if ($result->num_rows > 0) {
     </div>
 
 <div id="addScheduleModal" class="modal">
-    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow: hidden;">
+    <!-- etong css gamit ng add modal -->
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
         <span class="close">&times;</span>
         <h2 style="margin-top: 0;">Add Schedule</h2>
         <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
