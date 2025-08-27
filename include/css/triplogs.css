@@ -477,6 +477,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 20px;
 }
 
 .events-table .icon-btn:hover {
@@ -1064,7 +1065,7 @@
     .event-actions {
         display: flex;
         gap: 10px;
-        margin-top: 15px;
+        margin-top: 60px;
     }
 
     .filter-row {
@@ -1278,14 +1279,14 @@ width:140px;
     }
 
 
-    .actions {
+    /* .actions {
         display: flex;
         flex-wrap: nowrap; 
         gap: 5px; 
         justify-content: center;
         align-items: center;
     margin:20px
-    }
+    } */
 
 
     .icon-btn {
