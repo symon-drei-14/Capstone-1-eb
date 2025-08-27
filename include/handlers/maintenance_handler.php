@@ -817,50 +817,74 @@ try {
             echo json_encode($counts);
             break;
 
-        case 'checkMaintenance':
-            $plateNo = isset($_GET['plateNo']) ? $_GET['plateNo'] : '';
-            $tripDate = isset($_GET['tripDate']) ? $_GET['tripDate'] : '';
-            
-            if (empty($plateNo) || empty($tripDate)) {
-                echo json_encode(['success' => false, 'message' => 'Missing parameters']);
-                break;
-            }
-            
-            $stmt = $conn->prepare("SELECT 
-                                    m.date_mtnce, 
-                                    m.remarks, 
-                                    mt.type_name AS maintenance_type,
-                                    t.plate_no AS licence_plate
-                                   FROM maintenance_table m
-                                   LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
-                                   LEFT JOIN truck_table t ON m.truck_id = t.truck_id
-                                   WHERE t.plate_no = ? 
-                                   AND m.is_deleted = 0
-                                   AND m.status != 'Completed'
-                                   AND DATEDIFF(m.date_mtnce, ?) BETWEEN -7 AND 7");
-            
-            if (!$stmt) {
-                echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]);
-                break;
-            }
-            
-            $stmt->bind_param("ss", $plateNo, $tripDate);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            if ($result->num_rows > 0) {
-                $maintenance = $result->fetch_assoc();
-                echo json_encode([
-                    'success' => true,
-                    'hasConflict' => true,
-                    'maintenanceDate' => $maintenance['date_mtnce'],
-                    'maintenanceType' => $maintenance['maintenance_type'],
-                    'remarks' => $maintenance['remarks']
-                ]);
-            } else {
-                echo json_encode(['success' => true, 'hasConflict' => false]);
-            }
-            break;
+       // In maintenance_handler.php, ensure the checkMaintenance action is correctly implemented
+case 'checkMaintenance':
+    $plateNo = isset($_GET['plateNo']) ? $_GET['plateNo'] : '';
+    $tripDate = isset($_GET['tripDate']) ? $_GET['tripDate'] : '';
+    
+    if (empty($plateNo) || empty($tripDate)) {
+        echo json_encode(['success' => false, 'message' => 'Missing parameters']);
+        break;
+    }
+    
+    // First get the truck ID from the plate number
+    $truckStmt = $conn->prepare("SELECT truck_id FROM truck_table WHERE plate_no = ? AND is_deleted = 0");
+    $truckStmt->bind_param("s", $plateNo);
+    $truckStmt->execute();
+    $truckResult = $truckStmt->get_result();
+    
+    if ($truckResult->num_rows === 0) {
+        echo json_encode(['success' => false, 'message' => 'Truck not found']);
+        break;
+    }
+    
+    $truckId = $truckResult->fetch_assoc()['truck_id'];
+    
+    $stmt = $conn->prepare("
+    SELECT 
+    m.date_mtnce, 
+    m.remarks, 
+    mt.type_name AS maintenance_type
+FROM maintenance_table m
+LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+LEFT JOIN audit_logs_maintenance alm ON m.maintenance_id = alm.maintenance_id
+WHERE m.truck_id = ? 
+AND (alm.is_deleted = 0 OR alm.is_deleted IS NULL)
+AND m.status != 'Completed'
+AND (
+    -- Exact date match
+    m.date_mtnce = ?
+    OR
+    -- Within one week before maintenance
+    DATEDIFF(m.date_mtnce, ?) BETWEEN 0 AND 7
+    OR
+    -- Or if trip spans multiple days that might conflict
+    ? BETWEEN DATE_SUB(m.date_mtnce, INTERVAL 7 DAY) AND m.date_mtnce
+        )
+    ");
+    
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]);
+        break;
+    }
+    
+    $stmt->bind_param("isss", $truckId, $tripDate, $tripDate, $tripDate);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $maintenance = $result->fetch_assoc();
+        echo json_encode([
+            'success' => true,
+            'hasConflict' => true,
+            'maintenanceDate' => $maintenance['date_mtnce'],
+            'maintenanceType' => $maintenance['maintenance_type'],
+            'remarks' => $maintenance['remarks']
+        ]);
+    } else {
+        echo json_encode(['success' => true, 'hasConflict' => false]);
+    }
+    break;
 
             case 'checkPreventiveDate':
     $truckId = isset($_GET['truckId']) ? intval($_GET['truckId']) : 0;

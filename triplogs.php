@@ -798,40 +798,50 @@ let filteredEvents = [];
     
 
 
-    function checkMaintenanceConflict(plateNo, tripDate, callback) {
-        $.ajax({
-            url: 'include/handlers/maintenance_handler.php',
-            type: 'GET',
-            data: {
-                action: 'checkMaintenance',
-                plateNo: plateNo,
-                tripDate: tripDate
-            },
-            success: function(response) {
-                if (response.success && response.hasConflict) {
-                    // Show warning modal
-                    Swal.fire({
-                        title: 'Maintenance Conflict',
-                        html: `This truck has scheduled maintenance on <strong>${response.maintenanceDate}</strong>.<br><br>
-                            Maintenance Type: <strong>${response.maintenanceType}</strong><br>
-                            Remarks: <strong>${response.remarks}</strong>`,
-                        icon: 'warning',
-                        confirmButtonText: 'Continue Anyway',
-                        showCancelButton: true,
-                        cancelButtonText: 'Cancel'
-                    }).then((result) => {
-                        callback(result.isConfirmed);
-                    });
-                } else {
-                    callback(true); // No conflict, proceed
-                }
-            },
-            error: function() {
-                console.error('Error checking maintenance');
-                callback(true); // On error, proceed anyway
+   function checkMaintenanceConflict(plateNo, tripDate, callback) {
+    $.ajax({
+        url: 'include/handlers/maintenance_handler.php',
+        type: 'GET',
+        data: {
+            action: 'checkMaintenance',
+            plateNo: plateNo,
+            tripDate: tripDate
+        },
+        success: function(response) {
+            if (response.success && response.hasConflict) {
+                // Show warning modal with detailed information
+                Swal.fire({
+                    title: 'Maintenance Conflict',
+                    html: `This truck has scheduled maintenance on <strong>${response.maintenanceDate}</strong>.<br><br>
+                        Maintenance Type: <strong>${response.maintenanceType}</strong><br>
+                        Remarks: <strong>${response.remarks}</strong><br><br>
+                        Trips cannot be scheduled within one week of maintenance.`,
+                    icon: 'warning',
+                    confirmButtonText: 'OK',
+                    showCancelButton: false
+                }).then((result) => {
+                    callback(false); // Don't proceed
+                });
+            } else {
+                callback(true); // No conflict, proceed
             }
-        });
-    }
+        },
+        error: function() {
+            console.error('Error checking maintenance');
+            // On error, allow proceeding but show a warning
+            Swal.fire({
+                title: 'Warning',
+                text: 'Could not verify maintenance schedule. Please proceed with caution.',
+                icon: 'warning',
+                confirmButtonText: 'Continue Anyway',
+                showCancelButton: true,
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                callback(result.isConfirmed);
+            });
+        }
+    });
+}
 
 
 function renderTripRows(trips, showDeleted) {

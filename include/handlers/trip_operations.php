@@ -148,13 +148,69 @@ function getDriverIdByName($conn, $driverName) {
     return null;
 }
 
+function checkMaintenanceConflict($conn, $truckId, $tripDate) {
+    $stmt = $conn->prepare("
+   SELECT m.date_mtnce, m.remarks, mt.type_name 
+FROM maintenance_table m
+LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+LEFT JOIN audit_logs_maintenance alm ON m.maintenance_id = alm.maintenance_id
+WHERE m.truck_id = ? 
+AND (alm.is_deleted = 0 OR alm.is_deleted IS NULL)
+AND m.status != 'Completed'
+AND (
+    -- Exact date match
+    m.date_mtnce = ?
+    OR
+    -- Within one week before maintenance
+    DATEDIFF(m.date_mtnce, ?) BETWEEN 0 AND 7
+    OR
+    -- Or if trip spans multiple days that might conflict
+    ? BETWEEN DATE_SUB(m.date_mtnce, INTERVAL 7 DAY) AND m.date_mtnce
+        )
+    ");
+    
+    if (!$stmt) {
+        return ['hasConflict' => false]; // On error, assume no conflict
+    }
+    
+    $stmt->bind_param("isss", $truckId, $tripDate, $tripDate, $tripDate);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $maintenance = $result->fetch_assoc();
+        return [
+            'hasConflict' => true,
+            'maintenanceDate' => $maintenance['date_mtnce'],
+            'maintenanceType' => $maintenance['type_name'],
+            'remarks' => $maintenance['remarks']
+        ];
+    }
+    
+    return ['hasConflict' => false];
+}
+
 try {
     switch ($action) {
         case 'add':
             $conn->begin_transaction();
             
-            try {
-                $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
+           try {
+        // Check for maintenance conflicts first
+        $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
+        
+        if (!$truckId) {
+            throw new Exception("Truck with plate number {$data['plateNo']} not found");
+        }
+        
+        // Check if the trip date conflicts with maintenance
+        $maintenanceCheck = checkMaintenanceConflict($conn, $truckId, $data['date']);
+        
+        if ($maintenanceCheck['hasConflict']) {
+            throw new Exception("Cannot schedule trip: Truck has maintenance scheduled on " . 
+                               $maintenanceCheck['maintenanceDate'] . ". " .
+                               "Trips cannot be scheduled within one week of maintenance.");
+        }
                 $clientId = getOrCreateClientId($conn, $data['client']);
                 $helperId = getHelperId($conn, $data['helper']);
                 $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
