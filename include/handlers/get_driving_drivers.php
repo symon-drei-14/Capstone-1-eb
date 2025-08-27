@@ -44,7 +44,12 @@ function getAllDeliveriesCount() {
     global $conn;
     
     $count = 0;
-    $query = "SELECT COUNT(*) as count FROM assign WHERE is_deleted = '0' and status ='Pending'";
+    $query = "SELECT COUNT(*) as count 
+              FROM trips t
+              LEFT JOIN audit_logs_trips alt ON t.trip_id = alt.trip_id
+              WHERE (alt.is_deleted = 0 OR alt.is_deleted IS NULL) 
+              AND t.status = 'Pending'";
+    
     $result = $conn->query($query);
     
     if ($result && $result->num_rows > 0) {
