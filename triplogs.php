@@ -667,7 +667,7 @@ if ($result->num_rows > 0) {
             <th>Shipping Line</th>
             <th>Consignee</th>
             <th>Container Size</th>
-            <th>FCL Status</th>
+            <th>FCL</th>
             <th>Cash Advance</th>
             <th>Additional CA</th>
             <th>Diesel</th>
