@@ -146,11 +146,41 @@ if ($maintenanceResult && $maintenanceResult->num_rows > 0) {
 require 'include/handlers/dbhandler.php';
 
 // Fetch trip data
-$sql = "SELECT a.*, t.plate_no as truck_plate_no, t.capacity as truck_capacity, a.edit_reasons, d.driver_id
-        FROM assign a
-        LEFT JOIN drivers_table d ON a.driver = d.name
-        LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id
-        WHERE a.is_deleted = 0";
+$sql = "SELECT 
+          t.trip_id,
+          t.container_no as container_no,
+          t.trip_date as date,
+          t.status,
+    
+          tr.plate_no as plate_no,
+          tr.capacity as size ,
+          d.name as driver,
+          d.driver_id,
+          h.name as helper,
+          disp.name as dispatcher,
+          c.name as client,
+          dest.name as destination,
+          sl.name as shipping_line,
+          cons.name as consignee,
+          al.modified_by as last_modified_by,
+          al.modified_at as last_modified_at,
+          al.edit_reason as edit_reasons,
+          COALESCE(te.cash_advance, 0) as cash_adv
+        FROM trips t
+        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+        LEFT JOIN helpers h ON t.helper_id = h.helper_id
+        LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+        LEFT JOIN clients c ON t.client_id = c.client_id
+        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+        LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
+        LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+        WHERE NOT EXISTS (
+            SELECT 1 FROM audit_logs_trips al2 
+            WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+        )";
 $result = $conn->query($sql);
 $eventsData = [];
 
@@ -167,15 +197,15 @@ if ($result->num_rows > 0) {
             'containerNo' => $row['container_no'],
             'client' => $row['client'],
             'destination' => $row['destination'],
-            'shippingLine' => $row['shippine_line'],
+            'shippingLine' => $row['shipping_line'],
             'consignee' => $row['consignee'],
             'size' => $row['size'],
             'cashAdvance' => $row['cash_adv'],
             'status' => $row['status'],
             'modifiedby' => $row['last_modified_by'],
             'modifiedat' => $row['last_modified_at'],
-            'truck_plate_no' => $row['truck_plate_no'],
-            'truck_capacity' => $row['truck_capacity'],
+            'truck_plate_no' => $row['plate_no'], // Using the same as plateNo
+            // 'truck_capacity' => $row['truck_capacity'],
             'edit_reasons' => $row['edit_reasons']
         ];
     }
