@@ -672,7 +672,7 @@ if ($result->num_rows > 0) {
             <th>Additional CA</th>
             <th>Diesel</th>
             <th>Status</th>
-            <th>Created At</th>
+            <th>Last Modified</th>
             <th>Action</th>
         </tr>
     </thead>
@@ -869,11 +869,10 @@ function renderTripRows(trips, showDeleted) {
                 </td>
             `;
         }
-
-        const row = `
+const row = `
              <tr class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
-                <td>${trip.plate_no || 'N/A'}</td>  <!-- Add this cell -->
-                <td>${formatDateTime(trip.trip_date)}</td>  <!-- Add this cell -->
+                <td>${trip.plate_no || 'N/A'}</td>
+                <td>${formatDateTime(trip.trip_date)}</td>
                 <td>${trip.driver || 'N/A'}</td>
                 <td>${trip.helper || 'N/A'}</td>
                 <td>${trip.dispatcher || 'N/A'}</td>
@@ -883,13 +882,12 @@ function renderTripRows(trips, showDeleted) {
                 <td>${trip.shipping_line || 'N/A'}</td>
                 <td>${trip.consignee || 'N/A'}</td>
                 <td>${trip.truck_capacity ? trip.truck_capacity + 'ft' : 'N/A'}</td>
-                <td>${trip.fcl_status || 'N/A'}</td>  <!-- Add FCL Status cell -->
+                <td>${trip.fcl_status || 'N/A'}</td>
                 <td>₱${parseFloat(trip.cash_advance || 0).toFixed(2)}</td>
                 <td>₱${parseFloat(trip.additional_cash_advance || 0).toFixed(2)}</td>
                 <td>₱${parseFloat(trip.diesel || 0).toFixed(2)}</td>
                 ${statusCell}
-                <td>
-                    ${formatDateTime(trip.created_at)}
+                <td>${formatDateTime(trip.last_modified_at || trip.created_at)} <!-- Updated this line -->
                     ${trip.last_modified_by ? `<br><small>Modified by: ${trip.last_modified_by}</small>` : ''}
                 </td>
                 ${actionCell}
@@ -1728,43 +1726,82 @@ $('#addScheduleForm').on('submit', function(e) {
     });
 });
 
-    $(document).on('click', '.icon-btn.view-reasons', function() {
-        var eventId = $(this).data('id');
-        var event = eventsData.find(function(e) { return e.id == eventId; });
-        
-        if (event && event.edit_reasons) {
-            try {
-                var reasons = JSON.parse(event.edit_reasons);
-                var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
-                html += '<ul style="list-style-type: none; padding-left: 5px;">';
-                
-                reasons.forEach(function(reason) {
-                    // Format the reason with a bullet point and proper spacing
-                    html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
-                    html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
-                    html += '</li>';
-                });
-                
-                html += '</ul>';
-                html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
-                html += 'Last modified by: ' + (event.modifiedby || 'System') + '<br>';
-                html += 'On: ' + formatDateTime(event.modifiedat);
-                html += '</p></div>';
-                
-                $('#editReasonsContent').html(html);
+  $(document).on('click', '.icon-btn.view-reasons', function() {
+    var eventId = $(this).data('id');
+    var event = eventsData.find(function(e) { return e.id == eventId; });
+    
+    if (event && event.edit_reasons) {
+        try {
+            // Check if it's the default "Trip created" message
+            if (event.edit_reasons === "Trip created" || 
+                event.edit_reasons === '"Trip created"') {
+                $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
+                    '<p>This trip has not been edited yet</p></div>');
                 $('#editReasonsModal').show();
-            } catch (e) {
-                console.error('Error parsing edit reasons:', e);
-                $('#editReasonsContent').html('<div style="padding: 15px; background: #fff8f8; border: 1px solid #ffdddd;">'+
-                    '<p>Error displaying edit history</p></div>');
-                $('#editReasonsModal').show();
+                return;
             }
-        } else {
-            $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
-                '<p>No edit remarks recorded for this trip</p></div>');
+            
+            var reasons;
+            
+            // Handle different data types
+            if (typeof event.edit_reasons === 'string') {
+                reasons = JSON.parse(event.edit_reasons);
+            } else if (Array.isArray(event.edit_reasons)) {
+                reasons = event.edit_reasons;
+            } else if (typeof event.edit_reasons === 'object') {
+                reasons = Object.values(event.edit_reasons);
+            } else {
+                throw new Error('Unknown data format');
+            }
+            
+            // Ensure we have an array
+            if (!Array.isArray(reasons)) {
+                reasons = [reasons];
+            }
+            
+            // Filter out any empty or null reasons
+            reasons = reasons.filter(function(reason) {
+                return reason && reason !== "Trip created";
+            });
+            
+            // If no valid reasons after filtering
+            if (reasons.length === 0) {
+                $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
+                    '<p>This trip has not been edited yet</p></div>');
+                $('#editReasonsModal').show();
+                return;
+            }
+            
+            var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
+            html += '<ul style="list-style-type: none; padding-left: 5px;">';
+            
+            reasons.forEach(function(reason) {
+                html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
+                html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
+                html += '</li>';
+            });
+            
+            html += '</ul>';
+            html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
+            html += 'Last modified by: ' + (event.modifiedby || 'System') + '<br>';
+            html += 'On: ' + formatDateTime(event.modifiedat);
+            html += '</p></div>';
+            
+            $('#editReasonsContent').html(html);
+            $('#editReasonsModal').show();
+            
+        } catch (e) {
+            console.error('Error processing edit reasons:', e, event.edit_reasons);
+            $('#editReasonsContent').html('<div style="padding: 15px; background: #fff8f8; border: 1px solid #ffdddd;">'+
+                '<p>Error displaying edit history</p></div>');
             $('#editReasonsModal').show();
         }
-    });
+    } else {
+        $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
+            '<p>No edit remarks recorded for this trip</p></div>');
+        $('#editReasonsModal').show();
+    }
+});
 
 
 function validateEditReasons() {
