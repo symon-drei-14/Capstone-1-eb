@@ -29,7 +29,7 @@ function getOngoingDeliveriesCount() {
     global $conn;
     
     $count = 0;
-    $query = "SELECT COUNT(*) as count FROM assign WHERE status = 'en route'";
+    $query = "SELECT COUNT(*) as count FROM trips WHERE status = 'En Route'";
     $result = $conn->query($query);
     
     if ($result && $result->num_rows > 0) {
