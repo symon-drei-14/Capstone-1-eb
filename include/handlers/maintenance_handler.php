@@ -760,32 +760,53 @@ try {
             break;
 
         case 'restore':
-            $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-            
-            if ($id <= 0) {
-                echo json_encode(["success" => false, "message" => "Invalid ID"]);
-                exit;
-            }
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid ID"]);
+        exit;
+    }
 
-            $getMaintenance = $conn->prepare("SELECT truck_id, status FROM maintenance_table WHERE maintenance_id = ?");
-            
-            if (!$getMaintenance) {
-                echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
-                break;
-            }
-            
-            $getMaintenance->bind_param("i", $id);
-            $getMaintenance->execute();
-            $maintenance = $getMaintenance->get_result()->fetch_assoc();
-            
-            if (!$maintenance) {
-                echo json_encode(["success" => false, "message" => "Maintenance record not found"]);
-                exit;
-            }
+    // Get the maintenance record details
+    $getMaintenance = $conn->prepare("SELECT truck_id, status FROM maintenance_table WHERE maintenance_id = ?");
+    
+    if (!$getMaintenance) {
+        echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+        break;
+    }
+    
+    $getMaintenance->bind_param("i", $id);
+    $getMaintenance->execute();
+    $maintenance = $getMaintenance->get_result()->fetch_assoc();
+    
+    if (!$maintenance) {
+        echo json_encode(["success" => false, "message" => "Maintenance record not found"]);
+        exit;
+    }
 
-            $conn->begin_transaction();
+    $conn->begin_transaction();
+    
+    try {
+        // First, check if the record is currently marked as deleted in the latest audit log
+        $checkDeletedStmt = $conn->prepare("
+            SELECT is_deleted 
+            FROM audit_logs_maintenance 
+            WHERE maintenance_id = ? 
+            ORDER BY modified_at DESC 
+            LIMIT 1
+        ");
+        $checkDeletedStmt->bind_param("i", $id);
+        $checkDeletedStmt->execute();
+        $deletedResult = $checkDeletedStmt->get_result();
+        
+        if ($deletedResult->num_rows > 0) {
+            $latestLog = $deletedResult->fetch_assoc();
             
-            try {
+            // Only proceed if the record is currently marked as deleted
+            if ($latestLog['is_deleted'] == 1) {
+                $username = $_SESSION['username'] ?? 'System';
+                
+                // Add restoration audit log entry
                 $stmt = $conn->prepare("INSERT INTO audit_logs_maintenance 
                                       (maintenance_id, modified_by, modified_at, edit_reason, is_deleted) 
                                       VALUES (?, ?, NOW(), 'Record restored', 0)");
@@ -794,23 +815,34 @@ try {
                     throw new Exception("Failed to prepare restore statement: " . $conn->error);
                 }
                 
-                $username = $_SESSION['username'] ?? 'System';
                 $stmt->bind_param("is", $id, $username);
                 
                 if (!$stmt->execute()) {
                     throw new Exception("Failed to restore maintenance record: " . $stmt->error);
                 }
 
+                // Update truck status based on the restored maintenance record
                 updateTruckStatusFromMaintenance($conn, $maintenance['truck_id']);
                 
                 $conn->commit();
                 echo json_encode(["success" => true, "message" => "Maintenance record restored successfully"]);
-                
-            } catch (Exception $e) {
+            } else {
+                // Record is not currently deleted
                 $conn->rollback();
-                echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
+                echo json_encode(["success" => false, "message" => "Record is not currently deleted"]);
             }
-            break;
+        } else {
+            // No audit logs found (shouldn't happen)
+            $conn->rollback();
+            echo json_encode(["success" => false, "message" => "No audit history found for this record"]);
+        }
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Restore error: " . $e->getMessage());
+        echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
+    }
+    break;
 
         case 'getCounts':
             $counts = getMaintenanceCounts($conn);
