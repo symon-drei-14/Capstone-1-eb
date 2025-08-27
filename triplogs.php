@@ -1227,7 +1227,7 @@ $(document).on('click', '.icon-btn.edit', function() {
             modifiedat: event.modifiedat,
             truck_plate_no: event.truck_plate_no,
             truck_capacity: event.truck_capacity,
-            edit_reasons: event.edit_reason,
+            edit_reasons: event.edit_reasons,
              fcl_status: event.fcl_status 
         };
     });
