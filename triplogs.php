@@ -1571,7 +1571,6 @@ $(document).on('click', '.icon-btn.edit', function() {
         $('#editEventConsignee').val(event.consignee);
         $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
         $('#editEventFCL').val(event.fcl_status || event.size);
-        $('#editEventSize').val(event.fcl_status);
         $('#editEventCashAdvance').val(event.cashAdvance);
         $('#editEventAdditionalCashAdvance').val(event.additionalCashAdvance);
         $('#editEventDiesel').val(event.diesel);
@@ -1675,7 +1674,7 @@ $('#addScheduleForm').on('submit', function(e) {
             shippingLine: $('#addEventShippingLine').val(),
             consignee: $('#addEventConsignee').val(),
             size: $('#addEventSize').val(),
-            fclStatus: $('#addEventFCL').val(),
+            fcl_status: $('#addEventFCL').val(),
             cashAdvance: $('#addEventCashAdvance').val(),
             additionalCashAdvance: $('#addEventAdditionalCashAdvance').val(),
             diesel: $('#addEventDiesel').val(),

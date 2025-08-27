@@ -187,7 +187,7 @@ try {
                     $data['containerNo'],
                     $data['date'],
                     $data['status'],
-                    $data['size']
+                    $data['fcl_status']
                 );
                 
                 if (!$stmt->execute()) {
@@ -248,16 +248,15 @@ try {
                 $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
                 $consigneeId = getConsigneeId($conn, $data['consignee']);
                 $driverId = getDriverIdByName($conn, $data['driver']);
-                
-                // Update the trip
+
                 $stmt = $conn->prepare("UPDATE trips SET 
                     truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, 
                     destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
                     trip_date=?, status=?, fcl_status=?
                     WHERE trip_id=?");
-                $stmt->bind_param("iiiiiiissssi",
+                $stmt->bind_param("iiiiiiiissssi",
                     $truckId,
-                    $driverId,
+                    $driverId, 
                     $helperId,
                     $dispatcherId,
                     $clientId,
@@ -267,7 +266,7 @@ try {
                     $data['containerNo'],
                     $data['date'],
                     $data['status'],
-                    $data['size'],
+                    $data['fclStatus'],
                     $data['id']
                 );
                 $stmt->execute();
