@@ -75,7 +75,7 @@ function updateTruckStatus($conn, $truckId, $plateNo) {
     } elseif ($maintenanceStatus === 'Overdue') {
         $newStatus = 'Overdue';
     } elseif ($maintenanceStatus === 'Pending') {
-        $newStatus = 'Pending Maintenance';
+        $newStatus = 'In Terminal';
     } elseif ($maintenanceStatus === 'Completed' || $maintenanceStatus === null) {
         $newStatus = 'In Terminal';
     }
@@ -153,7 +153,7 @@ function updateAllTruckStatuses($conn) {
         } elseif ($maintenanceStatus === 'Overdue') {
             $newStatus = 'Overdue';
         } elseif ($maintenanceStatus === 'Pending') {
-            $newStatus = 'Pending Maintenance';
+            $newStatus = 'In Terminal';
         } elseif ($maintenanceStatus === 'Completed' || $maintenanceStatus === null) {
             $newStatus = 'In Terminal';
         }
