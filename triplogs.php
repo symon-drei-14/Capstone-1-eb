@@ -244,16 +244,43 @@ if ($result->num_rows > 0) {
         </div>
 </div>
 </div>
- <div class="main-container">   
+  <div class="main-container">   
         <div class="calendar-container">
             <section class="calendar-section">
-                <div class="toggle-btns">
-                    <button id="calendarViewBtn" class="toggle-btn active"> <i class="fa fa-calendar"> Calendar</i></button>
-                    <button id="tableViewBtn" class="toggle-btn">  <i class="fa fa-tasks"> Table</i></button>
-                
+                <div class="calendar-controls">
+                    <button id="addScheduleBtnTable"> 
+                        <i class="fa-solid fa-calendar-plus" style="margin-right:5px;"></i>Add Schedule
+                    </button>
+                    
+                    <div class="status-filter-container">
+                        <select id="statusFilter">
+                            <option value="" disabled selected>Status Filter</option>
+                            <option value="all">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="En Route">En Route</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="deleted">Deleted</option>
+                        </select>
+                        
+                        <div class="search-container">
+                            <i class="fa fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Search trips...">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-toggle-container">
+                        <div class="toggle-btns">
+                            <button id="calendarViewBtn" class="toggle-btn active" data-tooltip="Calendar View"> 
+                                <i class="fa fa-calendar"></i>
+                            </button>
+                            <button id="tableViewBtn" class="toggle-btn" data-tooltip="Table View">  
+                                <i class="fa fa-tasks"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <button id="addScheduleBtnTable" class="toggle-btn">Add Schedule</button>
-        
+                
                 <div id="calendar"></div>
             </section>
             
@@ -266,14 +293,16 @@ if ($result->num_rows > 0) {
 
      <!-- Edit Modal -->
      <div id="editModal" class="modal">
-    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: scroll;">
+    <div class="modal-content" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: scroll; overflow-x:hidden;">
         <span class="close">&times;</span>
         <h3 style="margin-top: 0;">Edit Trip</h3>
         <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
             <input type="hidden" id="editEventId" name="eventId">
             
             <!-- Column 1 -->
-            <div style="display: flex; flex-direction: column;">
+           <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Shipment Information</legend>
                 <label for="editEventSize">Container Size:</label>
                 <select id="editEventSize" name="eventSize" required style="width: 100%;">
                     <option value="">Select Size</option>
@@ -307,7 +336,9 @@ if ($result->num_rows > 0) {
             </div>
 
             <!-- Column 2 -->
-            <div style="display: flex; flex-direction: column;">
+           <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Dispatcher & Container Information</legend>
                 <label for="editEventDispatcher">Dispatcher:</label>
                 <select id="editEventDispatcher" name="eventDispatcher" required style="width: 100%;">
                     <option value="">Select Dispatcher</option>
@@ -315,7 +346,10 @@ if ($result->num_rows > 0) {
 
                 <label for="editEventContainerNo">Container No.:</label>
                 <input type="text" id="editEventContainerNo" name="eventContainerNo" required style="width: 100%;">
-
+                </legend>
+                </fieldset>
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Client & Destination</legend>
                 <label for="editEventClient">Client:</label>
                 <select id="editEventClient" name="eventClient" required style="width: 100%;">
                     <option value="">Select Client</option>
@@ -325,7 +359,7 @@ if ($result->num_rows > 0) {
                 <select id="editEventDestination" name="eventDestination" required style="width: 100%;">
                     <option value="">Select Destination</option>
                 </select>
-
+             
                 <label for="editEventStatus">Status:</label>
                 <select id="editEventStatus" name="eventStatus" required style="width: 100%;">
                     <option value="Pending">Pending</option>
@@ -333,25 +367,32 @@ if ($result->num_rows > 0) {
                     <option value="Completed">Completed</option>
                     <option value="Cancelled">Cancelled</option>
                 </select>
+                   </legend>
+                </fieldset>
             </div>
 
             <!-- Full width fields -->
-            <div style="grid-column: span 2;">
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Shippine line hehe</legend>
                 <label for="editEventShippingLine">Shipping Line:</label>
-                <select id="editEventShippingLine" name="eventShippingLine" required style="width: 35%;">
+                <select id="editEventShippingLine" name="eventShippingLine" required style="width: 100%;">
                     <option value="">Select Shipping Line</option>
                 </select>
-            
+            <br>
+                   <br>
                 <label for="editEventConsignee">Consignee:</label>
-                <select id="editEventConsignee" name="eventConsignee" required style="width: 25%;">
+                <select id="editEventConsignee" name="eventConsignee" required style="width: 100%;">
                     <option value="">Select Consignee</option>
                 </select>
+                 </legend>
+                </fieldset>
             </div>
 
             <!-- Expense Fields Section -->
-            <div style="grid-column: span 2; border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Expense Information</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+         <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Money Money</legend>
                     <div>
                         <label for="editEventCashAdvance">Cash Advance:</label>
                         <input type="number" id="editEventCashAdvance" name="eventCashAdvance" 
@@ -367,11 +408,13 @@ if ($result->num_rows > 0) {
                         <input type="number" id="editEventDiesel" name="eventDiesel" 
                                min="0" step="0.01" placeholder="0.00" style="width: 100%;">
                     </div>
-                </div>
+            
+                 </legend>
+                </fieldset>
             </div>
 
             <!-- Edit Reasons Section -->
-            <div class="edit-reasons-section" style="grid-column: span 2; margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #ddd; width: 100%;">
+            <div class="edit-reasons-section" style="grid-column: span 2; margin-top: 15px; padding: 15px; border-radius: 5px; border: 1px solid #ddd; width: 95%;">
                 <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Reason for Edit</h4>
                 <p style="margin-top: 0; margin-bottom: 10px; color: #666;">Select all that apply:</p>
                 
@@ -437,7 +480,7 @@ if ($result->num_rows > 0) {
 
 
     <div id="expensesModal" class="modal">
-        <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; ">
             <span class="close">&times;</span>
             <h3 style="margin-top: 0;">Expense Reports</h3>
             <div id="expensesContent">
@@ -457,12 +500,14 @@ if ($result->num_rows > 0) {
 
 <div id="addScheduleModal" class="modal">
     <!-- etong css gamit ng add modal -->
-    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+    <div class="modal-content" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; overflow-x:hidden;">
         <span class="close">&times;</span>
         <h2 style="margin-top: 0;">Add Schedule</h2>
         <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
             <!-- Column 1 -->
-            <div style="display: flex; flex-direction: column;">
+              <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Shipment Information</legend>
                 <label for="addEventSize">Shipment Size:</label>
                 <select id="addEventSize" name="eventSize" required style="width: 100%;">
                     <option value="">Select Size</option>
@@ -496,7 +541,9 @@ if ($result->num_rows > 0) {
             </div>
 
             <!-- Column 2 -->
-            <div style="display: flex; flex-direction: column;">
+               <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Dispatcher & Container Information</legend>
                 <label for="addEventDispatcher">Dispatcher:</label>
                 <select id="addEventDispatcher" name="eventDispatcher" required style="width: 100%;">
                     <option value="">Select Dispatcher</option>
@@ -505,7 +552,12 @@ if ($result->num_rows > 0) {
                 <label for="addEventContainerNo">Container No.:</label>
                 <input type="text" id="addEventContainerNo" name="eventContainerNo" required style="width: 100%;">
 
-                <label for="addEventClient">Client:</label>
+                
+</legend>
+</fieldset>
+  <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Client & Destination</legend>
+<label for="addEventClient">Client:</label>
                 <select id="addEventClient" name="eventClient" required style="width: 100%;">
                     <option value="">Select Client</option>
                     <option value="Maersk">Maersk</option>
@@ -515,7 +567,6 @@ if ($result->num_rows > 0) {
                     <option value="Hapag-Lloyd">Hapag-Lloyd</option>
                     <option value="Evergreen">Evergreen</option>
                 </select>
-
                 <label for="addEventDestination">Destination:</label>
                 <select id="addEventDestination" name="eventDestination" required style="width: 100%;">
                     <option value="">Select Destination</option>
@@ -533,11 +584,15 @@ if ($result->num_rows > 0) {
                     <option value="Completed">Completed</option>
                     <option value="Cancelled">Cancelled</option>
                 </select>
+                </legend>
+</fieldset>
             </div>
 
-            <!-- Full width fields -->
-            <div style="grid-column: span 2; display: flex; gap: 15px; align-items: flex-end;">
-                <div style="flex: 1;">
+    
+     
+                  <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Shippine line hehe</legend>
                     <label for="addEventShippingLine">Shipping Line:</label>
                     <select id="addEventShippingLine" name="eventShippingLine" required style="width: 100%;">
                         <option value="">Select Shipping Line</option>
@@ -547,20 +602,21 @@ if ($result->num_rows > 0) {
                         <option value="CMA CGM">CMA CGM</option>
                         <option value="Hapag-Lloyd">Hapag-Lloyd</option>
                     </select>
-                </div>
-                
-                <div style="flex: 1;">
+         
+                    <br>
+                   <br>
                     <label for="addEventConsignee">Consignee:</label>
                     <select id="addEventConsignee" name="eventConsignee" required style="width: 100%;">
                         <option value="">Select Consignee</option>
                     </select>
-                </div>
-            </div>
+ </legend>
+</fieldset>
+      </div>
 
             <!-- Expense Fields Section -->
-            <div style="grid-column: span 2; border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Expense Information</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+               <div style="display: flex; flex-direction: column; gap: 20px;">
+                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+                    <legend style="font-weight: bold;">Money Money</legend>
                     <div>
                         <label for="addEventCashAdvance">Cash Advance:</label>
                         <input type="number" id="addEventCashAdvance" name="eventCashAdvance" 
@@ -576,11 +632,12 @@ if ($result->num_rows > 0) {
                         <input type="number" id="addEventDiesel" name="eventDiesel" 
                                min="0" step="0.01" placeholder="0.00" style="width: 100%;">
                     </div>
-                </div>
+                    
+          
             </div>
 
             <!-- Form buttons -->
-            <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" class="close-btn cancel-btn" style="padding: 5px 10px;">Cancel</button>
                 <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
             </div>
@@ -641,7 +698,8 @@ if ($result->num_rows > 0) {
     <div class="table-info" id="showingInfo"></div>
     
      <div class="rows-per-page-container">
-        <label for="rowsPerPage">Rows per page:</label>
+         <label for="rowsPerPage" class="rowlabel">Rows per page:</label>
+
         <select id="rowsPerPage" onchange="changeRowsPerPage()">
             <option value="5">5</option>
             <option value="10">10</option>
@@ -1537,25 +1595,36 @@ setTimeout(function() {
             
             // View toggle buttons
     $('#calendarViewBtn').on('click', function() {
-        $(this).addClass('active');
-        $('#tableViewBtn').removeClass('active');
-        $('#calendar').show();
-        $('#eventDetails').show();
-        $('#eventsTable, #eventTableBody, .pagination-container, .filter-row, .table-controls ').hide();
-        $('body').removeClass('table-view'); 
-        $('#calendar').fullCalendar('render');
-    });
+            $(this).addClass('active');
+            $('#tableViewBtn').removeClass('active');
+            $('#calendar').show();
+            $('#eventDetails').show();
+            $('#eventsTable, #eventTableBody, .pagination-container, .table-controls').hide();
+            $('body').removeClass('table-view'); 
+            $('#calendar').fullCalendar('render');
+            
+            // Hide the filter in calendar view
+            $('.status-filter-container').hide();
+        });
 
-    $('#tableViewBtn').on('click', function() {
-        $(this).addClass('active');
-        $('#calendarViewBtn').removeClass('active');
-        $('#calendar').hide();
-        $('#eventDetails').hide();
-        $('#eventsTable, #eventTableBody, .pagination-container, .filter-row, .rows-per-page-container, .table-controls').show(); 
-        $('body').addClass('table-view');
-        currentPage = 1;
-        renderTable();
-    });
+     $('#tableViewBtn').on('click', function() {
+            $(this).addClass('active');
+            $('#calendarViewBtn').removeClass('active');
+            $('#calendar').hide();
+            $('#eventDetails').hide();
+            $('#eventsTable, #eventTableBody, .pagination-container, .rows-per-page-container, .table-controls').show(); 
+            $('body').addClass('table-view');
+            currentPage = 1;
+            renderTable();
+            
+            // Show the filter in table view
+            $('.status-filter-container').show();
+        });
+  $(document).ready(function() {
+            if ($('#calendarViewBtn').hasClass('active')) {
+                $('.status-filter-container, rows-per-page-container, .table-controls').hide();
+            }
+        });
             // Edit button click handler
 $(document).on('click', '.icon-btn.edit', function() {
     var eventId = $(this).data('id');

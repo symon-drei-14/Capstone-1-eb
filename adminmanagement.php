@@ -17,51 +17,10 @@ checkAccess();
 
 </head>
 <style>
-    .deleted-only {
-    display: none;
-}
-
-.show-deleted .deleted-only {
-    display: table-cell;
-}
-
-.table-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-}
-
-.table-info {
-    font-size: 14px;
-    color: #555;
-}
 
 
-.rows-per-page-container {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-right:30px;
-}
 
-.rows-per-page-container label {
-    font-size: 14px;
-    color: #333;
-    margin-right: 5px;
-    border-radius:20px;
-}
-.rows-per-page-container select {
-    font-size: 14px;
-    color: black;
-    border-color: #33333328;
-    margin-right: 5px;
-    border-radius:10px;
-    padding: 5px;
-    margin: 5px;
-    max-width:200px;
-    width:auto;
-}
+
     </style>
 
  <h3><i class="fa-solid fa-truck"></i>Admin Management</h3>
