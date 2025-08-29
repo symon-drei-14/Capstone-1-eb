@@ -760,26 +760,32 @@ function viewMaintenanceHistory(truckId) {
                     if (item.status.toLowerCase().includes('complete')) statusClass = 'status-completed';
                     if (item.status.toLowerCase().includes('progress')) statusClass = 'status-in-progress';
                     if (item.status.toLowerCase().includes('pending')) statusClass = 'status-pending';
-                     if (item.status.toLowerCase().includes('overdue')) statusClass = 'status-overdue';
+                    if (item.status.toLowerCase().includes('overdue')) statusClass = 'status-overdue';
+                    
+                    // Use the correct field names from your SQL query
+                    const maintenanceDate = item.date_mtnce || item.last_modified_at;
+                    const maintenanceType = item.maintenance_type_name || 'N/A';
+                    const supplierName = item.supplier_name || 'N/A';
+                    const cost = item.cost ? `₱${item.cost.toLocaleString()}` : 'N/A';
                     
                     historyHTML += `    
                         <li class="history-item">
                             <div class="history-header">
-                                <span class="history-date">${formatDateTime(item.date_since || item.last_modified_at)}</span>
+                                <span class="history-date">${formatDateTime(maintenanceDate)}</span>
                                 <span class="history-status ${statusClass}">${item.status}</span>
                             </div>
                             <div class="history-details">
                                 <div class="history-detail">
                                     <span class="detail-label">Type</span>
-                                    <span class="detail-value">${item.maintenance_type_name || 'N/A'}</span>
+                                    <span class="detail-value">${maintenanceType}</span>
                                 </div>
                                 <div class="history-detail">
                                     <span class="detail-label">Supplier</span>
-                                    <span class="detail-value">${item.supplier_name || 'N/A'}</span>
+                                    <span class="detail-value">${supplierName}</span>
                                 </div>
                                 <div class="history-detail">
                                     <span class="detail-label">Cost</span>
-                                    <span class="detail-value">₱${item.cost ? item.cost.toLocaleString() : 'N/A'}</span>
+                                    <span class="detail-value">${cost}</span>
                                 </div>
                             </div>
                             <div class="history-remarks">
@@ -814,18 +820,6 @@ function viewMaintenanceHistory(truckId) {
                 </div>`;
             document.getElementById('historyModal').style.display = 'block';
         });
-}
-document.querySelector('#historyModal .close').onclick = function() {
-    document.getElementById('historyModal').style.display = 'none';
-}
-document.querySelector('#historyModal .modal-footer button').onclick = function() {
-    document.getElementById('historyModal').style.display = 'none';
-}
-
-window.onclick = function(event) {
-    if (event.target == document.getElementById('historyModal')) {
-        document.getElementById('historyModal').style.display = 'none';
-    }
 }
 
 function sortTrucks(sortBy) {

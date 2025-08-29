@@ -372,7 +372,11 @@ function getMaintenanceHistory($conn, $truckId) {
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id
             LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
             LEFT JOIN suppliers s ON m.supplier_id = s.supplier_id
-            LEFT JOIN audit_logs_maintenance al ON m.maintenance_id = al.maintenance_id
+            LEFT JOIN (
+                SELECT maintenance_id, modified_by, modified_at,
+                       ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
+                FROM audit_logs_maintenance
+            ) al ON m.maintenance_id = al.maintenance_id AND al.rn = 1
             WHERE m.truck_id = ? AND t.is_deleted = 0
             ORDER BY m.date_mtnce DESC";
     
