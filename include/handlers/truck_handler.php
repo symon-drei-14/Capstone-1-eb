@@ -80,11 +80,11 @@ function updateTruckStatus($conn, $truckId, $plateNo) {
         $newStatus = 'In Terminal';
     }
 
-    $updateStmt = $conn->prepare("
-        UPDATE truck_table 
-        SET status = ?, last_modified_by = 'System', last_modified_at = NOW() 
-        WHERE truck_id = ?
-    ");
+   $updateStmt = $conn->prepare("
+    UPDATE truck_table 
+    SET status = ?, last_modified_at = NOW() 
+    WHERE truck_id = ?
+");
     $updateStmt->bind_param("si", $newStatus, $truckId);
     $updateStmt->execute();
 }
@@ -158,11 +158,11 @@ function updateAllTruckStatuses($conn) {
             $newStatus = 'In Terminal';
         }
 
-        $updateStmt = $conn->prepare("
-            UPDATE truck_table 
-            SET status = ?, last_modified_by = 'System', last_modified_at = NOW() 
-            WHERE truck_id = ? AND status <> ?
-        ");
+      $updateStmt = $conn->prepare("
+    UPDATE truck_table 
+    SET status = ?, last_modified_at = NOW() 
+    WHERE truck_id = ? AND status <> ?
+");
         $updateStmt->bind_param("sis", $newStatus, $truckId, $newStatus);
         $updateStmt->execute();
     }
