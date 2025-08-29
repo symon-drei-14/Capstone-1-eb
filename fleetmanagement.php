@@ -801,15 +801,16 @@ function viewMaintenanceHistory(truckId) {
                 historyHTML += '</ul>';
                 
                 document.getElementById('historyModalContent').innerHTML = historyHTML;
-                document.getElementById('historyModal').style.display = 'block';
             } else {
                 document.getElementById('historyModalContent').innerHTML = 
                     `<div class="empty-state">
                         <i class="fas fa-clipboard-list"></i>
                         <p>No maintenance history found for this truck.</p>
                     </div>`;
-                document.getElementById('historyModal').style.display = 'block';
             }
+            
+            // Show the modal
+            document.getElementById('historyModal').style.display = 'block';
         })
         .catch(error => {
             console.error('Error loading maintenance history:', error);
@@ -930,25 +931,71 @@ function updateStatsCards(counts) {
     document.querySelector('.stat-card:nth-child(5) .stat-value').textContent = counts['Total'] || '0';
 }
 
-        function fetchTrucks() {
-            fetch('include/handlers/truck_handler.php?action=getTrucks')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        trucksData = data.trucks;
-                        renderTrucksTable();
-                        
-                       
-                    } else {
-                        alert('Error fetching trucks: ' + data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+        
+
+        function setupModalEventListeners() {
+    // History Modal close events
+    const historyModal = document.getElementById('historyModal');
+    const historyCloseBtn = historyModal.querySelector('.close');
+    const historyCloseButton = historyModal.querySelector('.modal-footer button');
+    
+    // Close button (X) event
+    if (historyCloseBtn) {
+        historyCloseBtn.addEventListener('click', function() {
+            closeHistoryModal();
+        });
+    }
+    
+    // Footer close button event
+    if (historyCloseButton) {
+        historyCloseButton.addEventListener('click', function() {
+            closeHistoryModal();
+        });
+    }
+    
+    // Click outside modal to close
+    historyModal.addEventListener('click', function(e) {
+        if (e.target === historyModal) {
+            closeHistoryModal();
         }
+    });
+    
+    // ESC key to close modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (historyModal.style.display === 'block') {
+                closeHistoryModal();
+            }
+            
+            if (document.getElementById('truckModal').style.display === 'block') {
+                closeModal('truckModal');
+            }
+            if (document.getElementById('deleteModal').style.display === 'block') {
+                closeModal('deleteModal');
+            }
+            if (document.getElementById('reasonModal').style.display === 'block') {
+                closeModal('reasonModal');
+            }
+        }
+    });
+}
+
+
+function closeHistoryModal() {
+    const historyModal = document.getElementById('historyModal');
+    historyModal.style.display = 'none';
+    
+    // Clear the modal content
+    document.getElementById('historyModalContent').innerHTML = '';
+}
+
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchTrucks();
             fetchTruckCounts();
+
+               setupModalEventListeners();
+
             document.getElementById('toggleSidebarBtn').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.toggle('expanded');
             });
