@@ -343,10 +343,17 @@
         <!-- Maintenance History Modal -->
         <div id="historyModal" class="modal">
             <div class="modal-content">
-                <span class="close" onclick="closeHistoryModal()">&times;</span>
-                <h2>Maintenance History</h2>
-                <div class="history-list" id="historyList">
-                </div>
+        <div class="modal-header">
+            <h3>Maintenance History</h3>
+            <span class="close" onclick="closeHistoryModal()">&times;</span>
+            </div>
+                <div class="history-list" id="historyList"></div>
+ 
+                <div class="modal-footer">
+                <button type="button"  onclick="closeHistoryModal()">Close</button>
+             </div>
+            </div>
+           
             </div>
         </div>
         
@@ -962,17 +969,38 @@ function renderTable(data) {
 }
 
 
-            function formatDateTime(datetimeString) {
-                if (!datetimeString) return 'N/A';
-                const date = new Date(datetimeString);
-                return date.toLocaleString(); 
-            }
+             function formatDateTime(datetimeString) {
+            if (!datetimeString) return 'N/A';
+            const date = new Date(datetimeString);
+            const dateOptions = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            };
+            
+            return `${date.toLocaleDateString(undefined, dateOptions)} at ${date.toLocaleTimeString(undefined, timeOptions)}`;
+        }
         
             function formatDate(dateString) {
-                if (!dateString) return 'N/A';
-                const date = new Date(dateString);
-                return date.toISOString().split('T')[0];
-            }
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    
+    // Format date in word form: "Month Day, Year"
+    const options = { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    };
+    
+    return date.toLocaleDateString('en-US', options);
+}
+
             
             function updatePagination() {
     const paginationContainer = document.querySelector(".pagination");
@@ -1421,19 +1449,47 @@ function saveMaintenanceRecord() {
                             historyList.innerHTML = "<p>No maintenance history found for this truck.</p>";
                         } else {
                             response.history.forEach(item => {
+                                 let statusClass = 'status-pending';
+                                    if (item.status.toLowerCase().includes('complete')) statusClass = 'status-completed';
+                                    if (item.status.toLowerCase().includes('progress')) statusClass = 'status-in-progress';
+                                    if (item.status.toLowerCase().includes('pending')) statusClass = 'status-pending';
+                                    if (item.status.toLowerCase().includes('overdue')) statusClass = 'status-overdue';
                                 const historyItem = document.createElement("div");
+                                   const supplierName = item.supplier || item.supplier_name || item.supplierName || 'N/A';
                                 historyItem.className = "history-item";
                             historyItem.innerHTML = `
-                                    <strong>Date of Inspection:</strong> ${formatDate(item.date_mtnce)}<br>
-                                    <strong>Remarks:</strong> ${item.remarks}<br>
-                                    <strong>Status:</strong> ${item.status}<br>
-                                    <strong>Supplier:</strong> ${item.supplier || 'N/A'}<br>
-                                    <strong>Cost:</strong> ₱ ${parseFloat(item.cost).toFixed(2)}<br>
-                                    <strong>Last Modified By:</strong> ${item.last_modified_by} on ${formatDateTime(item.last_modified_at)}<br>
-                                    <hr>
+                            <li class="history-item">
+                                <div class="history-header">
+                                  <span class="history-date"> ${formatDate(item.date_mtnce)}</span>
+                                   <span class="history-status ${statusClass}"> ${item.status}</span>
+                                </div>
+                                <div class="history-details">   
+                                 <div class="history-detail">
+                                    <span class="detail-label">Supplier</span>
+                                    <span class="detail-value"> ${supplierName}</span>
+                                    </div>
+                                <div class="history-detail">
+                                    <span class="detail-label">Cost</span>
+                                     <span class="detail-value">₱${parseFloat(item.cost).toFixed(2)}</span>
+                                </div>
+                                  <div class="history-detail">
+                                    <span class="detail-label">Remarks</span>
+                                    <span class="detail-value"> ${item.remarks || 'No remarks provided'} </span>
+                                    </div>
+                                </div>
+                                 <div class="history-remarks">
+                                  <div class="history-detail">
+                                    <span class="detail-label">Last Modified By:</span>
+                                    <span class="detail-value">  ${item.last_modified_by} on ${formatDateTime(item.last_modified_at)} </span>
+                                </div>
+                                    </div>
+                            </div>
+                            
+                            </li>
                                 `;
                                 historyList.appendChild(historyItem);
                             });
+                            
                         }
                         
                         document.getElementById("historyModal").style.display = "block";
