@@ -20,13 +20,13 @@ function validatePlateNumber($plateNo) {
 function updateTruckStatus($conn, $truckId, $plateNo) {
     $tripStatus = null;
     $tripQuery = $conn->prepare("
-        SELECT status 
-        FROM assign 
-        WHERE plate_no = ? 
-        ORDER BY date DESC 
+           SELECT status 
+        FROM trips 
+        WHERE truck_id = ? 
+        ORDER BY trip_date DESC 
         LIMIT 1
     ");
-    $tripQuery->bind_param("s", $plateNo);
+    $tripQuery->bind_param("i", $truckId);
     $tripQuery->execute();
     $tripResult = $tripQuery->get_result();
     if ($tripResult->num_rows > 0) {
@@ -96,15 +96,15 @@ function updateAllTruckStatuses($conn) {
         $truckId = $truck['truck_id'];
         $plateNo = $truck['plate_no'];
 
-        $tripStatus = null;
+      $tripStatus = null;
         $tripQuery = $conn->prepare("
             SELECT status 
-            FROM assign 
-            WHERE plate_no = ? 
-            ORDER BY date DESC 
+            FROM trips 
+            WHERE truck_id = ? 
+            ORDER BY trip_date DESC 
             LIMIT 1
         ");
-        $tripQuery->bind_param("s", $plateNo);
+        $tripQuery->bind_param("i", $truckId);
         $tripQuery->execute();
         $tripResult = $tripQuery->get_result();
         if ($tripResult->num_rows > 0) {
@@ -174,6 +174,8 @@ function updateAllTruckStatuses($conn) {
 try {
     switch ($action) {
  case 'getTrucks':
+
+     updateAllTruckStatuses($conn);
     $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
                           t.status as display_status, t.is_deleted,
                           t.last_modified_by, t.delete_reason,
