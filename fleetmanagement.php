@@ -146,7 +146,7 @@ checkAccess();
             <div class="container">
                 <div class="status-filter">
                 <div class="button-row">
-                    <button class="add_trip" onclick="openTruckModal()">Add a truck</button>
+                    <button class="add_trip" onclick="openTruckModal()"> <i class="fa-solid fa-plus"></i> Add truck</button>
                 </div>
 
 
@@ -207,9 +207,17 @@ checkAccess();
     </div>
 
     <div id="historyModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-        <span class="close" onclick="document.getElementById('historyModal').style.display='none'">&times;</span>
-        <div id="historyModalContent"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Maintenance History</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div id="historyModalContent">
+        
+        </div>
+        <div class="modal-footer">
+            <button>Close</button>
+        </div>
     </div>
 </div>
 
@@ -744,38 +752,80 @@ function viewMaintenanceHistory(truckId) {
             }
             
             if (historyRecords.length > 0) {
-                let historyHTML = '<div class="history-modal-content"><h3>Maintenance History</h3><ul>';
+                let historyHTML = '<ul class="history-list">';
                 
                 historyRecords.forEach(item => {
-                    historyHTML += `
-                        <li>
-                            <strong>Date:</strong> ${formatDateTime(item.date_since || item.last_modified_at)}<br>
-                            <strong>Status:</strong> ${item.status}<br>
-                            <strong>Type:</strong> ${item.maintenance_type_name || 'N/A'}<br>
-                            <strong>Supplier:</strong> ${item.supplier_name || 'N/A'}<br>
-                            <strong>Cost:</strong> ₱${item.cost ? item.cost.toLocaleString() : 'N/A'}<br>
-                            <strong>Remarks:</strong> ${item.remarks}<br>
-                            <hr>
+                    // Determine status class based on status text
+                    let statusClass = 'status-pending';
+                    if (item.status.toLowerCase().includes('complete')) statusClass = 'status-completed';
+                    if (item.status.toLowerCase().includes('progress')) statusClass = 'status-in-progress';
+                    if (item.status.toLowerCase().includes('pending')) statusClass = 'status-pending';
+                     if (item.status.toLowerCase().includes('overdue')) statusClass = 'status-overdue';
+                    
+                    historyHTML += `    
+                        <li class="history-item">
+                            <div class="history-header">
+                                <span class="history-date">${formatDateTime(item.date_since || item.last_modified_at)}</span>
+                                <span class="history-status ${statusClass}">${item.status}</span>
+                            </div>
+                            <div class="history-details">
+                                <div class="history-detail">
+                                    <span class="detail-label">Type</span>
+                                    <span class="detail-value">${item.maintenance_type_name || 'N/A'}</span>
+                                </div>
+                                <div class="history-detail">
+                                    <span class="detail-label">Supplier</span>
+                                    <span class="detail-value">${item.supplier_name || 'N/A'}</span>
+                                </div>
+                                <div class="history-detail">
+                                    <span class="detail-label">Cost</span>
+                                    <span class="detail-value">₱${item.cost ? item.cost.toLocaleString() : 'N/A'}</span>
+                                </div>
+                            </div>
+                            <div class="history-remarks">
+                                <div class="history-detail">
+                                    <span class="detail-label">Remarks</span>
+                                    <span class="detail-value">${item.remarks || 'No remarks provided'}</span>
+                                </div>
+                            </div>
                         </li>
                     `;
                 });
                 
-                historyHTML += '</ul><button onclick="document.getElementById(\'historyModal\').style.display=\'none\'">Close</button></div>';
+                historyHTML += '</ul>';
                 
                 document.getElementById('historyModalContent').innerHTML = historyHTML;
                 document.getElementById('historyModal').style.display = 'block';
             } else {
                 document.getElementById('historyModalContent').innerHTML = 
-                    '<div class="history-modal-content"><p>No maintenance history found for this truck.</p></div>';
+                    `<div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>No maintenance history found for this truck.</p>
+                    </div>`;
                 document.getElementById('historyModal').style.display = 'block';
             }
         })
         .catch(error => {
             console.error('Error loading maintenance history:', error);
             document.getElementById('historyModalContent').innerHTML = 
-                '<div class="history-modal-content"><p>Error loading maintenance history.</p></div>';
+                `<div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Error loading maintenance history. Please try again.</p>
+                </div>`;
             document.getElementById('historyModal').style.display = 'block';
         });
+}
+document.querySelector('#historyModal .close').onclick = function() {
+    document.getElementById('historyModal').style.display = 'none';
+}
+document.querySelector('#historyModal .modal-footer button').onclick = function() {
+    document.getElementById('historyModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target == document.getElementById('historyModal')) {
+        document.getElementById('historyModal').style.display = 'none';
+    }
 }
 
 function sortTrucks(sortBy) {
@@ -849,10 +899,22 @@ function changeTruckPage(direction) {
     renderTrucksTable();
 }
 
-        function formatDateTime(datetimeString) {
+       function formatDateTime(datetimeString) {
             if (!datetimeString) return 'N/A';
             const date = new Date(datetimeString);
-            return date.toLocaleString(); // This will format based on user's locale
+            const dateOptions = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            };
+            
+            return `${date.toLocaleDateString(undefined, dateOptions)} at ${date.toLocaleTimeString(undefined, timeOptions)}`;
         }
 
   function fetchTruckCounts() {

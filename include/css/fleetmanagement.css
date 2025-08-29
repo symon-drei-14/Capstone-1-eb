@@ -1,4 +1,14 @@
 
+    body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    overflow-x:hidden;
+    }
 
 
 th, td {
@@ -8,25 +18,23 @@ th, td {
 }
 
 th {
-    background-color:  #ffffff;
+    background-color:  #f9f9f9;
     font-weight: bold;
     position: relative;
-    box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
-    border-bottom: 5px double #d3d1d15c;
+    padding: 20px;
     z-index: 1;
     box-sizing: border-box;
+    
 }
 
-tr:nth-child(even) {
-    background-color: #f0eeee9a;
-}
 
-tr:nth-child(odd) {
+tr {
     background-color: #ffffff;
+    border-bottom: 1px dotted rgba(0, 0, 0, 0.108);
 }
 
 tr:hover {
-    background-color: #e0e0e0;
+    background-color: #f3f3f3ae;
 }
 
 
@@ -62,12 +70,12 @@ tr:hover {
 
 
 .actions button {
-    padding: 4px 10px;
+    padding: 15px 10px;
     font-size: 14px;
     cursor: pointer;
     border: none;
     border-radius: 7px;
-    margin:  5px 0;
+    display: block;
     transition: background-color 0.3s, color 0.3s;
     width: 100px;
     white-space: nowrap;
@@ -80,24 +88,10 @@ tr:hover {
 }
 
 
-
-
-
-
-/* 
-.main-content4 .pagination {
-    margin-top: -15px;
-    margin-bottom: 20px; 
-    padding-bottom: 15px; 
-  }
-   */
-
-
-
 .table-container {
     margin-bottom:30px;
     margin-right: 20px;
-
+    
 }
 
 .add_trip {
@@ -110,10 +104,12 @@ tr:hover {
     border-radius: 10px;
     font-weight: bold;
     letter-spacing: 1px;
+    transition: transform 0.3s ease;
 }
 
 .add_trip:hover {
     background-color: #45a049;
+     transform: scale(1.1);
 }
 
 /* Modal styles */
@@ -123,10 +119,12 @@ tr:hover {
     z-index: 11000;
     left: 0;
     top: 0;
+    bottom:20px;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    overflow-y: auto;
+    overflow:hidden ;
+
 }
 
 .modal-content {
@@ -242,21 +240,11 @@ select.form-control {
 }
 
 
-        body {
-        font-family: Arial, sans-serif;
-        background-color: #FCFAEE;
-        height: auto;
-        display: flex;
-        flex-direction: column;
-        margin: 0;
-        padding: 0;
-        overflow-x:hidden;
-        }
         table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 10px;
-   
+        
         }
         .table-container {
          width: 100%;
@@ -270,6 +258,7 @@ select.form-control {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            
         }
         
             .main-content4 {
@@ -278,8 +267,8 @@ select.form-control {
                 margin-right: 10px;
                 width: calc(100% - 20px);
                 background-color: #ffffff;
-                border-radius: 10px;
-                box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+                border-radius: 5px;
+                box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
                 padding-bottom: 20px;
                 height:auto;
                 contain:content;                
@@ -367,17 +356,7 @@ select.form-control {
             box-sizing: border-box;
         }
         
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1200;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
-            
-        }
+     
         
         .modal-content {
             background-color: #fefefe;
@@ -583,7 +562,7 @@ th[onclick]:hover {
     padding: 15px;
     margin: 15px 20px 15px 20px;
     border-radius: 8px;
-     box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+     box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.06) 0px 2px 4px -1px;
 
 }
 .stats-container {
@@ -808,30 +787,195 @@ th[onclick]:hover {
     display:block;
     
 }
-
-.history-modal-content {
-    padding: 20px;
+#historyModal {
+    display: none;
+    position: fixed;
+    z-index: 11000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    animation: fadeIn 0.3s ease;
 }
 
-.history-modal-content h3 {
-    margin-top: 0;
-    color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
-.history-modal-content ul {
-    list-style-type: none;
+#historyModal .modal-content {
+    background-color: #fff;
+    margin: 40px auto;
     padding: 0;
-    max-height: 400px;
-    overflow-y: auto;
+    width: 85%;
+    max-width: 800px;
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    position: relative;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideDown 0.3s ease;
 }
 
-.history-modal-content li {
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #f0f0f0;
+@keyframes slideDown {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
+
+#historyModal .modal-header {
+    padding: 20px 25px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f9f9f9;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+#historyModal .modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+#historyModal .close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+#historyModal .close:hover {
+    color: #B82132;
+}
+
+#historyModalContent {
+    padding: 0;
+    overflow-y: auto;
+    max-height: calc(85vh - 130px);
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.history-item {
+    padding: 20px 25px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.history-item:hover {
+    background-color: #f9f9f9;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.history-date {
+    font-weight: 600;
+    color: #333;
+    font-size: 1.05rem;
+}
+
+.history-status {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.history-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.history-detail {
+    display: flex;
+    flex-direction: column;
+}
+.detail-label {
+    font-size: 0.8rem;
+    color: #777;
+    margin-bottom: 4px;
+}
+
+.detail-value {
+    font-size: 0.95rem;
+    color: #333;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.history-remarks {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #eaeaea;
+}
+
+.modal-footer {
+    padding: 15px 25px;
+    border-top: 1px solid #eaeaea;
+    text-align: right;
+    background-color: #f9f9f9;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.modal-footer button {
+    background-color: #B82132;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.modal-footer button:hover {
+    background-color: #9a1a28;
+}
+
+.status-completed {
+    background-color: #4CAF50;
+    color: white;
+}
+.status-verdue {
+    background-color: #9a1a28;
+    color: white;
+}
+
+.status-in-progress {
+    background-color: #FF9800;
+    color: white;
+}
+
+.status-pending {
+    background-color: #2196F3;
+    color: white;
+}
+
+
 
 .history-modal-content button {
     background-color: #B82132;
@@ -845,6 +989,23 @@ th[onclick]:hover {
 
 .history-modal-content button:hover {
     background-color: #9a1a28;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #777;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: #ddd;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1.1rem;
 }
 
 .pagination2 {
@@ -932,20 +1093,19 @@ th[onclick]:hover {
 }
 
 .rows-per-page-container label {
-    font-size: 14px;
+    font-size: 13px;
     color: #333;
     margin-right: 5px;
-    border-radius:20px;
+        margin: 5px;
+
 }
 .rows-per-page-container select {
-    font-size: 14px;
-    color: black;
-    border-color: #33333328;
+    font-size: 13px;
+    color: rgb(43, 43, 43);
+    border-color: white;
     margin-right: 5px;
-    border-radius:10px;
-    padding: 5px;
+
     margin: 5px;
-    max-width:200px;
     width:auto;
 }
 
