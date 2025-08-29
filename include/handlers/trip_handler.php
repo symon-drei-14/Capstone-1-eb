@@ -28,236 +28,349 @@ $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 $action = $data['action'] ?? '';
 
+// Helper functions from trip_operations.php
+function getOrCreateClientId($conn, $clientName) {
+    $stmt = $conn->prepare("SELECT client_id FROM clients WHERE name = ?");
+    $stmt->bind_param("s", $clientName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['client_id'];
+    } else {
+        $insertStmt = $conn->prepare("INSERT INTO clients (name) VALUES (?)");
+        $insertStmt->bind_param("s", $clientName);
+        $insertStmt->execute();
+        return $conn->insert_id;
+    }
+}
+
+function getHelperId($conn, $helperName) {
+    if (empty($helperName)) return null;
+    
+    $stmt = $conn->prepare("SELECT helper_id FROM helpers WHERE name = ?");
+    $stmt->bind_param("s", $helperName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['helper_id'];
+    }
+    return null;
+}
+
+function getDispatcherId($conn, $dispatcherName) {
+    if (empty($dispatcherName)) return null;
+    
+    $stmt = $conn->prepare("SELECT dispatcher_id FROM dispatchers WHERE name = ?");
+    $stmt->bind_param("s", $dispatcherName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['dispatcher_id'];
+    }
+    return null;
+}
+
+function getOrCreateDestinationId($conn, $destinationName) {
+    $stmt = $conn->prepare("SELECT destination_id FROM destinations WHERE name = ?");
+    $stmt->bind_param("s", $destinationName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['destination_id'];
+    } else {
+        $insertStmt = $conn->prepare("INSERT INTO destinations (name) VALUES (?)");
+        $insertStmt->bind_param("s", $destinationName);
+        $insertStmt->execute();
+        return $conn->insert_id;
+    }
+}
+
+function getOrCreateShippingLineId($conn, $shippingLineName) {
+    $stmt = $conn->prepare("SELECT shipping_line_id FROM shipping_lines WHERE name = ?");
+    $stmt->bind_param("s", $shippingLineName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['shipping_line_id'];
+    } else {
+        $insertStmt = $conn->prepare("INSERT INTO shipping_lines (name) VALUES (?)");
+        $insertStmt->bind_param("s", $shippingLineName);
+        $insertStmt->execute();
+        return $conn->insert_id;
+    }
+}
+
+function getConsigneeId($conn, $consigneeName) {
+    if (empty($consigneeName)) return null;
+    
+    $stmt = $conn->prepare("SELECT consignee_id FROM consignees WHERE name = ?");
+    $stmt->bind_param("s", $consigneeName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['consignee_id'];
+    }
+    return null;
+}
+
+function getTruckIdByPlateNo($conn, $plateNo) {
+    $stmt = $conn->prepare("SELECT truck_id FROM truck_table WHERE plate_no = ?");
+    $stmt->bind_param("s", $plateNo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['truck_id'];
+    }
+    return null;
+}
+
+function getDriverIdByName($conn, $driverName) {
+    $stmt = $conn->prepare("SELECT driver_id FROM drivers_table WHERE name = ?");
+    $stmt->bind_param("s", $driverName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['driver_id'];
+    }
+    return null;
+}
+
+function insertTripExpenses($conn, $tripId, $cashAdvance) {
+    if ($cashAdvance > 0) {
+        $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance) VALUES (?, ?)");
+        $stmt->bind_param("id", $tripId, $cashAdvance);
+        return $stmt->execute();
+    }
+    return true;
+}
+
+function updateTripExpenses($conn, $tripId, $cashAdvance) {
+    $checkStmt = $conn->prepare("SELECT expense_id FROM trip_expenses WHERE trip_id = ?");
+    $checkStmt->bind_param("i", $tripId);
+    $checkStmt->execute();
+    $exists = $checkStmt->get_result()->num_rows > 0;
+    
+    if ($exists) {
+        $stmt = $conn->prepare("UPDATE trip_expenses SET cash_advance = ? WHERE trip_id = ?");
+        $stmt->bind_param("di", $cashAdvance, $tripId);
+    } else {
+        if ($cashAdvance > 0) {
+            $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance) VALUES (?, ?)");
+            $stmt->bind_param("id", $tripId, $cashAdvance);
+        } else {
+            return true; // No need to insert 0 cash advance
+        }
+    }
+    
+    return $stmt->execute();
+}
+
 try {
     switch ($action) {
         case 'add':
-            $driverId = $data['driver_id'] ?? null;
-            $driverName = $data['driver'] ?? null;
+            $conn->begin_transaction();
             
-            if (empty($driverId) && !empty($driverName)) {
-                $getDriverId = $conn->prepare("SELECT driver_id FROM drivers_table WHERE name = ? LIMIT 1");
-                if ($getDriverId === false) {
-                    throw new Exception("Failed to prepare driver query: " . $conn->error);
-                }
-                $getDriverId->bind_param("s", $driverName);
-                $getDriverId->execute();
-                $driverResult = $getDriverId->get_result();
-                if ($driverResult->num_rows > 0) {
-                    $driverId = $driverResult->fetch_assoc()['driver_id'];
-                }
-                $getDriverId->close();
-            }
-            
-            // Check if created_at column exists
-            $columnsQuery = $conn->query("SHOW COLUMNS FROM assign LIKE 'created_at'");
-            $hasCreatedAt = $columnsQuery && $columnsQuery->num_rows > 0;
-            
-            if ($hasCreatedAt) {
-                $stmt = $conn->prepare("INSERT INTO assign 
-                    (plate_no, date, driver, driver_id, helper, dispatcher, container_no, client, 
-                    destination, shippine_line, consignee, size, cash_adv, status,
-                    last_modified_by, created_at) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            try {
+                // Get foreign key IDs
+                $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
+                $driverId = getDriverIdByName($conn, $data['driver']);
+                $clientId = getOrCreateClientId($conn, $data['client']);
+                $helperId = getHelperId($conn, $data['helper']);
+                $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
+                $destinationId = getOrCreateDestinationId($conn, $data['destination']);
+                $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
+                $consigneeId = getConsigneeId($conn, $data['consignee']);
                 
-                if ($stmt === false) {
-                    throw new Exception("Failed to prepare insert statement: " . $conn->error);
+                if (!$truckId) {
+                    throw new Exception("Truck with plate number {$data['plateNo']} not found");
+                }
+                if (!$driverId) {
+                    throw new Exception("Driver {$data['driver']} not found");
                 }
                 
-                $stmt->bind_param("sssssssssssssss",
-                    $data['plateNo'],
-                    $data['date'],
-                    $driverName,
-                    $driverId, 
-                    $data['helper'],
-                    $data['dispatcher'],
+                // Insert trip
+                $stmt = $conn->prepare("INSERT INTO trips 
+                    (truck_id, driver_id, helper_id, dispatcher_id, client_id, 
+                    destination_id, shipping_line_id, consignee_id, container_no, 
+                    trip_date, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("iiiiiiiisss",
+                    $truckId,
+                    $driverId,
+                    $helperId,
+                    $dispatcherId,
+                    $clientId,
+                    $destinationId,
+                    $shippingLineId,
+                    $consigneeId,
                     $data['containerNo'],
-                    $data['client'],
-                    $data['destination'],
-                    $data['shippingLine'],
-                    $data['consignee'],
-                    $data['size'],
-                    $data['cashAdvance'],
-                    $data['status'],
-                    $currentUser  
+                    $data['date'],
+                    $data['status']
                 );
-            } else {
-                $stmt = $conn->prepare("INSERT INTO assign 
-                    (plate_no, date, driver, driver_id, helper, dispatcher, container_no, client, 
-                    destination, shippine_line, consignee, size, cash_adv, status,
-                    last_modified_by) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 
-                if ($stmt === false) {
-                    throw new Exception("Failed to prepare insert statement: " . $conn->error);
+                if (!$stmt->execute()) {
+                    throw new Exception("Failed to insert trip: " . $stmt->error);
                 }
                 
-                $stmt->bind_param("sssssssssssssss",
-                    $data['plateNo'],
-                    $data['date'],
-                    $driverName,
-                    $driverId, 
-                    $data['helper'],
-                    $data['dispatcher'],
-                    $data['containerNo'],
-                    $data['client'],
-                    $data['destination'],
-                    $data['shippingLine'],
-                    $data['consignee'],
-                    $data['size'],
-                    $data['cashAdvance'],
-                    $data['status'],
-                    $currentUser  
-                );
-            }
-            
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute insert: " . $stmt->error);
-            }
-            
-            $newTripId = $conn->insert_id;
+                $tripId = $conn->insert_id;
 
-            if ($data['status'] === 'En Route') {
-                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE plate_no = ?");
-                if ($updateTruck === false) {
-                    throw new Exception("Failed to prepare truck update: " . $conn->error);
+                // Insert cash advance if provided
+                $cashAdvance = floatval($data['cashAdvance'] ?? 0);
+                if (!insertTripExpenses($conn, $tripId, $cashAdvance)) {
+                    throw new Exception("Failed to insert trip expenses");
                 }
-                $updateTruck->bind_param("s", $data['plateNo']);
-                $updateTruck->execute();
-                $updateTruck->close();
+
+                // Insert audit log
+                $auditStmt = $conn->prepare("INSERT INTO audit_logs_trips (trip_id, modified_by, edit_reason) VALUES (?, ?, 'Trip created')");
+                $auditStmt->bind_param("is", $tripId, $currentUser);
+                if (!$auditStmt->execute()) {
+                    throw new Exception("Failed to insert audit log: " . $auditStmt->error);
+                }
+
+                // Update truck status
+                if ($data['status'] === 'En Route') {
+                    $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
+                    $updateTruck->bind_param("i", $truckId);
+                    $updateTruck->execute();
+                }
+
+                $conn->commit();
+                echo json_encode(['success' => true, 'trip_id' => $tripId]);
+                
+            } catch (Exception $e) {
+                $conn->rollback();
+                throw $e;
             }
-            
-            $stmt->close();
-            echo json_encode(['success' => true, 'trip_id' => $newTripId]);
             break;
 
         case 'edit':
-            $getCurrent = $conn->prepare("SELECT status, plate_no FROM assign WHERE trip_id = ?");
-            if ($getCurrent === false) {
-                throw new Exception("Failed to prepare current select: " . $conn->error);
-            }
-            $getCurrent->bind_param("i", $data['id']);
-            $getCurrent->execute();
-            $current = $getCurrent->get_result()->fetch_assoc();
-            $getCurrent->close();
+            $conn->begin_transaction();
+            
+            try {
+                // Get current trip info
+                $getCurrent = $conn->prepare("SELECT status, truck_id FROM trips WHERE trip_id = ?");
+                $getCurrent->bind_param("i", $data['id']);
+                $getCurrent->execute();
+                $current = $getCurrent->get_result()->fetch_assoc();
+                
+                if (!$current) {
+                    throw new Exception("Trip not found");
+                }
+                
+                // Get foreign key IDs
+                $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
+                $driverId = getDriverIdByName($conn, $data['driver']);
+                $clientId = getOrCreateClientId($conn, $data['client']);
+                $helperId = getHelperId($conn, $data['helper']);
+                $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
+                $destinationId = getOrCreateDestinationId($conn, $data['destination']);
+                $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
+                $consigneeId = getConsigneeId($conn, $data['consignee']);
 
-            $driverId = $data['driver_id'] ?? null;
-            $driverName = $data['driver'] ?? null;
-            
-            if (empty($driverId) && !empty($driverName)) {
-                $getDriverId = $conn->prepare("SELECT driver_id FROM drivers_table WHERE name = ? LIMIT 1");
-                if ($getDriverId === false) {
-                    throw new Exception("Failed to prepare driver query: " . $conn->error);
+                if (!$truckId) {
+                    throw new Exception("Truck with plate number {$data['plateNo']} not found");
                 }
-                $getDriverId->bind_param("s", $driverName);
-                $getDriverId->execute();
-                $driverResult = $getDriverId->get_result();
-                if ($driverResult->num_rows > 0) {
-                    $driverId = $driverResult->fetch_assoc()['driver_id'];
+                if (!$driverId) {
+                    throw new Exception("Driver {$data['driver']} not found");
                 }
-                $getDriverId->close();
-            }
-            
-            $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
-            
-            // Check if last_modified_at column exists
-            $columnsQuery = $conn->query("SHOW COLUMNS FROM assign LIKE 'last_modified_at'");
-            $hasLastModifiedAt = $columnsQuery && $columnsQuery->num_rows > 0;
-            
-            if ($hasLastModifiedAt) {
-                $stmt = $conn->prepare("UPDATE assign SET 
-                    plate_no=?, date=?, driver=?, driver_id=?, helper=?, dispatcher=?, container_no=?, client=?, 
-                    destination=?, shippine_line=?, consignee=?, size=?, cash_adv=?, status=?,
-                    edit_reasons=?, last_modified_by=?, last_modified_at=NOW()
+
+                // Update trip
+                $stmt = $conn->prepare("UPDATE trips SET 
+                    truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, 
+                    destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
+                    trip_date=?, status=?
                     WHERE trip_id=?");
-            } else {
-                $stmt = $conn->prepare("UPDATE assign SET 
-                    plate_no=?, date=?, driver=?, driver_id=?, helper=?, dispatcher=?, container_no=?, client=?, 
-                    destination=?, shippine_line=?, consignee=?, size=?, cash_adv=?, status=?,
-                    edit_reasons=?, last_modified_by=?
-                    WHERE trip_id=?");
-            }
+                $stmt->bind_param("iiiiiiiisssi",
+                    $truckId,
+                    $driverId, 
+                    $helperId,
+                    $dispatcherId,
+                    $clientId,
+                    $destinationId,
+                    $shippingLineId,
+                    $consigneeId,
+                    $data['containerNo'],
+                    $data['date'],
+                    $data['status'],
+                    $data['id']
+                );
                 
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare update statement: " . $conn->error);
-            }
-            
-            $stmt->bind_param("ssssssssssssssssi",
-                $data['plateNo'],
-                $data['date'],
-                $driverName,
-                $driverId,
-                $data['helper'],
-                $data['dispatcher'],
-                $data['containerNo'],
-                $data['client'],
-                $data['destination'],
-                $data['shippingLine'],
-                $data['consignee'],
-                $data['size'],
-                $data['cashAdvance'],
-                $data['status'],
-                $editReasons,
-                $currentUser,  
-                $data['id']
-            );
-            
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute update: " . $stmt->error);
-            }
-            
-            $stmt->close();
-            
-            if ($current && $current['status'] !== $data['status']) {
-                $newTruckStatus = 'In Terminal'; 
-                
-                if ($data['status'] === 'En Route') {
-                    $newTruckStatus = 'Enroute';
-                } elseif ($data['status'] === 'Pending') {
-                    $newTruckStatus = 'Pending';
+                if (!$stmt->execute()) {
+                    throw new Exception("Failed to update trip: " . $stmt->error);
                 }
                 
-                $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE plate_no = ?");
-                if ($updateTruck === false) {
-                    throw new Exception("Failed to prepare truck update: " . $conn->error);
+                // Update trip expenses
+                $cashAdvance = floatval($data['cashAdvance'] ?? 0);
+                updateTripExpenses($conn, $data['id'], $cashAdvance);
+                
+                // Update audit log
+                $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
+                $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
+                $auditStmt->bind_param("ssi", $currentUser, $editReasons, $data['id']);
+                $auditStmt->execute();
+                
+                // Update truck status if status changed
+                if ($current['status'] !== $data['status']) {
+                    $newTruckStatus = 'In Terminal';
+                    if ($data['status'] === 'En Route') {
+                        $newTruckStatus = 'Enroute';
+                    } elseif ($data['status'] === 'Pending') {
+                        $newTruckStatus = 'Pending';
+                    }
+                    
+                    $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
+                    $updateTruck->bind_param("si", $newTruckStatus, $truckId);
+                    $updateTruck->execute();
                 }
-                $updateTruck->bind_param("ss", $newTruckStatus, $data['plateNo']);
-                $updateTruck->execute();
-                $updateTruck->close();
+                
+                $conn->commit();
+                echo json_encode(['success' => true]);
+                
+            } catch (Exception $e) {
+                $conn->rollback();
+                throw $e;
             }
-            
-            echo json_encode(['success' => true]);
             break;
 
         case 'delete':
-            $getPlate = $conn->prepare("SELECT plate_no, status FROM assign WHERE trip_id = ?");
-            if ($getPlate === false) {
-                throw new Exception("Failed to prepare plate select: " . $conn->error);
-            }
-            $getPlate->bind_param("i", $data['id']);
-            $getPlate->execute();
-            $trip = $getPlate->get_result()->fetch_assoc();
-            $getPlate->close();
+            // Mark trip as deleted in audit log (soft delete)
+            $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
+                is_deleted = 1,
+                delete_reason = ?,
+                modified_by = ?,
+                modified_at = NOW()
+                WHERE trip_id = ? AND is_deleted = 0");
+            $stmt->bind_param("ssi", 
+                $data['reason'] ?? 'Deleted via mobile',
+                $currentUser,
+                $data['id']
+            );
+            $stmt->execute();
             
-            $stmt = $conn->prepare("DELETE FROM assign WHERE trip_id=?");
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare delete statement: " . $conn->error);
-            }
-            $stmt->bind_param("i", $data['id']);
+            // Get trip details for truck status update
+            $getTrip = $conn->prepare("
+                SELECT t.status, tr.truck_id 
+                FROM trips t 
+                JOIN truck_table tr ON t.truck_id = tr.truck_id 
+                WHERE t.trip_id = ?
+            ");
+            $getTrip->bind_param("i", $data['id']);
+            $getTrip->execute();
+            $trip = $getTrip->get_result()->fetch_assoc();
             
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute delete: " . $stmt->error);
-            }
-            
-            $stmt->close();
-            
-            if ($trip && $trip['status'] === 'En Route') {
-                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'In Terminal' WHERE plate_no = ?");
-                if ($updateTruck === false) {
-                    throw new Exception("Failed to prepare truck update: " . $conn->error);
-                }
-                $updateTruck->bind_param("s", $trip['plate_no']);
+            if ($trip) {
+                $newTruckStatus = 'In Terminal';
+                $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
+                $updateTruck->bind_param("si", $newTruckStatus, $trip['truck_id']);
                 $updateTruck->execute();
-                $updateTruck->close();
             }
             
             echo json_encode(['success' => true]);
@@ -287,40 +400,57 @@ try {
             
             // Filter by driver if specified
             if (isset($data['driver_id'])) {
-                $whereClause = "WHERE a.driver_id = ?";
+                $whereClause = "WHERE t.driver_id = ?";
                 $params = [$data['driver_id']];
                 $types = "i";
             } elseif (isset($data['driver_name'])) {
-                $whereClause = "WHERE a.driver = ?";
+                $whereClause = "WHERE d.name = ?";
                 $params = [$data['driver_name']];
                 $types = "s";
             }
             
-            // Check if created_at column exists
-            $columnsQuery = $conn->query("SHOW COLUMNS FROM assign LIKE 'created_at'");
-            $hasCreatedAt = $columnsQuery && $columnsQuery->num_rows > 0;
+            // Add filter for non-deleted trips
+            $whereClause .= ($whereClause ? " AND " : "WHERE ") . "NOT EXISTS (
+                SELECT 1 FROM audit_logs_trips al2 
+                WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+            )";
             
-            if ($hasCreatedAt) {
-                $sql = "
-                    SELECT a.*, d.name as driver_name, d.email as driver_email,
-                           DATE_FORMAT(a.date, '%Y-%m-%d') as formatted_date,
-                           DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp
-                    FROM assign a 
-                    LEFT JOIN drivers_table d ON a.driver_id = d.driver_id 
-                    $whereClause
-                    ORDER BY a.date DESC, a.created_at DESC
-                ";
-            } else {
-                $sql = "
-                    SELECT a.*, d.name as driver_name, d.email as driver_email,
-                           DATE_FORMAT(a.date, '%Y-%m-%d') as formatted_date,
-                           NULL as created_timestamp
-                    FROM assign a 
-                    LEFT JOIN drivers_table d ON a.driver_id = d.driver_id 
-                    $whereClause
-                    ORDER BY a.date DESC, a.trip_id DESC
-                ";
-            }
+            $sql = "
+                SELECT 
+                    t.trip_id,
+                    t.container_no,
+                    t.trip_date,
+                    t.status,
+                    t.created_at,
+                    tr.plate_no,
+                    tr.capacity as truck_capacity,
+                    d.name as driver,
+                    d.driver_id,
+                    d.name as driver_name,
+                    d.email as driver_email,
+                    h.name as helper,
+                    disp.name as dispatcher,
+                    c.name as client,
+                    dest.name as destination,
+                    sl.name as shipping_line,
+                    cons.name as consignee,
+                    COALESCE(te.cash_advance, 0) as cash_adv,
+                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+                    t.trip_date as date,
+                    DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp
+                FROM trips t
+                LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+                LEFT JOIN helpers h ON t.helper_id = h.helper_id
+                LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+                LEFT JOIN clients c ON t.client_id = c.client_id
+                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+                LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+                LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+                LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+                $whereClause
+                ORDER BY t.trip_date DESC, t.created_at DESC
+            ";
             
             $stmt = $conn->prepare($sql);
             if ($stmt === false) {
@@ -339,6 +469,8 @@ try {
             
             $trips = [];
             while ($row = $result->fetch_assoc()) {
+                // Map to old column names for compatibility
+                $row['size'] = $row['truck_capacity'];
                 $trips[] = $row;
             }
             
@@ -354,19 +486,51 @@ try {
                 throw new Exception("Driver ID or name required");
             }
             
-            $whereClause = $driverId ? "a.driver_id = ?" : "a.driver = ?";
+            $whereClause = $driverId ? "t.driver_id = ?" : "d.name = ?";
             $param = $driverId ? $driverId : $driverName;
             $type = $driverId ? "i" : "s";
             
             $stmt = $conn->prepare("
-                SELECT a.*, d.name as driver_name, d.email as driver_email,
-                       DATE_FORMAT(a.date, '%Y-%m-%d') as formatted_date
-                FROM assign a 
-                LEFT JOIN drivers_table d ON a.driver_id = d.driver_id 
-                WHERE $whereClause AND a.status IN ('En Route', 'Pending')
+                SELECT 
+                    t.trip_id,
+                    t.container_no,
+                    t.trip_date,
+                    t.status,
+                    tr.plate_no,
+                    tr.capacity as size,
+                    tr.capacity as truck_capacity,
+                    d.name as driver,
+                    d.driver_id,
+                    d.name as driver_name,
+                    d.email as driver_email,
+                    h.name as helper,
+                    disp.name as dispatcher,
+                    c.name as client,
+                    dest.name as destination,
+                    sl.name as shipping_line,
+                    cons.name as consignee,
+                    COALESCE(te.cash_advance, 0) as cash_adv,
+                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+                    t.trip_date as date
+                FROM trips t 
+                LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+                LEFT JOIN helpers h ON t.helper_id = h.helper_id
+                LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+                LEFT JOIN clients c ON t.client_id = c.client_id
+                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+                LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+                LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+                LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+                WHERE $whereClause 
+                AND t.status IN ('En Route', 'Pending')
+                AND NOT EXISTS (
+                    SELECT 1 FROM audit_logs_trips al2 
+                    WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+                )
                 ORDER BY 
-                    CASE WHEN a.status = 'En Route' THEN 1 ELSE 2 END,
-                    a.date ASC
+                    CASE WHEN t.status = 'En Route' THEN 1 ELSE 2 END,
+                    t.trip_date ASC
                 LIMIT 1
             ");
             
@@ -399,17 +563,49 @@ try {
                 throw new Exception("Driver ID or name required");
             }
             
-            $whereClause = $driverId ? "a.driver_id = ?" : "a.driver = ?";
+            $whereClause = $driverId ? "t.driver_id = ?" : "d.name = ?";
             $param = $driverId ? $driverId : $driverName;
             $type = $driverId ? "i" : "s";
             
             $stmt = $conn->prepare("
-                SELECT a.*, d.name as driver_name, d.email as driver_email,
-                       DATE_FORMAT(a.date, '%Y-%m-%d') as formatted_date
-                FROM assign a 
-                LEFT JOIN drivers_table d ON a.driver_id = d.driver_id 
-                WHERE $whereClause AND a.status = 'Pending'
-                ORDER BY a.date ASC
+                SELECT 
+                    t.trip_id,
+                    t.container_no,
+                    t.trip_date,
+                    t.status,
+                    tr.plate_no,
+                    tr.capacity as size,
+                    tr.capacity as truck_capacity,
+                    d.name as driver,
+                    d.driver_id,
+                    d.name as driver_name,
+                    d.email as driver_email,
+                    h.name as helper,
+                    disp.name as dispatcher,
+                    c.name as client,
+                    dest.name as destination,
+                    sl.name as shipping_line,
+                    cons.name as consignee,
+                    COALESCE(te.cash_advance, 0) as cash_adv,
+                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+                    t.trip_date as date
+                FROM trips t 
+                LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+                LEFT JOIN helpers h ON t.helper_id = h.helper_id
+                LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+                LEFT JOIN clients c ON t.client_id = c.client_id
+                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+                LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+                LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+                LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+                WHERE $whereClause 
+                AND t.status = 'Pending'
+                AND NOT EXISTS (
+                    SELECT 1 FROM audit_logs_trips al2 
+                    WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+                )
+                ORDER BY t.trip_date ASC
             ");
             
             if ($stmt === false) {
@@ -443,7 +639,7 @@ try {
             }
             
             // Get current trip info
-            $getCurrent = $conn->prepare("SELECT plate_no, status FROM assign WHERE trip_id = ?");
+            $getCurrent = $conn->prepare("SELECT t.status, tr.truck_id FROM trips t JOIN truck_table tr ON t.truck_id = tr.truck_id WHERE t.trip_id = ?");
             if ($getCurrent === false) {
                 throw new Exception("Failed to prepare current status query: " . $conn->error);
             }
@@ -456,35 +652,24 @@ try {
                 throw new Exception("Trip not found");
             }
             
-            // Check if last_modified_at column exists
-            $columnsQuery = $conn->query("SHOW COLUMNS FROM assign LIKE 'last_modified_at'");
-            $hasLastModifiedAt = $columnsQuery && $columnsQuery->num_rows > 0;
-            
             // Update trip status
-            if ($hasLastModifiedAt) {
-                $stmt = $conn->prepare("UPDATE assign SET 
-                    status = ?, 
-                    last_modified_by = ?, 
-                    last_modified_at = NOW()
-                    WHERE trip_id = ?");
-            } else {
-                $stmt = $conn->prepare("UPDATE assign SET 
-                    status = ?, 
-                    last_modified_by = ?
-                    WHERE trip_id = ?");
-            }
-                
+            $stmt = $conn->prepare("UPDATE trips SET status = ? WHERE trip_id = ?");
             if ($stmt === false) {
                 throw new Exception("Failed to prepare status update: " . $conn->error);
             }
             
-            $stmt->bind_param("ssi", $newStatus, $currentUser, $tripId);
+            $stmt->bind_param("si", $newStatus, $tripId);
             
             if (!$stmt->execute()) {
                 throw new Exception("Failed to execute status update: " . $stmt->error);
             }
             
             $stmt->close();
+            
+            // Update audit log
+            $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
+            $auditStmt->bind_param("ssi", $currentUser, "Status updated to $newStatus", $tripId);
+            $auditStmt->execute();
             
             // Update truck status accordingly
             $newTruckStatus = 'In Terminal';
@@ -494,147 +679,121 @@ try {
                 $newTruckStatus = 'Pending';
             }
             
-            $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE plate_no = ?");
+            $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
             if ($updateTruck === false) {
                 throw new Exception("Failed to prepare truck status update: " . $conn->error);
             }
-            $updateTruck->bind_param("ss", $newTruckStatus, $current['plate_no']);
+            $updateTruck->bind_param("si", $newTruckStatus, $current['truck_id']);
             $updateTruck->execute();
             $updateTruck->close();
             
             echo json_encode(['success' => true, 'message' => 'Status updated successfully']);
             break;
 
-            case 'save_checklist':
-    // Check if checklist already exists for this trip
-    $checkStmt = $conn->prepare("SELECT id FROM driver_checklist WHERE trip_id = ?");
-    $checkStmt->bind_param("i", $data['trip_id']);
-    $checkStmt->execute();
-    $exists = $checkStmt->get_result()->num_rows > 0;
-    $checkStmt->close();
-    
-    if ($exists) {
-        // Update existing checklist
-        $stmt = $conn->prepare("UPDATE driver_checklist SET 
-            no_fatigue = ?,
-            no_drugs = ?,
-            no_distractions = ?,
-            no_illness = ?,
-            fit_to_work = ?,
-            alcohol_test = ?,
-            hours_sleep = ?
-            WHERE trip_id = ?");
-        $stmt->bind_param("iiiiiddi", 
-            $data['no_fatigue'],
-            $data['no_drugs'],
-            $data['no_distractions'],
-            $data['no_illness'],
-            $data['fit_to_work'],
-            $data['alcohol_test'],
-            $data['hours_sleep'],
-            $data['trip_id']
-        );
-    } else {
-        // Insert new checklist
-        $stmt = $conn->prepare("INSERT INTO driver_checklist (
-            trip_id,
-            no_fatigue,
-            no_drugs,
-            no_distractions,
-            no_illness,
-            fit_to_work,
-            alcohol_test,
-            hours_sleep
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("iiiiiidd", 
-            $data['trip_id'],
-            $data['no_fatigue'],
-            $data['no_drugs'],
-            $data['no_distractions'],
-            $data['no_illness'],
-            $data['fit_to_work'],
-            $data['alcohol_test'],
-            $data['hours_sleep']
-        );
-    }
-    
-    $stmt->execute();
-    echo json_encode(['success' => true]);
-    break;
-
-case 'get_checklist':
-    $tripId = $data['trip_id'] ?? null;
-    
-    if (!$tripId) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Trip ID is required']);
-        break;
-    }
-    
-    try {
-        $stmt = $conn->prepare("SELECT * FROM driver_checklist WHERE trip_id = ?");
-        if ($stmt === false) {
-            throw new Exception("Failed to prepare statement: " . $conn->error);
-        }
-        
-        $stmt->bind_param("i", $tripId);
-        
-        if (!$stmt->execute()) {
-            throw new Exception("Failed to execute query: " . $stmt->error);
-        }
-        
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows > 0) {
-            $checklist = $result->fetch_assoc();
-            echo json_encode([
-                'success' => true, 
-                'checklist' => $checklist,
-                'message' => 'Checklist found'
-            ]);
-        } else {
-            echo json_encode([
-                'success' => false, 
-                'message' => 'No checklist found for this trip'
-            ]);
-        }
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error fetching checklist: ' . $e->getMessage()
-        ]);
-    } finally {
-        if (isset($stmt)) {
-            $stmt->close();
-        }
-    }
-    break;
-
-        case 'fix_missing_driver_ids':
-            $stmt = $conn->prepare("
-                UPDATE assign a 
-                SET driver_id = (
-                    SELECT d.driver_id 
-                    FROM drivers_table d 
-                    WHERE d.name = a.driver 
-                    LIMIT 1
-                ) 
-                WHERE a.driver_id IS NULL AND a.driver IS NOT NULL
-            ");
+        case 'save_checklist':
+            // Check if checklist already exists for this trip
+            $checkStmt = $conn->prepare("SELECT id FROM driver_checklist WHERE trip_id = ?");
+            $checkStmt->bind_param("i", $data['trip_id']);
+            $checkStmt->execute();
+            $exists = $checkStmt->get_result()->num_rows > 0;
+            $checkStmt->close();
             
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare driver ID fix: " . $conn->error);
+            if ($exists) {
+                // Update existing checklist
+                $stmt = $conn->prepare("UPDATE driver_checklist SET 
+                    no_fatigue = ?,
+                    no_drugs = ?,
+                    no_distractions = ?,
+                    no_illness = ?,
+                    fit_to_work = ?,
+                    alcohol_test = ?,
+                    hours_sleep = ?
+                    WHERE trip_id = ?");
+                $stmt->bind_param("iiiiiddi", 
+                    $data['no_fatigue'],
+                    $data['no_drugs'],
+                    $data['no_distractions'],
+                    $data['no_illness'],
+                    $data['fit_to_work'],
+                    $data['alcohol_test'],
+                    $data['hours_sleep'],
+                    $data['trip_id']
+                );
+            } else {
+                // Insert new checklist
+                $stmt = $conn->prepare("INSERT INTO driver_checklist (
+                    trip_id,
+                    no_fatigue,
+                    no_drugs,
+                    no_distractions,
+                    no_illness,
+                    fit_to_work,
+                    alcohol_test,
+                    hours_sleep
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("iiiiiidd", 
+                    $data['trip_id'],
+                    $data['no_fatigue'],
+                    $data['no_drugs'],
+                    $data['no_distractions'],
+                    $data['no_illness'],
+                    $data['fit_to_work'],
+                    $data['alcohol_test'],
+                    $data['hours_sleep']
+                );
             }
             
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute driver ID fix: " . $stmt->error);
+            $stmt->execute();
+            echo json_encode(['success' => true]);
+            break;
+
+        case 'get_checklist':
+            $tripId = $data['trip_id'] ?? null;
+            
+            if (!$tripId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Trip ID is required']);
+                break;
             }
             
-            $affectedRows = $stmt->affected_rows;
-            $stmt->close();
-            
-            echo json_encode(['success' => true, 'updated_records' => $affectedRows]);
+            try {
+                $stmt = $conn->prepare("SELECT * FROM driver_checklist WHERE trip_id = ?");
+                if ($stmt === false) {
+                    throw new Exception("Failed to prepare statement: " . $conn->error);
+                }
+                
+                $stmt->bind_param("i", $tripId);
+                
+                if (!$stmt->execute()) {
+                    throw new Exception("Failed to execute query: " . $stmt->error);
+                }
+                
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows > 0) {
+                    $checklist = $result->fetch_assoc();
+                    echo json_encode([
+                        'success' => true, 
+                        'checklist' => $checklist,
+                        'message' => 'Checklist found'
+                    ]);
+                } else {
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => 'No checklist found for this trip'
+                    ]);
+                }
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Error fetching checklist: ' . $e->getMessage()
+                ]);
+            } finally {
+                if (isset($stmt)) {
+                    $stmt->close();
+                }
+            }
             break;
 
         default:
