@@ -1597,7 +1597,7 @@ width:140px;
 
     .view-reasons::after {
         background-color: #0d7cbdff; 
-    left:10%;
+    
     }
 
     .show-deleted-container {
@@ -2082,9 +2082,14 @@ h3.title {
 }
 
 /* Specific tooltip colors for different button types */
-.event-modal-actions .icon-btn.edit::after,
+.event-modal-actions .icon-btn.edit::after{
+
+     background-color: #28a745;
+}
 .event-modal-actions .icon-btn.edit::before {
-    background-color: #28a745;
+
+
+   
     border-color: #28a745 transparent transparent transparent;
 }
 
@@ -2103,6 +2108,7 @@ h3.title {
 .event-modal-actions .icon-btn.view-reasons::before {
     border-color: #17a2b8 transparent transparent transparent;
 }
+
 
 /* Responsive tooltip adjustments */
 @media (max-width: 768px) {
