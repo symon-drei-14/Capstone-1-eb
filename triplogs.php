@@ -284,11 +284,112 @@ if ($result->num_rows > 0) {
                 <div id="calendar"></div>
             </section>
             
-            <section class="event-details-container" id="eventDetails">
-                <h4>Event Details</h4>
-                <p id="noEventsMessage" style="display: none;">No scheduled trips for this date</p>
-                <ul id="eventList" class="event-list"></ul>
-            </section>
+          
+        </div>
+<!-- modal for the scheduled trips in the calendar -->
+         <div id="eventModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="event-modal-header">
+                    <h3 style="margin: 0;">Trip Details</h3>
+                    <div class="event-status" id="eventModalStatus"></div>
+                </div>
+                
+                <div class="event-details-grid">
+                    <div>
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Date & Time</div>
+                            <div class="event-detail-value" id="eventModalDate"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Plate Number</div>
+                            <div class="event-detail-value" id="eventModalPlateNo"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Driver</div>
+                            <div class="event-detail-value" id="eventModalDriver"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Helper</div>
+                            <div class="event-detail-value" id="eventModalHelper"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Dispatcher</div>
+                            <div class="event-detail-value" id="eventModalDispatcher"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Container Number</div>
+                            <div class="event-detail-value" id="eventModalContainerNo"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Client</div>
+                            <div class="event-detail-value" id="eventModalClient"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Destination</div>
+                            <div class="event-detail-value" id="eventModalDestination"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Shipping Line</div>
+                            <div class="event-detail-value" id="eventModalShippingLine"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Consignee</div>
+                            <div class="event-detail-value" id="eventModalConsignee"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Container Size</div>
+                            <div class="event-detail-value" id="eventModalSize"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">FCL Status</div>
+                            <div class="event-detail-value" id="eventModalFCL"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Cash Advance</div>
+                            <div class="event-detail-value" id="eventModalCashAdvance"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Additional Cash Advance</div>
+                            <div class="event-detail-value" id="eventModalAdditionalCashAdvance"></div>
+                        </div>
+                        
+                        <div class="event-detail-group">
+                            <div class="event-detail-label">Diesel</div>
+                            <div class="event-detail-value" id="eventModalDiesel"></div>
+                        </div>
+                    </div>
+                </div>
+                
+               <div class="event-modal-actions">
+    <button class="icon-btn edit" id="eventModalEditBtn" data-tooltip="Edit Trip">
+        <i class="fas fa-edit"></i>
+    </button>
+    <button class="icon-btn delete" id="eventModalDeleteBtn" data-tooltip="Delete Trip">
+        <i class="fas fa-trash-alt"></i>
+    </button>
+    <button class="icon-btn view-reasons" id="eventModalHistoryBtn" data-tooltip="View Edit History">
+        <i class="fas fa-history"></i>
+    </button>
+</div>
+            </div>
         </div>
 
      <!-- Edit Modal -->
@@ -1290,6 +1391,8 @@ $(document).on('click', '.icon-btn.edit', function() {
             consignee: event.consignee,
             size: event.size,
             cashAdvance: event.cashAdvance,
+            additional_cash_advance: event.additionalCashAdvance, 
+        diesel: event.diesel,
             status: event.status,
             modifiedby: event.modifiedby,
             modifiedat: event.modifiedat,
@@ -1438,7 +1541,7 @@ function resetAddScheduleForm() {
             });
 
             // Initialize calendar
-           $('#calendar').fullCalendar({
+          $('#calendar').fullCalendar({
     header: { 
         left: 'prev,next today', 
         center: 'title', 
@@ -1459,14 +1562,44 @@ function resetAddScheduleForm() {
         var statusClass = 'status ' + event.status.toLowerCase().replace(/\s+/g, '');
         element.addClass(statusClass);
     },
-    // Add this to automatically select tod   
     viewRender: function(view, element) {
         if (view.name === 'month') {
-            // Trigger a click on today's cell
             setTimeout(function() {
                 $('.fc-today').trigger('click');
             }, 100);
         }
+    },
+    eventClick: function(event, jsEvent, view) {
+        // Populate the event modal with event data
+        $('#eventModalDate').text(moment(event.start).format('MMMM D, YYYY h:mm A'));
+        $('#eventModalPlateNo').text(event.plateNo || 'N/A');
+        $('#eventModalDriver').text(event.driver || 'N/A');
+        $('#eventModalHelper').text(event.helper || 'N/A');
+        $('#eventModalDispatcher').text(event.dispatcher || 'N/A');
+        $('#eventModalContainerNo').text(event.containerNo || 'N/A');
+        $('#eventModalClient').text(event.client || 'N/A');
+        $('#eventModalDestination').text(event.destination || 'N/A');
+        $('#eventModalShippingLine').text(event.shippingLine || 'N/A');
+        $('#eventModalConsignee').text(event.consignee || 'N/A');
+        $('#eventModalSize').text(event.truck_capacity || 'N/A');
+        $('#eventModalFCL').text(event.fcl_status || 'N/A');
+        $('#eventModalCashAdvance').text('₱' + (parseFloat(event.cashAdvance) || 0).toFixed(2));
+        $('#eventModalAdditionalCashAdvance').text('₱' + (parseFloat(event.additionalCashAdvance) || 0).toFixed(2));
+        $('#eventModalDiesel').text('₱' + (parseFloat(event.diesel) || 0).toFixed(2));
+        
+        // Set status with appropriate styling
+        const statusElement = $('#eventModalStatus');
+        statusElement.text(event.status || 'N/A');
+        statusElement.removeClass().addClass('status ' + (event.status ? event.status.toLowerCase().replace(/\s+/g, '') : ''));
+        
+        // Store event ID for action buttons
+        $('#eventModal').data('eventId', event.id);
+        
+        // Show the modal
+        $('#eventModal').show();
+        
+        // Prevent default behavior
+        return false;
     },
     dayClick: function(date, jsEvent, view) {
         var clickedDay = $(this);
