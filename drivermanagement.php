@@ -135,6 +135,9 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal()">×</span>
             <h2 id="modalTitle">Add Driver</h2>
+
+               <div id="profilePreview"></div>
+
             <form id="driverForm">
                 <input type="hidden" id="driverId" name="driverId">
                 <input type="hidden" id="modalMode" name="modalMode" value="add">
@@ -179,8 +182,9 @@
     <script>
         let currentDriverId = null;
         let driversData = [];
-        let currentPage = 1;
-        let rowsPerPage = 5;
+     let currentPage = 1;
+let rowsPerPage = 5;
+let totalPages = 0;
 
         $(document).ready(function() {
             fetchDrivers();
@@ -199,22 +203,24 @@
         updateDateTime();
         setInterval(updateDateTime, 1000);
 
-        function openAddDriverModal() {
-            document.getElementById("modalTitle").textContent = "Add New Driver";
-            document.getElementById("modalMode").value = "add";
-            document.getElementById("saveButtonText").textContent = "Add Driver";
-            document.getElementById("passwordHelp").style.display = "none";
-            document.getElementById("password").required = true;
-            
-            // Clear all fields
-            document.getElementById("driverId").value = "";
-            document.getElementById("driverName").value = "";
-            document.getElementById("driverEmail").value = "";
-            document.getElementById("password").value = "";
-            document.getElementById("assignedTruck").value = "";
-            
-            document.getElementById("driverModal").style.display = "block";
-        }
+       function openAddDriverModal() {
+    document.getElementById("modalTitle").textContent = "Add New Driver";
+    document.getElementById("modalMode").value = "add";
+    document.getElementById("saveButtonText").textContent = "Add Driver";
+    document.getElementById("passwordHelp").style.display = "none";
+    document.getElementById("password").required = true;
+    
+    // Clear all fields
+    document.getElementById("driverId").value = "";
+    document.getElementById("driverName").value = "";
+    document.getElementById("driverEmail").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("assignedTruck").value = "";
+    document.getElementById("driverProfile").value = ""; // Clear file input
+    document.getElementById("profilePreview").innerHTML = ""; // Clear preview
+    
+    document.getElementById("driverModal").style.display = "block";
+}
 
        function fetchDrivers() {
     $.ajax({
@@ -260,15 +266,19 @@ function fetchTripCounts() {
     });
 }
 
-       function renderTable() {
+      function renderTable() {
+    // Clear existing highlights
     document.querySelectorAll('.highlight').forEach(el => {
         el.outerHTML = el.innerHTML;
     });
     
     $('#driverTableBody').empty();
+    
+    // Calculate pagination
+    totalPages = Math.ceil(driversData.length / rowsPerPage);
     var startIndex = (currentPage - 1) * rowsPerPage;
     var endIndex = startIndex + rowsPerPage;
-    var pageData = driversData.slice(startIndex, Math.min(endIndex, driversData.length));
+    var pageData = driversData.slice(startIndex, endIndex);
     
     if (pageData.length > 0) {
         pageData.forEach(function(driver) {
@@ -276,16 +286,16 @@ function fetchTripCounts() {
             
             var row = "<tr>" +
                 "<td>" + 
-    (driver.driver_pic ? 
-        '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
-        '<i class="fa-solid fa-circle-user profile-icon"></i>'
-    ) + 
-"</td>" +
+                (driver.driver_pic ? 
+                    '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
+                    '<i class="fa-solid fa-circle-user profile-icon"></i>'
+                ) + 
+                "</td>" +
                 "<td>" + driver.driver_id + "</td>" +
                 "<td>" + driver.name + "</td>" +
                 "<td>" + driver.email + "</td>" +
                 "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
-                 "<td>" + (driver.total_completed || 0) + "</td>" +
+                "<td>" + (driver.total_completed || 0) + "</td>" +
                 "<td>" + (driver.monthly_completed || 0) + "</td>" +
                 "<td>" + driver.created_at + "</td>" +
                 "<td>" + formattedLastLogin + "</td>" +
@@ -318,91 +328,142 @@ function fetchTripCounts() {
             return date.toLocaleString('en-US', options);
         }
         
-        function updatePagination() {
-            totalPages = Math.ceil(driversData.length / rowsPerPage);
-            
-            $('#page-numbers').empty();
-            
-            for (var i = 1; i <= totalPages; i++) {
-                var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
-                var pageNumberElement = $(`<div class="${pageNumClass}">${i}</div>`);
-                
-                pageNumberElement.on('click', function() {
-                    var page = parseInt($(this).text());
-                    goToPage(page);
-                });
-                
-                $('#page-numbers').append(pageNumberElement);
-            }
-            
-            $('#prevPageBtn').prop('disabled', currentPage === 1);
-            $('#nextPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
-        }
+       function updatePagination() {
+    totalPages = Math.ceil(driversData.length / rowsPerPage);
+    
+    // Clear existing page numbers
+    $('#page-numbers').empty();
+    
+    // Don't show pagination if no data or only one page
+    if (totalPages <= 1) {
+        $('#prevPageBtn').prop('disabled', true);
+        $('#nextPageBtn').prop('disabled', true);
+        return;
+    }
+    
+    // Ensure current page is within bounds
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+        currentPage = 1;
+    }
+    
+    // Create page number buttons - FIXED VERSION
+    for (var i = 1; i <= totalPages; i++) {
+        var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
+        var pageNumberElement = $('<div class="' + pageNumClass + '" data-page="' + i + '">' + i + '</div>');
+        
+        $('#page-numbers').append(pageNumberElement);
+    }
+    
+    // Update navigation buttons
+    $('#prevPageBtn').prop('disabled', currentPage === 1);
+    $('#nextPageBtn').prop('disabled', currentPage === totalPages);
+}
+    function goToPage(page) {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+        currentPage = page;
+        renderTable();
+    }
+}
 
-        function goToPage(page) {
-            currentPage = page;
-            renderTable();
-            $('.page-number').removeClass('active');
-            $(`.page-number:contains(${page})`).addClass('active');
-        }
+   function changePage(step) {
+    var newPage = currentPage + step;
+    if (newPage >= 1 && newPage <= totalPages) {
+        goToPage(newPage);
+    }
+}
 
-        function changePage(step) {
-            var newPage = currentPage + step;
-            if (newPage >= 1 && newPage <= totalPages) {
-                currentPage = newPage;
-                renderTable();
-            }
-        }
+   $(document).ready(function() {
+    // Remove any existing event listeners first
+    $('#prevPageBtn').off('click');
+    $('#nextPageBtn').off('click');
+    
+    // Previous button
+    $('#prevPageBtn').on('click', function() {
+        changePage(-1);
+    });
 
-        $('#prevPageBtn').on('click', function() {
-            changePage(-1);
-        });
-
-        $('#nextPageBtn').on('click', function() {
-            changePage(1);
-        });
-
-        $(document).on('click', '.page-number', function() {
-            var page = parseInt($(this).data('page'));
+    // Next button
+    $('#nextPageBtn').on('click', function() {
+        changePage(1);
+    });
+    
+    // FIXED: Page number clicks using event delegation with data attribute
+    $(document).off('click', '.page-number');
+    $(document).on('click', '.page-number', function() {
+        var page = parseInt($(this).data('page'));
+        if (!isNaN(page) && page !== currentPage) {
             goToPage(page);
-        });
+        }
+    });
+    
+    // Initial load
+    fetchDrivers();
+});
 
         function closeModal() {
             document.getElementById("driverModal").style.display = "none";
         }
 
     function editDriver(driverId) {
-        $.ajax({
-            url: 'include/handlers/get_driver.php?id=' + driverId,
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                if (data.success) {
-                    const driver = data.driver;
-                    
-                    document.getElementById("modalTitle").textContent = "Edit Driver";
-                    document.getElementById("modalMode").value = "edit";
-                    document.getElementById("saveButtonText").textContent = "Save Changes";
-                    document.getElementById("passwordHelp").style.display = "block";
-                    document.getElementById("password").required = false;
-                    
-                    document.getElementById("driverId").value = driver.driver_id;
-                    document.getElementById("driverName").value = driver.name;
-                    document.getElementById("driverEmail").value = driver.email;
-                    document.getElementById("password").value = '';
-                    document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
-                    
-                    document.getElementById("driverModal").style.display = "block";
+    $.ajax({
+        url: 'include/handlers/get_driver.php?id=' + driverId,
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            if (data.success) {
+                const driver = data.driver;
+                
+                document.getElementById("modalTitle").textContent = "Edit Driver";
+                document.getElementById("modalMode").value = "edit";
+                document.getElementById("saveButtonText").textContent = "Save Changes";
+                document.getElementById("passwordHelp").style.display = "block";
+                document.getElementById("password").required = false;
+                
+                document.getElementById("driverId").value = driver.driver_id;
+                document.getElementById("driverName").value = driver.name;
+                document.getElementById("driverEmail").value = driver.email;
+                document.getElementById("password").value = '';
+                document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
+                
+                // Display existing profile picture if it exists
+                const profilePreview = document.getElementById('profilePreview');
+                if (driver.driver_pic) {
+                    profilePreview.innerHTML = `
+                        <div class="current-profile-section">
+                            <h4>Current Profile Picture:</h4>
+                            <div class="large-profile-display">
+                                <img src="data:image/jpeg;base64,${driver.driver_pic}" 
+                                     class="large-profile-preview" 
+                                     alt="Current Driver Photo">
+                            </div>
+                        </div>
+                    `;
                 } else {
-                    alert("Error fetching driver data: " + data.message);
+                    profilePreview.innerHTML = `
+                        <div class="current-profile-section">
+                            <h4>Current Profile Picture:</h4>
+                            <div class="large-profile-display">
+                                <i class="fa-solid fa-circle-user large-profile-icon"></i>
+                                <p>No profile picture uploaded</p>
+                            </div>
+                        </div>
+                    `;
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                alert("An error occurred while fetching driver data.");
+                
+                document.getElementById("driverModal").style.display = "block";
+            } else {
+                alert("Error fetching driver data: " + data.message);
             }
-        });
-    }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert("An error occurred while fetching driver data.");
+        }
+    });
+}
 
         function deleteDriver(driverId) {
             if (confirm("Are you sure you want to delete this driver?")) {
@@ -525,84 +586,128 @@ function fetchTripCounts() {
     }
 });
 
-        function searchDrivers() {
-            const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
-            
-            if (searchTerm === '') {
-                document.querySelectorAll('.highlight').forEach(el => {
-                    el.outerHTML = el.innerHTML;
-                });
-                fetchDrivers();
-                return;
-            }
+       function searchDrivers() {
+    const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
+    
+    // Reset to first page when searching
+    currentPage = 1;
+    
+    if (searchTerm === '') {
+        document.querySelectorAll('.highlight').forEach(el => {
+            el.outerHTML = el.innerHTML;
+        });
+        fetchDrivers();
+        return;
+    }
 
-            const filteredDrivers = driversData.filter(driver => {
-                return (
-                    String(driver.driver_id).toLowerCase().includes(searchTerm) ||
-                    String(driver.name).toLowerCase().includes(searchTerm) ||
-                    String(driver.email).toLowerCase().includes(searchTerm) ||
-                    String(driver.assigned_truck_id || 'None').toLowerCase().includes(searchTerm) ||
-                    String(driver.created_at).toLowerCase().includes(searchTerm) ||
-                    String(formatTime(driver.last_login)).toLowerCase().includes(searchTerm)
-                );
-            });
+    const filteredDrivers = driversData.filter(driver => {
+        return (
+            String(driver.driver_id).toLowerCase().includes(searchTerm) ||
+            String(driver.name).toLowerCase().includes(searchTerm) ||
+            String(driver.email).toLowerCase().includes(searchTerm) ||
+            String(driver.assigned_truck_id || 'None').toLowerCase().includes(searchTerm) ||
+            String(driver.created_at).toLowerCase().includes(searchTerm) ||
+            String(formatTime(driver.last_login)).toLowerCase().includes(searchTerm)
+        );
+    });
 
-            renderFilteredDrivers(filteredDrivers, searchTerm);
-        }
+    renderFilteredDrivers(filteredDrivers, searchTerm);
+}
 
         function renderFilteredDrivers(filteredDrivers, searchTerm) {
-            $('#driverTableBody').empty();
+    $('#driverTableBody').empty();
+    
+    if (filteredDrivers.length > 0) {
+        filteredDrivers.forEach(function(driver) {
+            let formattedLastLogin = formatTime(driver.last_login);
             
-            if (filteredDrivers.length > 0) {
-                filteredDrivers.forEach(function(driver) {
-                    let formattedLastLogin = formatTime(driver.last_login);
-                    
-                    const highlightText = (text) => {
-                        if (!searchTerm || !text) return text;
-                        const str = String(text);
-                        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                        return str.replace(regex, '<span class="highlight">$1</span>');
-                    };
-                    
-                    var row = "<tr>" +
-                        "<td><i class='fa-solid fa-circle-user profile-icon'></i></td>" + 
-                        "<td>" + highlightText(driver.driver_id) + "</td>" +
-                        "<td>" + highlightText(driver.name) + "</td>" +
-                        "<td>" + highlightText(driver.email) + "</td>" +
-                        "<td>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
-                        "<td>" + highlightText(driver.total_completed || 0) + "</td>" +
-                        "<td>" + highlightText(driver.monthly_completed || 0) + "</td>" +
-                        "<td>" + highlightText(driver.created_at) + "</td>" +
-                        "<td>" + highlightText(formattedLastLogin) + "</td>" +
-                        "<td class='actions'>" +
-                        "<button class='action-btn edit-btn' data-tooltip='Edit Driver' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
-                        "<button class='action-btn delete-btn' data-tooltip='Delete Driver' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
-                        "</td>" +
-                        "</tr>";
-                    $('#driverTableBody').append(row);
-                });
-            } else {
-                $('#driverTableBody').append("<tr><td colspan='10'>No matching drivers found</td></tr>");
-            }
+            const highlightText = (text) => {
+                if (!searchTerm || !text) return text;
+                const str = String(text);
+                const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                return str.replace(regex, '<span class="highlight">$1</span>');
+            };
             
-            $('#page-numbers').empty();
-            $('#page-numbers').append(`<div>Showing ${filteredDrivers.length} result(s)</div>`);
-            $('#prevPageBtn').prop('disabled', true);
-            $('#nextPageBtn').prop('disabled', true);
-        }
-        
-        // Preview profile image when selected
-        document.getElementById('driverProfile') && document.getElementById('driverProfile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('profilePreview').innerHTML = 
-                        `<img src="${event.target.result}" style="max-width: 100px; max-height: 100px; border-radius: 50%;">`;
-                };
-                reader.readAsDataURL(file);
-            }
+            var row = "<tr>" +
+                "<td>" + 
+                (driver.driver_pic ? 
+                    '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
+                    '<i class="fa-solid fa-circle-user profile-icon"></i>'
+                ) + 
+                "</td>" +
+                "<td>" + highlightText(driver.driver_id) + "</td>" +
+                "<td>" + highlightText(driver.name) + "</td>" +
+                "<td>" + highlightText(driver.email) + "</td>" +
+                "<td>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
+                "<td>" + highlightText(driver.total_completed || 0) + "</td>" +
+                "<td>" + highlightText(driver.monthly_completed || 0) + "</td>" +
+                "<td>" + highlightText(driver.created_at) + "</td>" +
+                "<td>" + highlightText(formattedLastLogin) + "</td>" +
+                "<td class='actions'><div class='actions-container'>" +
+                "<button class='action-btn edit-btn' data-tooltip='Edit Driver' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
+                "<button class='action-btn delete-btn' data-tooltip='Delete Driver' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
+                "</div></td>" +
+                "</tr>";
+            $('#driverTableBody').append(row);
         });
+    } else {
+        $('#driverTableBody').append("<tr><td colspan='10'>No matching drivers found</td></tr>");
+    }
+    
+    // Hide pagination during search
+    $('#page-numbers').empty();
+    $('#page-numbers').append('<div class="search-results">Showing ' + filteredDrivers.length + ' result(s)</div>');
+    $('#prevPageBtn').prop('disabled', true);
+    $('#nextPageBtn').prop('disabled', true);
+}
+        
+      // Preview profile image when selected - Updated version
+document.getElementById('driverProfile') && document.getElementById('driverProfile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const profilePreview = document.getElementById('profilePreview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            // Check if there's existing content (for edit mode)
+            const existingContent = profilePreview.querySelector('.current-profile-section');
+            
+            let newPreviewHtml = `
+                <div class="new-profile-section">
+                    <h4>New Profile Picture:</h4>
+                    <div class="large-profile-display">
+                        <img src="${event.target.result}" 
+                             class="large-profile-preview" 
+                             alt="New Driver Photo">
+                        <p>New image selected</p>
+                    </div>
+                </div>
+            `;
+            
+            if (existingContent) {
+                // In edit mode - show both existing and new
+                profilePreview.innerHTML = existingContent.outerHTML + newPreviewHtml;
+            } else {
+                // In add mode - show only new
+                profilePreview.innerHTML = newPreviewHtml;
+            }
+        };
+        reader.readAsDataURL(file);
+    } else {
+        // If no file selected and in edit mode, restore original preview
+        const mode = document.getElementById("modalMode").value;
+        if (mode === 'edit') {
+            // Keep existing image display only
+            const existingContent = profilePreview.querySelector('.current-profile-section');
+            if (existingContent) {
+                profilePreview.innerHTML = existingContent.outerHTML;
+            }
+        } else {
+            // Clear preview in add mode
+            profilePreview.innerHTML = '';
+        }
+    }
+});
 
         window.onclick = function(event) {
             const modal = document.getElementById("driverModal");

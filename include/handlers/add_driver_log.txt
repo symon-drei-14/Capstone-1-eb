@@ -46,3 +46,18 @@
 2025-08-30 18:24:22 - MySQL SQL prepared successfully
 2025-08-30 18:24:22 - MySQL insert successful
 2025-08-30 18:24:24 - Firebase save successful
+2025-08-30 19:51:59 - Add Driver Request received
+2025-08-30 19:51:59 - POST data received successfully
+2025-08-30 19:51:59 - Data validation passed
+2025-08-30 19:51:59 - MySQL connection successful
+2025-08-30 19:51:59 - Email check passed
+2025-08-30 19:51:59 - MySQL SQL prepared successfully
+2025-08-30 19:51:59 - ERROR: Got a packet bigger than 'max_allowed_packet' bytes
+2025-08-30 19:52:13 - Add Driver Request received
+2025-08-30 19:52:13 - POST data received successfully
+2025-08-30 19:52:13 - Data validation passed
+2025-08-30 19:52:13 - MySQL connection successful
+2025-08-30 19:52:13 - Email check passed
+2025-08-30 19:52:13 - MySQL SQL prepared successfully
+2025-08-30 19:52:13 - MySQL insert successful
+2025-08-30 19:52:14 - Firebase save successful
