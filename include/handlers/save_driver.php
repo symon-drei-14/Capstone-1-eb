@@ -9,8 +9,26 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 
+// Handle file upload
+$driverPic = null;
+if (!empty($_FILES['driverProfile']['name']) && $_FILES['driverProfile']['error'] == UPLOAD_ERR_OK) {
+    // Validate file type
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($fileInfo, $_FILES['driverProfile']['tmp_name']);
+    finfo_close($fileInfo);
+    
+    if (in_array($mimeType, $allowedTypes)) {
+        // Read and encode the image
+        $driverPic = base64_encode(file_get_contents($_FILES['driverProfile']['tmp_name']));
+    } else {
+        echo json_encode(["success" => false, "message" => "Invalid file type. Only JPG, PNG and GIF are allowed."]);
+        exit;
+    }
+}
+
 // Get the POST data
-$data = json_decode(file_get_contents('php://input'), true);
+$data = $_POST;
 
 // Validate required fields
 if (!isset($data['name']) || !isset($data['email'])) {
@@ -21,13 +39,13 @@ if (!isset($data['name']) || !isset($data['email'])) {
 try {
     if ($data['mode'] === 'add') {
         // Adding a new driver
-        $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, password, assigned_truck_id, created_at) 
-                               VALUES (?, ?, ?, ?, NOW())");
+        $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, password, assigned_truck_id, driver_pic, created_at) 
+                               VALUES (?, ?, ?, ?, ?, NOW())");
         
         $assignedTruck = !empty($data['assignedTruck']) ? $data['assignedTruck'] : null;
         $password = !empty($data['password']) ? password_hash($data['password'], PASSWORD_DEFAULT) : null;
         
-        $stmt->bind_param("ssss", $data['name'], $data['email'], $password, $assignedTruck);
+        $stmt->bind_param("sssss", $data['name'], $data['email'], $password, $assignedTruck, $driverPic);
         
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Driver added successfully"]);
@@ -63,6 +81,13 @@ try {
         if (isset($data['assignedTruck'])) {
             $updateFields[] = "assigned_truck_id = ?";
             $params[] = $data['assignedTruck'] ?: null;
+            $types .= "s";
+        }
+        
+        // Handle profile picture update if provided
+        if ($driverPic !== null) {
+            $updateFields[] = "driver_pic = ?";
+            $params[] = $driverPic;
             $types .= "s";
         }
         

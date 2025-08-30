@@ -160,6 +160,12 @@
                     <input type="number" id="assignedTruck" name="assignedTruck" placeholder="Enter truck ID or leave blank">
                 </div>
 
+                <div class="form-group">
+    <label for="driverProfile">Profile Photo</label>
+    <input type="file" id="driverProfile" name="driverProfile" accept="image/*">
+    <div id="profilePreview" style="margin-top: 10px;"></div>
+</div>
+
                 <button type="submit" id="saveButton" class="btn-primary">
                     <i class="fas fa-save"></i> <span id="saveButtonText">Add Driver</span>
                 </button>
@@ -269,7 +275,12 @@ function fetchTripCounts() {
             let formattedLastLogin = formatTime(driver.last_login);
             
             var row = "<tr>" +
-                "<td><i class='fa-solid fa-circle-user profile-icon'></i></td>" + 
+                "<td>" + 
+    (driver.driver_pic ? 
+        '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
+        '<i class="fa-solid fa-circle-user profile-icon"></i>'
+    ) + 
+"</td>" +
                 "<td>" + driver.driver_id + "</td>" +
                 "<td>" + driver.name + "</td>" +
                 "<td>" + driver.email + "</td>" +
@@ -417,91 +428,102 @@ function fetchTripCounts() {
         }
 
       document.getElementById("driverForm").addEventListener("submit", function(e) {
-        e.preventDefault();
+    e.preventDefault();
+    
+    const mode = document.getElementById("modalMode").value;
+    const formData = new FormData();
+    
+    formData.append("name", document.getElementById("driverName").value);
+    formData.append("email", document.getElementById("driverEmail").value);
+    formData.append("password", document.getElementById("password").value);
+    formData.append("assigned_truck_id", document.getElementById("assignedTruck").value);
+    formData.append("mode", mode);
+    
+    // Add driver ID for edit mode
+    if (mode === 'edit') {
+        formData.append("driverId", document.getElementById("driverId").value);
+    }
+    
+    // Add profile picture if selected
+    const profileInput = document.getElementById("driverProfile");
+    if (profileInput.files.length > 0) {
+        formData.append("driverProfile", profileInput.files[0]);
+    }
+    
+    if (mode === 'add') {
+        // For adding new driver, use the same structure as register.js
+        const driver_id = Date.now().toString();
+        formData.append("driver_id", driver_id);
+        formData.append("firebase_uid", driver_id);
         
-        const mode = document.getElementById("modalMode").value;
-        const formData = {
-            name: document.getElementById("driverName").value,
-            email: document.getElementById("driverEmail").value,
-            password: document.getElementById("password").value,
-            assigned_truck_id: document.getElementById("assignedTruck").value ? parseInt(document.getElementById("assignedTruck").value) : null
-        };
-        
-        if (mode === 'add') {
-            // For adding new driver, use the same structure as register.js
-            const driver_id = Date.now().toString();
-            formData.driver_id = driver_id;
-            formData.firebase_uid = driver_id;
-            
-            $.ajax({
-                url: 'include/handlers/add_driver.php',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                success: function(data) {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Driver added successfully!'
-                        });
-                        fetchDrivers();
-                        closeModal();
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.message || 'Error adding driver'
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
+        $.ajax({
+            url: 'include/handlers/add_driver.php',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(data) {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Driver added successfully!'
+                    });
+                    fetchDrivers();
+                    closeModal();
+                } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'An error occurred while adding the driver.'
+                        text: data.message || 'Error adding driver'
                     });
                 }
-            });
-        } else {
-            // For editing existing driver
-            formData.driverId = document.getElementById("driverId").value;
-            formData.mode = 'edit';
-            
-            $.ajax({
-                url: 'include/handlers/save_driver.php',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                success: function(data) {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Driver updated successfully!'
-                        });
-                        fetchDrivers();
-                        closeModal();
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.message || 'Error updating driver'
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while adding the driver.'
+                });
+            }
+        });
+    } else {
+        // For editing existing driver
+        $.ajax({
+            url: 'include/handlers/save_driver.php',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(data) {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Driver updated successfully!'
+                    });
+                    fetchDrivers();
+                    closeModal();
+                } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'An error occurred while updating the driver data.'
+                        text: data.message || 'Error updating driver'
                     });
                 }
-            });
-        }
-    });
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while updating the driver data.'
+                });
+            }
+        });
+    }
+});
 
         function searchDrivers() {
             const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
@@ -588,6 +610,8 @@ function fetchTripCounts() {
                 closeModal();
             }
         }
+
+        
 
         
     </script>

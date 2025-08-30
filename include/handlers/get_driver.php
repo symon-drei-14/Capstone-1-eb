@@ -19,7 +19,7 @@ $driverId = $_GET['id'];
 
 try {
     // Prepare and execute the query
-    $stmt = $conn->prepare("SELECT driver_id, firebase_uid, name, email, password, assigned_truck_id, 
+    $stmt = $conn->prepare("SELECT driver_id, firebase_uid, name, email, password, assigned_truck_id, driver_pic, 
                            created_at, last_login FROM drivers_table WHERE driver_id = ?");
     $stmt->bind_param("s", $driverId);
     $stmt->execute();

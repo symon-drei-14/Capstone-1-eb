@@ -3,8 +3,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 file_put_contents('add_driver_log.txt', 
-    date('Y-m-d H:i:s') . " - Add Driver Request received\n" . 
-    file_get_contents("php://input") . "\n\n", 
+    date('Y-m-d H:i:s') . " - Add Driver Request received\n", 
     FILE_APPEND);
 
 header("Access-Control-Allow-Origin: *");
@@ -40,23 +39,36 @@ $username = "root";
 $password = ""; 
 
 try {
-    $input = file_get_contents("php://input");
-    $data = json_decode($input);
-    
-    if (!$data) {
-        throw new Exception("Invalid JSON input: " . $input);
+    // Handle file upload
+    $driverPic = null;
+    if (!empty($_FILES['driverProfile']['name']) && $_FILES['driverProfile']['error'] == UPLOAD_ERR_OK) {
+        // Validate file type
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($fileInfo, $_FILES['driverProfile']['tmp_name']);
+        finfo_close($fileInfo);
+        
+        if (in_array($mimeType, $allowedTypes)) {
+            // Read and encode the image
+            $driverPic = base64_encode(file_get_contents($_FILES['driverProfile']['tmp_name']));
+        } else {
+            throw new Exception("Invalid file type. Only JPG, PNG and GIF are allowed.");
+        }
     }
 
+    // Get the POST data (now from $_POST instead of JSON)
+    $data = $_POST;
+    
     file_put_contents('add_driver_log.txt', 
-        date('Y-m-d H:i:s') . " - JSON parsed successfully\n", 
+        date('Y-m-d H:i:s') . " - POST data received successfully\n", 
         FILE_APPEND);
 
     // Validate required fields
     if (
-        empty($data->name) ||
-        empty($data->email) ||
-        empty($data->password) ||
-        !isset($data->assigned_truck_id)
+        empty($data['name']) ||
+        empty($data['email']) ||
+        empty($data['password']) ||
+        !isset($data['assigned_truck_id'])
     ) {
         throw new Exception("Missing required fields");
     }
@@ -66,8 +78,8 @@ try {
         FILE_APPEND);
 
     // Generate driver_id and firebase_uid (same as register.js)
-    $driver_id = $data->driver_id;
-    $firebase_uid = $data->firebase_uid;
+    $driver_id = $data['driver_id'];
+    $firebase_uid = $data['firebase_uid'];
 
     // Connect to MySQL
     $mysql_conn = new mysqli($host, $username, $password, $db_name);
@@ -88,7 +100,7 @@ try {
         throw new Exception("Email check prepare failed: " . $mysql_conn->error);
     }
     
-    $stmt->bind_param("s", $data->email);
+    $stmt->bind_param("s", $data['email']);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -101,11 +113,11 @@ try {
         FILE_APPEND);
 
     // Hash password for MySQL
-    $hashed_password = password_hash($data->password, PASSWORD_DEFAULT);
+    $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
 
-    // Insert into MySQL
-    $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, password, assigned_truck_id, created_at) 
-              VALUES (?, ?, ?, ?, ?, ?, NOW())";
+    // Insert into MySQL (now includes driver_pic)
+    $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, password, assigned_truck_id, driver_pic, created_at) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
               
     $stmt = $mysql_conn->prepare($query);
     
@@ -118,13 +130,14 @@ try {
         FILE_APPEND);
     
     $stmt->bind_param(
-        "sssssi",
+        "sssssss",
         $driver_id,
         $firebase_uid,
-        $data->name,
-        $data->email,
+        $data['name'],
+        $data['email'],
         $hashed_password,
-        $data->assigned_truck_id
+        $data['assigned_truck_id'],
+        $driverPic
     );
 
     if (!$stmt->execute()) {
@@ -140,10 +153,10 @@ try {
     
     $firebase_data = array(
         "driver_id" => $driver_id,
-        "name" => $data->name,
-        "email" => $data->email,
-        "password" => $data->password, // Store plain password in Firebase as per your register.js logic
-        "assigned_truck_id" => intval($data->assigned_truck_id),
+        "name" => $data['name'],
+        "email" => $data['email'],
+        "password" => $data['password'], // Store plain password in Firebase as per your register.js logic
+        "assigned_truck_id" => intval($data['assigned_truck_id']),
         "created_at" => date('c'), // ISO 8601 format
         "last_login" => null,
         "location" => array(
