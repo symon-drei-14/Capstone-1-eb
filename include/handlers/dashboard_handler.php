@@ -28,7 +28,7 @@ try {
             $total = $countStmt->get_result()->fetch_assoc()['total'];
             $totalPages = ceil($total / $limit);
             
-            // Get paginated results using trips table
+            // Get paginated results using trips table - MODIFIED TO INCLUDE truck_pic
             $stmt = $conn->prepare("
                 SELECT 
                     t.trip_id,
@@ -36,6 +36,8 @@ try {
                     t.trip_date as date,
                     t.status,
                     tr.plate_no, 
+                    tr.truck_pic,
+                    tr.capacity,
                     d.name as driver,
                     h.name as helper,
                     c.name as client,

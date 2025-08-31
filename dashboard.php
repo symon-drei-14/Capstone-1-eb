@@ -153,7 +153,8 @@ $sql = "SELECT
           t.status,
     
           tr.plate_no as plate_no,
-          tr.capacity as size ,
+          tr.capacity as size,
+          tr.truck_pic,
           d.name as driver,
           d.driver_id,
           h.name as helper,
@@ -204,8 +205,8 @@ if ($result->num_rows > 0) {
             'status' => $row['status'],
             'modifiedby' => $row['last_modified_by'],
             'modifiedat' => $row['last_modified_at'],
-            'truck_plate_no' => $row['plate_no'], // Using the same as plateNo
-            // 'truck_capacity' => $row['truck_capacity'],
+            'truck_plate_no' => $row['plate_no'],
+            'truck_pic' => $row['truck_pic'], 
             'edit_reasons' => $row['edit_reasons']
         ];
     }
@@ -384,7 +385,13 @@ $eventsDataJson = json_encode($eventsData);
                 ?>
                 <div class="shipment-card" data-trip-id="<?php echo htmlspecialchars($trip['id']); ?>">
                     <div class="shipment-header">
-                        <img src="include/img/truck2.png" alt="Truck" class="truck-image">
+                      <?php if (!empty($trip['truck_pic'])): ?>
+            <img src="data:image/jpeg;base64,<?php echo $trip['truck_pic']; ?>" 
+                 alt="Truck <?php echo htmlspecialchars($trip['plateNo']); ?>" 
+                 class="truck-image">
+        <?php else: ?>
+            <img src="include/img/truck2.png" alt="Truck" class="truck-image">
+        <?php endif; ?>
                         <div class="header-details">
                             <div class="plate-column">
                                 <span class="info-label">Container Number</span>
@@ -829,9 +836,17 @@ $(document).ready(function() {
                         var formattedDate = dateObj.toLocaleDateString();
                         var formattedTime = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
+                        // Determine truck image - MODIFIED
+                        var truckImage = '';
+                        if (trip.truck_pic && trip.truck_pic.length > 0) {
+                            truckImage = '<img src="data:image/jpeg;base64,' + trip.truck_pic + '" alt="Truck ' + trip.plate_no + '" class="truck-image" style="width: 30px; height: 30px; object-fit: cover; border-radius: 4px;">';
+                        } else {
+                            truckImage = '<i class="fa fa-automobile icon-bg2"></i>';
+                        }
+
                         var row = `
                             <tr>
-                                <td><i class="fa fa-automobile icon-bg2"></i></td>
+                                <td>${truckImage}</td>
                                 <td>${trip.plate_no}</td>
                                 <td>${trip.driver}</td>
                                 <td>${trip.helper}</td>
