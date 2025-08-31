@@ -226,6 +226,9 @@ checkAccess();
             <span class="close" onclick="closeModal('truckModal')">&times;</span>
             <h2 id="modalTitle">Add Truck</h2>
             <input type="hidden" id="truckIdHidden">
+
+            <div id="truckPhotoPreview" class="truck-photo-preview"></div>
+
             <div class="form-group">
                 <label for="plateNo">Plate Number (Format: ABC123 or ABC-1234)</label>
                 <input type="text" id="plateNo" name="plateNo" 
@@ -250,6 +253,13 @@ checkAccess();
                     
                 </select>
             </div>
+
+        <div class="form-group">
+            <label for="truckPhoto">Truck Photo (Max 2MB)</label>
+            <input type="file" id="truckPhoto" name="truckPhoto" accept="image/*" onchange="previewTruckPhoto(this)">
+            <small>Supported formats: JPG, PNG, GIF</small>
+        </div>
+
             <div class="button-group">
                 <button type="button" class="save-btn" onclick="validateAndSaveTruck()">Save</button>
                 <button type="button" class="cancel-btn" onclick="closeModal('truckModal')">Cancel</button>
@@ -360,8 +370,12 @@ function fetchTrucks() {
             resetForm();
         }
 
-        function openTruckModal(editMode = false, truckId = null) {
+     function openTruckModal(editMode = false, truckId = null) {
     isEditMode = editMode;
+    
+    // Reset photo preview and file input
+    resetTruckPhotoPreview();
+    
     if (editMode) {
         document.getElementById('modalTitle').textContent = 'Edit Truck';
         const truck = trucksData.find(t => t.truck_id == truckId);
@@ -370,6 +384,23 @@ function fetchTrucks() {
             document.getElementById('plateNo').value = truck.plate_no;
             document.getElementById('capacity').value = truck.capacity;
             document.getElementById('status').value = truck.status || truck.display_status;
+            
+            // Display existing truck photo if available
+            const preview = document.getElementById('truckPhotoPreview');
+            if (truck.truck_pic) {
+                const img = document.createElement('img');
+                img.src = 'data:image/jpeg;base64,' + truck.truck_pic;
+                img.className = 'truck-preview-image';
+                preview.appendChild(img);
+                
+                // Add a note that this is the current photo
+                const note = document.createElement('p');
+                note.textContent = 'Current truck photo';
+                note.style.fontSize = '12px';
+                note.style.marginTop = '5px';
+                note.style.color = '#666';
+                preview.appendChild(note);
+            }
         }
     } else {
         document.getElementById('modalTitle').textContent = 'Add Truck';
@@ -377,12 +408,13 @@ function fetchTrucks() {
     openModal('truckModal');
 }
         function resetForm() {
-            document.getElementById('truckIdHidden').value = '';
-            document.getElementById('plateNo').value = '';
-            document.getElementById('capacity').value = '20';
-            document.getElementById('status').value = 'In Terminal';
-            isEditMode = false;
-        }
+    document.getElementById('truckIdHidden').value = '';
+    document.getElementById('plateNo').value = '';
+    document.getElementById('capacity').value = '20';
+    document.getElementById('status').value = 'In Terminal';
+    resetTruckPhotoPreview();
+    isEditMode = false;
+}
 
         function validatePlateNumber(plateNo) {
             const plateRegex = /^[A-Za-z]{2,3}-?\d{3,4}$/;
@@ -403,46 +435,56 @@ function fetchTrucks() {
             saveTruck();
         }
 
-        function saveTruck() {
-            const truckData = {
-                truck_id: document.getElementById('truckIdHidden').value,
-                plate_no: document.getElementById('plateNo').value,
-                capacity: document.getElementById('capacity').value,
-                status: document.getElementById('status').value,
-                action: isEditMode ? 'updateTruck' : 'addTruck'
-            };
-
-            fetch('include/handlers/truck_handler.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(truckData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                   Swal.fire({
-                    icon: 'success',
-                    title: isEditMode ? 'Truck Updated' : 'Truck Added',
-                    text: isEditMode ? 'Truck updated successfully!' : 'Truck added successfully!',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-                    closeModal('truckModal');
-                    fetchTrucks();
-                     fetchTruckCounts();
-                } else {
-                    Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message
-                });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please check console for details.');
+       function saveTruck() {
+    const formData = new FormData();
+    const truckId = document.getElementById('truckIdHidden').value;
+    const plateNo = document.getElementById('plateNo').value;
+    const capacity = document.getElementById('capacity').value;
+    const status = document.getElementById('status').value;
+    const photoFile = document.getElementById('truckPhoto').files[0];
+    
+    // Add basic truck data
+    formData.append('truck_id', truckId);
+    formData.append('plate_no', plateNo);
+    formData.append('capacity', capacity);
+    formData.append('status', status);
+    formData.append('action', isEditMode ? 'updateTruck' : 'addTruck');
+    
+    // Add photo if selected
+    if (photoFile) {
+        formData.append('truck_photo', photoFile);
+    }
+    
+    fetch('include/handlers/truck_handler.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: isEditMode ? 'Truck Updated' : 'Truck Added',
+                text: isEditMode ? 'Truck updated successfully!' : 'Truck added successfully!',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            closeModal('truckModal');
+            fetchTrucks();
+            fetchTruckCounts();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message
             });
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please check console for details.');
+    });
+}
 
        function deleteTruck(truckId) {
     // Find the truck in our data
@@ -613,14 +655,20 @@ function renderTrucksTable() {
      
         tr.innerHTML = `
             <td>${highlightMatches(truck.truck_id)}</td>
-            <td>
-                <div class="truck-image-container">
-                    <img src="include/img/truck${truck.capacity == 20 ? '1' : '2'}.png" 
-                         alt="Truck ${truck.plate_no}" 
-                         class="truck-image"
-                         title="Plate: ${truck.plate_no}\nCapacity: ${truck.capacity}">
-                </div>
-            </td>
+           <td>
+    <div class='truck-image-container'>
+        ${truck.truck_pic ? 
+            '<img src="data:image/jpeg;base64,' + truck.truck_pic + '" ' +
+            'alt="Truck ' + truck.plate_no + '" ' +
+            'class="truck-image" ' +
+            'title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">' :
+            '<img src="include/img/truck' + (truck.capacity == 20 ? '1' : '2') + '.png" ' +
+            'alt="Truck ' + truck.plate_no + '" ' +
+            'class="truck-image" ' +
+            'title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">'
+        }
+    </div>
+</td>
             <td>${highlightMatches(truck.plate_no)}</td>
             <td>${highlightMatches(truck.capacity)}</td>
             <td><span class="status-${statusClass}">${highlightMatches(statusText)}</span></td>
@@ -1200,6 +1248,40 @@ function updateShowingInfo(filteredTrucks) {
     
     document.getElementById('showingInfo').textContent = 
         `Showing ${start} to ${end} of ${total} entries`;
+}
+
+
+function previewTruckPhoto(input) {
+    const preview = document.getElementById('truckPhotoPreview');
+    preview.innerHTML = '';
+    
+    if (input.files && input.files[0]) {
+        // Check file size (max 2MB)
+        if (input.files[0].size > 2 * 1024 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'File Too Large',
+                text: 'Please select an image smaller than 2MB.'
+            });
+            input.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'truck-preview-image';
+            preview.appendChild(img);
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function resetTruckPhotoPreview() {
+    const preview = document.getElementById('truckPhotoPreview');
+    preview.innerHTML = '';
+    document.getElementById('truckPhoto').value = '';
 }
     </script>
 

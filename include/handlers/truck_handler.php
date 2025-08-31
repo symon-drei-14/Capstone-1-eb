@@ -3,12 +3,20 @@ header("Content-Type: application/json");
 session_start();
 require 'dbhandler.php';
 
-// Get the current username from session or default to 'System'
+
 $currentUser = $_SESSION['username'] ?? 'System';
+
 
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
-$action = $data['action'] ?? $_GET['action'] ?? '';
+
+
+$action = $data['action'] ?? $_POST['action'] ?? $_GET['action'] ?? '';
+
+
+if (isset($_POST['action']) && ($_POST['action'] === 'addTruck' || $_POST['action'] === 'updateTruck')) {
+    $data = array_merge($data ?: [], $_POST);
+}
 
 function validatePlateNumber($plateNo) {
     return preg_match("/^[A-Za-z]{2,3}-?\d{3,4}$/", $plateNo);
@@ -174,12 +182,11 @@ function updateAllTruckStatuses($conn) {
 try {
     switch ($action) {
  case 'getTrucks':
-
-     updateAllTruckStatuses($conn);
+    updateAllTruckStatuses($conn);
     $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
                           t.status as display_status, t.is_deleted,
                           t.last_modified_by, t.delete_reason,
-                          t.last_modified_at
+                          t.last_modified_at, t.truck_pic
                           FROM truck_table t
                           ORDER BY t.truck_id");
     $stmt->execute();
@@ -188,23 +195,47 @@ try {
     
     echo json_encode(['success' => true, 'trucks' => $trucks]);
     break;
-        case 'addTruck':
-            if (!validatePlateNumber($data['plate_no'])) {
-                throw new Exception("Invalid plate number format. Use format like ABC123 or ABC-1234");
-            }
 
-            $stmt = $conn->prepare("INSERT INTO truck_table 
-                                  (plate_no, capacity, status, last_modified_by) 
-                                  VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", 
-                $data['plate_no'], 
-                $data['capacity'], 
-                $data['status'],
-                $currentUser
-            );
-            $stmt->execute();
-            echo json_encode(['success' => true]);
-            break;
+      case 'addTruck':
+    if (!validatePlateNumber($data['plate_no'])) {
+        throw new Exception("Invalid plate number format. Use format like ABC123 or ABC-1234");
+    }
+
+    // Handle photo upload
+    $truckPic = null;
+    if (!empty($_FILES['truck_photo']['name']) && $_FILES['truck_photo']['error'] == UPLOAD_ERR_OK) {
+        // Validate file type
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($fileInfo, $_FILES['truck_photo']['tmp_name']);
+        finfo_close($fileInfo);
+        
+        if (in_array($mimeType, $allowedTypes)) {
+            // Check file size (max 2MB)
+            if ($_FILES['truck_photo']['size'] > 2 * 1024 * 1024) {
+                throw new Exception("Image file is too large. Maximum size is 2MB.");
+            }
+            
+            // Read and encode the image
+            $truckPic = base64_encode(file_get_contents($_FILES['truck_photo']['tmp_name']));
+        } else {
+            throw new Exception("Invalid file type. Only JPG, PNG and GIF are allowed.");
+        }
+    }
+
+    $stmt = $conn->prepare("INSERT INTO truck_table 
+                          (plate_no, capacity, status, truck_pic, last_modified_by) 
+                          VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssss", 
+        $data['plate_no'], 
+        $data['capacity'], 
+        $data['status'],
+        $truckPic,
+        $currentUser
+    );
+    $stmt->execute();
+    echo json_encode(['success' => true]);
+    break;
 
         case 'updateTruck':
     if (!validatePlateNumber($data['plate_no'])) {
@@ -217,20 +248,58 @@ try {
         throw new Exception("Invalid status value");
     }
 
-    $stmt = $conn->prepare("UPDATE truck_table 
-                          SET plate_no=?, capacity=?, status=?, 
-                          last_modified_by=?, last_modified_at=NOW()
-                          WHERE truck_id=?");
-    $stmt->bind_param("ssssi", 
-        $data['plate_no'], 
-        $data['capacity'], 
-        $data['status'],
-        $currentUser,
-        $data['truck_id']
-    );
+    // Handle photo upload
+    $truckPic = null;
+    $photoUpdate = "";
+    if (!empty($_FILES['truck_photo']['name']) && $_FILES['truck_photo']['error'] == UPLOAD_ERR_OK) {
+        // Validate file type
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($fileInfo, $_FILES['truck_photo']['tmp_name']);
+        finfo_close($fileInfo);
+        
+        if (in_array($mimeType, $allowedTypes)) {
+            // Check file size (max 2MB)
+            if ($_FILES['truck_photo']['size'] > 2 * 1024 * 1024) {
+                throw new Exception("Image file is too large. Maximum size is 2MB.");
+            }
+            
+            // Read and encode the image
+            $truckPic = base64_encode(file_get_contents($_FILES['truck_photo']['tmp_name']));
+            $photoUpdate = ", truck_pic = ?";
+        } else {
+            throw new Exception("Invalid file type. Only JPG, PNG and GIF are allowed.");
+        }
+    }
+
+    if ($photoUpdate) {
+        $stmt = $conn->prepare("UPDATE truck_table 
+                              SET plate_no=?, capacity=?, status=?, 
+                              last_modified_by=?, last_modified_at=NOW()" . $photoUpdate . "
+                              WHERE truck_id=?");
+        $stmt->bind_param("sssssi", 
+            $data['plate_no'], 
+            $data['capacity'], 
+            $data['status'],
+            $currentUser,
+            $truckPic,
+            $data['truck_id']
+        );
+    } else {
+        $stmt = $conn->prepare("UPDATE truck_table 
+                              SET plate_no=?, capacity=?, status=?, 
+                              last_modified_by=?, last_modified_at=NOW()
+                              WHERE truck_id=?");
+        $stmt->bind_param("ssssi", 
+            $data['plate_no'], 
+            $data['capacity'], 
+            $data['status'],
+            $currentUser,
+            $data['truck_id']
+        );
+    }
+    
     $stmt->execute();
-    
-    
     echo json_encode(['success' => true]);
     break;
 
