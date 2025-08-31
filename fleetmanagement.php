@@ -185,7 +185,7 @@ checkAccess();
                         <thead>
                             <tr>
                                 <th onclick="sortTrucks('truck_id')">ID <span id="sortIndicator">↑</span></th>
-                                <th>Optimum pride</th>
+                                <th>Truck Photo</th>
                                 <th>Plate No.</th>
                                 <th>Capacity</th>
                                 <th>Status</th>
