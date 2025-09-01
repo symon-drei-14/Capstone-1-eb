@@ -91,6 +91,7 @@ checkAccess();
 
 
  <h3><i class="fa-solid fa-truck"></i>Truck Management</h3>
+ 
 <div class="stats-container-wrapper">
     <div class="stats-container" id="statsContainer">
                     <div class="stat-card">
@@ -147,13 +148,15 @@ checkAccess();
                 <div class="status-filter">
                 <div class="button-row">
                     <button class="add_trip" onclick="openTruckModal()"> <i class="fa-solid fa-plus"></i> Add truck</button>
+                      <!-- <button class="print_btn" type="button"><i class="fas fa-print"></i> Print</button> -->
                 </div>
 
 
     <div class="search-container">
         <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" placeholder="Search trucks..." oninput="searchTrucks()">
+        <input type="text" id="searchInput" placeholder="Search trucks table..." oninput="searchTrucks()">
     </div>
+    
         <select id="statusFilter" onchange="filterTrucksByStatus()">
         <option value="" disabled selected>Status Filter</option>
         <option value="all">All Statuses</option>
@@ -162,6 +165,7 @@ checkAccess();
         <option value="In Repair">In Repair</option>
         <option value="Overdue">Overdue</option>
         <option value="deleted">Deleted</option>
+    
     </select>
 </div>
 
@@ -256,7 +260,7 @@ checkAccess();
 
         <div class="form-group">
             <label for="truckPhoto">Truck Photo (Max 2MB)</label>
-            <input type="file" id="truckPhoto" name="truckPhoto" accept="image/*" onchange="previewTruckPhoto(this)">
+            <input type="file" id="truckPhoto" class="custom-file-btn" name="truckPhoto" accept="image/*" onchange="previewTruckPhoto(this)">
             <small>Supported formats: JPG, PNG, GIF</small>
         </div>
 
@@ -395,7 +399,7 @@ function fetchTrucks() {
                 
                 // Add a note that this is the current photo
                 const note = document.createElement('p');
-                note.textContent = 'Current truck photo';
+                note.textContent = 'Current photo';
                 note.style.fontSize = '12px';
                 note.style.marginTop = '5px';
                 note.style.color = '#666';
@@ -672,7 +676,7 @@ function renderTrucksTable() {
             <td>${highlightMatches(truck.plate_no)}</td>
             <td>${highlightMatches(truck.capacity)}</td>
             <td><span class="status-${statusClass}">${highlightMatches(statusText)}</span></td>
-            <td>${highlightMatches(truck.last_modified_by)}<br>${formatDateTime(truck.last_modified_at)}</td>
+            <td> <strong><span class="modifby">${highlightMatches(truck.last_modified_by)}</span></strong><br>${formatDateTime(truck.last_modified_at)}</td>
             <td>
                 <button class="icon-btn history" data-tooltip="View History" onclick="viewMaintenanceHistory(${truck.truck_id})">
                     <i class="fas fa-history"></i>
@@ -957,7 +961,7 @@ function changeTruckPage(direction) {
                 hour12: true
             };
             
-            return `${date.toLocaleDateString(undefined, dateOptions)} at ${date.toLocaleTimeString(undefined, timeOptions)}`;
+           return `<span class="date">${date.toLocaleDateString(undefined, dateOptions)}</span>  <span class="time">${date.toLocaleTimeString(undefined, timeOptions)}</span>`;
         }
 
   function fetchTruckCounts() {

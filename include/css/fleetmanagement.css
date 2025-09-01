@@ -1,6 +1,9 @@
-
+*{
+font-family: 'Poppins', sans-serif;
+}
     body {
-    font-family: Arial, sans-serif;
+
+
     background-color: #f8f9fa;
     height: auto;
     display: flex;
@@ -18,8 +21,9 @@ th, td {
 }
 
 th {
-    background-color:  #f9f9f9;
+    background-color:  #e7e7e786;
     font-weight: bold;
+    font-size: 18px;
     position: relative;
     padding: 20px;
     z-index: 1;
@@ -31,10 +35,17 @@ th {
 tr {
     background-color: #ffffff;
     border-bottom: 1px dotted rgba(0, 0, 0, 0.108);
+ 
+    
 }
 
 tr:hover {
     background-color: #f3f3f3ae;
+}
+td{
+    color:#515151;
+       font-size: 16px;
+
 }
 
 
@@ -119,14 +130,15 @@ tr:hover {
     z-index: 11000;
     left: 0;
     top: 0;
-    bottom:20px;
     width: 100%;
-    height: 100%;
+    height: 1200%;
     background-color: rgba(0, 0, 0, 0.5);
-    overflow:hidden ;
+    overflow: hidden ;
 
 }
-
+#truckModal{
+    top: -100px;
+}
 .modal-content {
     background-color: #fff;
     margin: 30px auto;
@@ -258,9 +270,26 @@ select.form-control {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+             table-layout:fixed;
             
         }
-        
+        #trucksTable th:nth-child(7), 
+#trucksTable td:nth-child(7) {
+    width: 130px; 
+    text-align: center;
+    font-size: 17px;
+   
+}
+
+    #trucksTable th:nth-child(1){
+    border-top-left-radius:15px ;
+}
+
+  #trucksTable th:nth-child(8){
+    border-top-right-radius:15px ;
+
+   
+}
             .main-content4 {
                 
                 margin-left: 10px;
@@ -375,34 +404,89 @@ select.form-control {
     flex-wrap: wrap;
     border-bottom:1px solid #88888831;
     width:98%;
+    
 }
 
 
 .status-filter select {
-    padding: 8px 12px 8px 35px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
+    padding: 8px 12px 8px 40px;
+    border-radius: 12px;
+    border: 1px solid #ddddddad;
     background-color: white;
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: 12px center;
-    background-size: 16px;
+background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");    background-repeat: no-repeat;
+    background-position: right center;
+    background-size:20px;
+    width:170px;
+    height:40px;
+    font-size: 16px;
+   
+
 
 }
 
+
 .status-filter select option {
-    color: #000000ff; 
+         color: #525252;
+        border-radius: 12px;
+       margin-left: -200px;
+            font-size: 16px;
+
+
 
 }
 
 .status-filter select option[disabled][selected] {
     display: none;
-
+  color: #525252;
 }
+#statusFilter {
+    
+    color: #666666;  
+}
+#statusFilter option[value=""] {
+    color: #999999; 
+    
+}
+
+
+ .search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 0px; /* Fixed width */
+    left: 1050;
+}
+
+    .search-container .fa-search {
+    position: absolute;
+    left: 10px;
+    color: #aaa;
+    pointer-events: none;
+    z-index: 2;
+}
+    
+
+    #searchInput {
+    padding: 8px 10px 8px 35px;
+    border-radius: 13px;
+    border: 1px solid #ddd;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+      width:400px;
+    height:40px;
+    font-size: 16px;
+}
+    #searchInput:focus {
+    outline: none;
+    border-color: #4b77de;
+    box-shadow: 0 0 0 2px rgba(75, 119, 222, 0.2);
+}
+
 
 th[onclick] {
     cursor: pointer;
@@ -562,7 +646,9 @@ th[onclick]:hover {
     padding: 15px;
     margin: 15px 20px 15px 20px;
     border-radius: 8px;
-     box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.06) 0px 2px 4px -1px;
+      box-shadow: 
+        0 2px 10px rgba(0, 0, 0, 0.05), 
+        0 1px 3px rgba(0, 0, 0, 0.1);
 
 }
 .stats-container {
@@ -577,11 +663,13 @@ th[onclick]:hover {
 }
 
 .stat-card {
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 15px;
     min-width: 160px;
     flex: 1 1 auto; 
-    box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+     box-shadow: 
+        0 2px 10px rgba(0, 0, 0, 0.05), 
+        0 1px 3px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     gap: 15px; 
@@ -655,36 +743,7 @@ th[onclick]:hover {
 }
 
 
-  .search-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 250px; /* Fixed width */
-}
-
-    .search-container .fa-search {
-    position: absolute;
-    left: 10px;
-    color: #aaa;
-    pointer-events: none;
-    z-index: 2;
-}
-    
-
-    #searchInput {
-    padding: 8px 10px 8px 35px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-    width: 100%;
-    box-sizing: border-box;
-    position: relative;
-}
-    #searchInput:focus {
-    outline: none;
-    border-color: #4b77de;
-    box-shadow: 0 0 0 2px rgba(75, 119, 222, 0.2);
-}
-
+ 
 
    .icon-btn {
     position: relative; 
@@ -1093,8 +1152,9 @@ th[onclick]:hover {
 }
 
 .rows-per-page-container label {
-    font-size: 13px;
-    color: #333;
+    font-size: 14px;
+ 
+    color: #5a5a5a;
     margin-right: 5px;
         margin: 5px;
 
@@ -1141,6 +1201,7 @@ th[onclick]:hover {
     border-radius: 2px;
 }
 
+
 /* Truck photo preview styles */
 .truck-photo-preview {
     margin-bottom: 15px;
@@ -1151,7 +1212,7 @@ th[onclick]:hover {
     max-width: 200px;
     max-height: 150px;
     border-radius: 4px;
-    border: 1px solid #ddd;
+
 }
 
 /* Update the truck image in the table */
@@ -1176,3 +1237,75 @@ th[onclick]:hover {
     transform: scale(1.1);
     cursor: pointer;
 }
+
+ .form-group.button{
+    background-color: #007bff;
+
+}
+
+/* .print_btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+        padding: 10px 20px;
+    margin-left: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.3s ease;
+}
+
+.print_btn:hover {
+    background-color: #0056b3;
+}  */
+
+.date, .time { 
+    color: rgb(105, 105, 105);
+     font-weight: bold; 
+    line-height: 1.7;
+     font-size: 13px;
+}
+
+.modifby{
+    font-size: 16px;
+        color: rgb(1, 1, 1);
+}
+
+
+      
+.form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    
+}
+
+.form-group label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+}
+
+.form-group input[type="file"] {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+    width: 100%;
+    text-align: center;
+    
+}
+.form-group input[type="file"]:hover {
+    border-color: #ed3d3a; 
+}
+
+.form-group small {
+    font-size: 14px;
+    color: #666;
+}
+
