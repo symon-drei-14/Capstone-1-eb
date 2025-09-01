@@ -23,11 +23,7 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     </head>
-<style>
-    .swal2-container {
-  z-index: 999999 !important;
-}   
-    </style>
+
     <body>
         <?php
         require 'include/handlers/dbhandler.php';
@@ -288,98 +284,99 @@ if ($result->num_rows > 0) {
         </div>
 <!-- modal for the scheduled trips in the calendar -->
          <div id="eventModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <div class="event-modal-header">
-                    <h3 style="margin: 0;">Trip Details</h3>
-                    <div class="event-status" id="eventModalStatus"></div>
-                </div>
-                
+        <div class="modal-content">
+            <div class="event-modal-header">
+                <h3>Trip Details</h3>
+                <div id="eventModalStatus" class="completed">Completed</div>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <div class="event-modal-body">
                 <div class="event-details-grid">
-                    <div>
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Date & Time</div>
-                            <div class="event-detail-value" id="eventModalDate"></div>
+                    
+                    <div class="event-detail-section">
+                        <h4><i class="fas fa-info-circle"></i> Trip Information</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Date & Time:</div>
+                            <div class="detail-value" id="eventModalDate"></div>
                         </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Plate Number</div>
-                            <div class="event-detail-value" id="eventModalPlateNo"></div>
+                        <div class="detail-row">
+                            <div class="detail-label">Plate Number:</div>
+                            <div class="detail-value" id="eventModalPlateNo"></div>
                         </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Driver</div>
-                            <div class="event-detail-value" id="eventModalDriver"></div>
+                        <div class="detail-row">
+                            <div class="detail-label">Container No:</div>
+                            <div class="detail-value" id="eventModalContainerNo"></div>
                         </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Helper</div>
-                            <div class="event-detail-value" id="eventModalHelper"></div>
-                        </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Dispatcher</div>
-                            <div class="event-detail-value" id="eventModalDispatcher"></div>
+                        <div class="detail-row">
+                            <div class="detail-label">Container Size:</div>
+                            <div class="detail-value" id="eventModalSize"></div>
                         </div>
                     </div>
                     
-                    <div>
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Container Number</div>
-                            <div class="event-detail-value" id="eventModalContainerNo"></div>
+                    <!-- Personnel -->
+                    <div class="event-detail-section">
+                        <h4><i class="fas fa-users"></i> Personnel</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Driver:</div>
+                            <div class="detail-value" id="eventModalDriver"></div>
                         </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Client</div>
-                            <div class="event-detail-value" id="eventModalClient"></div>
+                        <div class="detail-row">
+                            <div class="detail-label">Helper:</div>
+                            <div class="detail-value" id="eventModalHelper"></div>
                         </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Destination</div>
-                            <div class="event-detail-value" id="eventModalDestination"></div>
-                        </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Shipping Line</div>
-                            <div class="event-detail-value" id="eventModalShippingLine"></div>
-                        </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Consignee</div>
-                            <div class="event-detail-value" id="eventModalConsignee"></div>
+                        <div class="detail-row">
+                            <div class="detail-label">Dispatcher:</div>
+                            <div class="detail-value" id="eventModalDispatcher"></div>
                         </div>
                     </div>
                     
-                    <div>
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Container Size</div>
-                            <div class="event-detail-value" id="eventModalSize"></div>
+                    <!-- Client & Destination -->
+                    <div class="event-detail-section">
+                        <h4><i class="fas fa-map-marker-alt"></i> Client & Destination</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Client:</div>
+                            <div class="detail-value" id="eventModalClient"></div>
                         </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">FCL Status</div>
-                            <div class="event-detail-value" id="eventModalFCL"></div>
+                        <div class="detail-row">
+                            <div class="detail-label">Destination:</div>
+                            <div class="detail-value" id="eventModalDestination"></div>
                         </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Cash Advance</div>
-                            <div class="event-detail-value" id="eventModalCashAdvance"></div>
+                        <div class="detail-row">
+                            <div class="detail-label">Shipping Line:</div>
+                            <div class="detail-value" id="eventModalShippingLine"></div>
                         </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Additional Cash Advance</div>
-                            <div class="event-detail-value" id="eventModalAdditionalCashAdvance"></div>
+                        <div class="detail-row">
+                            <div class="detail-label">Consignee:</div>
+                            <div class="detail-value" id="eventModalConsignee"></div>
                         </div>
-                        
-                        <div class="event-detail-group">
-                            <div class="event-detail-label">Diesel</div>
-                            <div class="event-detail-value" id="eventModalDiesel"></div>
+                    </div>
+                    
+                    <!-- Financial Information -->
+                    <div class="event-detail-section">
+                        <h4><i class="fas fa-dollar-sign"></i> Financial Information</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Cash Advance:</div>
+                            <div class="detail-value" id="eventModalCashAdvance"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Additional Cash:</div>
+                            <div class="detail-value" id="eventModalAdditionalCashAdvance"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Diesel:</div>
+                            <div class="detail-value" id="eventModalDiesel"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">FCL Status:</div>
+                            <div class="detail-value" id="eventModalFCL"></div>
                         </div>
                     </div>
                 </div>
+            </div>
                 
                <div class="event-modal-actions">
-    <button class="icon-btn edit" id="eventModalEditBtn" data-tooltip="Edit Trip">
+    <button class="icon-btn edit" id="eventModalEditBtn" data-tooltip="Edit Trip" > 
         <i class="fas fa-edit"></i>
     </button>
     <button class="icon-btn delete" id="eventModalDeleteBtn" data-tooltip="Delete Trip">
@@ -828,7 +825,7 @@ if ($result->num_rows > 0) {
             <th>Container Size</th>
             <th>FCL</th>
             <th>Cash Advance</th>
-            <th>Additional CA</th>
+            <th>Additional Cash</th>
             <th>Diesel</th>
             <th>Status</th>
             <th>Last Modified</th>
@@ -861,12 +858,30 @@ if ($result->num_rows > 0) {
 
 
     <script>
-
-         function formatDateTime(datetimeString) {
-        if (!datetimeString) return 'N/A';
-        const date = new Date(datetimeString);
-        return date.toLocaleString(); 
-    }
+function formatDateTime(datetimeString) {
+    if (!datetimeString) return 'N/A';
+    
+    const date = new Date(datetimeString);
+    
+    // Format month as abbreviated word
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    
+    // Format day
+    const day = date.getDate();
+    
+    // Format year
+    const year = date.getFullYear();
+    
+    // Format time in 12-hour format with AM/PM
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // Convert 0 to 12
+    
+  return `<span class="date">${month} ${day}, ${year}</span><br> <span class="time">${hours}:${minutes} ${ampm}</span>`;
+}
  let currentPage = 1;
 let rowsPerPage = 5; 
 let totalPages = 1;
@@ -1056,8 +1071,8 @@ const row = `
                 <td>₱${parseFloat(trip.additional_cash_advance || 0).toFixed(2)}</td>
                 <td>₱${parseFloat(trip.diesel || 0).toFixed(2)}</td>
                 ${statusCell}
-                <td>${formatDateTime(trip.last_modified_at || trip.created_at)} <!-- Updated this line -->
-                    ${trip.last_modified_by ? `<br><small>Modified by: ${trip.last_modified_by}</small>` : ''}
+                <td>${formatDateTime(trip.last_modified_at || trip.created_at)} 
+                    ${trip.last_modified_by ? `<br> <strong>${trip.last_modified_by} </strong></small>` : ''}
                 </td>
                 ${actionCell}
             </tr>
