@@ -1266,24 +1266,50 @@ $(document).on('click', '.icon-btn.edit', function() {
                         unavailableTruckIds.includes(driver.assigned_truck_id.toString())
                     );
                     
-                    if (unavailableDrivers.length > 0) {
-                        driverOptions += '<optgroup label="Unavailable Drivers">';
-                        unavailableDrivers.forEach(function(driver) {
-                            var status = truckResponse.trucks.find(t => 
-                                t.truck_id.toString() === driver.assigned_truck_id.toString()
-                            ).display_status;
-                            
-                            driverOptions += `
-                                <option 
-                                    disabled
-                                    title="Assigned truck is ${status === 'Deleted' ? 'deleted' : status.toLowerCase()}"
-                                >
-                                    ${driver.name} (Unavailable - Truck ${status})
-                                </option>
-                            `;
-                        });
-                        driverOptions += '</optgroup>';
-                    }
+                   if (unavailableDrivers.length > 0) {
+    driverOptions += '<optgroup label="Unavailable Drivers">';
+    unavailableDrivers.forEach(function(driver) {
+        // Check if driver has an assigned truck that's not deleted
+        if (driver.assigned_truck_id) {
+            var truck = truckResponse.trucks.find(t => 
+                t.truck_id.toString() === driver.assigned_truck_id.toString()
+            );
+            
+            // If truck is deleted or doesn't exist, show "No assigned trucks"
+            if (!truck || truck.is_deleted == 1) {
+                driverOptions += `
+                    <option 
+                        disabled
+                        title="No assigned truck"
+                    >
+                        ${driver.name} (Unavailable - No assigned truck)
+                    </option>
+                `;
+            } else {
+                // Truck exists but is in repair or overdue
+                driverOptions += `
+                    <option 
+                        disabled
+                        title="Assigned truck is ${truck.display_status.toLowerCase()}"
+                    >
+                        ${driver.name} (Unavailable - Truck ${truck.display_status})
+                    </option>
+                `;
+            }
+        } else {
+            // Driver has no assigned truck
+            driverOptions += `
+                <option 
+                    disabled
+                    title="No assigned truck"
+                >
+                    ${driver.name} (Unavailable - No assigned truck)
+                </option>
+            `;
+        }
+    });
+    driverOptions += '</optgroup>';
+}
                     
                     $('#editEventDriver').html(driverOptions);
                     $('#addEventDriver').html(driverOptions);

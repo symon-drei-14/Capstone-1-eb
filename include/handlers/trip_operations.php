@@ -26,8 +26,10 @@ function getOrCreateClientId($conn, $clientName) {
 }
 
 function checkDriverAvailability($conn, $driverId, $tripDate, $excludeTripId = null) {
-    $query = "SELECT COUNT(*) as count FROM trips t
+    $query = "SELECT t.trip_date, dest.name as destination, t.status 
+              FROM trips t
               JOIN drivers_table d ON t.driver_id = d.driver_id
+              LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
               WHERE t.driver_id = ? 
               AND t.status IN ('Pending', 'En Route')
               AND DATE(t.trip_date) BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)";
@@ -45,9 +47,31 @@ function checkDriverAvailability($conn, $driverId, $tripDate, $excludeTripId = n
     }
     
     $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+    $result = $stmt->get_result();
     
-    return $result['count'] > 0;
+    $conflictingTrips = [];
+    while ($row = $result->fetch_assoc()) {
+        $conflictingTrips[] = $row;
+    }
+    
+    return $conflictingTrips;
+}
+
+function validateTripDate($tripDate) {
+    $today = new DateTime();
+    $tripDateTime = new DateTime($tripDate);
+    $interval = $today->diff($tripDateTime);
+    
+    // Check if trip date is at least 3 days from today
+    if ($interval->days < 3 && $tripDateTime > $today) {
+        $earliestDate = (new DateTime())->modify('+3 days')->format('Y-m-d');
+        return [
+            'valid' => false,
+            'message' => "Trips must be scheduled at least 3 days in advance. The earliest available date is $earliestDate."
+        ];
+    }
+    
+    return ['valid' => true];
 }
 
 function insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance = 0, $diesel = 0) {
@@ -236,27 +260,43 @@ try {
         case 'add':
             $conn->begin_transaction();
             
-           try {
-        // Check for maintenance conflicts first
-        $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
-        
-        if (!$truckId) {
-            throw new Exception("Truck with plate number {$data['plateNo']} not found");
-        }
-        
-        // Check if the trip date conflicts with maintenance
-        $maintenanceCheck = checkMaintenanceConflict($conn, $truckId, $data['date']);
-        
-        if ($maintenanceCheck['hasConflict']) {
-            throw new Exception("Cannot schedule trip: Truck has maintenance scheduled on " . 
-                               $maintenanceCheck['maintenanceDate'] . ". " .
-                               "Trips cannot be scheduled within one week of maintenance.");
-        }
+            try {
+                // Validate trip date is at least 3 days in advance
+                $dateValidation = validateTripDate($data['date']);
+                if (!$dateValidation['valid']) {
+                    throw new Exception($dateValidation['message']);
+                }
+                
+                // Check for maintenance conflicts first
+                $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
+                
+                if (!$truckId) {
+                    throw new Exception("Truck with plate number {$data['plateNo']} not found");
+                }
+                
+                // Check if the trip date conflicts with maintenance
+                $maintenanceCheck = checkMaintenanceConflict($conn, $truckId, $data['date']);
+                
+                if ($maintenanceCheck['hasConflict']) {
+                    throw new Exception("Cannot schedule trip: Truck has maintenance scheduled on " . 
+                                       $maintenanceCheck['maintenanceDate'] . ". " .
+                                       "Trips cannot be scheduled within one week of maintenance.");
+                }
 
-        $driverId = getDriverIdByName($conn, $data['driver']);
-        if (checkDriverAvailability($conn, $driverId, $data['date'])) {
-            throw new Exception("Driver {$data['driver']} is not available for the selected date (has trips within 3 days).");
-        }
+                $driverId = getDriverIdByName($conn, $data['driver']);
+                $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date']);
+                
+                if (!empty($conflictingTrips)) {
+                    $conflictDetails = "";
+                    foreach ($conflictingTrips as $trip) {
+                        $tripDate = date('M j, Y', strtotime($trip['trip_date']));
+                        $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
+                    }
+                    
+                    throw new Exception("Driver {$data['driver']} has conflicting trips within 3 days of the selected date:\n\n" . 
+                                       $conflictDetails . "\nPlease choose a different date or driver.");
+                }
+                
                 $clientId = getOrCreateClientId($conn, $data['client']);
                 $helperId = getHelperId($conn, $data['helper']);
                 $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
@@ -271,19 +311,22 @@ try {
                 if (!$driverId) {
                     throw new Exception("Driver {$data['driver']} not found");
                 }
+                
                 $portId = getOrCreatePortId($conn, $data['port']);
-               $stmt = $conn->prepare("INSERT INTO trips 
-    (truck_id, driver_id, helper_id, dispatcher_id, client_id, port_id,
-    destination_id, shipping_line_id, consignee_id, container_no, 
-    trip_date, status, fcl_status) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("iiiiiiiisssss",
+                
+                $stmt = $conn->prepare("INSERT INTO trips 
+                    (truck_id, driver_id, helper_id, dispatcher_id, client_id, port_id,
+                    destination_id, shipping_line_id, consignee_id, container_no, 
+                    trip_date, status, fcl_status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                
+                $stmt->bind_param("iiiiiiiisssss",
                     $truckId,
                     $driverId,
                     $helperId,
                     $dispatcherId,
                     $clientId,
-                     $portId,
+                    $portId,
                     $destinationId,
                     $shippingLineId,
                     $consigneeId,
@@ -330,10 +373,18 @@ $stmt->bind_param("iiiiiiiisssss",
             }
             break;
 
-        case 'edit':
+       case 'edit':
             $conn->begin_transaction();
             
             try {
+                // Validate trip date is at least 3 days in advance for new dates
+                if (isset($data['date'])) {
+                    $dateValidation = validateTripDate($data['date']);
+                    if (!$dateValidation['valid']) {
+                        throw new Exception($dateValidation['message']);
+                    }
+                }
+                
                 $getCurrent = $conn->prepare("SELECT status, truck_id FROM trips WHERE trip_id = ?");
                 $getCurrent->bind_param("i", $data['id']);
                 $getCurrent->execute();
@@ -343,10 +394,19 @@ $stmt->bind_param("iiiiiiiisssss",
                     throw new Exception("Trip not found");
                 }
 
-                   $driverId = getDriverIdByName($conn, $data['driver']);
-        if (checkDriverAvailability($conn, $driverId, $data['date'], $data['id'])) {
-            throw new Exception("Driver {$data['driver']} is not available for the selected date (has trips within 3 days).");
-        }
+                $driverId = getDriverIdByName($conn, $data['driver']);
+                $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date'], $data['id']);
+                
+                if (!empty($conflictingTrips)) {
+                    $conflictDetails = "";
+                    foreach ($conflictingTrips as $trip) {
+                        $tripDate = date('M j, Y', strtotime($trip['trip_date']));
+                        $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
+                    }
+                    
+                    throw new Exception("Driver {$data['driver']} has conflicting trips within 3 days of the selected date:\n\n" . 
+                                       $conflictDetails . "\nPlease choose a different date or driver.");
+                }
                 
                 $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
                 $clientId = getOrCreateClientId($conn, $data['client']);
@@ -357,43 +417,52 @@ $stmt->bind_param("iiiiiiiisssss",
                 $consigneeId = getConsigneeId($conn, $data['consignee']);
                 $driverId = getDriverIdByName($conn, $data['driver']);
 
-            $portId = getOrCreatePortId($conn, $data['port']);
+                $portId = getOrCreatePortId($conn, $data['port']);
 
-$stmt = $conn->prepare("UPDATE trips SET 
-    truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, port_id=?,
-    destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
-    trip_date=?, status=?, fcl_status=?  
-    WHERE trip_id=?");
-$stmt->bind_param("iiiiiiiisssssi",
-            $truckId,
-            $driverId, 
-            $helperId,
-            $dispatcherId,
-            $clientId,
-             $portId,
-            $destinationId,
-            $shippingLineId,
-            $consigneeId,
-            $data['containerNo'],
-            $data['date'],
-            $data['status'],
-            $data['fclStatus'],  // Make sure this is included
-            $data['id']
-        );
-        $stmt->execute();
+                $stmt = $conn->prepare("UPDATE trips SET 
+                    truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, port_id=?,
+                    destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
+                    trip_date=?, status=?, fcl_status=?  
+                    WHERE trip_id=?");
+                
+                $stmt->bind_param("iiiiiiiisssssi",
+                    $truckId,
+                    $driverId, 
+                    $helperId,
+                    $dispatcherId,
+                    $clientId,
+                    $portId,
+                    $destinationId,
+                    $shippingLineId,
+                    $consigneeId,
+                    $data['containerNo'],
+                    $data['date'],
+                    $data['status'],
+                    $data['fclStatus'],
+                    $data['id']
+                );
+                
+                if (!$stmt->execute()) {
+                    throw new Exception("Failed to update trip: " . $stmt->error);
+                }
                 
                 // Update trip expenses with all three fields
                 $cashAdvance = floatval($data['cashAdvance'] ?? 0);
                 $additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
                 $diesel = floatval($data['diesel'] ?? 0);
                 
-                updateTripExpenses($conn, $data['id'], $cashAdvance, $additionalCashAdvance, $diesel);
+                if (!updateTripExpenses($conn, $data['id'], $cashAdvance, $additionalCashAdvance, $diesel)) {
+                    throw new Exception("Failed to update trip expenses");
+                }
                 
                 // Update audit log
                 $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
                 $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
                 $auditStmt->bind_param("ssi", $currentUser, $editReasons, $data['id']);
-                $auditStmt->execute();
+                
+                if (!$auditStmt->execute()) {
+                    throw new Exception("Failed to update audit log: " . $auditStmt->error);
+                }
                 
                 // Update truck status logic
                 if ($current['status'] !== $data['status']) {
@@ -404,7 +473,10 @@ $stmt->bind_param("iiiiiiiisssssi",
                     
                     $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
                     $updateTruck->bind_param("si", $newTruckStatus, $truckId);
-                    $updateTruck->execute();
+                    
+                    if (!$updateTruck->execute()) {
+                        throw new Exception("Failed to update truck status: " . $updateTruck->error);
+                    }
                 }
                 
                 $conn->commit();
