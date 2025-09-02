@@ -42,7 +42,7 @@ try {
         $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, password, assigned_truck_id, driver_pic, created_at) 
                                VALUES (?, ?, ?, ?, ?, NOW())");
         
-        $assignedTruck = !empty($data['assignedTruck']) ? $data['assignedTruck'] : null;
+        $assignedTruck = !empty($data['assigned_truck_id']) ? $data['assigned_truck_id'] : null;
         $password = !empty($data['password']) ? password_hash($data['password'], PASSWORD_DEFAULT) : null;
         
         $stmt->bind_param("sssss", $data['name'], $data['email'], $password, $assignedTruck, $driverPic);
@@ -78,9 +78,10 @@ try {
             $types .= "s";
         }
         
-        if (isset($data['assignedTruck'])) {
+        // FIXED: Changed from 'assignedTruck' to 'assigned_truck_id' to match the form data
+        if (isset($data['assigned_truck_id'])) {
             $updateFields[] = "assigned_truck_id = ?";
-            $params[] = $data['assignedTruck'] ?: null;
+            $params[] = $data['assigned_truck_id'] ?: null;
             $types .= "s";
         }
         
@@ -106,10 +107,8 @@ try {
         $stmt->bind_param($types, ...$params);
         
         if ($stmt->execute()) {
-            // If password was updated, also update Firebase
-            if (!empty($data['password'])) {
-                updateFirebaseDriver($data['driverId'], $data);
-            }
+            // Always update Firebase when any field is updated
+            updateFirebaseDriver($data['driverId'], $data);
             echo json_encode(["success" => true, "message" => "Driver updated successfully"]);
         } else {
             echo json_encode(["success" => false, "message" => "Error updating driver: " . $stmt->error]);
@@ -147,8 +146,9 @@ function updateFirebaseDriver($driverId, $data) {
             if (!empty($data['password'])) {
                 $firebase_data['password'] = $data['password']; // Store plain password in Firebase
             }
-            if (isset($data['assignedTruck'])) {
-                $firebase_data['assigned_truck_id'] = $data['assignedTruck'] ? intval($data['assignedTruck']) : null;
+            // FIXED: Changed from 'assignedTruck' to 'assigned_truck_id'
+            if (isset($data['assigned_truck_id'])) {
+                $firebase_data['assigned_truck_id'] = $data['assigned_truck_id'] ? intval($data['assigned_truck_id']) : null;
             }
             
             // Update Firebase

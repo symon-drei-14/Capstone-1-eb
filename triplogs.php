@@ -1278,7 +1278,7 @@ $(document).on('click', '.icon-btn.edit', function() {
                                     disabled
                                     title="Assigned truck is ${status === 'Deleted' ? 'deleted' : status.toLowerCase()}"
                                 >
-                                    ${driver.name} (Unavailable)
+                                    ${driver.name} (Unavailable - Truck ${status})
                                 </option>
                             `;
                         });
