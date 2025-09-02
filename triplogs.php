@@ -42,6 +42,7 @@ $sql = "SELECT
             h.name as helper,
             disp.name as dispatcher,
             c.name as client,
+            p.name as port,  
             dest.name as destination,
             sl.name as shipping_line,
             cons.name as consignee,
@@ -51,14 +52,15 @@ $sql = "SELECT
             COALESCE(te.cash_advance, 0) as cash_advance,
             COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
             COALESCE(te.diesel, 0) as diesel,
-            tr.plate_no,  -- Add this line
-            t.trip_date   -- Add this line
+            tr.plate_no,  
+            t.trip_date   
         FROM trips t
         LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
         LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
         LEFT JOIN helpers h ON t.helper_id = h.helper_id
         LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
         LEFT JOIN clients c ON t.client_id = c.client_id
+        LEFT JOIN ports p ON t.port_id = p.port_id  
         LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
         LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
         LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
@@ -77,13 +79,14 @@ if ($result->num_rows > 0) {
        $eventsData[] = [
     'id' => $row['trip_id'],
     'plateNo' => $row['truck_plate_no'],
-    'date' => $row['trip_date'],  // Add this line
+    'date' => $row['trip_date'],  
     'driver' => $row['driver'],
     'driver_id' => $row['driver_id'],
     'helper' => $row['helper'],
     'dispatcher' => $row['dispatcher'],
     'containerNo' => $row['container_no'],
     'client' => $row['client'],
+    'port' => $row['port'],
     'destination' => $row['destination'],
     'shippingLine' => $row['shipping_line'],
     'consignee' => $row['consignee'],
@@ -338,6 +341,12 @@ if ($result->num_rows > 0) {
                             <div class="detail-label">Client:</div>
                             <div class="detail-value" id="eventModalClient"></div>
                         </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Port:</div>
+                         <div class="detail-value" id="eventModalPort"></div>
+                    </div>
+
+
                         <div class="detail-row">
                             <div class="detail-label">Destination:</div>
                             <div class="detail-value" id="eventModalDestination"></div>
@@ -452,6 +461,12 @@ if ($result->num_rows > 0) {
                 <select id="editEventClient" name="eventClient" required style="width: 100%;">
                     <option value="">Select Client</option>
                 </select>
+
+
+                <label for="editEventPort">Port:</label>
+<select id="editEventPort" name="eventPort" required style="width: 100%;">
+    <option value="">Select Port</option>
+</select>
 
                 <label for="editEventDestination">Destination:</label>
                 <select id="editEventDestination" name="eventDestination" required style="width: 100%;">
@@ -665,6 +680,14 @@ if ($result->num_rows > 0) {
                     <option value="Hapag-Lloyd">Hapag-Lloyd</option>
                     <option value="Evergreen">Evergreen</option>
                 </select>
+
+
+<label for="addEventPort">Port:</label>
+<select id="addEventPort" name="eventPort" required style="width: 100%;">
+    <option value="">Select Port</option>
+</select>
+
+
                 <label for="addEventDestination">Destination:</label>
                 <select id="addEventDestination" name="eventDestination" required style="width: 100%;">
                     <option value="">Select Destination</option>
@@ -818,7 +841,7 @@ if ($result->num_rows > 0) {
             <th>Helper</th>
             <th>Dispatcher</th>
             <th>Container No.</th>
-            <th>Client</th>
+         <th>Client - Port</th>
             <th>Destination</th>
             <th>Shipping Line</th>
             <th>Consignee</th>
@@ -1061,7 +1084,7 @@ const row = `
                 <td>${trip.helper || 'N/A'}</td>
                 <td>${trip.dispatcher || 'N/A'}</td>
                 <td>${trip.container_no || 'N/A'}</td>
-                <td>${trip.client || 'N/A'}</td>
+               <td>${trip.client || 'N/A'}${trip.port ? ' - ' + trip.port : ''}</td>
                 <td>${trip.destination || 'N/A'}</td>
                 <td>${trip.shipping_line || 'N/A'}</td>
                 <td>${trip.consignee || 'N/A'}</td>
@@ -1141,6 +1164,7 @@ $(document).ready(function() {
     populateDispatcherDropdowns();
     populateConsigneeDropdowns();
     populateClientDropdowns();
+    populatePortDropdowns();
     populateDestinationDropdowns();
     populateShippingLineDropdowns();
 
@@ -1152,6 +1176,7 @@ $('#addScheduleBtnTable').on('click', function() {
     populateHelperDropdowns();        
     populateDispatcherDropdowns();
     populateConsigneeDropdowns();
+    populatePortDropdowns();
     populateClientDropdowns();
     populateDestinationDropdowns();
     populateShippingLineDropdowns();
@@ -1164,6 +1189,7 @@ $(document).on('click', '.icon-btn.edit', function() {
     populateDispatcherDropdowns();
     populateConsigneeDropdowns();
     populateClientDropdowns();
+     populatePortDropdowns();
     populateDestinationDropdowns();
     populateShippingLineDropdowns();
 
@@ -1172,6 +1198,7 @@ $(document).on('click', '.icon-btn.edit', function() {
         $('#editEventDispatcher').val(event.dispatcher || '');
         $('#editEventConsignee').val(event.consignee);
         $('#editEventClient').val(event.client);
+         $('#editEventPort').val(event.port || '');
         $('#editEventDestination').val(event.destination);
         $('#editEventShippingLine').val(event.shipping_line);
     }, 100);
@@ -1400,6 +1427,7 @@ $(document).on('click', '.icon-btn.edit', function() {
             helper: event.helper,
                 dispatcher: event.dispatcher,
             containerNo: event.containerNo,
+             port: event.port,
             client: event.client,
             destination: event.destination,
             shippingLine: event.shippingLine,
@@ -1590,6 +1618,7 @@ function resetAddScheduleForm() {
         $('#eventModalPlateNo').text(event.plateNo || 'N/A');
         $('#eventModalDriver').text(event.driver || 'N/A');
         $('#eventModalHelper').text(event.helper || 'N/A');
+        $('#eventModalPort').text(event.port || 'N/A');
         $('#eventModalDispatcher').text(event.dispatcher || 'N/A');
         $('#eventModalContainerNo').text(event.containerNo || 'N/A');
         $('#eventModalClient').text(event.client || 'N/A');
@@ -1783,27 +1812,25 @@ $(document).on('click', '.icon-btn.edit', function() {
         $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
         
         var eventDate = event.date || event.trip_date;
-
         if (eventDate) {
             if (eventDate.includes('T')) {
                 eventDate = eventDate.substring(0, 16); 
             }
         }
         $('#editEventDate').val(eventDate);
- 
 
+        // Populate all dropdowns first
         populateDriverDropdowns(event.size);
-        setTimeout(() => {
-            $('#editEventDriver').val(event.driver);
-        }, 100);
-        
-        $('#editEventHelper').val(event.helper);
-        $('#editEventDispatcher').val(event.dispatcher || '');
+        populateHelperDropdowns();
+        populateDispatcherDropdowns();
+        populateConsigneeDropdowns();
+        populateClientDropdowns();
+        populatePortDropdowns();  // Add this line
+        populateDestinationDropdowns();
+        populateShippingLineDropdowns();
+
+        // Set immediate values (non-dropdown fields)
         $('#editEventContainerNo').val(event.containerNo);
-        $('#editEventClient').val(event.client);
-        $('#editEventDestination').val(event.destination);
-        $('#editEventShippingLine').val(event.shippingLine);
-        $('#editEventConsignee').val(event.consignee);
         $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
         $('#editEventFCL').val(event.fcl_status || event.size);
         $('#editEventCashAdvance').val(event.cashAdvance);
@@ -1811,6 +1838,19 @@ $(document).on('click', '.icon-btn.edit', function() {
         $('#editEventDiesel').val(event.diesel);
         $('#editEventStatus').val(event.status);
 
+        // Set dropdown values after they're populated
+        setTimeout(() => {
+            $('#editEventDriver').val(event.driver);
+            $('#editEventHelper').val(event.helper);
+            $('#editEventDispatcher').val(event.dispatcher || '');
+            $('#editEventConsignee').val(event.consignee);
+            $('#editEventClient').val(event.client);
+            $('#editEventPort').val(event.port || '');  // Move this here
+            $('#editEventDestination').val(event.destination);
+            $('#editEventShippingLine').val(event.shippingLine);
+        }, 100);
+
+        // Show/hide buttons based on status
         if (event.status === 'Completed') {
             $('#viewExpensesBtn').show();
         } else {
@@ -1903,6 +1943,7 @@ $('#addScheduleForm').on('submit', function(e) {
             driver: selectedDriver,
             helper: $('#addEventHelper').val(),
             dispatcher: $('#addEventDispatcher').val(),
+            port: $('#addEventPort').val(),
             containerNo: $('#addEventContainerNo').val(),
             client: $('#addEventClient').val(),
             destination: $('#addEventDestination').val(),
@@ -2120,6 +2161,7 @@ $('#editForm').on('submit', function(e) {
                 dispatcher: $('#editEventDispatcher').val(),
                 containerNo: $('#editEventContainerNo').val(),
                 client: $('#editEventClient').val(),
+                port: $('#editEventPort').val(),
                 destination: $('#editEventDestination').val(),
                 shippingLine: $('#editEventShippingLine').val(),
                 consignee: $('#editEventConsignee').val(),
@@ -2229,6 +2271,27 @@ $('#editForm').on('submit', function(e) {
         }
     });
 
+  function populatePortDropdowns() {
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ action: 'get_ports' }),
+        success: function(response) {
+            if (response.success && response.ports) {
+                var options = '<option value="">Select Port</option>';
+                response.ports.forEach(function(port) {
+                    options += `<option value="${port.name}">${port.name}</option>`;
+                });
+                $('#editEventPort, #addEventPort').html(options);
+            }
+        },
+        error: function() {
+            console.error('Error fetching ports');
+        }
+    });
+}
+
     function searchTrips() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         const table = document.getElementById('eventsTable');
@@ -2337,7 +2400,7 @@ $(document).on('click', '.icon-btn.full-delete', function(e) {
                                 <td>${trip.helper || 'N/A'}</td>
                                 <td>${trip.dispatcher || 'N/A'}</td>
                                 <td>${trip.container_no || 'N/A'}</td>
-                                <td>${trip.client || 'N/A'}</td>
+                               <td>${trip.client || 'N/A'}${trip.port ? ' - ' + trip.port : ''}</td>
                                 <td>${trip.destination || 'N/A'}</td>
                                 <td>${trip.shippine_line || 'N/A'}</td>
                                 <td>${trip.consignee || 'N/A'}</td>

@@ -25,7 +25,30 @@ function getOrCreateClientId($conn, $clientName) {
     }
 }
 
-
+function checkDriverAvailability($conn, $driverId, $tripDate, $excludeTripId = null) {
+    $query = "SELECT COUNT(*) as count FROM trips t
+              JOIN drivers_table d ON t.driver_id = d.driver_id
+              WHERE t.driver_id = ? 
+              AND t.status IN ('Pending', 'En Route')
+              AND DATE(t.trip_date) BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)";
+    
+    if ($excludeTripId) {
+        $query .= " AND t.trip_id != ?";
+    }
+    
+    $stmt = $conn->prepare($query);
+    
+    if ($excludeTripId) {
+        $stmt->bind_param("issi", $driverId, $tripDate, $tripDate, $excludeTripId);
+    } else {
+        $stmt->bind_param("iss", $driverId, $tripDate, $tripDate);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    
+    return $result['count'] > 0;
+}
 
 function insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance = 0, $diesel = 0) {
     $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance, additional_cash_advance, diesel) VALUES (?, ?, ?, ?)");
@@ -148,6 +171,24 @@ function getDriverIdByName($conn, $driverName) {
     return null;
 }
 
+function getOrCreatePortId($conn, $portName) {
+    if (empty($portName)) return null;
+    
+    $stmt = $conn->prepare("SELECT port_id FROM ports WHERE name = ?");
+    $stmt->bind_param("s", $portName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['port_id'];
+    } else {
+        $insertStmt = $conn->prepare("INSERT INTO ports (name) VALUES (?)");
+        $insertStmt->bind_param("s", $portName);
+        $insertStmt->execute();
+        return $conn->insert_id;
+    }
+}
+
 function checkMaintenanceConflict($conn, $truckId, $tripDate) {
     $stmt = $conn->prepare("
    SELECT m.date_mtnce, m.remarks, mt.type_name 
@@ -211,6 +252,11 @@ try {
                                $maintenanceCheck['maintenanceDate'] . ". " .
                                "Trips cannot be scheduled within one week of maintenance.");
         }
+
+        $driverId = getDriverIdByName($conn, $data['driver']);
+        if (checkDriverAvailability($conn, $driverId, $data['date'])) {
+            throw new Exception("Driver {$data['driver']} is not available for the selected date (has trips within 3 days).");
+        }
                 $clientId = getOrCreateClientId($conn, $data['client']);
                 $helperId = getHelperId($conn, $data['helper']);
                 $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
@@ -225,18 +271,19 @@ try {
                 if (!$driverId) {
                     throw new Exception("Driver {$data['driver']} not found");
                 }
-                
-                $stmt = $conn->prepare("INSERT INTO trips 
-                    (truck_id, driver_id, helper_id, dispatcher_id, client_id, 
-                    destination_id, shipping_line_id, consignee_id, container_no, 
-                    trip_date, status, fcl_status) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("iiiiiiiissss",
+                $portId = getOrCreatePortId($conn, $data['port']);
+               $stmt = $conn->prepare("INSERT INTO trips 
+    (truck_id, driver_id, helper_id, dispatcher_id, client_id, port_id,
+    destination_id, shipping_line_id, consignee_id, container_no, 
+    trip_date, status, fcl_status) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("iiiiiiiisssss",
                     $truckId,
                     $driverId,
                     $helperId,
                     $dispatcherId,
                     $clientId,
+                     $portId,
                     $destinationId,
                     $shippingLineId,
                     $consigneeId,
@@ -295,6 +342,11 @@ try {
                 if (!$current) {
                     throw new Exception("Trip not found");
                 }
+
+                   $driverId = getDriverIdByName($conn, $data['driver']);
+        if (checkDriverAvailability($conn, $driverId, $data['date'], $data['id'])) {
+            throw new Exception("Driver {$data['driver']} is not available for the selected date (has trips within 3 days).");
+        }
                 
                 $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
                 $clientId = getOrCreateClientId($conn, $data['client']);
@@ -305,17 +357,20 @@ try {
                 $consigneeId = getConsigneeId($conn, $data['consignee']);
                 $driverId = getDriverIdByName($conn, $data['driver']);
 
-                $stmt = $conn->prepare("UPDATE trips SET 
-            truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, 
-            destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
-            trip_date=?, status=?, fcl_status=?  
-            WHERE trip_id=?");
-        $stmt->bind_param("iiiiiiiissssi",
+            $portId = getOrCreatePortId($conn, $data['port']);
+
+$stmt = $conn->prepare("UPDATE trips SET 
+    truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, port_id=?,
+    destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
+    trip_date=?, status=?, fcl_status=?  
+    WHERE trip_id=?");
+$stmt->bind_param("iiiiiiiisssssi",
             $truckId,
             $driverId, 
             $helperId,
             $dispatcherId,
             $clientId,
+             $portId,
             $destinationId,
             $shippingLineId,
             $consigneeId,
@@ -404,43 +459,45 @@ try {
             $perPage = $data['perPage'] ?? 10;
             
             $query = "SELECT 
-                        t.trip_id,
-                        t.container_no,
-                        t.trip_date,
-                        t.status,
-                        t.fcl_status,
-                        t.created_at,
-                        tr.plate_no, 
-                        tr.capacity as truck_capacity,
-                        d.name as driver,
-                        d.driver_id,
-                        h.name as helper,
-                        disp.name as dispatcher,
-                        c.name as client,
-                        dest.name as destination,
-                        sl.name as shipping_line,
-                        cons.name as consignee,
-                        al.modified_by as last_modified_by,
-                        al.modified_at as last_modified_at,
-                        al.edit_reason,
-                        COALESCE(te.cash_advance, 0) as cash_advance,
-                        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-                        COALESCE(te.diesel, 0) as diesel
-                      FROM trips t
-                      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-                      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-                      LEFT JOIN helpers h ON t.helper_id = h.helper_id
-                      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-                      LEFT JOIN clients c ON t.client_id = c.client_id
-                      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-                      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-                      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-                      LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
-                      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-                      WHERE NOT EXISTS (
-                          SELECT 1 FROM audit_logs_trips al2 
-                          WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
-                      )";
+            t.trip_id,
+            t.container_no,
+            t.trip_date,
+            t.status,
+            t.fcl_status,
+            t.created_at,
+            tr.plate_no, 
+            tr.capacity as truck_capacity,
+            d.name as driver,
+            d.driver_id,
+            h.name as helper,
+            disp.name as dispatcher,
+            c.name as client,
+            p.name as port,  
+            dest.name as destination,
+            sl.name as shipping_line,
+            cons.name as consignee,
+            al.modified_by as last_modified_by,
+            al.modified_at as last_modified_at,
+            al.edit_reason,
+            COALESCE(te.cash_advance, 0) as cash_advance,
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+            COALESCE(te.diesel, 0) as diesel
+          FROM trips t
+          LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+          LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+          LEFT JOIN helpers h ON t.helper_id = h.helper_id
+          LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+          LEFT JOIN clients c ON t.client_id = c.client_id
+          LEFT JOIN ports p ON t.port_id = p.port_id  
+          LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+          LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+          LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+          LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
+          LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+          WHERE NOT EXISTS (
+              SELECT 1 FROM audit_logs_trips al2 
+              WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+          )";
             
             if ($statusFilter !== 'all') {
                 $query .= " AND t.status = ?";
@@ -500,43 +557,45 @@ try {
             $perPage = $data['perPage'] ?? 10;
             
             $query = "SELECT 
-                        t.trip_id,
-                        t.container_no,
-                        t.trip_date,
-                        t.status,
-                        t.fcl_status,
-                        t.created_at,
-                        tr.plate_no, 
-                        tr.capacity as truck_capacity,
-                        d.name as driver,
-                        h.name as helper,
-                        disp.name as dispatcher,
-                        c.name as client,
-                        dest.name as destination,
-                        sl.name as shipping_line,
-                        cons.name as consignee,
-                        al.modified_by as last_modified_by,
-                        al.modified_at as last_modified_at,
-                        al.delete_reason,
-                        1 as is_deleted,
-                        COALESCE(te.cash_advance, 0) as cash_advance,
-                        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-                        COALESCE(te.diesel, 0) as diesel
-                      FROM trips t
-                      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-                      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-                      LEFT JOIN helpers h ON t.helper_id = h.helper_id
-                      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-                      LEFT JOIN clients c ON t.client_id = c.client_id
-                      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-                      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-                      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-                      LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 1
-                      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-                      WHERE EXISTS (
-                          SELECT 1 FROM audit_logs_trips al2 
-                          WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
-                      )";
+            t.trip_id,
+            t.container_no,
+            t.trip_date,
+            t.status,
+            t.fcl_status,
+            t.created_at,
+            tr.plate_no, 
+            tr.capacity as truck_capacity,
+            d.name as driver,
+            h.name as helper,
+            disp.name as dispatcher,
+            c.name as client,
+            p.name as port,  
+            dest.name as destination,
+            sl.name as shipping_line,
+            cons.name as consignee,
+            al.modified_by as last_modified_by,
+            al.modified_at as last_modified_at,
+            al.delete_reason,
+            1 as is_deleted,
+            COALESCE(te.cash_advance, 0) as cash_advance,
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+            COALESCE(te.diesel, 0) as diesel
+          FROM trips t
+          LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+          LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+          LEFT JOIN helpers h ON t.helper_id = h.helper_id
+          LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+          LEFT JOIN clients c ON t.client_id = c.client_id
+          LEFT JOIN ports p ON t.port_id = p.port_id  
+          LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+          LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+          LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+          LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 1
+          LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+          WHERE EXISTS (
+              SELECT 1 FROM audit_logs_trips al2 
+              WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+          )";
             
             if ($statusFilter !== 'all') {
                 $query .= " AND t.status = ?";
@@ -674,6 +733,20 @@ try {
                 throw $e;
             }
             break;
+
+            case 'get_ports':
+    $stmt = $conn->prepare("SELECT port_id, name FROM ports ORDER BY name");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $ports = [];
+    while ($row = $result->fetch_assoc()) {
+        $ports[] = $row;
+    }
+    
+    echo json_encode(['success' => true, 'ports' => $ports]);
+    break;
+
 
         case 'get_expenses':
             $tripId = $data['tripId'] ?? 0;
