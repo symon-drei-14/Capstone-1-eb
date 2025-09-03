@@ -19,11 +19,7 @@
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
     </head>
-<style>
-    .swal2-container {
-  z-index: 999999 !important;
-}   
-    </style>
+
     <body>
 
    <header class="header">
@@ -177,8 +173,7 @@
     </div>
 </div>
     <br/>
-    <br/>
-                    <div class="table-container">
+                        <div class="table-container">
                         <table id="maintenanceTable">
                             <thead>
                                 <tr>
@@ -848,27 +843,41 @@ function renderTable(data) {
         
         const actionsCell = row.isDeleted 
             ? `
-                <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreMaintenance(${row.maintenanceId})">
-                   <i class="fas fa-trash-restore"></i>
+             <div class="dropdown">
+                        <button class="dropdown-btn" data-tooltip="Actions">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="dropdown-content">
+                <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreMaintenance(${row.maintenanceId})">
+                   <i class="fas fa-trash-restore"></i> Restore
                 </button>
-                ${window.userRole === 'Full Admin' ? 
-                `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenanceId})">
-                    <i class="fa-solid fa-ban"></i>
+             
+                <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
+                    <i class="fas fa-history"></i> History
+                </button>
+                   ${window.userRole === 'Full Admin' ? 
+                `<button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenanceId})">
+                    <i class="fa-solid fa-ban"></i> Full Delete
                 </button>` : ''}
-                <button class="icon-btn history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
-                    <i class="fas fa-history"></i>
+            
+            </div>
+            </div>    `
+        : `  <div class="dropdown">
+                <button class="dropdown-btn" data-tooltip="Actions">
+                    <i class="fas fa-ellipsis-v"></i>
                 </button>
-            `
-            : `
-                <button class="icon-btn edit" data-tooltip="Edit" onclick="openEditModal(${row.maintenanceId}, ${row.truckId}, '${row.licensePlate || ''}', '${row.maintenanceDate}', '${row.remarks || ''}', '${row.status}', ${row.supplierId || 'null'}, ${row.cost || 0}, ${row.maintenanceTypeId || 'null'})">
-                    <i class="fas fa-edit"></i>
+                <div class="dropdown-content">
+                <button class="dropdown-item edit" data-tooltip="Edit" onclick="openEditModal(${row.maintenanceId}, ${row.truckId}, '${row.licensePlate || ''}', '${row.maintenanceDate}', '${row.remarks || ''}', '${row.status}', ${row.supplierId || 'null'}, ${row.cost || 0}, ${row.maintenanceTypeId || 'null'})">
+                    <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenanceId})">
-                    <i class="fas fa-trash-alt"></i>
+                <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
+                    <i class="fas fa-history"></i> History
                 </button>
-                <button class="icon-btn history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
-                    <i class="fas fa-history"></i>
+                <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenanceId})">
+                    <i class="fas fa-trash-alt"></i> Delete
                 </button>
+                </div>
+                </div>
             `;
         
         tr.innerHTML = `
@@ -902,6 +911,18 @@ function renderTable(data) {
         });
     });
 }
+
+
+$(document).on('click', '.dropdown-btn', function(e) {
+    e.stopPropagation();
+    $('.dropdown-content').not($(this).siblings('.dropdown-content')).removeClass('show');
+    $(this).siblings('.dropdown-content').toggleClass('show');
+});
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.dropdown').length) {
+        $('.dropdown-content').removeClass('show');
+    }
+});
 
     // Add this new function for full delete
    function fullDeleteMaintenance(id) {

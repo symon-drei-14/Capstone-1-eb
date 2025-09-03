@@ -14,14 +14,11 @@ checkAccess();
     <link rel="stylesheet" href="include/css/loading.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="include/css/adminmanagement.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </head>
-<style>
 
-
-
-
-    </style>
 
  <h3><i class="fa-solid fa-truck"></i>Admin Management</h3>
 <body>
@@ -295,10 +292,17 @@ function renderAdminsTable(admins, isSearchResult = false) {
 <td class="deleted-only">${highlightText(deletedAt)}</td>
 <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
     <td class="actions">
-        ${admin.is_deleted ? '' : `<button class="icon-btn edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i></button>`}
-        ${admin.is_deleted ? '' : `<button class="icon-btn delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i></button>`}
-        ${admin.is_deleted ? `<button class="icon-btn restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i></button>` : ''}
-        ${admin.is_deleted ? `<button class="icon-btn full-delete" onclick="fullDeleteAdmin(${admin.admin_id})" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i></button>` : ''}
+     <div class="dropdown">
+                        <button class="dropdown-btn" data-tooltip="Actions">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+        <div class="dropdown-content">
+        ${admin.is_deleted ? '' : `<button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i>Edit</button>`}
+        ${admin.is_deleted ? '' : `<button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i>Delete</button>`}
+        ${admin.is_deleted ? `<button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i>Restore</button>` : ''}
+        ${admin.is_deleted ? `<button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i>Full Delete</button>` : ''}
+    </div>
+    </div>
     </td>
 `;
         tableBody.appendChild(row);
@@ -309,6 +313,18 @@ function renderAdminsTable(admins, isSearchResult = false) {
         document.getElementById("admin-page-info").textContent = `Page ${currentAdminPage} of ${totalPages || 1}`;
     }
 }
+
+
+$(document).on('click', '.dropdown-btn', function(e) {
+    e.stopPropagation();
+    $('.dropdown-content').not($(this).siblings('.dropdown-content')).removeClass('show');
+    $(this).siblings('.dropdown-content').toggleClass('show');
+});
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.dropdown').length) {
+        $('.dropdown-content').removeClass('show');
+    }
+}); 
 
 function confirmDeleteAdmin(adminId) {
     const reason = prompt('Please enter the reason for deleting this admin:');
@@ -357,9 +373,18 @@ function confirmDeleteAdmin(adminId) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(adminId ? 'Admin updated successfully!' : 'Admin added successfully!');
-                    closeModal('adminModal');
-                    fetchAdminsPaginated();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Admin has been updated successfully',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    }).then(() => {
+                        $('#editModal').hide();
+                        location.reload();
+                    });
+                
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -773,7 +798,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
 });
-
 
 </script>
 <footer class="site-footer">

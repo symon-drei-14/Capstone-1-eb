@@ -17,7 +17,7 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     </head>
-   
+
     <body>
     <header class="header">
         <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
@@ -92,7 +92,7 @@
                         <input type="text" id="driverSearch" placeholder="Search drivers..." onkeyup="searchDrivers()">
                     </div>
                     <div style="float: right; margin-top: 10px; margin-right: 20px;">
-                        <button class="btn-primary" onclick="openAddDriverModal()">
+                        <button class="addbtn" onclick="openAddDriverModal()">
                             <i class="fas fa-plus"></i> Add New Driver
                         </button>
                     </div>
@@ -284,34 +284,45 @@ function fetchTripCounts() {
         pageData.forEach(function(driver) {
             let formattedLastLogin = formatTime(driver.last_login);
             
-            var row = "<tr>" +
-                "<td>" + 
-                (driver.driver_pic ? 
-                    '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
-                    '<i class="fa-solid fa-circle-user profile-icon"></i>'
-                ) + 
-                "</td>" +
-                "<td>" + driver.driver_id + "</td>" +
-                "<td>" + driver.name + "</td>" +
-                "<td>" + driver.email + "</td>" +
-                "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
-                "<td>" + (driver.total_completed || 0) + "</td>" +
-                "<td>" + (driver.monthly_completed || 0) + "</td>" +
-                "<td>" + driver.created_at + "</td>" +
-                "<td>" + formattedLastLogin + "</td>" +
-                "<td class='actions'><div class='actions-container'>" +
-                "<button class='action-btn edit-btn' data-tooltip='Edit Driver' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
-                "<button class='action-btn delete-btn' data-tooltip='Delete Driver' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
-                "</div></td>" +
-                "</tr>";
-            $('#driverTableBody').append(row);
-        });
-    } else {
-        $('#driverTableBody').append("<tr><td colspan='10'>No drivers found</td></tr>");
+        var row = "<tr>" +
+                    "<td>" + 
+                    (driver.driver_pic ? 
+                        '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
+                        '<i class="fa-solid fa-circle-user profile-icon"></i>'
+                    ) + 
+                    "</td>" +
+                    "<td>" + driver.driver_id + "</td>" +
+                    "<td>" + driver.name + "</td>" +
+                    "<td>" + driver.email + "</td>" +
+                    "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
+                    "<td>" + (driver.total_completed || 0) + "</td>" +
+                    "<td>" + (driver.monthly_completed || 0) + "</td>" +
+                    "<td>" + driver.created_at + "</td>" +
+                    "<td>" + formattedLastLogin + "</td>" +
+                    "<td class='actions'>" +
+                    "<div class='dropdown'>" +
+                    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'>" +
+                    "<i class='fas fa-ellipsis-v'></i>" +
+                    "</button>" +
+                    "<div class='dropdown-content'>" +
+                    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'>" +
+                    "<i class='fas fa-edit'></i> Edit Driver" +
+                    "</button>" +
+                    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>" +
+                    "<i class='fas fa-trash-alt'></i> Delete Driver" +
+                    "</button>" +
+                    "</div>" +
+                    "</div>" +
+                    "</td>" +
+                    "</tr>";
+                $('#driverTableBody').append(row);
+            });
+        } else {
+            $('#driverTableBody').append("<tr><td colspan='10'>No drivers found</td></tr>");
+        }
+        
+        updatePagination();
     }
-    
-    updatePagination();
-}
 
         function formatTime(dateString) {
             if (!dateString || dateString === 'NULL') return 'Never';
@@ -643,12 +654,23 @@ function fetchTripCounts() {
                 "<td>" + highlightText(driver.monthly_completed || 0) + "</td>" +
                 "<td>" + highlightText(driver.created_at) + "</td>" +
                 "<td>" + highlightText(formattedLastLogin) + "</td>" +
-                "<td class='actions'><div class='actions-container'>" +
-                "<button class='action-btn edit-btn' data-tooltip='Edit Driver' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i></button>" +
-                "<button class='action-btn delete-btn' data-tooltip='Delete Driver' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i></button>" +
-                "</div></td>" +
-                "</tr>";
-            $('#driverTableBody').append(row);
+                 "<td class='actions'>" +
+                    "<div class='dropdown'>" +
+                    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'>" +
+                    "<i class='fas fa-ellipsis-v'></i>" +
+                    "</button>" +
+                    "<div class='dropdown-content'>" +
+                    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'>" +
+                    "<i class='fas fa-edit'></i> Edit Driver" +
+                    "</button>" +
+                    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>" +
+                    "<i class='fas fa-trash-alt'></i> Delete Driver" +
+                    "</button>" +
+                    "</div>" +
+                    "</div>" +
+                    "</td>" +
+                    "</tr>";
+                $('#driverTableBody').append(row);
         });
     } else {
         $('#driverTableBody').append("<tr><td colspan='10'>No matching drivers found</td></tr>");
@@ -717,7 +739,54 @@ document.getElementById('driverProfile') && document.getElementById('driverProfi
         }
 
         
-
+   document.addEventListener('DOMContentLoaded', function() {
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown')) {
+                    closeAllDropdowns();
+                }
+            });
+            
+            // Toggle dropdowns when clicking the button
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.dropdown-btn')) {
+                    const dropdown = e.target.closest('.dropdown');
+                    const dropdownContent = dropdown.querySelector('.dropdown-content');
+                    
+                    // Close all other dropdowns
+                    closeAllDropdownsExcept(dropdownContent);
+                    
+                    // Toggle this dropdown
+                    dropdownContent.classList.toggle('show');
+                    e.stopPropagation();
+                }
+            });
+            
+            // Handle dropdown item clicks
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.dropdown-item')) {
+                    // Close the dropdown
+                    const dropdownContent = e.target.closest('.dropdown-content');
+                    if (dropdownContent) {
+                        dropdownContent.classList.remove('show');
+                    }
+                }
+            });
+        });
+        
+        function closeAllDropdowns() {
+            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+        }
+        
+        function closeAllDropdownsExcept(exceptDropdown) {
+            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                if (dropdown !== exceptDropdown) {
+                    dropdown.classList.remove('show');
+                }
+            });
+        }
         
     </script>
 

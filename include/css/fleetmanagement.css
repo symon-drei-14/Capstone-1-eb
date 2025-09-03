@@ -80,23 +80,7 @@ td{
 
 
 
-.actions button {
-    padding: 15px 10px;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    border-radius: 7px;
-    display: block;
-    transition: background-color 0.3s, color 0.3s;
-    width: 100px;
-    white-space: nowrap;
-    margin-bottom: 8px;
-}
 
-.actions button.edit {
-    background-color:#4CAF50;
-    color: rgb(0, 0, 0);
-}
 
 
 .table-container {
@@ -515,97 +499,9 @@ th[onclick]:hover {
 
 
 
-.view-reason {
-    background-color: #17a2b8;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-}
 
-.view-reason:hover {
-       transform: scale(1.7);
-}
 
-.full-delete {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 5px;
-}
 
-.full-delete:hover {
-       transform: scale(1.7);
-}
-
-.actions {
-       flex-direction: row;
-    display: flex;
-    gap: 2px;
-    justify-content: center;
-    align-items: center;
-}
-.actions button {
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 7px;
-    transition: background-color 0.3s, color 0.3s;
-    width: 30px;
-    white-space: nowrap;
-    margin-bottom: 8px;
-    margin:10;
-}
-
-.actions button.edit {
-    background-color:transparent;
-    color: rgba(8, 89, 18, 1);
-}
-
-.actions button.delete {
-    background-color:transparent;
-    color: rgba(189, 13, 31, 1);
-}
-
-.icon-btn {
-    background: none;
-    border: none;
-    padding: 1px;
-    margin: 0;
-    cursor: pointer;
-    font-size: 16px;
-    color: #555;
-    transition: all 0.2s ease;
-}
-
-.icon-btn:hover {
-
-    transform: scale(1.2);
-}
-
-.icon-btn.delete {
-    color: #ff0b0bff;
-}
-
-.icon-btn.restore {
-    color: #28a745;
-}
-
-.icon-btn.full-delete {
-    color: #dc3545;
-}
-
-.icon-btn.view-reason {
-    color: #17a2b8;
-}
-
-.icon-btn.history {
-    color: #17a2b8;
-}
 
     .datetime-container {
         display: inline-flex;
@@ -744,58 +640,6 @@ th[onclick]:hover {
 
 
  
-
-   .icon-btn {
-    position: relative; 
-}
-
-.icon-btn::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 70%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-    z-index: 9999; 
-    pointer-events: none;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    margin-bottom: 5px;
-}
-
-.icon-btn:hover::after {
-    opacity: 1;
-    visibility: visible;
-}
-
-
-.icon-btn::before {
-    content: '';
-    position: absolute;
-    bottom: calc(100% - 5px);
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: #333 transparent transparent transparent;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-    z-index: 9999;
-}
-
-.icon-btn:hover::before {
-    opacity: 1;
-    visibility: visible;
-}
 
 .edit::after {
     background-color: #085912; 
@@ -1309,3 +1153,173 @@ th[onclick]:hover {
     color: #666;
 }
 
+.swal2-container {
+  z-index: 999999 !important;
+}    
+
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    align-items:center;
+    justify-items:center;
+    padding-top:20px;
+}
+
+.dropdown-btn {
+    background: transparent;
+    border: none;
+    margin-top:5px;
+    border-radius: 4px;
+    padding: 1px 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size:20px;
+    color: #dc4848ff;
+}
+
+.dropdown-btn:hover {
+
+    border-color: #adb5bd;
+    color: #943565ff;
+    transform:scale(1.1);
+}
+
+.dropdown-content {
+    
+    display: none;
+    position: absolute;
+    right: 20;
+    top:-10;
+    
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-radius: 6px;
+    overflow: hidden;
+    
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.dropdown-item {
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+    font-size:14px;
+    line-height :1.5;
+    letter-spacing:0.9;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item i {
+    width: 15px;
+    text-align: center;
+}
+.dropdown-item.edit{
+
+     color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.edit:hover {
+    background-color: #3b9358ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.delete{
+    border-top: 1px solid #b2b2b25c;
+     color: #d32f2f;
+}
+
+.dropdown-item.delete:hover {
+    background-color: #d33950ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.view-reasons{
+        color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.view-reasons:hover {
+    background-color: #ff9d004a;
+     color: rgba(156, 96, 6, 1);
+}
+.dropdown-item.restore{
+         color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.restore:hover {
+       background-color: #3b9358ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.full-delete{
+     color: #d32f2f;
+      white-space: nowrap;
+        flex-shrink:2;
+          border-top: 1px solid #b2b2b25c;
+}
+.dropdown-item.full-delete:hover {
+    background-color: #d33950ff;
+    color: #e2f4e4ff;
+}
+
+.dropdown-item.history {
+     color: rgba(86, 86, 86, 1);
+
+        white-space: nowrap;
+        flex-shrink:2;
+}
+
+.dropdown-item.history:hover {
+     background-color: #17a2b8;
+    color: white;
+}
+
+.dropdown-item.view-reason {
+     color: rgba(86, 86, 86, 1);
+    
+        white-space: nowrap;
+        flex-shrink:2;
+}
+
+.dropdown-item.view-reason:hover {
+    background-color: #17a2b8;
+    color: white;
+}
+.btn-confirm{
+ background-color: #28a745;
+ color:white;
+ padding:8px 15px;
+ font-size: 14px;
+ border:none;
+ margin-right:10px;
+ border-radius:5px;
+cursor: pointer;
+   transition: background-color 0.2s;
+}
+.btn-confirm:hover{
+    background-color: #1d6f30ff;
+}
+.btn-cancel{
+     background-color: #6c757d;
+ color:white;
+ padding:8px 15px;
+ font-size: 14px;
+ border:none;
+ margin-right:10px;
+ border-radius:5px;
+ cursor:pointer; 
+ transition: background-color 0.2s;
+}
+
+.btn-cancel:hover{
+    background-color: #454545ff;
+}

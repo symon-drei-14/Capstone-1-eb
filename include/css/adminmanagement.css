@@ -62,24 +62,6 @@ tr:hover {
 
 
 
-.actions button {
-    padding: 4px 10px;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    border-radius: 7px;
-    margin:  5px 0;
-    transition: background-color 0.3s, color 0.3s;
-    width: 100px;
-    white-space: nowrap;
-    margin-bottom: 8px;
-}
-
-.actions button.edit {
-    background-color:#4CAF50;
-    color: rgb(0, 0, 0);
-}
-
 
 
 
@@ -112,6 +94,7 @@ tr:hover {
     font-weight: bold;
     letter-spacing: 1px;
       transition: all 0.2s ease;
+      margin-bottom: 20px;
 }
 
 .add_trip:hover {
@@ -249,7 +232,7 @@ select.form-control {
 
         body {
         font-family: Arial, sans-serif;
-        background-color: #FCFAEE;
+        background-color: #f8f9fa;
         height: auto;
         display: flex;
         flex-direction: column;
@@ -477,16 +460,6 @@ th[onclick]:hover {
 }
 
 
-.restore {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 5px;
-}
-
 
 
 .view-reason {
@@ -500,85 +473,6 @@ th[onclick]:hover {
 
 .view-reason:hover {
        transform: scale(1.7);
-}
-
-.full-delete {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 5px;
-}
-
-.full-delete:hover {
-       transform: scale(1.7);
-}
-
-.actions {
-       flex-direction: row;
-    display: flex;
-    gap: 2px;
-    justify-content: center;
-    align-items: center;
-}
-.actions button {
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 7px;
-    transition: background-color 0.3s, color 0.3s;
-    width: 30px;
-    white-space: nowrap;
-    margin-bottom: 8px;
-    margin:10;
-}
-
-.actions button.edit {
-    background-color:transparent;
-    color: rgba(8, 89, 18, 1);
-}
-
-.actions button.delete {
-    background-color:transparent;
-    color: rgba(189, 13, 31, 1);
-}
-
-.icon-btn {
-    background: none;
-    border: none;
-    padding: 1px;
-    margin: 0;
-    cursor: pointer;
-    font-size: 16px;
-    color: #555;
-    transition: all 0.2s ease;
-}
-
-.icon-btn:hover {
-
-    transform: scale(1.2);
-}
-
-.icon-btn.delete {
-    color: #ff0b0bff;
-}
-
-.icon-btn.restore {
-    color: #28a745;
-}
-
-.icon-btn.full-delete {
-    color: #dc3545;
-}
-
-.icon-btn.view-reason {
-    color: #17a2b8;
-}
-
-.icon-btn.history {
-    color: #17a2b8;
 }
 
     .datetime-container {
@@ -729,13 +623,15 @@ th[onclick]:hover {
     
 
     #adminSearch{
-    padding: 8px 10px 8px 35px;
-    margin:5px;
-    border-radius: 4px;
+       padding: 8px 10px 8px 32px;
+    border-radius: 13px;
     border: 1px solid #ddd;
     width: 100%;
     box-sizing: border-box;
     position: relative;
+      width:300px;
+    height:40px;
+    font-size: 16px;
 }
     #adminSearch:focus {
     outline: none;
@@ -978,3 +874,143 @@ th[onclick]:hover {
 .show-deleted .deleted-only {
     display: table-cell;
 }
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    align-items:center;
+    justify-items:center;
+
+}
+
+.dropdown-btn {
+ padding:10px;   
+    background: transparent;
+    border: none;
+
+    border-radius: 4px;
+
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size:20px;
+    color: #dc4848ff;
+}
+
+.dropdown-btn:hover {
+
+    border-color: #adb5bd;
+    color: #943565ff;
+    transform:scale(1.1);
+}
+
+.dropdown-content {
+    
+    display: none;
+    position: absolute;
+    right: 20;
+    top:-10;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-radius: 6px;
+    overflow: hidden;
+    
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.dropdown-item {
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+    font-size:14px;
+    line-height :1.5;
+    letter-spacing:0.9;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item i {
+    width: 15px;
+    text-align: center;
+}
+.dropdown-item.edit{
+
+     color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.edit:hover {
+    background-color: #3b9358ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.delete{
+    border-top: 1px solid #b2b2b25c;
+     color: #d32f2f;
+}
+
+.dropdown-item.delete:hover {
+    background-color: #d33950ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.view-reasons{
+        color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.view-reasons:hover {
+    background-color: #ff9d004a;
+     color: rgba(156, 96, 6, 1);
+}
+.dropdown-item.restore{
+         color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.restore:hover {
+       background-color: #3b9358ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.full-delete{
+     color: #d32f2f;
+      white-space: nowrap;
+        flex-shrink:2;
+          border-top: 1px solid #b2b2b25c;
+}
+.dropdown-item.full-delete:hover {
+    background-color: #d33950ff;
+    color: #e2f4e4ff;
+}
+
+.dropdown-item.history {
+     color: rgba(86, 86, 86, 1);
+
+        white-space: nowrap;
+        flex-shrink:2;
+}
+
+.dropdown-item.history:hover {
+     background-color: #17a2b8;
+    color: white;
+}
+
+.dropdown-item.view-reason {
+     color: rgba(86, 86, 86, 1);
+    
+        white-space: nowrap;
+        flex-shrink:2;
+}
+
+.dropdown-item.view-reason:hover {
+    background-color: #17a2b8;
+    color: white;
+}
+  .swal2-container {
+  z-index: 999999 !important;
+}   

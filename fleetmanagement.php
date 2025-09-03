@@ -16,13 +16,7 @@ checkAccess();
   
  
 </head>
-<style>
-.swal2-container {
-  z-index: 999999 !important;
-}    
 
-
-</style>
 
 <body>
     <header class="header">
@@ -194,7 +188,7 @@ checkAccess();
                                 <th>Capacity</th>
                                 <th>Status</th>
                                 <th>Last Modified</th>
-                                <th>Maintenance History</th>
+                               
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -677,33 +671,40 @@ function renderTrucksTable() {
             <td>${highlightMatches(truck.capacity)}</td>
             <td><span class="status-${statusClass}">${highlightMatches(statusText)}</span></td>
             <td> <strong><span class="modifby">${highlightMatches(truck.last_modified_by)}</span></strong><br>${formatDateTime(truck.last_modified_at)}</td>
-            <td>
-                <button class="icon-btn history" data-tooltip="View History" onclick="viewMaintenanceHistory(${truck.truck_id})">
-                    <i class="fas fa-history"></i>
-                </button>
-            </td>
-            <td class="actions">
-                ${truck.is_deleted == 1 ? `
-                    <button class="icon-btn restore" data-tooltip="Restore" onclick="restoreTruck(${truck.truck_id})">
-                      <i class="fas fa-trash-restore"></i>
-                    </button>
-                    ${window.userRole === 'Full Admin' ? 
-                      `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
-                              <i class="fa-solid fa-ban"></i>
-                      </button>` : ''}
-                    <button class="icon-btn view-reason" data-tooltip="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
-                        <i class="fas fa-info-circle"></i>
-                    </button>
-                ` : `
-                    <button class="icon-btn edit" data-tooltip="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="icon-btn delete" data-tooltip="Delete" onclick="deleteTruck(${truck.truck_id})">
-                        <i class='fas fa-trash-alt'></i>
-                    </button>
-                `}
-            </td>
-        `;
+          
+             <td class="actions">
+                    <div class="dropdown">
+                        <button class="dropdown-btn" data-tooltip="Actions">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="dropdown-content">
+                            ${truck.is_deleted == 1 ? `
+                                <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreTruck(${truck.truck_id})">
+                                    <i class="fas fa-trash-restore"></i> Restore
+                                </button>
+                               
+                                <button class="dropdown-item view-reason" data-tooltip="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
+                                    <i class="fas fa-info-circle"></i> View Reason
+                                </button>
+                                 ${window.userRole === 'Full Admin' ? 
+                                    `<button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
+                                        <i class="fa-solid fa-ban"></i> Permanent Delete
+                                    </button>` : ''}
+                            ` : `
+                                <button class="dropdown-item edit" data-tooltip="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="dropdown-item history" data-tooltip="View History" onclick="viewMaintenanceHistory(${truck.truck_id})">
+                                    <i class="fas fa-history"></i> Maintenance History
+                                </button>
+                                <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteTruck(${truck.truck_id})">
+                                    <i class='fas fa-trash-alt'></i> Delete
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </td>
+            `;
         tableBody.appendChild(tr);
     });
     
@@ -716,6 +717,54 @@ function renderTrucksTable() {
         pageInfoElement.textContent = `Page ${currentTruckPage} of ${totalPages}`;
     }
 }
+   document.addEventListener('DOMContentLoaded', function() {
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown')) {
+                    closeAllDropdowns();
+                }
+            });
+            
+            // Toggle dropdowns when clicking the button
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.dropdown-btn')) {
+                    const dropdown = e.target.closest('.dropdown');
+                    const dropdownContent = dropdown.querySelector('.dropdown-content');
+                    
+                    // Close all other dropdowns
+                    closeAllDropdownsExcept(dropdownContent);
+                    
+                    // Toggle this dropdown
+                    dropdownContent.classList.toggle('show');
+                    e.stopPropagation();
+                }
+            });
+            
+            // Handle dropdown item clicks
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.dropdown-item')) {
+                    // Close the dropdown
+                    const dropdownContent = e.target.closest('.dropdown-content');
+                    if (dropdownContent) {
+                        dropdownContent.classList.remove('show');
+                    }
+                }
+            });
+        });
+        
+        function closeAllDropdowns() {
+            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+        }
+        
+        function closeAllDropdownsExcept(exceptDropdown) {
+            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                if (dropdown !== exceptDropdown) {
+                    dropdown.classList.remove('show');
+                }
+            });
+        }
 
 // Add this new function for full delete
 function fullDeleteTruck(truckId) {
@@ -1060,8 +1109,6 @@ function closeHistoryModal() {
         text: 'Are you sure you want to restore this truck?',
         icon: 'question',
         showCancelButton: true,
-         confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, restore it!',
         cancelButtonText: 'No, keep it',
         confirmButtonColor: '#28a745', 

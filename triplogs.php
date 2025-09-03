@@ -363,7 +363,7 @@ if ($result->num_rows > 0) {
                     
                     <!-- Financial Information -->
                     <div class="event-detail-section">
-                        <h4><i class="fas fa-dollar-sign"></i> Financial Information</h4>
+                        <h4><i class="fa-solid fa-peso-sign"></i> Financial Information</h4>
                         <div class="detail-row">
                             <div class="detail-label">Cash Advance:</div>
                             <div class="detail-value" id="eventModalCashAdvance"></div>

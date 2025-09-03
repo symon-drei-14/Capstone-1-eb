@@ -55,40 +55,6 @@ tr:hover {
     border-radius: 20px;
 }
 
-.actions button {
-    padding: 6px 12px;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    border-radius: 7px;
-    margin: 0 5px;
-    transition: background-color 0.3s, color 0.3s;
-    width: 100px; 
-    white-space: nowrap; 
-    margin-bottom: 10px;
-}
-
-/* Individual Button Styles */
-.actions button.edit {
-    background-color: #4CAF50; /* Green */
-    color: white;
-}
-
-.actions button.delete {
-    background-color: #d7584f; /* Red */
-    color: white;
-}
-
-.actions button.history {
-    background-color: #2196F3; /* Blue */
-    color: white;
-}
-
-/* Button Hover Effects */
-.actions button:hover {
-    opacity: 0.8; /* Slightly less opaque on hover */
-}
-
 
 .container {
     padding: 20px;
@@ -364,15 +330,6 @@ tr:hover {
 
 
 
-.actions button.edit {
-    background-color: #4CAF50; /* Green */
-    color: white;
-}
-
-.actions button.delete {
-    background-color: #d7584f; /* Red */
-    color: white;
-}
 
 .actions button.history {
     background-color: #2196F3; /* Blue */
@@ -380,9 +337,6 @@ tr:hover {
 }
 
 /* Button Hover Effects */
-.actions button:hover {
-    opacity: 0.8; 
-}
 
 
 
@@ -390,10 +344,7 @@ tr:hover {
     padding: 20px;
 }
 
-.table-container {
-    margin-bottom: 20px;
-    margin-right: 20px;
-}
+
 .add_driver {
     background-color: #4CAF50;
     color: white; 
@@ -477,7 +428,7 @@ button[type="submit"]:hover {
 
  body {
             font-family: Arial, sans-serif;
-        background-color:#FCFAEE;
+        background-color: #f8f9fa;
         }
 
         .header {
@@ -577,10 +528,15 @@ button[type="submit"]:hover {
         }
 
         .search-container input {
-            padding: 8px 10px 8px 30px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+        padding: 8px 12px 8px 32px;
+        border-radius: 13px;
+        border: 1px solid #ddd;
+        width: 100%;
+        box-sizing: border-box;
+        position: relative;
+        width:300px;
+        height:35px;
+        font-size: 16px;
         }
 
         .search-container .fa-search {
@@ -589,6 +545,7 @@ button[type="submit"]:hover {
             top: 50%;
             transform: translateY(-50%);
             color: #999;
+            z-index:2;
         }
 
         .highlight {
@@ -598,48 +555,11 @@ button[type="submit"]:hover {
             border-radius: 2px;
         }
         
-        .actions button {
-        padding: 6px 0px;
-        font-size: 14px;
-        cursor: pointer;
-        border: none;
-        border-radius: 7px;
-        margin: 0 5px;
-        transition: background-color 0.3s, color 0.3s;
-        width: 30px; 
-        white-space: nowrap; 
-        margin-bottom: 10px;
-        background-color:transparent;
-        color: inherit;
-    }
+      
 
 
-    td.actions {
-        text-align: center;
 
-    }
-
-    .actions-container {
-        display: flex;
-        justify-content: center;
-        gap: 5px; /* Reduced from 10px */
-        padding: 5px 5px;
-    }
-
-    .fas.fa-edit {
-    color: rgba(8, 89, 18, 1);
-    }
-
-    .fas.fa-trash-alt{
-        color: rgba(189, 13, 31, 1);
-        margin-left: 0; 
-    }
-    .actions button:hover {
-    transform:scale(1.2);
-    }
-    .action-btn i {
-        color: inherit;
-    }
+  
     .profile-icon {
         font-size: 30px;
         color: #555;
@@ -725,65 +645,8 @@ th:nth-child(10), td:nth-child(10) {
         
     }
 
-    .action-btn {
-    position: relative; 
-}
-
-.action-btn::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 65%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-    z-index: 9999; 
-    pointer-events: none;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    margin-bottom: 5px;
-}
-
-.action-btn:hover::after {
-    opacity: 1;
-    visibility: visible;
-}
 
 
-.action-btn::before {
-    content: '';
-    position: absolute;
-    bottom: calc(100% - 5px);
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: #333 transparent transparent transparent;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-    z-index: 9999;
-}
-
-.action-btn:hover::before {
-    opacity: 1;
-    visibility: visible;
-}
-
-.edit-btn::after {
-    background-color: #085912; 
-}
-
-.delete-btn::after {
-    background-color: #bd0d1f; 
-}
 .company {
     margin-left:-90px;
     height: 110px;
@@ -899,4 +762,153 @@ h3 {
     font-style: italic;
 }
 
+.dropdown {
+    position: relative;
+    display: inline-block;
+    align-items:center;
+    justify-items:center;
 
+}
+
+.dropdown-btn {
+    
+    background: transparent;
+    border: none;
+
+    border-radius: 4px;
+    padding: 1px 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size:20px;
+    color: #dc4848ff;
+}
+
+.dropdown-btn:hover {
+
+    border-color: #adb5bd;
+    color: #943565ff;
+    transform:scale(1.1);
+}
+
+.dropdown-content {
+    
+    display: none;
+    position: absolute;
+    right: 20;
+    top:-10;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-radius: 6px;
+    overflow: hidden;
+    
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.dropdown-item {
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+    font-size:14px;
+    line-height :1.5;
+    letter-spacing:0.9;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item i {
+    width: 15px;
+    text-align: center;
+}
+.dropdown-item.edit{
+
+     color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.edit:hover {
+    background-color: #3b9358ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.delete{
+    border-top: 1px solid #b2b2b25c;
+     color: #d32f2f;
+}
+
+.dropdown-item.delete:hover {
+    background-color: #d33950ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.view-reasons{
+        color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.view-reasons:hover {
+    background-color: #ff9d004a;
+     color: rgba(156, 96, 6, 1);
+}
+.dropdown-item.restore{
+         color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.restore:hover {
+       background-color: #3b9358ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.full-delete{
+     color: #d32f2f;
+      white-space: nowrap;
+        flex-shrink:2;
+          border-top: 1px solid #b2b2b25c;
+}
+.dropdown-item.full-delete:hover {
+    background-color: #d33950ff;
+    color: #e2f4e4ff;
+}
+
+.dropdown-item.history {
+     color: rgba(86, 86, 86, 1);
+
+        white-space: nowrap;
+        flex-shrink:2;
+}
+
+.dropdown-item.history:hover {
+     background-color: #17a2b8;
+    color: white;
+}
+
+.dropdown-item.view-reason {
+     color: rgba(86, 86, 86, 1);
+    
+        white-space: nowrap;
+        flex-shrink:2;
+}
+
+.dropdown-item.view-reason:hover {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.addbtn{
+    background-color: #3b9358ff; 
+    color:white;
+    padding:8px 12px;
+    border:none;
+    border-radius:5px;
+    transition: background-color 0.3s ;
+    cursor:pointer;
+}
+.addbtn:hover{
+    background-color: rgb(24, 62, 37); 
+
+}
