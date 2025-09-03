@@ -2149,7 +2149,8 @@ function validateEditReasons() {
     }
     
     // Check if "Other" is checked but no reason provided
-    if ($('#reason6').is(':checked') && otherReasonText === '') {
+
+    if ($('#reason7').is(':checked') && $('#otherReasonText').val().trim() === '') {
         Swal.fire({
             icon: 'error',
             title: 'Validation Error',
@@ -2319,18 +2320,18 @@ $('#editForm').on('submit', function(e) {
             document.querySelector('.sidebar').classList.toggle('expanded');
         });
 
-        $('#otherReasonText').on('input', function() {
-        if ($(this).val().trim() !== '') {
-            $('#reason6').prop('checked', true);
-        }
-    });
+       $('#otherReasonText').on('input', function() {
+if ($(this).val().trim() !== '') {
+$('#reason7').prop('checked', true); // Now setting the "Other" checkbox
+}
+});
 
 
-    $('#reason6').on('change', function() {
-        if (!$(this).is(':checked')) {
-            $('#otherReasonText').val('');
-        }
-    });
+   $('#reason7').on('change', function() {
+if (!$(this).is(':checked')) {
+$('#otherReasonText').val('');
+}
+});
 
   function populatePortDropdowns() {
     $.ajax({
@@ -2573,11 +2574,9 @@ $(document).on('click', '.dropdown-item.full-delete', function(e) {
     });
 
 
-    document.getElementById('reason6').addEventListener('change', function() {
+    document.getElementById('reason7').addEventListener('change', function() {
         const otherReasonContainer = document.getElementById('otherReasonContainer');
         otherReasonContainer.style.display = this.checked ? 'block' : 'none';
-        
-        
         if (!this.checked) {
             document.getElementById('otherReasonText').value = '';
         }
@@ -2586,14 +2585,14 @@ $(document).on('click', '.dropdown-item.full-delete', function(e) {
 
     document.getElementById('otherReasonText').addEventListener('input', function() {
         if (this.value.trim() !== '') {
-            document.getElementById('reason6').checked = true;
+            document.getElementById('reason7').checked = true;
             document.getElementById('otherReasonContainer').style.display = 'block';
         }
     });
 
 
     document.querySelector('form').addEventListener('submit', function(e) {
-        const otherCheckbox = document.getElementById('reason6');
+        const otherCheckbox = document.getElementById('reason7');
         const otherReasonText = document.getElementById('otherReasonText').value.trim();
         
        if (otherCheckbox.checked && otherReasonText === '') {
