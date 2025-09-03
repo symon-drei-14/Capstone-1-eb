@@ -3,7 +3,6 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
-
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
@@ -18,7 +17,7 @@ if (!$conn) {
     echo json_encode([
         'success' => false,
         'message' => 'Database connection failed'
-    ]);
+    ]); 
     exit;
 }
 
@@ -394,240 +393,252 @@ try {
             break;
 
         case 'get_trips_with_drivers':
-            $whereClause = "";
-            $params = [];
-            $types = "";
-            
-            // Filter by driver if specified
-            if (isset($data['driver_id'])) {
-                $whereClause = "WHERE t.driver_id = ?";
-                $params = [$data['driver_id']];
-                $types = "i";
-            } elseif (isset($data['driver_name'])) {
-                $whereClause = "WHERE d.name = ?";
-                $params = [$data['driver_name']];
-                $types = "s";
-            }
-            
-            // Add filter for non-deleted trips
-            $whereClause .= ($whereClause ? " AND " : "WHERE ") . "NOT EXISTS (
-                SELECT 1 FROM audit_logs_trips al2 
-                WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
-            )";
-            
-            $sql = "
-                SELECT 
-                    t.trip_id,
-                    t.container_no,
-                    t.trip_date,
-                    t.status,
-                    t.created_at,
-                    tr.plate_no,
-                    tr.capacity as truck_capacity,
-                    d.name as driver,
-                    d.driver_id,
-                    d.name as driver_name,
-                    d.email as driver_email,
-                    h.name as helper,
-                    disp.name as dispatcher,
-                    c.name as client,
-                    dest.name as destination,
-                    sl.name as shipping_line,
-                    cons.name as consignee,
-                    COALESCE(te.cash_advance, 0) as cash_adv,
-                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
-                    t.trip_date as date,
-                    DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp
-                FROM trips t
-                LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-                LEFT JOIN helpers h ON t.helper_id = h.helper_id
-                LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-                LEFT JOIN clients c ON t.client_id = c.client_id
-                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-                LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-                LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-                LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-                $whereClause
-                ORDER BY t.trip_date DESC, t.created_at DESC
-            ";
-            
-            $stmt = $conn->prepare($sql);
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare trips query: " . $conn->error);
-            }
-            
-            if ($params) {
-                $stmt->bind_param($types, ...$params);
-            }
-            
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute trips query: " . $stmt->error);
-            }
-            
-            $result = $stmt->get_result();
-            
-            $trips = [];
-            while ($row = $result->fetch_assoc()) {
-                // Map to old column names for compatibility
-                $row['size'] = $row['truck_capacity'];
-                $trips[] = $row;
-            }
-            
-            $stmt->close();
-            echo json_encode(['success' => true, 'trips' => $trips]);
-            break;
+    $whereClause = "";
+    $params = [];
+    $types = "";
+    
+    // Filter by driver if specified
+    if (isset($data['driver_id'])) {
+        $whereClause = "WHERE t.driver_id = ?";
+        $params = [$data['driver_id']];
+        $types = "i";
+    } elseif (isset($data['driver_name'])) {
+        $whereClause = "WHERE d.name = ?";
+        $params = [$data['driver_name']];
+        $types = "s";
+    }
+    
+    // Add filter for non-deleted trips
+    $whereClause .= ($whereClause ? " AND " : "WHERE ") . "NOT EXISTS (
+        SELECT 1 FROM audit_logs_trips al2 
+        WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+    )";
+    
+    $sql = "
+        SELECT 
+            t.trip_id,
+            t.container_no,
+            t.trip_date,
+            t.status,
+            t.created_at,
+            tr.plate_no,
+            tr.capacity as truck_capacity,
+            d.name as driver,
+            d.driver_id,
+            d.name as driver_name,
+            d.email as driver_email,
+            h.name as helper,
+            disp.name as dispatcher,
+            c.name as client,
+            dest.name as destination,
+            sl.name as shipping_line,
+            cons.name as consignee,
+            COALESCE(te.cash_advance, 0) as cash_advance,
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+            COALESCE(te.diesel, 0) as diesel,
+            (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_cash_advance,
+            COALESCE(te.cash_advance, 0) as cash_adv,
+            DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+            t.trip_date as date,
+            DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp
+        FROM trips t
+        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+        LEFT JOIN helpers h ON t.helper_id = h.helper_id
+        LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+        LEFT JOIN clients c ON t.client_id = c.client_id
+        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+        LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+        $whereClause
+        ORDER BY t.trip_date DESC, t.created_at DESC
+    ";
+    
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        throw new Exception("Failed to prepare trips query: " . $conn->error);
+    }
+    
+    if ($params) {
+        $stmt->bind_param($types, ...$params);
+    }
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute trips query: " . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    
+    $trips = [];
+    while ($row = $result->fetch_assoc()) {
+        // Map to old column names for compatibility
+        $row['size'] = $row['truck_capacity'];
+        $trips[] = $row;
+    }
+    
+    $stmt->close();
+    echo json_encode(['success' => true, 'trips' => $trips]);
+    break;
 
         case 'get_driver_current_trip':
-            $driverId = $data['driver_id'] ?? null;
-            $driverName = $data['driver_name'] ?? null;
-            
-            if (!$driverId && !$driverName) {
-                throw new Exception("Driver ID or name required");
-            }
-            
-            $whereClause = $driverId ? "t.driver_id = ?" : "d.name = ?";
-            $param = $driverId ? $driverId : $driverName;
-            $type = $driverId ? "i" : "s";
-            
-            $stmt = $conn->prepare("
-                SELECT 
-                    t.trip_id,
-                    t.container_no,
-                    t.trip_date,
-                    t.status,
-                    tr.plate_no,
-                    tr.capacity as size,
-                    tr.capacity as truck_capacity,
-                    d.name as driver,
-                    d.driver_id,
-                    d.name as driver_name,
-                    d.email as driver_email,
-                    h.name as helper,
-                    disp.name as dispatcher,
-                    c.name as client,
-                    dest.name as destination,
-                    sl.name as shipping_line,
-                    cons.name as consignee,
-                    COALESCE(te.cash_advance, 0) as cash_adv,
-                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
-                    t.trip_date as date
-                FROM trips t 
-                LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-                LEFT JOIN helpers h ON t.helper_id = h.helper_id
-                LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-                LEFT JOIN clients c ON t.client_id = c.client_id
-                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-                LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-                LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-                LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-                WHERE $whereClause 
-                AND t.status IN ('En Route', 'Pending')
-                AND NOT EXISTS (
-                    SELECT 1 FROM audit_logs_trips al2 
-                    WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
-                )
-                ORDER BY 
-                    CASE WHEN t.status = 'En Route' THEN 1 ELSE 2 END,
-                    t.trip_date ASC
-                LIMIT 1
-            ");
-            
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare current trip query: " . $conn->error);
-            }
-            
-            $stmt->bind_param($type, $param);
-            
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute current trip query: " . $stmt->error);
-            }
-            
-            $result = $stmt->get_result();
-            $trip = $result->fetch_assoc();
-            $stmt->close();
-            
-            echo json_encode([
-                'success' => true, 
-                'trip' => $trip,
-                'has_active_trip' => $trip !== null
-            ]);
-            break;
+    $driverId = $data['driver_id'] ?? null;
+    $driverName = $data['driver_name'] ?? null;
+    
+    if (!$driverId && !$driverName) {
+        throw new Exception("Driver ID or name required");
+    }
+    
+    $whereClause = $driverId ? "t.driver_id = ?" : "d.name = ?";
+    $param = $driverId ? $driverId : $driverName;
+    $type = $driverId ? "i" : "s";
+    
+    $stmt = $conn->prepare("
+        SELECT 
+            t.trip_id,
+            t.container_no,
+            t.trip_date,
+            t.status,
+            tr.plate_no,
+            tr.capacity as size,
+            tr.capacity as truck_capacity,
+            d.name as driver,
+            d.driver_id,
+            d.name as driver_name,
+            d.email as driver_email,
+            h.name as helper,
+            disp.name as dispatcher,
+            c.name as client,
+            dest.name as destination,
+            sl.name as shipping_line,
+            cons.name as consignee,
+            COALESCE(te.cash_advance, 0) as cash_advance,
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+            COALESCE(te.diesel, 0) as diesel,
+            (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_cash_advance,
+            COALESCE(te.cash_advance, 0) as cash_adv,
+            DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+            t.trip_date as date
+        FROM trips t 
+        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+        LEFT JOIN helpers h ON t.helper_id = h.helper_id
+        LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+        LEFT JOIN clients c ON t.client_id = c.client_id
+        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+        LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+        WHERE $whereClause 
+        AND t.status IN ('En Route', 'Pending')
+        AND NOT EXISTS (
+            SELECT 1 FROM audit_logs_trips al2 
+            WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+        )
+        ORDER BY 
+            CASE WHEN t.status = 'En Route' THEN 1 ELSE 2 END,
+            t.trip_date ASC
+        LIMIT 1
+    ");
+    
+    if ($stmt === false) {
+        throw new Exception("Failed to prepare current trip query: " . $conn->error);
+    }
+    
+    $stmt->bind_param($type, $param);
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute current trip query: " . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    $trip = $result->fetch_assoc();
+    $stmt->close();
+    
+    echo json_encode([
+        'success' => true, 
+        'trip' => $trip,
+        'has_active_trip' => $trip !== null
+    ]);
+    break;
 
         case 'get_driver_scheduled_trips':
-            $driverId = $data['driver_id'] ?? null;
-            $driverName = $data['driver_name'] ?? null;
-            
-            if (!$driverId && !$driverName) {
-                throw new Exception("Driver ID or name required");
-            }
-            
-            $whereClause = $driverId ? "t.driver_id = ?" : "d.name = ?";
-            $param = $driverId ? $driverId : $driverName;
-            $type = $driverId ? "i" : "s";
-            
-            $stmt = $conn->prepare("
-                SELECT 
-                    t.trip_id,
-                    t.container_no,
-                    t.trip_date,
-                    t.status,
-                    tr.plate_no,
-                    tr.capacity as size,
-                    tr.capacity as truck_capacity,
-                    d.name as driver,
-                    d.driver_id,
-                    d.name as driver_name,
-                    d.email as driver_email,
-                    h.name as helper,
-                    disp.name as dispatcher,
-                    c.name as client,
-                    dest.name as destination,
-                    sl.name as shipping_line,
-                    cons.name as consignee,
-                    COALESCE(te.cash_advance, 0) as cash_adv,
-                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
-                    t.trip_date as date
-                FROM trips t 
-                LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-                LEFT JOIN helpers h ON t.helper_id = h.helper_id
-                LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-                LEFT JOIN clients c ON t.client_id = c.client_id
-                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-                LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-                LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-                LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-                WHERE $whereClause 
-                AND t.status = 'Pending'
-                AND NOT EXISTS (
-                    SELECT 1 FROM audit_logs_trips al2 
-                    WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
-                )
-                ORDER BY t.trip_date ASC
-            ");
-            
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare scheduled trips query: " . $conn->error);
-            }
-            
-            $stmt->bind_param($type, $param);
-            
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute scheduled trips query: " . $stmt->error);
-            }
-            
-            $result = $stmt->get_result();
-            
-            $trips = [];
-            while ($row = $result->fetch_assoc()) {
-                $trips[] = $row;
-            }
-            
-            $stmt->close();
-            echo json_encode(['success' => true, 'trips' => $trips]);
-            break;
+    $driverId = $data['driver_id'] ?? null;
+    $driverName = $data['driver_name'] ?? null;
+    
+    if (!$driverId && !$driverName) {
+        throw new Exception("Driver ID or name required");
+    }
+    
+    $whereClause = $driverId ? "t.driver_id = ?" : "d.name = ?";
+    $param = $driverId ? $driverId : $driverName;
+    $type = $driverId ? "i" : "s";
+    
+    $stmt = $conn->prepare("
+        SELECT 
+            t.trip_id,
+            t.container_no,
+            t.trip_date,
+            t.status,
+            tr.plate_no,
+            tr.capacity as size,
+            tr.capacity as truck_capacity,
+            d.name as driver,
+            d.driver_id,
+            d.name as driver_name,
+            d.email as driver_email,
+            h.name as helper,
+            disp.name as dispatcher,
+            c.name as client,
+            dest.name as destination,
+            sl.name as shipping_line,
+            cons.name as consignee,
+            COALESCE(te.cash_advance, 0) as cash_advance,
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+            COALESCE(te.diesel, 0) as diesel,
+            (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_cash_advance,
+            COALESCE(te.cash_advance, 0) as cash_adv,
+            DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+            t.trip_date as date
+        FROM trips t 
+        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+        LEFT JOIN helpers h ON t.helper_id = h.helper_id
+        LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+        LEFT JOIN clients c ON t.client_id = c.client_id
+        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+        LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+        WHERE $whereClause 
+        AND t.status = 'Pending'
+        AND NOT EXISTS (
+            SELECT 1 FROM audit_logs_trips al2 
+            WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+        )
+        ORDER BY t.trip_date ASC
+    ");
+    
+    if ($stmt === false) {
+        throw new Exception("Failed to prepare scheduled trips query: " . $conn->error);
+    }
+    
+    $stmt->bind_param($type, $param);
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute scheduled trips query: " . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    
+    $trips = [];
+    while ($row = $result->fetch_assoc()) {
+        $trips[] = $row;
+    }
+    
+    $stmt->close();
+    echo json_encode(['success' => true, 'trips' => $trips]);
+    break;
 
         case 'update_trip_status':
             // Simplified status update for mobile app

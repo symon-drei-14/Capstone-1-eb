@@ -854,3 +854,24 @@
 2025-08-29 08:46:14 - Data validation passed
 2025-08-29 08:46:14 - Database connection successful
 2025-08-29 08:46:14 - Login successful for: Tester@gmail.com
+2025-09-01 15:11:24 - Login request received
+{"email":"Tester@gmail.com","password":"12345678"}
+
+2025-09-01 15:11:24 - JSON parsed successfully
+2025-09-01 15:11:24 - Data validation passed
+2025-09-01 15:11:24 - Database connection successful
+2025-09-01 15:11:24 - Login successful for: Tester@gmail.com
+2025-09-02 08:47:20 - Login request received
+{"email":"shada@gmail.com","password":"asdasdasd"}
+
+2025-09-02 08:47:20 - JSON parsed successfully
+2025-09-02 08:47:20 - Data validation passed
+2025-09-02 08:47:20 - Database connection successful
+2025-09-02 08:47:20 - Login successful for: shada@gmail.com
+2025-09-03 06:12:11 - Login request received
+{"email":"shada@gmail.com","password":"asdasdasd"}
+
+2025-09-03 06:12:11 - JSON parsed successfully
+2025-09-03 06:12:11 - Data validation passed
+2025-09-03 06:12:11 - Database connection successful
+2025-09-03 06:12:11 - Login successful for: shada@gmail.com

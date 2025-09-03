@@ -116,7 +116,6 @@ function initMap() {
     }).addTo(map);
 
     fetchDriverData();
-    updateTimer = setInterval(fetchDriverData, 10000);
 
     const refreshBtn = document.getElementById('refresh-btn');
     if (refreshBtn) {
