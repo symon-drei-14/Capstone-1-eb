@@ -31,7 +31,7 @@
 
 
     $tripStats = getTripStatistics($conn);
-        session_start();
+        
 
     
 $sql = "SELECT 
@@ -53,7 +53,8 @@ $sql = "SELECT
             COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
             COALESCE(te.diesel, 0) as diesel,
             tr.plate_no,  
-            t.trip_date   
+            t.trip_date,
+            t.delivery_type   
         FROM trips t
         LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
         LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
@@ -85,6 +86,7 @@ if ($result->num_rows > 0) {
     'helper' => $row['helper'],
     'dispatcher' => $row['dispatcher'],
     'containerNo' => $row['container_no'],
+    'delivery_type' => $row['delivery_type'],
     'client' => $row['client'],
     'port' => $row['port'],
     'destination' => $row['destination'],
@@ -299,6 +301,12 @@ if ($result->num_rows > 0) {
                     
                     <div class="event-detail-section">
                         <h4><i class="fas fa-info-circle"></i> Trip Information</h4>
+
+
+                        <div class="detail-row">
+    <div class="detail-label">Delivery Type:</div>
+    <div class="detail-value" id="eventModalDeliveryType"></div>
+</div>
                         <div class="detail-row">
                             <div class="detail-label">Date & Time:</div>
                             <div class="detail-value" id="eventModalDate"></div>
@@ -410,7 +418,17 @@ if ($result->num_rows > 0) {
            <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
                     <legend style="font-weight: bold;">Shipment Information</legend>
-                <label for="editEventSize">Container Size:</label>
+
+ <label for="editEventDeliveryType">Type of Delivery:</label>
+        <select id="editEventDeliveryType" name="eventDeliveryType" required style="width: 100%;">
+            <option value="">Select Delivery Type</option>
+            <option value="Normal Delivery">Normal Delivery</option>
+            <option value="Emergency Delivery">Emergency Delivery</option>
+        </select>
+
+
+
+                <label for="editEventSize">Shipment Size:</label>
                 <select id="editEventSize" name="eventSize" required style="width: 100%;">
                     <option value="">Select Size</option>
                     <option value="20ft">20ft</option>
@@ -618,6 +636,15 @@ if ($result->num_rows > 0) {
               <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
                     <legend style="font-weight: bold;">Shipment Information</legend>
+
+   <label for="addEventDeliveryType">Type of Delivery:</label>
+        <select id="addEventDeliveryType" name="eventDeliveryType" required style="width: 100%;">
+            <option value="">Select Delivery Type</option>
+            <option value="Normal Delivery">Normal Delivery</option>
+            <option value="Emergency Delivery">Emergency Delivery</option>
+        </select>
+
+
                 <label for="addEventSize">Shipment Size:</label>
                 <select id="addEventSize" name="eventSize" required style="width: 100%;">
                     <option value="">Select Size</option>
@@ -1678,6 +1705,7 @@ function resetAddScheduleForm() {
         $('#eventModalDate').text(moment(event.start).format('MMMM D, YYYY h:mm A'));
         $('#eventModalPlateNo').text(event.plateNo || 'N/A');
         $('#eventModalDriver').text(event.driver || 'N/A');
+        $('#eventModalDeliveryType').text(event.delivery_type || 'Normal Delivery');
         $('#eventModalHelper').text(event.helper || 'N/A');
         $('#eventModalPort').text(event.port || 'N/A');
         $('#eventModalDispatcher').text(event.dispatcher || 'N/A');
@@ -1891,6 +1919,7 @@ $(document).on('click', '.dropdown-item.edit', function() {
         populateShippingLineDropdowns();
 
         // Set immediate values (non-dropdown fields)
+        $('#editEventDeliveryType').val(event.deliveryType || 'Normal Delivery');
         $('#editEventContainerNo').val(event.containerNo);
         $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
         $('#editEventFCL').val(event.fcl_status || event.size);
@@ -1999,6 +2028,7 @@ $('#addScheduleForm').on('submit', function(e) {
         contentType: 'application/json',
         data: JSON.stringify({
             action: 'add',
+            deliveryType: $('#addEventDeliveryType').val(),
             plateNo: truckPlateNo,
             date: $('#addEventDate').val(),
             driver: selectedDriver,
@@ -2214,6 +2244,7 @@ $('#editForm').on('submit', function(e) {
             contentType: 'application/json',
             data: JSON.stringify({
                 action: 'edit',
+                deliveryType: $('#editEventDeliveryType').val(),
                 id: $('#editEventId').val(),
                 plateNo: truckPlateNo,
                 date: $('#editEventDate').val(),
