@@ -44,6 +44,7 @@
         width: 90%;
         max-width: 600px;
         position: relative;
+        z-index: 9999999 !important; 
     }
 
 
@@ -372,11 +373,11 @@
 } */
 
 .events-table {
-    width: 100%;
+    max-width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
     background-color: #fff;
-   
+    
     table-layout: auto;
     font-size: 14px;
     border-top-left-radius:15px;
@@ -393,10 +394,11 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    white-space: nowrap;
+
     font-size: 14px;
     vertical-align: middle;
     white-space: wrap;
+    flex-shrink: 2;
  
 }
 
@@ -430,7 +432,9 @@
 .events-table th:nth-child(16), .events-table td:nth-child(16) { width: 6%; } /* Status */
 .events-table th:nth-child(17), .events-table td:nth-child(17) { width: 8%; } /* Created At */
 .events-table th:nth-child(18), .events-table td:nth-child(18) { width: 6%; border-top-right-radius:15px } /* Action */
-
+.events-table td:nth-child(18){
+    border-bottom: none !important;
+}
 /* Right-align numeric columns */
 .events-table th:nth-child(11), .events-table td:nth-child(11),  /* Container Size */
 .events-table th:nth-child(13), .events-table td:nth-child(13),  /* Cash Advance */
@@ -1077,7 +1081,7 @@ font-size: 13px;
             border-radius:20px;
             box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
             width: calc(100% - 40px); 
-      
+            
             height: auto;
 
         }
@@ -1896,13 +1900,15 @@ h3.title {
 #eventModal .modal-content {
     width: 90%;
     max-width: 900px;
-    max-height: 90vh;
+    max-height: 95vh;
     overflow-y: auto;
     padding: 25px;
     background-color: #fff;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     overflow-x: hidden;
+    overflow-y: hidden;
+
 }
 
 .event-modal-header {
@@ -1982,8 +1988,8 @@ h3.title {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
-    margin-top: 25px;
-    padding-top: 20px;
+
+    padding-top: 10px;
     border-top: 1px solid #e9ecef;
     flex-wrap: wrap;
 }
@@ -2243,3 +2249,138 @@ h3.title {
   .swal2-container {
   z-index: 999999 !important;
 }   
+
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    align-items:center;
+    justify-items:center;
+    padding-top:10px;
+}
+
+.dropdown-btn {
+    background: transparent;
+    border: none;
+    margin-top:5px;
+    border-radius: 4px;
+    padding: 1px 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size:18px;
+    color: #dc4848ff;
+}
+
+.dropdown-btn:hover {
+
+    border-color: #adb5bd;
+    color: #943565ff;
+    transform:scale(1.1);
+}
+
+.dropdown-content {
+    
+    display: none;
+    position: absolute;
+    right: 20;
+    top:0;
+    
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-radius: 6px;
+    overflow: hidden;
+    
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.dropdown-item {
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+    font-size:14px;
+    line-height :1.5;
+    letter-spacing:0.9;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item i {
+    width: 16px;
+    text-align: center;
+}
+.dropdown-item.edit{
+
+     color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.edit:hover {
+    background-color: #3b9358ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.delete{
+    border-top: 1px solid #b2b2b25c;
+     color: #d32f2f;
+}
+
+.dropdown-item.delete:hover {
+    background-color: #d33950ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.view-reasons{
+        color: rgba(86, 86, 86, 1);
+}
+.dropdown-item.view-reasons:hover {
+    background-color: #ff9d004a;
+     color: rgba(156, 96, 6, 1);
+}
+.dropdown-item.restore{
+         color: #179c27ff;
+}
+.dropdown-item.restore:hover {
+       background-color: #3b9358ff;
+    color: #e2f4e4ff;
+}
+.dropdown-item.full-delete{
+     color: #d32f2f;
+}
+.dropdown-item.full-delete:hover {
+    background-color: #d33950ff;
+    color: #e2f4e4ff;
+}
+
+.dropdown-item.view-expenses {
+     color: rgba(86, 86, 86, 1);
+
+        white-space: nowrap;
+        flex-shrink:2;
+}
+
+.dropdown-item.view-expenses:hover {
+    background-color: #28a745;
+    color: white;
+}
+
+.dropdown-item.view-checklist {
+     color: rgba(86, 86, 86, 1);
+    
+        white-space: nowrap;
+        flex-shrink:2;
+}
+
+.dropdown-item.view-checklist:hover {
+    background-color: #17a2b8;
+    color: white;
+}

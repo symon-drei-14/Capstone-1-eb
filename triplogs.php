@@ -576,10 +576,7 @@ if ($result->num_rows > 0) {
 
             <!-- Form buttons -->
             <div class="buttons" style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
-                <button type="button" id="viewChecklistBtn" class="save-btn" style="background-color: #17a2b8; display: none;">
-                    View Driver Checklist
-                </button>
-                <button type="button" id="viewExpensesBtn" class="save-btn" style="padding: 8px 15px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;">Expense Reports</button>
+             
                 <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
                 <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
             </div>
@@ -852,7 +849,7 @@ if ($result->num_rows > 0) {
             <th>Diesel</th>
             <th>Status</th>
             <th>Last Modified</th>
-            <th>Action</th>
+            <th></th>
         </tr>
     </thead>
     <tbody id="eventTableBody"></tbody>
@@ -1049,31 +1046,59 @@ function renderTripRows(trips, showDeleted) {
         if (showDeleted || trip.is_deleted == 1) {
             statusCell = `<td><span class="status cancelled">Deleted</span></td>`;
             actionCell = `
-                <td class="actions">
-                    <button class="icon-btn restore" data-tooltip="Restore" data-id="${trip.trip_id}">
-                    <i class="fas fa-trash-restore"></i>
-                    ${window.userRole === 'Full Admin' ? 
-                    `<button class="icon-btn full-delete" data-tooltip="Permanently Delete" data-id="${trip.trip_id}" > 
-                        <i class="fa-solid fa-ban"></i>
-                    </button>` : ''}
-                    </button>
-                </td>
+               <td class="actions">
+    <div class="dropdown">
+        <button class="dropdown-btn" data-tooltip="Actions">
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <div class="dropdown-content">
+            <button class="dropdown-item restore" data-id="${trip.trip_id}">
+                <i class="fas fa-trash-restore"></i> Restore
+            </button>
+            ${window.userRole === 'Full Admin' ? 
+            `<button class="dropdown-item full-delete" data-id="${trip.trip_id}">
+                <i class="fa-solid fa-ban"></i> Permanent Delete
+            </button>` : ''}
+              <button type="button" id="viewChecklistBtn" class=" dropdown-item full-delete" style="background-color: #17a2b8; display: none;">
+                    View Driver Checklist
+                </button>
+        </div>
+    </div>
+</td>
             `;
         } else {
             statusCell = `<td><span class="status ${trip.status.toLowerCase().replace(/\s+/g, '')}">${trip.status}</span></td>`;
             actionCell = `
-                <td class="actions">
-                    <button class="icon-btn edit" data-tooltip="Edit" data-id="${trip.trip_id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="icon-btn delete" data-tooltip="Delete" data-id="${trip.trip_id}">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                    ${trip.edit_reason && trip.edit_reason !== 'null' && trip.edit_reason !== '' ? 
-                    `<button class="icon-btn view-reasons" data-tooltip="View Edit History" data-id="${trip.trip_id}">
-                        <i class="fas fa-history"></i>
-                    </button>` : ''}
-                </td>
+             <td class="actions">
+    <div class="dropdown">
+        <button class="dropdown-btn" data-tooltip="Actions">
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <div class="dropdown-content">
+            <button class="dropdown-item edit" data-id="${trip.trip_id}">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            
+            <!-- New buttons added here -->
+            <button class="dropdown-item view-expenses" data-id="${trip.trip_id}">
+                <i class="fas fa-money-bill-wave"></i> View Expenses
+            </button>
+            
+            <button class="dropdown-item view-checklist" data-id="${trip.trip_id}" data-driver-id="${trip.driver_id}">
+                <i class="fas fa-clipboard-check"></i> Driver Checklist
+            </button>
+            
+            ${trip.edit_reason && trip.edit_reason !== 'null' && trip.edit_reason !== '' ? 
+            `<button class="dropdown-item view-reasons" data-id="${trip.trip_id}">
+                <i class="fas fa-history"></i> View History
+            </button>` : ''}
+            
+            <button class="dropdown-item delete" data-id="${trip.trip_id}">
+                <i class="fas fa-trash-alt"></i> Delete
+            </button>
+        </div>
+    </div>
+</td>
             `;
         }
 const row = `
@@ -1104,6 +1129,16 @@ const row = `
     });
 }
 
+$(document).on('click', '.dropdown-btn', function(e) {
+    e.stopPropagation();
+    $('.dropdown-content').not($(this).siblings('.dropdown-content')).removeClass('show');
+    $(this).siblings('.dropdown-content').toggleClass('show');
+});
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.dropdown').length) {
+        $('.dropdown-content').removeClass('show');
+    }
+});
 
             var eventsData = <?php echo $eventsDataJson; ?>;
             var driversData = <?php echo $driversDataJson; ?>;
@@ -1829,7 +1864,7 @@ setTimeout(function() {
             }
         });
             // Edit button click handler
-$(document).on('click', '.icon-btn.edit', function() {
+$(document).on('click', '.dropdown-item.edit', function() {
     var eventId = $(this).data('id');
     var event = eventsData.find(function(e) { return e.id == eventId; });
     
@@ -1893,7 +1928,7 @@ $(document).on('click', '.icon-btn.edit', function() {
     }
 });
 
-    $(document).on('click', '#viewExpensesBtn', function() {
+    $(document).on('click', '.dropdown-item.view-expenses', function() {
         var tripId = $('#editEventId').val();
         
         $.ajax({
@@ -1939,7 +1974,7 @@ $(document).on('click', '.icon-btn.edit', function() {
     });
             
 
-            $(document).on('click', '.icon-btn.delete', function() {
+            $(document).on('click', '.dropdown-item.delete', function() {
                 var eventId = $(this).data('id');
                 $('#deleteEventId').val(eventId);
                 $('#deleteConfirmModal').show();
@@ -2020,7 +2055,7 @@ $('#addScheduleForm').on('submit', function(e) {
     });
 });
 
-  $(document).on('click', '.icon-btn.view-reasons', function() {
+  $(document).on('click', '.dropdown-item.view-reasons', function() {
     var eventId = $(this).data('id');
     var event = eventsData.find(function(e) { return e.id == eventId; });
     
@@ -2345,7 +2380,7 @@ $('#editForm').on('submit', function(e) {
         }
     }
 
-$(document).on('click', '.icon-btn.full-delete', function(e) {
+$(document).on('click', '.dropdown-item.full-delete', function(e) {
     e.stopPropagation(); // Prevent event bubbling to parent elements
     
     const tripId = $(this).data('id');
@@ -2451,7 +2486,7 @@ $(document).on('click', '.icon-btn.full-delete', function(e) {
         });
     }
 
-  $(document).on('click', '.icon-btn.restore', function() {
+  $(document).on('click', '.dropdown-item.restore', function() {
     const tripId = $(this).data('id');
     const $row = $(this).closest('tr');
 
@@ -2581,8 +2616,9 @@ $(document).on('click', '.icon-btn.full-delete', function(e) {
     }
 });
 
-$('#viewChecklistBtn').on('click', function() {
-    var tripId = $('#editEventId').val();
+$(document).on('click', '.dropdown-item.view-checklist', function() {
+    var tripId = $(this).data('id');
+    var driverId = $(this).data('driver-id');
     
     $.ajax({
         url: 'include/handlers/trip_operations.php',
