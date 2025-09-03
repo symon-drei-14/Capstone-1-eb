@@ -2179,7 +2179,7 @@ function validateEditReasons() {
     }
     
     // Check if "Other" is checked but no reason provided
-    if ($('#reason6').is(':checked') && otherReasonText === '') {
+    if ($('#reason7').is(':checked') && otherReasonText === '') {
         Swal.fire({
             icon: 'error',
             title: 'Validation Error',
@@ -2352,7 +2352,7 @@ $('#editForm').on('submit', function(e) {
 
         $('#otherReasonText').on('input', function() {
         if ($(this).val().trim() !== '') {
-            $('#reason6').prop('checked', true);
+            $('#reason7').prop('checked', true);
         }
     });
 
@@ -2604,15 +2604,14 @@ $(document).on('click', '.dropdown-item.full-delete', function(e) {
     });
 
 
-    document.getElementById('reason6').addEventListener('change', function() {
-        const otherReasonContainer = document.getElementById('otherReasonContainer');
-        otherReasonContainer.style.display = this.checked ? 'block' : 'none';
-        
-        
-        if (!this.checked) {
-            document.getElementById('otherReasonText').value = '';
-        }
-    });
+   document.getElementById('reason7').addEventListener('change', function() { 
+    const otherReasonContainer = document.getElementById('otherReasonContainer');
+    otherReasonContainer.style.display = this.checked ? 'block' : 'none';
+    
+    if (!this.checked) {
+        document.getElementById('otherReasonText').value = '';
+    }
+});
 
 
     document.getElementById('otherReasonText').addEventListener('input', function() {
