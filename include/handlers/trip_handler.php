@@ -702,61 +702,93 @@ try {
             break;
 
         case 'save_checklist':
-            // Check if checklist already exists for this trip
-            $checkStmt = $conn->prepare("SELECT id FROM driver_checklist WHERE trip_id = ?");
-            $checkStmt->bind_param("i", $data['trip_id']);
-            $checkStmt->execute();
-            $exists = $checkStmt->get_result()->num_rows > 0;
-            $checkStmt->close();
-            
-            if ($exists) {
-                // Update existing checklist
-                $stmt = $conn->prepare("UPDATE driver_checklist SET 
-                    no_fatigue = ?,
-                    no_drugs = ?,
-                    no_distractions = ?,
-                    no_illness = ?,
-                    fit_to_work = ?,
-                    alcohol_test = ?,
-                    hours_sleep = ?
-                    WHERE trip_id = ?");
-                $stmt->bind_param("iiiiiddi", 
-                    $data['no_fatigue'],
-                    $data['no_drugs'],
-                    $data['no_distractions'],
-                    $data['no_illness'],
-                    $data['fit_to_work'],
-                    $data['alcohol_test'],
-                    $data['hours_sleep'],
-                    $data['trip_id']
-                );
-            } else {
-                // Insert new checklist
-                $stmt = $conn->prepare("INSERT INTO driver_checklist (
-                    trip_id,
-                    no_fatigue,
-                    no_drugs,
-                    no_distractions,
-                    no_illness,
-                    fit_to_work,
-                    alcohol_test,
-                    hours_sleep
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("iiiiiidd", 
-                    $data['trip_id'],
-                    $data['no_fatigue'],
-                    $data['no_drugs'],
-                    $data['no_distractions'],
-                    $data['no_illness'],
-                    $data['fit_to_work'],
-                    $data['alcohol_test'],
-                    $data['hours_sleep']
-                );
-            }
-            
-            $stmt->execute();
-            echo json_encode(['success' => true]);
-            break;
+    // First check if the trip exists and get its date for validation
+    $tripCheck = $conn->prepare("SELECT trip_date FROM trips WHERE trip_id = ?");
+    $tripCheck->bind_param("i", $data['trip_id']);
+    $tripCheck->execute();
+    $tripResult = $tripCheck->get_result();
+    
+    if ($tripResult->num_rows === 0) {
+        echo json_encode(['success' => false, 'message' => 'Trip not found']);
+        $tripCheck->close();
+        break;
+    }
+    
+    $trip = $tripResult->fetch_assoc();
+    $tripCheck->close();
+    
+    // Validate if checklist can be submitted (same day or 2 hours before)
+    $tripDate = new DateTime($trip['trip_date']);
+    $now = new DateTime();
+    
+    // Calculate 2 hours before the trip
+    $twoHoursBefore = clone $tripDate;
+    $twoHoursBefore->modify('-2 hours');
+    
+    // Check if current time is before the allowed window (more than 2 hours before)
+    if ($now < $twoHoursBefore) {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Checklist can only be completed on the day of delivery or up to 2 hours before.'
+        ]);
+        break;
+    }
+    
+    // Check if checklist already exists for this trip
+    $checkStmt = $conn->prepare("SELECT id FROM driver_checklist WHERE trip_id = ?");
+    $checkStmt->bind_param("i", $data['trip_id']);
+    $checkStmt->execute();
+    $exists = $checkStmt->get_result()->num_rows > 0;
+    $checkStmt->close();
+    
+    if ($exists) {
+        // Update existing checklist
+        $stmt = $conn->prepare("UPDATE driver_checklist SET 
+            no_fatigue = ?,
+            no_drugs = ?,
+            no_distractions = ?,
+            no_illness = ?,
+            fit_to_work = ?,
+            alcohol_test = ?,
+            hours_sleep = ?
+            WHERE trip_id = ?");
+        $stmt->bind_param("iiiiiddi", 
+            $data['no_fatigue'],
+            $data['no_drugs'],
+            $data['no_distractions'],
+            $data['no_illness'],
+            $data['fit_to_work'],
+            $data['alcohol_test'],
+            $data['hours_sleep'],
+            $data['trip_id']
+        );
+    } else {
+        // Insert new checklist
+        $stmt = $conn->prepare("INSERT INTO driver_checklist (
+            trip_id,
+            no_fatigue,
+            no_drugs,
+            no_distractions,
+            no_illness,
+            fit_to_work,
+            alcohol_test,
+            hours_sleep
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiiiiidd", 
+            $data['trip_id'],
+            $data['no_fatigue'],
+            $data['no_drugs'],
+            $data['no_distractions'],
+            $data['no_illness'],
+            $data['fit_to_work'],
+            $data['alcohol_test'],
+            $data['hours_sleep']
+        );
+    }
+    
+    $stmt->execute();
+    echo json_encode(['success' => true]);
+    break;
 
         case 'get_checklist':
             $tripId = $data['trip_id'] ?? null;
