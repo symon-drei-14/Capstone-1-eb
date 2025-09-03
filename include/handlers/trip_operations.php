@@ -57,22 +57,12 @@ function checkDriverAvailability($conn, $driverId, $tripDate, $excludeTripId = n
     return $conflictingTrips;
 }
 
-function validateTripDate($tripDate, $deliveryType, $isEdit = false, $originalDate = null) {
+function validateTripDate($tripDate) {
     $today = new DateTime();
     $tripDateTime = new DateTime($tripDate);
     $interval = $today->diff($tripDateTime);
     
-    // Emergency delivery bypasses all date restrictions
-    if ($deliveryType === 'Emergency Delivery') {
-        return ['valid' => true];
-    }
-    
-    // Normal delivery - check if trip date is at least 3 days from today
-    // For edits, only validate if the date has changed
-    if ($isEdit && $originalDate && $tripDate === $originalDate) {
-        return ['valid' => true];
-    }
-    
+    // Check if trip date is at least 3 days from today
     if ($interval->days < 3 && $tripDateTime > $today) {
         $earliestDate = (new DateTime())->modify('+3 days')->format('Y-m-d');
         return [
@@ -272,10 +262,10 @@ try {
             
             try {
                 // Validate trip date is at least 3 days in advance
-                $dateValidation = validateTripDate($data['date'], $data['deliveryType']);
-if (!$dateValidation['valid']) {
-    throw new Exception($dateValidation['message']);
-}
+                $dateValidation = validateTripDate($data['date']);
+                if (!$dateValidation['valid']) {
+                    throw new Exception($dateValidation['message']);
+                }
                 
                 // Check for maintenance conflicts first
                 $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
@@ -324,28 +314,27 @@ if (!$dateValidation['valid']) {
                 
                 $portId = getOrCreatePortId($conn, $data['port']);
                 
-               $stmt = $conn->prepare("INSERT INTO trips 
-    (truck_id, driver_id, helper_id, dispatcher_id, client_id, port_id,
-    destination_id, shipping_line_id, consignee_id, container_no, 
-    trip_date, status, fcl_status, delivery_type) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-$stmt->bind_param("iiiiiiiissssss",
-    $truckId,
-    $driverId,
-    $helperId,
-    $dispatcherId,
-    $clientId,
-    $portId,
-    $destinationId,
-    $shippingLineId,
-    $consigneeId,
-    $data['containerNo'],
-    $data['date'],
-    $data['status'],
-    $data['fcl_status'],
-    $data['deliveryType']
-);
+                $stmt = $conn->prepare("INSERT INTO trips 
+                    (truck_id, driver_id, helper_id, dispatcher_id, client_id, port_id,
+                    destination_id, shipping_line_id, consignee_id, container_no, 
+                    trip_date, status, fcl_status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                
+                $stmt->bind_param("iiiiiiiisssss",
+                    $truckId,
+                    $driverId,
+                    $helperId,
+                    $dispatcherId,
+                    $clientId,
+                    $portId,
+                    $destinationId,
+                    $shippingLineId,
+                    $consigneeId,
+                    $data['containerNo'],
+                    $data['date'],
+                    $data['status'],
+                    $data['fcl_status']
+                );
                 
                 if (!$stmt->execute()) {
                     throw new Exception("Failed to insert trip: " . $stmt->error);
@@ -396,15 +385,10 @@ $stmt->bind_param("iiiiiiiissssss",
                     }
                 }
                 
-                $getCurrent = $conn->prepare("SELECT trip_date, status, truck_id FROM trips WHERE trip_id = ?");
-$getCurrent->bind_param("i", $data['id']);
-$getCurrent->execute();
-$current = $getCurrent->get_result()->fetch_assoc();
-
-$dateValidation = validateTripDate($data['date'], $data['deliveryType'], true, $current['trip_date']);
-if (!$dateValidation['valid']) {
-    throw new Exception($dateValidation['message']);
-}
+                $getCurrent = $conn->prepare("SELECT status, truck_id FROM trips WHERE trip_id = ?");
+                $getCurrent->bind_param("i", $data['id']);
+                $getCurrent->execute();
+                $current = $getCurrent->get_result()->fetch_assoc();
                 
                 if (!$current) {
                     throw new Exception("Trip not found");
@@ -435,29 +419,28 @@ if (!$dateValidation['valid']) {
 
                 $portId = getOrCreatePortId($conn, $data['port']);
 
-               $stmt = $conn->prepare("UPDATE trips SET 
-    truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, port_id=?,
-    destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
-    trip_date=?, status=?, fcl_status=?, delivery_type=?
-    WHERE trip_id=?");
-
-$stmt->bind_param("iiiiiiiissssssi",
-    $truckId,
-    $driverId, 
-    $helperId,
-    $dispatcherId,
-    $clientId,
-    $portId,
-    $destinationId,
-    $shippingLineId,
-    $consigneeId,
-    $data['containerNo'],
-    $data['date'],
-    $data['status'],
-    $data['fclStatus'],
-    $data['deliveryType'],
-    $data['id']
-);
+                $stmt = $conn->prepare("UPDATE trips SET 
+                    truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, port_id=?,
+                    destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
+                    trip_date=?, status=?, fcl_status=?  
+                    WHERE trip_id=?");
+                
+                $stmt->bind_param("iiiiiiiisssssi",
+                    $truckId,
+                    $driverId, 
+                    $helperId,
+                    $dispatcherId,
+                    $clientId,
+                    $portId,
+                    $destinationId,
+                    $shippingLineId,
+                    $consigneeId,
+                    $data['containerNo'],
+                    $data['date'],
+                    $data['status'],
+                    $data['fclStatus'],
+                    $data['id']
+                );
                 
                 if (!$stmt->execute()) {
                     throw new Exception("Failed to update trip: " . $stmt->error);
@@ -553,7 +536,6 @@ $stmt->bind_param("iiiiiiiissssssi",
             t.trip_date,
             t.status,
             t.fcl_status,
-            t.delivery_type,
             t.created_at,
             tr.plate_no, 
             tr.capacity as truck_capacity,
@@ -652,7 +634,6 @@ $stmt->bind_param("iiiiiiiissssssi",
             t.trip_date,
             t.status,
             t.fcl_status,
-            t.delivery_type,
             t.created_at,
             tr.plate_no, 
             tr.capacity as truck_capacity,
