@@ -85,6 +85,35 @@ checkAccess(); // No role needed—logic is handled internally
 
  <h3 class="title"><i class="fa-solid fa-chart-line"></i>Information Management</h3>
 
+ <script>
+    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
+        document.querySelector('.sidebar').classList.toggle('expanded');
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Get current page filename
+    const currentPage = window.location.pathname.split('/').pop();
+    
+    // Find all sidebar links
+    const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+    
+    // Check each link
+    sidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('href').split('/').pop();
+        
+        // If this link matches current page, add active class
+        if (linkPage === currentPage) {
+            link.parentElement.classList.add('active');
+            
+            // Also highlight the icon
+            const icon = link.parentElement.querySelector('.icon2');
+            if (icon) {
+                icon.style.color = 'white';
+            }
+        }
+    });
+});
+</script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
 
