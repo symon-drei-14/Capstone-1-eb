@@ -31,7 +31,7 @@
 
 
     $tripStats = getTripStatistics($conn);
-        session_start();
+        session_start(); // tangalin tong session start hehe
 
     
 $sql = "SELECT 
