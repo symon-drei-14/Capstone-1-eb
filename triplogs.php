@@ -1494,8 +1494,8 @@ $(document).on('click', '.icon-btn.edit', function() {
             shippingLine: event.shippingLine,
             consignee: event.consignee,
             size: event.size,
-            cashAdvance: event.cashAdvance,
-            additional_cash_advance: event.additionalCashAdvance, 
+             cashAdvance: event.cashAdvance || event.cash_advance,
+        additionalCashAdvance: event.additionalCashAdvance || event.additional_cash_advance, 
         diesel: event.diesel,
             status: event.status,
             modifiedby: event.modifiedby,
@@ -1673,39 +1673,205 @@ function resetAddScheduleForm() {
             }, 100);
         }
     },
-    eventClick: function(event, jsEvent, view) {
-        // Populate the event modal with event data
-        $('#eventModalDate').text(moment(event.start).format('MMMM D, YYYY h:mm A'));
-        $('#eventModalPlateNo').text(event.plateNo || 'N/A');
-        $('#eventModalDriver').text(event.driver || 'N/A');
-        $('#eventModalHelper').text(event.helper || 'N/A');
-        $('#eventModalPort').text(event.port || 'N/A');
-        $('#eventModalDispatcher').text(event.dispatcher || 'N/A');
-        $('#eventModalContainerNo').text(event.containerNo || 'N/A');
-        $('#eventModalClient').text(event.client || 'N/A');
-        $('#eventModalDestination').text(event.destination || 'N/A');
-        $('#eventModalShippingLine').text(event.shippingLine || 'N/A');
-        $('#eventModalConsignee').text(event.consignee || 'N/A');
-        $('#eventModalSize').text(event.truck_capacity || 'N/A');
-        $('#eventModalFCL').text(event.fcl_status || 'N/A');
-        $('#eventModalCashAdvance').text('₱' + (parseFloat(event.cashAdvance) || 0).toFixed(2));
-        $('#eventModalAdditionalCashAdvance').text('₱' + (parseFloat(event.additionalCashAdvance) || 0).toFixed(2));
-        $('#eventModalDiesel').text('₱' + (parseFloat(event.diesel) || 0).toFixed(2));
+   
+eventClick: function(event, jsEvent, view) {
+    // Populate the event modal with event data
+    $('#eventModalDate').text(moment(event.start).format('MMMM D, YYYY h:mm A'));
+    $('#eventModalPlateNo').text(event.plateNo || 'N/A');
+    $('#eventModalDriver').text(event.driver || 'N/A');
+    $('#eventModalHelper').text(event.helper || 'N/A');
+    $('#eventModalPort').text(event.port || 'N/A');
+    $('#eventModalDispatcher').text(event.dispatcher || 'N/A');
+    $('#eventModalContainerNo').text(event.containerNo || 'N/A');
+    $('#eventModalClient').text(event.client || 'N/A');
+    $('#eventModalDestination').text(event.destination || 'N/A');
+    $('#eventModalShippingLine').text(event.shippingLine || 'N/A');
+    $('#eventModalConsignee').text(event.consignee || 'N/A');
+    $('#eventModalSize').text(event.truck_capacity || 'N/A');
+    $('#eventModalFCL').text(event.fcl_status || 'N/A');
+    
+    // Fix these property names to match the calendar event data structure:
+    $('#eventModalCashAdvance').text('₱' + (parseFloat(event.cashAdvance || event.cash_advance) || 0).toFixed(2));
+    $('#eventModalAdditionalCashAdvance').text('₱' + (parseFloat(event.additional_cash_advance || event.additionalCashAdvance) || 0).toFixed(2));
+    $('#eventModalDiesel').text('₱' + (parseFloat(event.diesel) || 0).toFixed(2));
+    
+    // Set status with appropriate styling
+    const statusElement = $('#eventModalStatus');
+    statusElement.text(event.status || 'N/A');
+    statusElement.removeClass().addClass('status ' + (event.status ? event.status.toLowerCase().replace(/\s+/g, '') : ''));
+    
+    // Store event ID for action buttons
+    $('#eventModal').data('eventId', event.id);
+    
+    // Update the edit button click handler
+    $('#eventModalEditBtn').off('click').on('click', function() {
+        var eventId = $('#eventModal').data('eventId');
         
-        // Set status with appropriate styling
-        const statusElement = $('#eventModalStatus');
-        statusElement.text(event.status || 'N/A');
-        statusElement.removeClass().addClass('status ' + (event.status ? event.status.toLowerCase().replace(/\s+/g, '') : ''));
+        // Find the event data from the original eventsData array instead of the calendar event
+        var eventData = eventsData.find(function(e) { return e.id == eventId; });
         
-        // Store event ID for action buttons
-        $('#eventModal').data('eventId', event.id);
+        if (eventData) {
+            $('#editEventId').val(eventData.id);
+            $('#editEventPlateNo').val(eventData.truck_plate_no || eventData.plateNo);
+            
+            // Fix date formatting
+            var eventDate = eventData.date || eventData.trip_date;
+            if (eventDate) {
+                if (eventDate.includes('T')) {
+                    eventDate = eventDate.substring(0, 16); 
+                }
+            }
+            $('#editEventDate').val(eventDate);
+
+            // Populate all dropdowns first
+            populateDriverDropdowns(eventData.size);
+            populateHelperDropdowns();
+            populateDispatcherDropdowns();
+            populateConsigneeDropdowns();
+            populateClientDropdowns();
+            populatePortDropdowns();
+            populateDestinationDropdowns();
+            populateShippingLineDropdowns();
+
+            // Set immediate values (non-dropdown fields)
+            $('#editEventContainerNo').val(eventData.containerNo);
+            $('#editEventSize').val(eventData.truck_capacity ? eventData.truck_capacity + 'ft' : eventData.size);
+            $('#editEventFCL').val(eventData.fcl_status || eventData.size);
+            
+            // Use the correct property names from eventsData:
+            $('#editEventCashAdvance').val(eventData.cashAdvance);
+            $('#editEventAdditionalCashAdvance').val(eventData.additionalCashAdvance);
+            $('#editEventDiesel').val(eventData.diesel);
+            $('#editEventStatus').val(eventData.status);
+
+            // Set dropdown values after they're populated
+            setTimeout(() => {
+                $('#editEventDriver').val(eventData.driver);
+                $('#editEventHelper').val(eventData.helper);
+                $('#editEventDispatcher').val(eventData.dispatcher || '');
+                $('#editEventConsignee').val(eventData.consignee);
+                $('#editEventClient').val(eventData.client);
+                $('#editEventPort').val(eventData.port || '');
+                $('#editEventDestination').val(eventData.destination);
+                $('#editEventShippingLine').val(eventData.shippingLine);
+            }, 100);
+
+            // Show/hide buttons based on status
+            if (eventData.status === 'Completed') {
+                $('#viewExpensesBtn').show();
+            } else {
+                $('#viewExpensesBtn').hide();
+            }
+
+            if (eventData.driver_id && eventData.status !== 'Cancelled') {
+                $('#viewChecklistBtn').show();
+            } else {
+                $('#viewChecklistBtn').hide();
+            }
+           
+            // Close event modal and show edit modal
+            $('#eventModal').hide();
+            $('#editModal').show();
+        }
+    });
+    
+    // Update delete button handler
+    $('#eventModalDeleteBtn').off('click').on('click', function() {
+        var eventId = $('#eventModal').data('eventId');
+        $('#deleteEventId').val(eventId);
+        $('#eventModal').hide();
+        $('#deleteConfirmModal').show();
+    });
+    
+    // Update history button handler
+    $('#eventModalHistoryBtn').off('click').on('click', function() {
+        var eventId = $('#eventModal').data('eventId');
+        var eventData = eventsData.find(function(e) { return e.id == eventId; });
         
-        // Show the modal
-        $('#eventModal').show();
-        
-        // Prevent default behavior
-        return false;
-    },
+        if (eventData && eventData.edit_reasons) {
+            try {
+                // Check if it's the default "Trip created" message
+                if (eventData.edit_reasons === "Trip created" || 
+                    eventData.edit_reasons === '"Trip created"') {
+                    $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
+                        '<p>This trip has not been edited yet</p></div>');
+                    $('#eventModal').hide();
+                    $('#editReasonsModal').show();
+                    return;
+                }
+                
+                var reasons;
+                
+                // Handle different data types
+                if (typeof eventData.edit_reasons === 'string') {
+                    reasons = JSON.parse(eventData.edit_reasons);
+                } else if (Array.isArray(eventData.edit_reasons)) {
+                    reasons = eventData.edit_reasons;
+                } else if (typeof eventData.edit_reasons === 'object') {
+                    reasons = Object.values(eventData.edit_reasons);
+                } else {
+                    throw new Error('Unknown data format');
+                }
+                
+                // Ensure we have an array
+                if (!Array.isArray(reasons)) {
+                    reasons = [reasons];
+                }
+                
+                // Filter out any empty or null reasons
+                reasons = reasons.filter(function(reason) {
+                    return reason && reason !== "Trip created";
+                });
+                
+                // If no valid reasons after filtering
+                if (reasons.length === 0) {
+                    $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
+                        '<p>This trip has not been edited yet</p></div>');
+                    $('#eventModal').hide();
+                    $('#editReasonsModal').show();
+                    return;
+                }
+                
+                var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
+                html += '<ul style="list-style-type: none; padding-left: 5px;">';
+                
+                reasons.forEach(function(reason) {
+                    html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
+                    html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
+                    html += '</li>';
+                });
+                
+                html += '</ul>';
+                html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
+                html += 'Last modified by: ' + (eventData.modifiedby || 'System') + '<br>';
+                html += 'On: ' + formatDateTime(eventData.modifiedat);
+                html += '</p></div>';
+                
+                $('#editReasonsContent').html(html);
+                $('#eventModal').hide();
+                $('#editReasonsModal').show();
+                
+            } catch (e) {
+                console.error('Error processing edit reasons:', e, eventData.edit_reasons);
+                $('#editReasonsContent').html('<div style="padding: 15px; background: #fff8f8; border: 1px solid #ffdddd;">'+
+                    '<p>Error displaying edit history</p></div>');
+                $('#eventModal').hide();
+                $('#editReasonsModal').show();
+            }
+        } else {
+            $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
+                '<p>No edit remarks recorded for this trip</p></div>');
+            $('#eventModal').hide();
+            $('#editReasonsModal').show();
+        }
+    });
+    
+    // Show the modal
+    $('#eventModal').show();
+    
+    // Prevent default behavior
+    return false;
+},
     dayClick: function(date, jsEvent, view) {
         var clickedDay = $(this);
         
