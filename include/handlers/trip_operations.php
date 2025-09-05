@@ -79,6 +79,31 @@ function validateTripDate($tripDate, $isEdit = false) {
     return ['valid' => true];
 }
 
+function checkDriverEnRouteTrips($conn, $driverId, $excludeTripId = null) {
+    $query = "SELECT COUNT(*) as count 
+              FROM trips 
+              WHERE driver_id = ? 
+              AND status = 'En Route'";
+    
+    if ($excludeTripId) {
+        $query .= " AND trip_id != ?";
+    }
+    
+    $stmt = $conn->prepare($query);
+    
+    if ($excludeTripId) {
+        $stmt->bind_param("ii", $driverId, $excludeTripId);
+    } else {
+        $stmt->bind_param("i", $driverId);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $count = $result->fetch_assoc()['count'];
+    
+    return $count > 0;
+}
+
 function insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance = 0, $diesel = 0) {
     $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance, additional_cash_advance, diesel) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("iddd", $tripId, $cashAdvance, $additionalCashAdvance, $diesel);
@@ -401,6 +426,15 @@ try {
                 }
 
                 $driverId = getDriverIdByName($conn, $data['driver']);
+
+                 if ($data['status'] === 'En Route') {
+            // Check if driver already has an En Route trip (excluding current trip)
+            $hasEnRouteTrip = checkDriverEnRouteTrips($conn, $driverId, $data['id']);
+            
+            if ($hasEnRouteTrip) {
+                throw new Exception("Cannot set status to 'En Route': Driver {$data['driver']} already has an active trip with En Route status.");
+            }
+        }
                 $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date'], $data['id']);
                 
                 if (!empty($conflictingTrips)) {
