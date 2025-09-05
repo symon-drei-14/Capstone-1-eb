@@ -70,7 +70,7 @@ checkAccess();
         </div>
         <div class="sidebar-item">
             <i class="icon2">📈</i>
-            <a href="fleetperformance.php">Fleet Performance Analytics</a>
+            <a href="informationmanagement.php">Information Management</a>
         </div>
         <hr>
         <div class="sidebar-item">

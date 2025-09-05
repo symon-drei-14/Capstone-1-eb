@@ -56,6 +56,7 @@ if ($maintenanceResult && $maintenanceResult->num_rows > 0) {
     <link rel="stylesheet" href="include/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -66,81 +67,7 @@ if ($maintenanceResult && $maintenanceResult->num_rows > 0) {
 
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
-<style>
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 11000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    overflow-y: auto; 
-    padding: 20px 0; 
-}
 
-.modal-content {
-    background-color: #fff;
-    margin: 2% auto;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    max-width: 700px; 
-    max-height: 100vh; 
-    overflow-y: auto; 
-    position: relative;
-    width: 90%; 
-}
-
-.trip-details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.details-section {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.section-title {
-    margin-top: 0;
-    margin-bottom: 15px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e0e0e0;
-    color: #333;
-    font-size: 16px;
-}
-
-.detail-row {
-    display: flex;
-    margin-bottom: 10px;
-}
-
-.detail-label {
-    font-weight: 600;
-    color: #555;
-    min-width: 120px;
-    display: inline-block;
-    margin-right:5px;
-}
-
-.detail-value {
-    color: #333;
-    word-break: break-word;
-}
-
-.system-info {
-    grid-column: span 2;
-    background: #f0f7ff;
-}
-
-
-</style>
 <?php
 
 require 'include/handlers/dbhandler.php';
@@ -268,7 +195,7 @@ $eventsDataJson = json_encode($eventsData);
     </div>
     <div class="sidebar-item">
         <i class="icon2">📈</i>
-        <a href="fleetperformance.php">Fleet Performance Analytics</a>
+        <a href="informationmanagement.php">Information Management</a>
     </div>
     <hr>
     <div class="sidebar-item">
@@ -281,11 +208,7 @@ $eventsDataJson = json_encode($eventsData);
     </div>
 </div>
 
- <!-- <div class="quick-stats">
-    <span><i class="fas fa-truck"></i> 42 Active Vehicles</span>
-    <span><i class="fas fa-user"></i> 18 Drivers On Duty</span>
-    <span><i class="fas fa-map-marker-alt"></i> 7 Deliveries Today</span>
-</div>  -->
+
 <div class="quick-actions-bar">
     <button class="quick-action-btn">
         <i class="fas fa-plus"></i> New Delivery
@@ -501,34 +424,7 @@ $eventsDataJson = json_encode($eventsData);
 </div>
     </div>
 <div class="dashboard-section">
-    <div class="card-large2">
-        <h3>Shipment Statistics</h3>
-        <p>Total deliveries: 23.8k</p>
-        <div id="shipmentStatisticsChart"></div>
-    </div>
-    <div class="card-small">
-        <h3>Active Drivers</h3>
-        <?php
-
-        if (count($drivingDrivers) > 0) {
-
-            foreach ($drivingDrivers as $driver) {
-                echo '<div class="performance">
-                        <i class="fa fa-user icon-bg"></i>
-                        <p>' . htmlspecialchars($driver['driver']) . ' - Destination: ' . htmlspecialchars($driver['destination']) . '</p>
-                      </div>';
-            }
-        } else {
-
-            echo '<div class="performance">
-                    <i class="fa fa-info-circle icon-bg"></i>
-                    <p>No active drivers currently on duty</p>
-                  </div>';
-        }
-        ?>
-    </div>
-</div>
-<section class="maintenance-section">
+  
     <div class="card-large">
         <h3>Maintenance keneve Status</h3>
         <div class="maintenance-container">
@@ -590,9 +486,51 @@ $eventsDataJson = json_encode($eventsData);
             <?php endif; ?>
         </div>
 
-        <button class="view-all-btn" onclick="window.location.href='maintenance.php'">View All Maintenance Records</button>
+        <button class="view-all-btn" onclick="window.location.href='maintenance.php'">View All Maintenance</button>
+
+        
     </div>
+    <!-- <div class="card-small">
+        <h3>Active Drivers</h3> -->
+        <?php
+
+        // if (count($drivingDrivers) > 0) {
+
+        //     foreach ($drivingDrivers as $driver) {
+        //         echo '<div class="performance">
+        //                 <i class="fa fa-user icon-bg"></i>
+        //                 <p>' . htmlspecialchars($driver['driver']) . ' - Destination: ' . htmlspecialchars($driver['destination']) . '</p>
+        //               </div>';
+        //     }
+        // } else {
+
+        //     echo '<div class="performance">
+        //             <i class="fa fa-info-circle icon-bg"></i>
+        //             <p>No active drivers currently on duty</p>
+        //           </div>';
+        // }
+        ?>
+  <div class="card1">
+        <h3>Maintenance Frequency</h3>
+        <div id="maintenance"></div>
+    </div>
+</div>
+    
+</div>
+<section class="analytics-section">
+  <div class="card3">
+        <h3>Cost Trends</h3>
+        <div id="costtrendchart"></div>
+    </div>
+
+     <div class="card2">
+        <h3>Number of Trips</h3>
+        <div id="tripnumber"></div>
+    </div>
+   
+            
 </section>
+
 
 <section class="calendar-section">
     <div class="card-large">
@@ -623,82 +561,6 @@ $eventsDataJson = json_encode($eventsData);
 
 
 <script>
-
-
-
-    var shipmentOptions = {
-        series: [{
-            name: 'Income',
-            type: 'column',
-            data: [1.4, 2, 2.5, 1.5, 2.5, 2.8, 3.8, 4.6]
-        }, {
-            name: 'Cashflow',
-            type: 'column',
-            data: [1.1, 3, 3.1, 4, 4.1, 4.9, 6.5, 8.5]
-        }, {
-            name: 'Revenue',
-            type: 'line',
-            data: [20, 29, 37, 36, 44, 45, 50, 58]
-        }],
-        chart: {
-            height: 350,
-            type: 'line',
-            stacked: false
-        },
-        xaxis: {
-            categories: [2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016],
-        },
-        yaxis: [{
-            seriesName: 'Income',
-            axisTicks: { show: true },
-            axisBorder: { show: true, color: '#008FFB' },
-            labels: { style: { colors: '#008FFB' } },
-            title: { text: "Income (thousand crores)", style: { color: '#008FFB' } }
-        }, {
-            seriesName: 'Cashflow',
-            opposite: true,
-            axisTicks: { show: true },
-            axisBorder: { show: true, color: '#00E396' },
-            labels: { style: { colors: '#00E396' } },
-            title: { text: "Operating Cashflow (thousand crores)", style: { color: '#00E396' } }
-        }, {
-            seriesName: 'Revenue',
-            opposite: true,
-            axisTicks: { show: true },
-            axisBorder: { show: true, color: '#FEB019' },
-            labels: { style: { colors: '#FEB019' } },
-            title: { text: "Revenue (thousand crores)", style: { color: '#FEB019' } }
-        }],
-        tooltip: { fixed: { enabled: true, position: 'topLeft', offsetY: 30, offsetX: 60 } },
-        legend: { horizontalAlign: 'left', offsetX: 40 }
-    };
-
-
-    var shipmentChart = new ApexCharts(document.querySelector("#shipmentStatisticsChart"), shipmentOptions);
-    shipmentChart.render();
-
-
-    var vehicleOptions = {
-        series: [{
-            name: 'On the way',
-            data: [39.7]
-        }, {
-            name: 'Unloading',
-            data: [28.3]
-        }, {
-            name: 'Loading',
-            data: [17.4]
-        }, {
-            name: 'Waiting',
-            data: [14.6]
-        }],
-        chart: {
-            height: 350,
-            type: 'pie'
-        },
-        labels: ['On the way', 'Unloading', 'Loading', 'Waiting']
-    };
-
 
 
      var calendarEvents = <?php echo $eventsDataJson; ?>;
@@ -1372,6 +1234,688 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for global access (optional)
 window.AdminLoading = AdminLoading;
+
+
 </script>
+
+<script>
+    
+      function updateDateTime() {
+        const now = new Date();
+        
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, options);
+        
+        document.getElementById('current-time').textContent = now.toLocaleTimeString();
+    }
+
+    // Update immediately and then every second
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    
+// Replace the existing cost trends chart initialization with this code
+
+// Global variables for the cost trends functionality
+let costTrendsChart = null;
+let currentView = 'current'; // 'current', 'monthly', 'yearly'
+
+// Initialize cost trends chart
+function initializeCostTrendsChart() {
+    loadCostTrendsData();
+    
+    // Add view toggle buttons
+    addCostTrendsControls();
+}
+
+function addCostTrendsControls() {
+        const costTrendsCard = document.querySelector('#costtrendchart').closest('.card3');
+
+    const header = costTrendsCard.querySelector('h3');
+    
+    // Create control buttons
+    const controlsDiv = document.createElement('div');
+    controlsDiv.style.cssText = `
+        display: flex; 
+        gap: 10px; 
+        margin: 10px 0; 
+        flex-wrap: wrap;
+    `;
+    
+    const buttonStyle = `
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: #f8f9fa;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s ease;
+    `;
+    
+    const activeButtonStyle = `
+        background: #B82132;
+        color: white;
+        border-color: #B82132;
+    `;
+    
+    const buttons = [
+        { id: 'current', text: 'Current Year' },
+        { id: 'monthly', text: 'Monthly View' },
+        { id: 'yearly', text: 'Yearly View' }
+    ];
+    
+    buttons.forEach(btn => {
+        const button = document.createElement('button');
+        button.textContent = btn.text;
+        button.style.cssText = buttonStyle;
+        button.onclick = () => switchCostView(btn.id);
+        button.id = `btn-${btn.id}`;
+        controlsDiv.appendChild(button);
+    });
+    
+    // Insert controls after the header
+    header.insertAdjacentElement('afterend', controlsDiv);
+    
+    // Set active button
+    document.getElementById('btn-current').style.cssText = buttonStyle + activeButtonStyle;
+}
+
+function switchCostView(view) {
+    currentView = view;
+    
+    // Update active button
+    document.querySelectorAll('[id^="btn-"]').forEach(btn => {
+        btn.style.cssText = `
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        `;
+    });
+    
+    document.getElementById(`btn-${view}`).style.cssText = `
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: #B82132;
+        color: white;
+        border-color: #B82132;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s ease;
+    `;
+    
+    // Load appropriate data
+    switch(view) {
+        case 'current':
+            loadCostTrendsData();
+            break;
+        case 'monthly':
+            loadMonthlyTrendsData();
+            break;
+        case 'yearly':
+            loadYearlyTrendsData();
+            break;
+    }
+}
+
+function loadCostTrendsData() {
+    fetch('include/handlers/analytics_handler.php?action=cost_trends')
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                renderCostTrendsChart(data, 'donut', 'Cost Distribution - Current Year');
+            } else {
+                console.error('Error loading cost trends:', data.error);
+                // Fallback to original static data if there's an error
+                renderDefaultCostChart();
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            renderDefaultCostChart();
+        });
+}
+
+function loadMonthlyTrendsData() {
+    fetch('include/handlers/analytics_handler.php?action=monthly_trends')
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                renderMonthlyChart(data);
+            } else {
+                console.error('Error loading monthly trends:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+        });
+}
+
+function loadYearlyTrendsData() {
+    fetch('include/handlers/analytics_handler.php?action=yearly_trends')
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                renderYearlyChart(data);
+            } else {
+                console.error('Error loading yearly trends:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+        });
+}
+
+function renderCostTrendsChart(data, chartType = 'donut', title = 'Cost Trends') {
+    if(costTrendsChart) {
+        costTrendsChart.destroy();
+    }
+    
+    const options = {
+        series: data.data,
+        chart: {
+            width: 580,
+            type: chartType,
+        },
+        labels: data.labels,
+        plotOptions: {
+            pie: {
+                startAngle: -90,
+                endAngle: 270
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        fill: {
+            type: 'gradient',
+        },
+        legend: {
+            formatter: function (val, opts) {
+                let series = opts.w.globals.series;
+                let total = series.reduce((a, b) => a + b, 0);
+                let value = series[opts.seriesIndex];
+                let percent = ((value / total) * 100).toFixed(1);
+                return `${val} - ${percent}% (₱${value.toLocaleString()})`;
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (value, opts) {
+                    let series = opts.w.globals.series;
+                    let total = series.reduce((a, b) => a + b, 0);
+                    let percent = ((value / total) * 100).toFixed(1);
+                    return `₱${value.toLocaleString()} (${percent}%)`;
+                }
+            }
+        },
+        title: {
+            text: title
+        },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: {
+                    width: 200
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }]
+    };
+    
+    costTrendsChart = new ApexCharts(document.querySelector("#costtrendchart"), options);
+    costTrendsChart.render();
+}
+
+function renderMonthlyChart(data) {
+    if(costTrendsChart) {
+        costTrendsChart.destroy();
+    }
+    
+    // Prepare data for line chart
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    const series = [];
+    const colors = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0'];
+    
+    data.expenseTypes.forEach((type, index) => {
+        const monthlyAmounts = months.map(month => {
+            return data.monthlyData[month] && data.monthlyData[month][type] 
+                ? data.monthlyData[month][type] 
+                : 0;
+        });
+        
+        series.push({
+            name: ucfirst(type),
+            type: 'line',
+            data: monthlyAmounts
+        });
+    });
+    
+    const options = {
+        series: series,
+        chart: {
+            height: 350,
+            type: 'line',
+            stacked: false,
+            width: 580,
+        },
+        stroke: {
+            width: [2, 2, 2, 2, 2],
+            curve: 'smooth'
+        },
+        plotOptions: {
+            bar: {
+                columnWidth: '50%'
+            }
+        },
+        fill: {
+            opacity: [0.85, 0.25, 1],
+            gradient: {
+                inverseColors: false,
+                shade: 'light',
+                type: "vertical",
+                opacityFrom: 0.85,
+                opacityTo: 0.55,
+                stops: [0, 100, 100, 100]
+            }
+        },
+        labels: months,
+        markers: {
+            size: 0
+        },
+        xaxis: {
+            type: 'category'
+        },
+        yaxis: {
+            title: {
+                text: 'Amount (₱)',
+            },
+            labels: {
+                formatter: function (val) {
+                    return '₱' + val.toLocaleString();
+                }
+            }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: {
+                formatter: function (y) {
+                    if (typeof y !== "undefined") {
+                        return "₱" + y.toLocaleString();
+                    }
+                    return y;
+                }
+            }
+        },
+        title: {
+            text: 'Monthly Cost Trends - ' + new Date().getFullYear()
+        },
+        colors: colors
+    };
+    
+    costTrendsChart = new ApexCharts(document.querySelector("#costtrendchart"), options);
+    costTrendsChart.render();
+}
+
+function renderYearlyChart(data) {
+    if(costTrendsChart) {
+        costTrendsChart.destroy();
+    }
+    
+    // Get all years from the data
+    const years = Object.keys(data.yearlyData).sort();
+    
+    const series = [];
+    const colors = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0'];
+    
+    data.expenseTypes.forEach((type, index) => {
+        const yearlyAmounts = years.map(year => {
+            return data.yearlyData[year] && data.yearlyData[year][type] 
+                ? data.yearlyData[year][type] 
+                : 0;
+        });
+        
+        series.push({
+            name: ucfirst(type),
+            type: 'column',
+            data: yearlyAmounts
+        });
+    });
+    
+    const options = {
+        series: series,
+        chart: {
+            type: 'bar',
+            height: 350,
+            stacked: true,
+            width: 580,
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                dataLabels: {
+                    total: {
+                        enabled: true,
+                        style: {
+                            fontSize: '13px',
+                            fontWeight: 900
+                        }
+                    }
+                }
+            },
+        },
+        stroke: {
+            width: 1,
+            colors: ['#fff']
+        },
+        title: {
+            text: 'Yearly Cost Trends'
+        },
+        xaxis: {
+            categories: years,
+            labels: {
+                formatter: function (val) {
+                    return val;
+                }
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Amount (₱)'
+            },
+            labels: {
+                formatter: function (val) {
+                    return '₱' + val.toLocaleString();
+                }
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return '₱' + val.toLocaleString();
+                }
+            }
+        },
+        fill: {
+            opacity: 1
+        },
+        legend: {
+            position: 'top',
+            horizontalAlign: 'left',
+            offsetX: 40
+        },
+        colors: colors
+    };
+    
+    costTrendsChart = new ApexCharts(document.querySelector("#costtrendchart"), options);
+    costTrendsChart.render();
+}
+
+function renderDefaultCostChart() {
+    // Fallback to your original static chart if data loading fails
+    const options = {
+        series: [44, 55, 41, 17, 15],
+        chart: {
+            width: 580,
+            type: 'donut',
+        },
+        labels: ['Fuel', 'Toll Gate', 'Food', 'Emergency', 'Others'],
+        plotOptions: {
+            pie: {
+                startAngle: -90,
+                endAngle: 270
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        fill: {
+            type: 'gradient',
+        },
+        legend: {
+            formatter: function (val, opts) {
+                let series = opts.w.globals.series;
+                let total = series.reduce((a, b) => a + b, 0);
+                let value = series[opts.seriesIndex];
+                let percent = ((value / total) * 100).toFixed(1);
+                return `${val} - ${percent}%`;
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (value, opts) {
+                    let series = opts.w.globals.series;
+                    let total = series.reduce((a, b) => a + b, 0);
+                    let percent = ((value / total) * 100).toFixed(1);
+                    return `${percent}%`;
+                }
+            }
+        },
+        title: {
+            text: 'Cost Trends (Demo Data)'
+        },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: {
+                    width: 200
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }]
+    };
+    
+    if(costTrendsChart) {
+        costTrendsChart.destroy();
+    }
+    
+    costTrendsChart = new ApexCharts(document.querySelector("#costtrendchart"), options);
+    costTrendsChart.render();
+}
+
+function ucfirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Small delay to ensure ApexCharts is ready
+    setTimeout(() => {
+        initializeCostTrendsChart();
+    }, 500);
+});
+
+  
+    var options3 = {
+        series: [{
+            name: "Number of Trips",
+            data: [23, 45, 56, 67, 89, 23, 45]
+        }],
+        chart: {
+            type: 'area',
+            height: 350,
+            zoom: {
+                enabled: false
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            curve: 'straight'
+        },
+      
+       
+        labels: ['2020-01-01', '2020-02-01', '2020-03-01', '2020-04-01', '2020-05-01', '2020-06-01', '2020-07-01'],
+        xaxis: {
+            type: 'datetime',
+        },
+        yaxis: {
+            opposite: true
+        },
+        legend: {
+            horizontalAlign: 'left'
+        }
+    };
+
+    var tripnumber = new ApexCharts(document.querySelector("#tripnumber"), options3);
+    tripnumber.render();
+
+    var options4 = {
+        series: [{
+            name: 'TEAM A',
+            type: 'column',
+            data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30]
+        }, {
+            name: 'TEAM B',
+            type: 'area',
+            data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43]
+        }, {
+            name: 'TEAM C',
+            type: 'line',
+            data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39]
+        }],
+        chart: {
+            height: 350,
+            type: 'line',
+            stacked: false,
+            width:1200,
+        },
+        stroke: {
+            width: [0, 2, 5],
+            curve: 'smooth'
+        },
+        fill: {
+            opacity: [0.85, 0.25, 1],
+            gradient: {
+                inverseColors: false,
+                shade: 'light',
+                type: "vertical",
+                opacityFrom: 0.85,
+                opacityTo: 0.55,
+                stops: [0, 100, 100, 100]
+            }
+        },
+        labels: ['01/01/2003', '02/01/2003', '03/01/2003', '04/01/2003', '05/01/2003', '06/01/2003', '07/01/2003',
+            '08/01/2003', '09/01/2003', '10/01/2003', '11/01/2003'
+        ],
+        markers: {
+            size: 0
+        },
+        xaxis: {
+            type: 'datetime'
+        },
+        yaxis: {
+            title: {
+                text: 'Points',
+            }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: {
+                formatter: function (y) {
+                    if (typeof y !== "undefined") {
+                        return y.toFixed(0) + " points";
+                    }
+                    return y;
+                }
+            }
+        }
+    };
+
+    var operational = new ApexCharts(document.querySelector("#operational"), options4);
+    operational.render();
+
+    var options = {
+          series: [{
+          name: 'Truck 1',
+          data: [44, 55, 41, 37, 22, 43, 21]
+        }, {
+          name: 'Truck 2',
+          data: [53, 32, 33, 52, 13, 43, 32]
+        }, {
+          name: 'Truck 3',
+          data: [12, 17, 11, 9, 15, 11, 20]
+        }, {
+          name: 'Truck 4',
+          data: [9, 7, 5, 8, 6, 9, 4]
+        }, {
+          name: 'Truck 5',
+          data: [25, 12, 19, 32, 25, 24, 10]
+        }],
+          chart: {
+          type: 'bar',
+          height: 350,
+          stacked: true,
+        },
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            dataLabels: {
+              total: {
+                enabled: true,
+                offsetX: 0,
+                style: {
+                  fontSize: '13px',
+                  fontWeight: 900
+                }
+              }
+            }
+          },
+        },
+        stroke: {
+          width: 1,
+          colors: ['#fff']
+        },
+    
+        xaxis: {
+          categories: [2019,2020, 2021, 2022, 2023, 2024, 2025],
+          labels: {
+            formatter: function (val) {
+              return val 
+            }
+          }
+        },
+        yaxis: {
+          title: {
+            text: undefined
+          },
+        },
+        tooltip: {
+          y: {
+            formatter: function (val) {
+              return val 
+            }
+          }
+        },
+        fill: {
+          opacity: 1
+        },
+        legend: {
+          position: 'top',
+          horizontalAlign: 'left',
+          offsetX: 40
+        }
+        };
+
+        var maintenance = new ApexCharts(document.querySelector("#maintenance"), options);
+        maintenance.render();
+
+
+</script>
+ 
+
+
 </body>
 </html>
