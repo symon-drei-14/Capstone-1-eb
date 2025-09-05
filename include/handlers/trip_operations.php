@@ -57,12 +57,17 @@ function checkDriverAvailability($conn, $driverId, $tripDate, $excludeTripId = n
     return $conflictingTrips;
 }
 
-function validateTripDate($tripDate) {
+function validateTripDate($tripDate, $isEdit = false) {
+    // If this is an edit operation, skip the 3-day validation
+    if ($isEdit) {
+        return ['valid' => true];
+    }
+    
     $today = new DateTime();
     $tripDateTime = new DateTime($tripDate);
     $interval = $today->diff($tripDateTime);
     
-    // Check if trip date is at least 3 days from today
+    // Check if trip date is at least 3 days from today (only for new trips)
     if ($interval->days < 3 && $tripDateTime > $today) {
         $earliestDate = (new DateTime())->modify('+3 days')->format('Y-m-d');
         return [
@@ -376,14 +381,15 @@ try {
        case 'edit':
             $conn->begin_transaction();
             
-            try {
-                // Validate trip date is at least 3 days in advance for new dates
-                if (isset($data['date'])) {
-                    $dateValidation = validateTripDate($data['date']);
-                    if (!$dateValidation['valid']) {
-                        throw new Exception($dateValidation['message']);
-                    }
-                }
+             try {
+        // Validate trip date is at least 3 days in advance for new dates
+        if (isset($data['date'])) {
+            
+            $dateValidation = validateTripDate($data['date'], true);
+            if (!$dateValidation['valid']) {
+                throw new Exception($dateValidation['message']);
+            }
+        }
                 
                 $getCurrent = $conn->prepare("SELECT status, truck_id FROM trips WHERE trip_id = ?");
                 $getCurrent->bind_param("i", $data['id']);
