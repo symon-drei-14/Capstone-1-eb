@@ -784,6 +784,22 @@ checkAccess(); // No role needed—logic is handled internally
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
+
+    document.getElementById('toggleSidebarBtn').addEventListener('click', function() {
+    document.querySelector('.sidebar').classList.toggle('expanded');
+});
+
+const currentPage = window.location.pathname.split('/').pop();
+    const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+    
+    sidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('href').split('/').pop();
+        if (linkPage === currentPage) {
+            link.parentElement.classList.add('active');
+            const icon = link.parentElement.querySelector('.icon2');
+            if (icon) icon.style.color = 'white';
+        }
+    });
 </script>
 
 <div id="admin-loading" class="admin-loading">
@@ -801,6 +817,9 @@ checkAccess(); // No role needed—logic is handled internally
     </div>
   </div>
 </div>
+
+
+
 
 <script>
 
