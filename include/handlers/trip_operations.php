@@ -916,7 +916,7 @@ try {
             echo json_encode(['success' => true, 'expenses' => $expenses]);
             break;
 
-            // Add these new cases to your switch statement:
+          
 
 case 'get_helpers':
     $stmt = $conn->prepare("SELECT helper_id, name FROM helpers ORDER BY name");
