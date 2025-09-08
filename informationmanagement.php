@@ -99,6 +99,14 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="dispatchers-search" placeholder="Search dispatchers..." oninput="searchTable('dispatchers')">
             </div>
+
+             <div class="toggle-view">
+        <label class="switch">
+            <input type="checkbox" id="dispatchers-toggle" onchange="toggleView('dispatchers')">
+            <span class="slider round"></span>
+        </label>
+        <span class="toggle-label">Show Deleted Only</span>
+    </div>
         </div>
         
         <div class="table-container">
@@ -130,6 +138,14 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="destinations-search" placeholder="Search destinations..." oninput="searchTable('destinations')">
             </div>
+
+             <div class="toggle-view">
+        <label class="switch">
+            <input type="checkbox" id="dispatchers-toggle" onchange="toggleView('dispatchers')">
+            <span class="slider round"></span>
+        </label>
+        <span class="toggle-label">Show Deleted Only</span>
+    </div>
         </div>
         
         <div class="table-container">
@@ -161,6 +177,13 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="clients-search" placeholder="Search clients..." oninput="searchTable('clients')">
             </div>
+             <div class="toggle-view">
+        <label class="switch">
+            <input type="checkbox" id="dispatchers-toggle" onchange="toggleView('dispatchers')">
+            <span class="slider round"></span>
+        </label>
+        <span class="toggle-label">Show Deleted Only</span>
+    </div>
         </div>
         
         <div class="table-container">
@@ -192,6 +215,13 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="shipping-lines-search" placeholder="Search shipping lines..." oninput="searchTable('shipping-lines')">
             </div>
+             <div class="toggle-view">
+        <label class="switch">
+            <input type="checkbox" id="dispatchers-toggle" onchange="toggleView('dispatchers')">
+            <span class="slider round"></span>
+        </label>
+        <span class="toggle-label">Show Deleted Only</span>
+    </div>
         </div>
         
         <div class="table-container">
@@ -223,6 +253,13 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="consignees-search" placeholder="Search consignees..." oninput="searchTable('consignees')">
             </div>
+             <div class="toggle-view">
+        <label class="switch">
+            <input type="checkbox" id="dispatchers-toggle" onchange="toggleView('dispatchers')">
+            <span class="slider round"></span>
+        </label>
+        <span class="toggle-label">Show Deleted Only</span>
+    </div>
         </div>
         
         <div class="table-container">
@@ -254,6 +291,13 @@ checkAccess(); // No role needed—logic is handled internally
             <i class="fas fa-search"></i>
             <input type="text" id="helpers-search" placeholder="Search helpers..." oninput="searchTable('helpers')">
         </div>
+         <div class="toggle-view">
+        <label class="switch">
+            <input type="checkbox" id="dispatchers-toggle" onchange="toggleView('dispatchers')">
+            <span class="slider round"></span>
+        </label>
+        <span class="toggle-label">Show Deleted Only</span>
+    </div>
     </div>
     
     <div class="table-container">
@@ -285,6 +329,13 @@ checkAccess(); // No role needed—logic is handled internally
             <i class="fas fa-search"></i>
             <input type="text" id="suppliers-search" placeholder="Search suppliers..." oninput="searchTable('suppliers')">
         </div>
+         <div class="toggle-view">
+        <label class="switch">
+            <input type="checkbox" id="dispatchers-toggle" onchange="toggleView('dispatchers')">
+            <span class="slider round"></span>
+        </label>
+        <span class="toggle-label">Show Deleted Only</span>
+    </div>
     </div>
     
     <div class="table-container">
@@ -366,14 +417,14 @@ checkAccess(); // No role needed—logic is handled internally
     // Global variables
     let currentTab = 'dispatchers';
     let data = {
-        dispatchers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
-        destinations: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
-        clients: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
-        'shipping-lines': { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
-        consignees: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
-        helpers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
-    suppliers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' }
-    };
+    dispatchers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '', viewDeleted: false },
+    destinations: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '', viewDeleted: false },
+    clients: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '', viewDeleted: false },
+    'shipping-lines': { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '', viewDeleted: false },
+    consignees: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '', viewDeleted: false },
+    helpers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '', viewDeleted: false },
+    suppliers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '', viewDeleted: false }
+};
     
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
@@ -395,6 +446,13 @@ checkAccess(); // No role needed—logic is handled internally
             }
         });
     });
+
+    function toggleView(type) {
+    const toggle = document.getElementById(`${type}-toggle`);
+    data[type].viewDeleted = toggle.checked;
+    data[type].currentPage = 1;
+    renderTable(type);
+}
     
     function updateDateTime() {
         const now = new Date();
@@ -424,9 +482,15 @@ checkAccess(); // No role needed—logic is handled internally
         });
     }
     
-   function fetchAllData() {
+ function fetchAllData() {
     const types = ['dispatchers', 'destinations', 'clients', 'shipping-lines', 'consignees', 'helpers', 'suppliers'];
     types.forEach(type => {
+        // Initialize toggle state
+        const toggle = document.getElementById(`${type}-toggle`);
+        if (toggle) {
+            toggle.checked = false;
+            data[type].viewDeleted = false;
+        }
         fetchData(type);
     });
 }
@@ -467,9 +531,10 @@ checkAccess(); // No role needed—logic is handled internally
         const searchTerm = data[type].searchTerm.toLowerCase();
         
         // Filter items based on search term
-        let filteredItems = data[type].items.filter(item => 
-            item.name.toLowerCase().includes(searchTerm)
-        );
+       let filteredItems = data[type].items.filter(item => 
+        item.name.toLowerCase().includes(searchTerm) &&
+        (data[type].viewDeleted ? item.is_deleted == 1 : item.is_deleted != 1)
+    );
         
         // Calculate pagination
         const totalPages = Math.ceil(filteredItems.length / data[type].rowsPerPage);
