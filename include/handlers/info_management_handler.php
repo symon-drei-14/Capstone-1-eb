@@ -312,6 +312,126 @@ try {
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Consignee permanently deleted']);
             break;
+
+            case 'getSuppliers':
+    $stmt = $conn->prepare("SELECT supplier_id, name, is_deleted, delete_reason, last_modified_by, last_modified_at FROM suppliers ORDER BY name");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $suppliers = $result->fetch_all(MYSQLI_ASSOC);
+    echo json_encode(['success' => true, 'data' => $suppliers]);
+    break;
+    
+case 'addSupplier':
+    $name = $_POST['name'] ?? '';
+    if (empty($name)) throw new Exception("Name is required");
+    
+    $stmt = $conn->prepare("INSERT INTO suppliers (name, last_modified_by) VALUES (?, ?)");
+    $stmt->bind_param("ss", $name, $currentUser);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Supplier added successfully']);
+    break;
+    
+case 'updateSupplier':
+    $id = $_POST['id'] ?? '';
+    $name = $_POST['name'] ?? '';
+    if (empty($id) || empty($name)) throw new Exception("ID and name are required");
+    
+    $stmt = $conn->prepare("UPDATE suppliers SET name = ?, last_modified_by = ?, last_modified_at = NOW() WHERE supplier_id = ?");
+    $stmt->bind_param("ssi", $name, $currentUser, $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Supplier updated successfully']);
+    break;
+    
+case 'softDeleteSupplier':
+    $id = $_POST['id'] ?? '';
+    $reason = $_POST['reason'] ?? '';
+    if (empty($id) || empty($reason)) throw new Exception("ID and reason are required");
+    
+    $stmt = $conn->prepare("UPDATE suppliers SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE supplier_id = ?");
+    $stmt->bind_param("ssi", $reason, $currentUser, $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Supplier deleted successfully']);
+    break;
+    
+case 'restoreSupplier':
+    $id = $_POST['id'] ?? '';
+    if (empty($id)) throw new Exception("ID is required");
+    
+    $stmt = $conn->prepare("UPDATE suppliers SET is_deleted = 0, delete_reason = NULL, last_modified_by = ?, last_modified_at = NOW() WHERE supplier_id = ?");
+    $stmt->bind_param("si", $currentUser, $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Supplier restored successfully']);
+    break;
+    
+case 'fullDeleteSupplier':
+    $id = $_POST['id'] ?? '';
+    if (empty($id)) throw new Exception("ID is required");
+    
+    $stmt = $conn->prepare("DELETE FROM suppliers WHERE supplier_id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Supplier permanently deleted']);
+    break;
+
+    case 'getHelpers':
+    $stmt = $conn->prepare("SELECT helper_id, name, is_deleted, delete_reason, last_modified_by, last_modified_at FROM helpers ORDER BY name");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $helpers = $result->fetch_all(MYSQLI_ASSOC);
+    echo json_encode(['success' => true, 'data' => $helpers]);
+    break;
+    
+case 'addHelper':
+    $name = $_POST['name'] ?? '';
+    if (empty($name)) throw new Exception("Name is required");
+    
+    $stmt = $conn->prepare("INSERT INTO helpers (name, last_modified_by) VALUES (?, ?)");
+    $stmt->bind_param("ss", $name, $currentUser);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Helper added successfully']);
+    break;
+    
+case 'updateHelper':
+    $id = $_POST['id'] ?? '';
+    $name = $_POST['name'] ?? '';
+    if (empty($id) || empty($name)) throw new Exception("ID and name are required");
+    
+    $stmt = $conn->prepare("UPDATE helpers SET name = ?, last_modified_by = ?, last_modified_at = NOW() WHERE helper_id = ?");
+    $stmt->bind_param("ssi", $name, $currentUser, $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Helper updated successfully']);
+    break;
+    
+case 'softDeleteHelper':
+    $id = $_POST['id'] ?? '';
+    $reason = $_POST['reason'] ?? '';
+    if (empty($id) || empty($reason)) throw new Exception("ID and reason are required");
+    
+    $stmt = $conn->prepare("UPDATE helpers SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE helper_id = ?");
+    $stmt->bind_param("ssi", $reason, $currentUser, $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Helper deleted successfully']);
+    break;
+    
+case 'restoreHelper':
+    $id = $_POST['id'] ?? '';
+    if (empty($id)) throw new Exception("ID is required");
+    
+    $stmt = $conn->prepare("UPDATE helpers SET is_deleted = 0, delete_reason = NULL, last_modified_by = ?, last_modified_at = NOW() WHERE helper_id = ?");
+    $stmt->bind_param("si", $currentUser, $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Helper restored successfully']);
+    break;
+    
+case 'fullDeleteHelper':
+    $id = $_POST['id'] ?? '';
+    if (empty($id)) throw new Exception("ID is required");
+    
+    $stmt = $conn->prepare("DELETE FROM helpers WHERE helper_id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Helper permanently deleted']);
+    break;
             
         default:
             throw new Exception("Invalid action");

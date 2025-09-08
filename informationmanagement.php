@@ -87,6 +87,8 @@ checkAccess(); // No role needed—logic is handled internally
         <button class="tab-btn" data-tab="clients">Clients</button>
         <button class="tab-btn" data-tab="shipping-lines">Shipping Lines</button>
         <button class="tab-btn" data-tab="consignees">Consignees</button>
+        <button class="tab-btn" data-tab="helpers">Helpers</button>
+        <button class="tab-btn" data-tab="suppliers">Suppliers</button>
     </div>
     
     <!-- Dispatchers Tab -->
@@ -243,8 +245,71 @@ checkAccess(); // No role needed—logic is handled internally
             <button class="next" onclick="changePage('consignees', 1)">►</button>
         </div>
     </div>
+
+
+<div class="tab-content" id="helpers-tab">
+    <div class="table-controls">
+        <button class="add-btn" onclick="openModal('helpers')"><i class="fa-solid fa-plus"></i> Add Helper</button>
+        <div class="search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" id="helpers-search" placeholder="Search helpers..." oninput="searchTable('helpers')">
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <table id="helpers-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Last Modified By</th>
+                    <th>Last Modified At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="helpers-table-body"></tbody>
+        </table>
+    </div>
+    
+    <div class="pagination">
+        <button class="prev" onclick="changePage('helpers', -1)">◄</button>
+        <span id="helpers-page-info">Page 1</span>
+        <button class="next" onclick="changePage('helpers', 1)">►</button>
+    </div>
 </div>
 
+<!-- Suppliers Tab -->
+<div class="tab-content" id="suppliers-tab">
+    <div class="table-controls">
+        <button class="add-btn" onclick="openModal('suppliers')"><i class="fa-solid fa-plus"></i> Add Supplier</button>
+        <div class="search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" id="suppliers-search" placeholder="Search suppliers..." oninput="searchTable('suppliers')">
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <table id="suppliers-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Last Modified By</th>
+                    <th>Last Modified At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="suppliers-table-body"></tbody>
+        </table>
+    </div>
+    
+    <div class="pagination">
+        <button class="prev" onclick="changePage('suppliers', -1)">◄</button>
+        <span id="suppliers-page-info">Page 1</span>
+        <button class="next" onclick="changePage('suppliers', 1)">►</button>
+    </div>
+</div>
+
+
+</div>
 <!-- Modal for Add/Edit -->
 <div id="infoModal" class="modal">
     <div class="modal-content">
@@ -305,7 +370,9 @@ checkAccess(); // No role needed—logic is handled internally
         destinations: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
         clients: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
         'shipping-lines': { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
-        consignees: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' }
+        consignees: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
+        helpers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
+    suppliers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' }
     };
     
     // Initialize when DOM is loaded
@@ -357,12 +424,12 @@ checkAccess(); // No role needed—logic is handled internally
         });
     }
     
-    function fetchAllData() {
-        const types = ['dispatchers', 'destinations', 'clients', 'shipping-lines', 'consignees'];
-        types.forEach(type => {
-            fetchData(type);
-        });
-    }
+   function fetchAllData() {
+    const types = ['dispatchers', 'destinations', 'clients', 'shipping-lines', 'consignees', 'helpers', 'suppliers'];
+    types.forEach(type => {
+        fetchData(type);
+    });
+}
     
     function fetchData(type) {
         fetch(`include/handlers/info_management_handler.php?action=get${capitalizeFirstLetter(type)}`)
