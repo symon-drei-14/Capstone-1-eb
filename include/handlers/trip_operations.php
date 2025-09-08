@@ -917,7 +917,7 @@ try {
             break;
 
           
-
+//eto pa babaguhin ko ehe
 case 'get_helpers':
     $stmt = $conn->prepare("SELECT helper_id, name FROM helpers ORDER BY name");
     $stmt->execute();
@@ -931,8 +931,10 @@ case 'get_helpers':
     echo json_encode(['success' => true, 'helpers' => $helpers]);
     break;
 
-    case 'get_clients':
-    $stmt = $conn->prepare("SELECT client_id, name FROM clients ORDER BY name");
+
+
+   case 'get_clients':
+    $stmt = $conn->prepare("SELECT client_id, name FROM clients WHERE is_deleted = 0 ORDER BY name");
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -945,7 +947,7 @@ case 'get_helpers':
     break;
 
 case 'get_destinations':
-    $stmt = $conn->prepare("SELECT destination_id, name FROM destinations ORDER BY name");
+    $stmt = $conn->prepare("SELECT destination_id, name FROM destinations WHERE is_deleted = 0 ORDER BY name");
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -958,7 +960,7 @@ case 'get_destinations':
     break;
 
 case 'get_shipping_lines':
-    $stmt = $conn->prepare("SELECT shipping_line_id, name FROM shipping_lines ORDER BY name");
+    $stmt = $conn->prepare("SELECT shipping_line_id, name FROM shipping_lines WHERE is_deleted = 0 ORDER BY name");
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -971,7 +973,7 @@ case 'get_shipping_lines':
     break;
 
 case 'get_dispatchers':
-    $stmt = $conn->prepare("SELECT dispatcher_id, name FROM dispatchers ORDER BY name");
+    $stmt = $conn->prepare("SELECT dispatcher_id, name FROM dispatchers WHERE is_deleted = 0 ORDER BY name");
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -984,7 +986,7 @@ case 'get_dispatchers':
     break;
 
 case 'get_consignees':
-    $stmt = $conn->prepare("SELECT consignee_id, name FROM consignees ORDER BY name");
+    $stmt = $conn->prepare("SELECT consignee_id, name FROM consignees WHERE is_deleted = 0 ORDER BY name");
     $stmt->execute();
     $result = $stmt->get_result();
     
