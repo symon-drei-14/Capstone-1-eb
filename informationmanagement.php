@@ -99,6 +99,11 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="dispatchers-search" placeholder="Search dispatchers..." oninput="searchTable('dispatchers')">
             </div>
+
+            <div class="toggle-deleted-container">
+      <input type="checkbox" id="showDeleted-dispatchers" onchange="toggleDeletedData('dispatchers')">
+    <label for="showDeleted-dispatchers">Show Deleted</label>
+</div>
         </div>
         
         <div class="table-container">
@@ -130,6 +135,12 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="destinations-search" placeholder="Search destinations..." oninput="searchTable('destinations')">
             </div>
+
+
+            <div class="toggle-deleted-container">
+     <input type="checkbox" id="showDeleted-destinations" onchange="toggleDeletedData('destinations')">
+    <label for="showDeleted-destinations">Show Deleted</label>
+</div>
         </div>
         
         <div class="table-container">
@@ -161,6 +172,12 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="clients-search" placeholder="Search clients..." oninput="searchTable('clients')">
             </div>
+
+            <div class="toggle-deleted-container">
+     <input type="checkbox" id="showDeleted-clients" onchange="toggleDeletedData('clients')">
+    <label for="showDeleted-clients">Show Deleted</label>
+</div>
+
         </div>
         
         <div class="table-container">
@@ -192,6 +209,11 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="shipping-lines-search" placeholder="Search shipping lines..." oninput="searchTable('shipping-lines')">
             </div>
+
+            <div class="toggle-deleted-container">
+    <input type="checkbox" id="showDeleted-shipping-lines" onchange="toggleDeletedData('shipping-lines')">
+    <label for="showDeleted-shipping-lines">Show Deleted</label>
+</div>
         </div>
         
         <div class="table-container">
@@ -223,6 +245,11 @@ checkAccess(); // No role needed—logic is handled internally
                 <i class="fas fa-search"></i>
                 <input type="text" id="consignees-search" placeholder="Search consignees..." oninput="searchTable('consignees')">
             </div>
+
+            <div class="toggle-deleted-container">
+      <input type="checkbox" id="showDeleted-consignees" onchange="toggleDeletedData('consignees')">
+    <label for="showDeleted-consignees">Show Deleted</label>
+</div>
         </div>
         
         <div class="table-container">
@@ -254,6 +281,11 @@ checkAccess(); // No role needed—logic is handled internally
             <i class="fas fa-search"></i>
             <input type="text" id="helpers-search" placeholder="Search helpers..." oninput="searchTable('helpers')">
         </div>
+
+        <div class="toggle-deleted-container">
+     <input type="checkbox" id="showDeleted-helpers" onchange="toggleDeletedData('helpers')">
+    <label for="showDeleted-helpers">Show Deleted</label>
+</div>
     </div>
     
     <div class="table-container">
@@ -285,6 +317,11 @@ checkAccess(); // No role needed—logic is handled internally
             <i class="fas fa-search"></i>
             <input type="text" id="suppliers-search" placeholder="Search suppliers..." oninput="searchTable('suppliers')">
         </div>
+
+        <div class="toggle-deleted-container">
+   <input type="checkbox" id="showDeleted-suppliers" onchange="toggleDeletedData('suppliers')">
+    <label for="showDeleted-suppliers">Show Deleted</label>
+</div>
     </div>
     
     <div class="table-container">
@@ -365,6 +402,17 @@ checkAccess(); // No role needed—logic is handled internally
 <script>
     // Global variables
     let currentTab = 'dispatchers';
+
+let showDeletedData = {
+    dispatchers: false,
+    destinations: false,
+    clients: false,
+    'shipping-lines': false,
+    consignees: false,
+    helpers: false,
+    suppliers: false
+};
+
     let data = {
         dispatchers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
         destinations: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
@@ -395,6 +443,12 @@ checkAccess(); // No role needed—logic is handled internally
             }
         });
     });
+
+    function toggleDeletedData(type) {
+    showDeletedData[type] = document.getElementById(`showDeleted-${type}`).checked;
+    data[type].currentPage = 1;
+    renderTable(type);
+}
     
     function updateDateTime() {
         const now = new Date();
@@ -462,88 +516,95 @@ checkAccess(); // No role needed—logic is handled internally
     }
     
     function renderTable(type) {
-        const tableBody = document.getElementById(`${type}-table-body`);
-        const pageInfo = document.getElementById(`${type}-page-info`);
-        const searchTerm = data[type].searchTerm.toLowerCase();
+    const tableBody = document.getElementById(`${type}-table-body`);
+    const pageInfo = document.getElementById(`${type}-page-info`);
+    const searchTerm = data[type].searchTerm.toLowerCase();
+    
+    // Filter items based on search term AND deleted status
+    let filteredItems = data[type].items.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchTerm);
         
-        // Filter items based on search term
-        let filteredItems = data[type].items.filter(item => 
-            item.name.toLowerCase().includes(searchTerm)
-        );
-        
-        // Calculate pagination
-        const totalPages = Math.ceil(filteredItems.length / data[type].rowsPerPage);
-        if (data[type].currentPage > totalPages && totalPages > 0) {
-            data[type].currentPage = totalPages;
-        } else if (totalPages === 0) {
-            data[type].currentPage = 1;
+        // If showing deleted, include only deleted items
+        if (showDeletedData[type]) {
+            return matchesSearch && item.is_deleted == 1;
         }
-        
-        const startIndex = (data[type].currentPage - 1) * data[type].rowsPerPage;
-        const endIndex = Math.min(startIndex + data[type].rowsPerPage, filteredItems.length);
-        const pageItems = filteredItems.slice(startIndex, endIndex);
-        
-        // Update table
-        tableBody.innerHTML = '';
-        
-        if (pageItems.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No ${type} found</td></tr>`;
-        } else {
-            pageItems.forEach(item => {
-                const tr = document.createElement('tr');
-                
-                // Highlight search matches
-                let nameDisplay = item.name;
-                if (searchTerm) {
-                    const regex = new RegExp(searchTerm, 'gi');
-                    nameDisplay = item.name.replace(regex, match => `<span class="highlight">${match}</span>`);
-                }
-                
-                tr.innerHTML = `
-                    <td>${nameDisplay}</td>
-                    <td>${item.last_modified_by || 'System'}</td>
-                    <td>${formatDateTime(item.last_modified_at)}</td>
-                    <td class="actions">
-                        <div class="dropdown">
-                            <button class="dropdown-btn" data-tooltip="Actions">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div class="dropdown-content">
-                                ${item.is_deleted == 1 ? `
-                                    <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                        <i class="fas fa-trash-restore"></i> Restore
-                                    </button>
-                                    <button class="dropdown-item view-reason" data-tooltip="View Reason" onclick="viewDeletionReason('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                        <i class="fas fa-info-circle"></i> View Reason
-                                    </button>
-                                    ${window.userRole === 'Full Admin' ? 
-                                        `<button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                            <i class="fa-solid fa-ban"></i> Permanent Delete
-                                        </button>` : ''}
-                                ` : `
-                                    <button class="dropdown-item edit" data-tooltip="Edit" onclick="editItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                        <i class='fas fa-trash-alt'></i> Delete
-                                    </button>
-                                `}
-                            </div>
-                        </div>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-        }
-        
-        // Update pagination info
-        if (pageInfo) {
-            pageInfo.textContent = `Page ${data[type].currentPage} of ${totalPages || 1}`;
-        }
-        
-        // Set up dropdown functionality
-        setupDropdowns();
+        // Otherwise, include only non-deleted items
+        return matchesSearch && item.is_deleted == 0;
+    });
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredItems.length / data[type].rowsPerPage);
+    if (data[type].currentPage > totalPages && totalPages > 0) {
+        data[type].currentPage = totalPages;
+    } else if (totalPages === 0) {
+        data[type].currentPage = 1;
     }
+    
+    const startIndex = (data[type].currentPage - 1) * data[type].rowsPerPage;
+    const endIndex = Math.min(startIndex + data[type].rowsPerPage, filteredItems.length);
+    const pageItems = filteredItems.slice(startIndex, endIndex);
+    
+    // Update table
+    tableBody.innerHTML = '';
+    
+    if (pageItems.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No ${type} found</td></tr>`;
+    } else {
+        pageItems.forEach(item => {
+            const tr = document.createElement('tr');
+            
+            // Highlight search matches
+            let nameDisplay = item.name;
+            if (searchTerm) {
+                const regex = new RegExp(searchTerm, 'gi');
+                nameDisplay = item.name.replace(regex, match => `<span class="highlight">${match}</span>`);
+            }
+            
+            tr.innerHTML = `
+                <td>${nameDisplay}</td>
+                <td>${item.last_modified_by || 'System'}</td>
+                <td>${formatDateTime(item.last_modified_at)}</td>
+                <td class="actions">
+                    <div class="dropdown">
+                        <button class="dropdown-btn" data-tooltip="Actions">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="dropdown-content">
+                            ${item.is_deleted == 1 ? `
+                                <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
+                                    <i class="fas fa-trash-restore"></i> Restore
+                                </button>
+                                <button class="dropdown-item view-reason" data-tooltip="View Reason" onclick="viewDeletionReason('${type}', ${item[`${type.slice(0, -1)}_id`]})">
+                                    <i class="fas fa-info-circle"></i> View Reason
+                                </button>
+                                ${window.userRole === 'Full Admin' ? 
+                                    `<button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
+                                        <i class="fa-solid fa-ban"></i> Permanent Delete
+                                    </button>` : ''}
+                            ` : `
+                                <button class="dropdown-item edit" data-tooltip="Edit" onclick="editItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
+                                    <i class='fas fa-trash-alt'></i> Delete
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    }
+    
+    // Update pagination info
+    if (pageInfo) {
+        pageInfo.textContent = `Page ${data[type].currentPage} of ${totalPages || 1}`;
+    }
+    
+    // Set up dropdown functionality
+    setupDropdowns();
+}
     
     function setupDropdowns() {
         // Close dropdowns when clicking outside
@@ -1042,6 +1103,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (event.persisted) setTimeout(() => AdminLoading.hideManual(), 500);
   });
 });
+
+
+
+
 </script>
 
 <footer class="site-footer">
