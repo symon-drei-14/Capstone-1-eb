@@ -834,62 +834,59 @@ function handleDropdownItemClick(e) {
         }
     }
     
-    function restoreItem(type, id) {
-        Swal.fire({
-            title: 'Restore Item',
-            text: 'Are you sure you want to restore this item?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, restore it!',
-            cancelButtonText: 'No, keep it',
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-            customClass: {
-                confirmButton: 'btn-confirm',
-                cancelButton: 'btn-cancel'
-            },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const formData = new FormData();
-                formData.append('action', `restore${capitalizeFirstLetter(type.slice(0, -1))}`);
-                formData.append('id', id);
-                
-                fetch('include/handlers/info_management_handler.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: result.message,
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            fetchData(type);
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: result.message
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
+   function restoreItem(type, id) {
+    Swal.fire({
+        title: 'Restore Item',
+        html: '<strong>Are you sure you want to restore this item?</strong><br><br>This will make the item active again.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, restore it!',
+        cancelButtonText: 'Cancel',
+        backdrop: 'rgba(0,0,0,0.8)',
+        allowOutsideClick: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('action', `restore${capitalizeFirstLetter(type.slice(0, -1))}`);
+            formData.append('id', id);
+            
+            fetch('include/handlers/info_management_handler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: result.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        fetchData(type);
+                    });
+                } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'An error occurred. Please try again.'
+                        text: result.message
                     });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred. Please try again.'
                 });
-            }
-        });
-    }
+            });
+        }
+    });
+}
     
     function fullDeleteItem(type, id) {
         Swal.fire({
