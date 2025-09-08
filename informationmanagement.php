@@ -104,6 +104,8 @@ checkAccess(); // No role needed—logic is handled internally
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Last Modified By</th>
+                        <th>Last Modified At</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -133,6 +135,8 @@ checkAccess(); // No role needed—logic is handled internally
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Last Modified By</th>
+                        <th>Last Modified At</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -162,6 +166,8 @@ checkAccess(); // No role needed—logic is handled internally
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Last Modified By</th>
+                        <th>Last Modified At</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -191,6 +197,8 @@ checkAccess(); // No role needed—logic is handled internally
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Last Modified By</th>
+                        <th>Last Modified At</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -220,6 +228,8 @@ checkAccess(); // No role needed—logic is handled internally
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Last Modified By</th>
+                        <th>Last Modified At</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -368,6 +378,22 @@ checkAccess(); // No role needed—logic is handled internally
             .catch(error => console.error(`Error fetching ${type}:`, error));
     }
     
+    function formatDateTime(dateTimeString) {
+        if (!dateTimeString) return 'N/A';
+        
+        const date = new Date(dateTimeString);
+        if (isNaN(date.getTime())) return 'Invalid Date';
+        
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+    
     function renderTable(type) {
         const tableBody = document.getElementById(`${type}-table-body`);
         const pageInfo = document.getElementById(`${type}-page-info`);
@@ -394,7 +420,7 @@ checkAccess(); // No role needed—logic is handled internally
         tableBody.innerHTML = '';
         
         if (pageItems.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="2" style="text-align: center;">No ${type} found</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No ${type} found</td></tr>`;
         } else {
             pageItems.forEach(item => {
                 const tr = document.createElement('tr');
@@ -408,6 +434,8 @@ checkAccess(); // No role needed—logic is handled internally
                 
                 tr.innerHTML = `
                     <td>${nameDisplay}</td>
+                    <td>${item.last_modified_by || 'System'}</td>
+                    <td>${formatDateTime(item.last_modified_at)}</td>
                     <td class="actions">
                         <div class="dropdown">
                             <button class="dropdown-btn" data-tooltip="Actions">

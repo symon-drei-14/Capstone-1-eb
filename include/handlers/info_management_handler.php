@@ -10,7 +10,7 @@ try {
     switch ($action) {
         // Dispatchers
         case 'getDispatchers':
-            $stmt = $conn->prepare("SELECT dispatcher_id, name, is_deleted, delete_reason FROM dispatchers ORDER BY name");
+            $stmt = $conn->prepare("SELECT dispatcher_id, name, is_deleted, delete_reason, last_modified_by, last_modified_at FROM dispatchers ORDER BY name");
             $stmt->execute();
             $result = $stmt->get_result();
             $dispatchers = $result->fetch_all(MYSQLI_ASSOC);
@@ -21,8 +21,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($name)) throw new Exception("Name is required");
             
-            $stmt = $conn->prepare("INSERT INTO dispatchers (name) VALUES (?)");
-            $stmt->bind_param("s", $name);
+            $stmt = $conn->prepare("INSERT INTO dispatchers (name, last_modified_by) VALUES (?, ?)");
+            $stmt->bind_param("ss", $name, $currentUser);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Dispatcher added successfully']);
             break;
@@ -32,8 +32,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($id) || empty($name)) throw new Exception("ID and name are required");
             
-            $stmt = $conn->prepare("UPDATE dispatchers SET name = ? WHERE dispatcher_id = ?");
-            $stmt->bind_param("si", $name, $id);
+            $stmt = $conn->prepare("UPDATE dispatchers SET name = ?, last_modified_by = ?, last_modified_at = NOW() WHERE dispatcher_id = ?");
+            $stmt->bind_param("ssi", $name, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Dispatcher updated successfully']);
             break;
@@ -43,8 +43,8 @@ try {
             $reason = $_POST['reason'] ?? '';
             if (empty($id) || empty($reason)) throw new Exception("ID and reason are required");
             
-            $stmt = $conn->prepare("UPDATE dispatchers SET is_deleted = 1, delete_reason = ? WHERE dispatcher_id = ?");
-            $stmt->bind_param("si", $reason, $id);
+            $stmt = $conn->prepare("UPDATE dispatchers SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE dispatcher_id = ?");
+            $stmt->bind_param("ssi", $reason, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Dispatcher deleted successfully']);
             break;
@@ -53,8 +53,8 @@ try {
             $id = $_POST['id'] ?? '';
             if (empty($id)) throw new Exception("ID is required");
             
-            $stmt = $conn->prepare("UPDATE dispatchers SET is_deleted = 0, delete_reason = NULL WHERE dispatcher_id = ?");
-            $stmt->bind_param("i", $id);
+            $stmt = $conn->prepare("UPDATE dispatchers SET is_deleted = 0, delete_reason = NULL, last_modified_by = ?, last_modified_at = NOW() WHERE dispatcher_id = ?");
+            $stmt->bind_param("si", $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Dispatcher restored successfully']);
             break;
@@ -71,7 +71,7 @@ try {
             
         // Destinations
         case 'getDestinations':
-            $stmt = $conn->prepare("SELECT destination_id, name, is_deleted, delete_reason FROM destinations ORDER BY name");
+            $stmt = $conn->prepare("SELECT destination_id, name, is_deleted, delete_reason, last_modified_by, last_modified_at FROM destinations ORDER BY name");
             $stmt->execute();
             $result = $stmt->get_result();
             $destinations = $result->fetch_all(MYSQLI_ASSOC);
@@ -82,8 +82,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($name)) throw new Exception("Name is required");
             
-            $stmt = $conn->prepare("INSERT INTO destinations (name) VALUES (?)");
-            $stmt->bind_param("s", $name);
+            $stmt = $conn->prepare("INSERT INTO destinations (name, last_modified_by) VALUES (?, ?)");
+            $stmt->bind_param("ss", $name, $currentUser);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Destination added successfully']);
             break;
@@ -93,8 +93,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($id) || empty($name)) throw new Exception("ID and name are required");
             
-            $stmt = $conn->prepare("UPDATE destinations SET name = ? WHERE destination_id = ?");
-            $stmt->bind_param("si", $name, $id);
+            $stmt = $conn->prepare("UPDATE destinations SET name = ?, last_modified_by = ?, last_modified_at = NOW() WHERE destination_id = ?");
+            $stmt->bind_param("ssi", $name, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Destination updated successfully']);
             break;
@@ -104,8 +104,8 @@ try {
             $reason = $_POST['reason'] ?? '';
             if (empty($id) || empty($reason)) throw new Exception("ID and reason are required");
             
-            $stmt = $conn->prepare("UPDATE destinations SET is_deleted = 1, delete_reason = ? WHERE destination_id = ?");
-            $stmt->bind_param("si", $reason, $id);
+            $stmt = $conn->prepare("UPDATE destinations SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE destination_id = ?");
+            $stmt->bind_param("ssi", $reason, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Destination deleted successfully']);
             break;
@@ -114,8 +114,8 @@ try {
             $id = $_POST['id'] ?? '';
             if (empty($id)) throw new Exception("ID is required");
             
-            $stmt = $conn->prepare("UPDATE destinations SET is_deleted = 0, delete_reason = NULL WHERE destination_id = ?");
-            $stmt->bind_param("i", $id);
+            $stmt = $conn->prepare("UPDATE destinations SET is_deleted = 0, delete_reason = NULL, last_modified_by = ?, last_modified_at = NOW() WHERE destination_id = ?");
+            $stmt->bind_param("si", $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Destination restored successfully']);
             break;
@@ -132,7 +132,7 @@ try {
             
         // Clients
         case 'getClients':
-            $stmt = $conn->prepare("SELECT client_id, name, is_deleted, delete_reason FROM clients ORDER BY name");
+            $stmt = $conn->prepare("SELECT client_id, name, is_deleted, delete_reason, last_modified_by, last_modified_at FROM clients ORDER BY name");
             $stmt->execute();
             $result = $stmt->get_result();
             $clients = $result->fetch_all(MYSQLI_ASSOC);
@@ -143,8 +143,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($name)) throw new Exception("Name is required");
             
-            $stmt = $conn->prepare("INSERT INTO clients (name) VALUES (?)");
-            $stmt->bind_param("s", $name);
+            $stmt = $conn->prepare("INSERT INTO clients (name, last_modified_by) VALUES (?, ?)");
+            $stmt->bind_param("ss", $name, $currentUser);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Client added successfully']);
             break;
@@ -154,8 +154,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($id) || empty($name)) throw new Exception("ID and name are required");
             
-            $stmt = $conn->prepare("UPDATE clients SET name = ? WHERE client_id = ?");
-            $stmt->bind_param("si", $name, $id);
+            $stmt = $conn->prepare("UPDATE clients SET name = ?, last_modified_by = ?, last_modified_at = NOW() WHERE client_id = ?");
+            $stmt->bind_param("ssi", $name, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Client updated successfully']);
             break;
@@ -165,8 +165,8 @@ try {
             $reason = $_POST['reason'] ?? '';
             if (empty($id) || empty($reason)) throw new Exception("ID and reason are required");
             
-            $stmt = $conn->prepare("UPDATE clients SET is_deleted = 1, delete_reason = ? WHERE client_id = ?");
-            $stmt->bind_param("si", $reason, $id);
+            $stmt = $conn->prepare("UPDATE clients SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE client_id = ?");
+            $stmt->bind_param("ssi", $reason, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Client deleted successfully']);
             break;
@@ -175,8 +175,8 @@ try {
             $id = $_POST['id'] ?? '';
             if (empty($id)) throw new Exception("ID is required");
             
-            $stmt = $conn->prepare("UPDATE clients SET is_deleted = 0, delete_reason = NULL WHERE client_id = ?");
-            $stmt->bind_param("i", $id);
+            $stmt = $conn->prepare("UPDATE clients SET is_deleted = 0, delete_reason = NULL, last_modified_by = ?, last_modified_at = NOW() WHERE client_id = ?");
+            $stmt->bind_param("si", $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Client restored successfully']);
             break;
@@ -193,7 +193,7 @@ try {
             
         // Shipping Lines
         case 'getShipping-lines':
-            $stmt = $conn->prepare("SELECT shipping_line_id, name, is_deleted, delete_reason FROM shipping_lines ORDER BY name");
+            $stmt = $conn->prepare("SELECT shipping_line_id, name, is_deleted, delete_reason, last_modified_by, last_modified_at FROM shipping_lines ORDER BY name");
             $stmt->execute();
             $result = $stmt->get_result();
             $shippingLines = $result->fetch_all(MYSQLI_ASSOC);
@@ -204,8 +204,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($name)) throw new Exception("Name is required");
             
-            $stmt = $conn->prepare("INSERT INTO shipping_lines (name) VALUES (?)");
-            $stmt->bind_param("s", $name);
+            $stmt = $conn->prepare("INSERT INTO shipping_lines (name, last_modified_by) VALUES (?, ?)");
+            $stmt->bind_param("ss", $name, $currentUser);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Shipping line added successfully']);
             break;
@@ -215,8 +215,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($id) || empty($name)) throw new Exception("ID and name are required");
             
-            $stmt = $conn->prepare("UPDATE shipping_lines SET name = ? WHERE shipping_line_id = ?");
-            $stmt->bind_param("si", $name, $id);
+            $stmt = $conn->prepare("UPDATE shipping_lines SET name = ?, last_modified_by = ?, last_modified_at = NOW() WHERE shipping_line_id = ?");
+            $stmt->bind_param("ssi", $name, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Shipping line updated successfully']);
             break;
@@ -226,8 +226,8 @@ try {
             $reason = $_POST['reason'] ?? '';
             if (empty($id) || empty($reason)) throw new Exception("ID and reason are required");
             
-            $stmt = $conn->prepare("UPDATE shipping_lines SET is_deleted = 1, delete_reason = ? WHERE shipping_line_id = ?");
-            $stmt->bind_param("si", $reason, $id);
+            $stmt = $conn->prepare("UPDATE shipping_lines SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE shipping_line_id = ?");
+            $stmt->bind_param("ssi", $reason, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Shipping line deleted successfully']);
             break;
@@ -236,8 +236,8 @@ try {
             $id = $_POST['id'] ?? '';
             if (empty($id)) throw new Exception("ID is required");
             
-            $stmt = $conn->prepare("UPDATE shipping_lines SET is_deleted = 0, delete_reason = NULL WHERE shipping_line_id = ?");
-            $stmt->bind_param("i", $id);
+            $stmt = $conn->prepare("UPDATE shipping_lines SET is_deleted = 0, delete_reason = NULL, last_modified_by = ?, last_modified_at = NOW() WHERE shipping_line_id = ?");
+            $stmt->bind_param("si", $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Shipping line restored successfully']);
             break;
@@ -254,7 +254,7 @@ try {
             
         // Consignees
         case 'getConsignees':
-            $stmt = $conn->prepare("SELECT consignee_id, name, is_deleted, delete_reason FROM consignees ORDER BY name");
+            $stmt = $conn->prepare("SELECT consignee_id, name, is_deleted, delete_reason, last_modified_by, last_modified_at FROM consignees ORDER BY name");
             $stmt->execute();
             $result = $stmt->get_result();
             $consignees = $result->fetch_all(MYSQLI_ASSOC);
@@ -265,8 +265,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($name)) throw new Exception("Name is required");
             
-            $stmt = $conn->prepare("INSERT INTO consignees (name) VALUES (?)");
-            $stmt->bind_param("s", $name);
+            $stmt = $conn->prepare("INSERT INTO consignees (name, last_modified_by) VALUES (?, ?)");
+            $stmt->bind_param("ss", $name, $currentUser);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Consignee added successfully']);
             break;
@@ -276,8 +276,8 @@ try {
             $name = $_POST['name'] ?? '';
             if (empty($id) || empty($name)) throw new Exception("ID and name are required");
             
-            $stmt = $conn->prepare("UPDATE consignees SET name = ? WHERE consignee_id = ?");
-            $stmt->bind_param("si", $name, $id);
+            $stmt = $conn->prepare("UPDATE consignees SET name = ?, last_modified_by = ?, last_modified_at = NOW() WHERE consignee_id = ?");
+            $stmt->bind_param("ssi", $name, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Consignee updated successfully']);
             break;
@@ -287,8 +287,8 @@ try {
             $reason = $_POST['reason'] ?? '';
             if (empty($id) || empty($reason)) throw new Exception("ID and reason are required");
             
-            $stmt = $conn->prepare("UPDATE consignees SET is_deleted = 1, delete_reason = ? WHERE consignee_id = ?");
-            $stmt->bind_param("si", $reason, $id);
+            $stmt = $conn->prepare("UPDATE consignees SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE consignee_id = ?");
+            $stmt->bind_param("ssi", $reason, $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Consignee deleted successfully']);
             break;
@@ -297,8 +297,8 @@ try {
             $id = $_POST['id'] ?? '';
             if (empty($id)) throw new Exception("ID is required");
             
-            $stmt = $conn->prepare("UPDATE consignees SET is_deleted = 0, delete_reason = NULL WHERE consignee_id = ?");
-            $stmt->bind_param("i", $id);
+            $stmt = $conn->prepare("UPDATE consignees SET is_deleted = 0, delete_reason = NULL, last_modified_by = ?, last_modified_at = NOW() WHERE consignee_id = ?");
+            $stmt->bind_param("si", $currentUser, $id);
             $stmt->execute();
             echo json_encode(['success' => true, 'message' => 'Consignee restored successfully']);
             break;
