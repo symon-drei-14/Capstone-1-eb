@@ -110,7 +110,7 @@ function updateTruckStatusFromMaintenance($conn, $truckId) {
     }
 }
 
-function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all', $showDeleted = false) {
+function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all', $showDeleted = false, $startDate = null, $endDate = null) {
     // First, update any pending records that are now overdue
     $updateOverdue = $conn->prepare("UPDATE maintenance_table m SET status = 'Overdue' 
                                    WHERE status IN ('Pending', 'In Progress') 
@@ -218,6 +218,18 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
         $types .= "s";
     }
     
+    if ($startDate) {
+        $whereClauses[] = "m.date_mtnce >= ?";
+        $params[] = $startDate;
+        $types .= "s";
+    }
+    
+    if ($endDate) {
+        $whereClauses[] = "m.date_mtnce <= ?";
+        $params[] = $endDate;
+        $types .= "s";
+    }
+    
     // Handle deleted records filter - only show records that are currently deleted
     if ($showDeleted) {
         $whereClauses[] = "latest_audit.is_deleted = 1";
@@ -281,6 +293,19 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     if ($statusFilter !== 'all') {
         $countWhereClauses[] = "m.status = ?";
         $countParams[] = $statusFilter;
+        $countTypes .= "s";
+    }
+    
+    // Add date range filtering to count query
+    if ($startDate) {
+        $countWhereClauses[] = "m.date_mtnce >= ?";
+        $countParams[] = $startDate;
+        $countTypes .= "s";
+    }
+    
+    if ($endDate) {
+        $countWhereClauses[] = "m.date_mtnce <= ?";
+        $countParams[] = $endDate;
         $countTypes .= "s";
     }
     
@@ -459,13 +484,16 @@ $action = isset($_GET['action']) ? $_GET['action'] : '';
 try {
     switch ($action) {
         case 'getRecords':
-            $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-            $rowsPerPage = isset($_GET['limit']) ? intval($_GET['limit']) : 5;
-            $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
-            $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
-            $data = getMaintenanceRecords($conn, $page, $rowsPerPage, $statusFilter, $showDeleted);
-            echo json_encode($data);
-            break;
+        $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+        $rowsPerPage = isset($_GET['limit']) ? intval($_GET['limit']) : 5;
+        $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
+        $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
+        $startDate = isset($_GET['startDate']) ? $_GET['startDate'] : null;
+        $endDate = isset($_GET['endDate']) ? $_GET['endDate'] : null;
+        
+        $data = getMaintenanceRecords($conn, $page, $rowsPerPage, $statusFilter, $showDeleted, $startDate, $endDate);
+        echo json_encode($data);
+        break;
 
         case 'getHistory':
             $truckId = isset($_GET['truckId']) ? intval($_GET['truckId']) : 0;
@@ -478,82 +506,96 @@ try {
             echo json_encode(["reminders" => $reminders]);
             break;
 
-        case 'getAllRecordsForSearch':
-            $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
-            $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
-            
-            
-            $sql = "SELECT 
-                m.maintenance_id AS maintenanceId,
-                m.truck_id AS truckId,
-                m.maintenance_type_id AS maintenanceTypeId,
-                mt.type_name AS maintenanceTypeName,
-                t.plate_no AS licensePlate,
-                m.date_mtnce AS maintenanceDate,
-                m.remarks,
-                m.status,
-                m.supplier_id AS supplierId,
-                s.name AS supplierName,
-                m.cost,
-                al.is_deleted AS isDeleted,
-                al.modified_by AS lastUpdatedBy,
-                al.modified_at AS lastUpdatedAt,
-                al.edit_reason AS editReason,
-                al.delete_reason AS deleteReason
-            FROM maintenance_table m
-            LEFT JOIN truck_table t ON m.truck_id = t.truck_id
-            LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
-            LEFT JOIN suppliers s ON m.supplier_id = s.supplier_id
-            LEFT JOIN (
-                SELECT maintenance_id, modified_by, modified_at, edit_reason, delete_reason, is_deleted,
-                    ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
-                FROM audit_logs_maintenance
-            ) al ON m.maintenance_id = al.maintenance_id AND al.rn = 1";
-            
-            $params = [];
-            $types = '';
-            $whereClauses = [];
-            
-            if ($statusFilter !== 'all') {
-                $whereClauses[] = "m.status = ?";
-                $params[] = $statusFilter;
-                $types .= "s";
-            }
-            
-            if ($showDeleted) {
-                $whereClauses[] = "COALESCE(al.is_deleted, 0) = 1";
-            } else {
-                $whereClauses[] = "COALESCE(al.is_deleted, 0) = 0";
-            }
-            
-            if (!empty($whereClauses)) {
-                $sql .= " WHERE " . implode(" AND ", $whereClauses);
-            }
-            
-            $sql .= " ORDER BY m.maintenance_id DESC";
-            
-            $stmt = $conn->prepare($sql);
-            
-            if (!$stmt) {
-                error_log("Failed to prepare getAllRecordsForSearch query: " . $conn->error);
-                echo json_encode(["success" => false, "message" => "Database error", "records" => []]);
-                break;
-            }
-            
-            if (!empty($params)) {
-                $stmt->bind_param($types, ...$params);
-            }
-            
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            $records = [];
-            while ($row = $result->fetch_assoc()) {
-                $records[] = $row;
-            }
-            
-            echo json_encode(["success" => true, "records" => $records]);
+       case 'getAllRecordsForSearch':
+        $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
+        $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
+        $startDate = isset($_GET['startDate']) ? $_GET['startDate'] : null;
+        $endDate = isset($_GET['endDate']) ? $_GET['endDate'] : null;
+        
+        $sql = "SELECT 
+            m.maintenance_id AS maintenanceId,
+            m.truck_id AS truckId,
+            m.maintenance_type_id AS maintenanceTypeId,
+            mt.type_name AS maintenanceTypeName,
+            t.plate_no AS licensePlate,
+            m.date_mtnce AS maintenanceDate,
+            m.remarks,
+            m.status,
+            m.supplier_id AS supplierId,
+            s.name AS supplierName,
+            m.cost,
+            al.is_deleted AS isDeleted,
+            al.modified_by AS lastUpdatedBy,
+            al.modified_at AS lastUpdatedAt,
+            al.edit_reason AS editReason,
+            al.delete_reason AS deleteReason
+        FROM maintenance_table m
+        LEFT JOIN truck_table t ON m.truck_id = t.truck_id
+        LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+        LEFT JOIN suppliers s ON m.supplier_id = s.supplier_id
+        LEFT JOIN (
+            SELECT maintenance_id, modified_by, modified_at, edit_reason, delete_reason, is_deleted,
+                ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
+            FROM audit_logs_maintenance
+        ) al ON m.maintenance_id = al.maintenance_id AND al.rn = 1";
+        
+        $params = [];
+        $types = '';
+        $whereClauses = [];
+        
+        if ($statusFilter !== 'all') {
+            $whereClauses[] = "m.status = ?";
+            $params[] = $statusFilter;
+            $types .= "s";
+        }
+        
+        // Add date range filtering
+        if ($startDate) {
+            $whereClauses[] = "m.date_mtnce >= ?";
+            $params[] = $startDate;
+            $types .= "s";
+        }
+        
+        if ($endDate) {
+            $whereClauses[] = "m.date_mtnce <= ?";
+            $params[] = $endDate;
+            $types .= "s";
+        }
+        
+        if ($showDeleted) {
+            $whereClauses[] = "COALESCE(al.is_deleted, 0) = 1";
+        } else {
+            $whereClauses[] = "COALESCE(al.is_deleted, 0) = 0";
+        }
+        
+        if (!empty($whereClauses)) {
+            $sql .= " WHERE " . implode(" AND ", $whereClauses);
+        }
+        
+        $sql .= " ORDER BY m.maintenance_id DESC";
+        
+        $stmt = $conn->prepare($sql);
+        
+        if (!$stmt) {
+            error_log("Failed to prepare getAllRecordsForSearch query: " . $conn->error);
+            echo json_encode(["success" => false, "message" => "Database error", "records" => []]);
             break;
+        }
+        
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $records = [];
+        while ($row = $result->fetch_assoc()) {
+            $records[] = $row;
+        }
+        
+        echo json_encode(["success" => true, "records" => $records]);
+        break;
             
         case 'add':
             $data = json_decode(file_get_contents("php://input"));

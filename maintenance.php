@@ -149,7 +149,20 @@
                 <option value="deleted">Deleted</option>
             </select>
         </div>
-        
+          <div class="date-range-filter-container">
+    <div class="date-input-wrapper">
+        <input type="date" id="startDate" onchange="applyDateFilter()">
+        <label for="startDate">From</label>
+    </div>
+    <div class="date-input-wrapper">
+        <input type="date" id="endDate" onchange="applyDateFilter()">
+        <label for="endDate">To</label>
+    </div>
+    <button class="clear-date-filter" onclick="clearDateFilter()">
+        <i class="fas fa-times"></i> Clear
+    </button>
+</div>
+
         <div class="search-container">
             <i class="fas fa-search"></i>
             <input type="text" id="searchInput" placeholder="Search..." onkeyup="searchMaintenance()">
@@ -391,6 +404,8 @@
             let sortTruckIdAsc = true; 
             let rowsPerPage = 5;
             let searchTimeout;
+            let startDateFilter = null;
+            let endDateFilter = null;
             let maintenanceData = [];
             
         function getLocalDate() {
@@ -727,10 +742,17 @@ function loadMaintenanceData() {
     if (currentStatusFilter === 'deleted') {
         url += `&showDeleted=1`;
     } 
+    
     else if (currentStatusFilter !== 'all') {
         url += `&status=${encodeURIComponent(currentStatusFilter)}`;
     }
 
+      if (startDateFilter) {
+        url += `&startDate=${encodeURIComponent(startDateFilter)}`;
+    }
+    if (endDateFilter) {
+        url += `&endDate=${encodeURIComponent(endDateFilter)}`;
+    }
       url += `&_=${new Date().getTime()}`;
     
     fetch(url)
@@ -805,6 +827,12 @@ window.onload = function() {
     
     if (currentStatusFilter === 'deleted') {
         url += `&showDeleted=1`;
+    }
+    if (startDateFilter) {
+        url += `&startDate=${encodeURIComponent(startDateFilter)}`;
+    }
+    if (endDateFilter) {
+        url += `&endDate=${encodeURIComponent(endDateFilter)}`;
     }
     
     return fetch(url)
@@ -1850,6 +1878,44 @@ function checkMaintenanceType() {
         // Remove restriction for emergency maintenance
         dateInput.removeAttribute('min');
     }
+}
+function applyDateFilter() {
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    
+    if (startDateInput.value && endDateInput.value) {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate > endDate) {
+            Swal.fire({
+                title: 'Invalid Date Range',
+                text: 'Start date cannot be after end date',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+            
+            startDateInput.value = endDateInput.value;
+            endDateInput.value = startDateInput.value;
+            return;
+        }
+    }
+    
+    startDateFilter = startDateInput.value;
+    endDateFilter = endDateInput.value;
+
+    currentPage = 1;
+    loadMaintenanceData();
+}
+
+function clearDateFilter() {
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    startDateFilter = null;
+    endDateFilter = null;
+
+    currentPage = 1;
+    loadMaintenanceData();
 }
 
     </script>

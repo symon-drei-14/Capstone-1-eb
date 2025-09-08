@@ -876,7 +876,7 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
         position: relative;
         display: flex;
         align-items: center;
-          left: 980;
+          left: 540;
     }
 
     .search-container .fa-search {
@@ -1605,4 +1605,161 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 .dropdown-item.view-reason:hover {
     background-color: #17a2b8;
     color: white;
+}
+
+.date-range-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-right: 15px;
+    padding: 12px 15px;
+    border-radius: 8px;
+}
+
+.date-input-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.date-input-wrapper input[type="date"] {
+    padding: 14px 10px 6px;
+    border: 1px solid #ced4da;
+    border-radius: 10px;
+    font-size: 14px;
+    width: 150px;
+    background: white;
+    color: transparent;
+    z-index: 1;
+    transition: color 0.2s ease;
+}
+
+/* Hide the default dd/mm/yyyy placeholder */
+.date-input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+.date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+.date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+.date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field {
+    color: transparent;
+}
+
+/* Show custom dashed placeholder */
+.date-input-wrapper input[type="date"]:not(:focus):invalid::-webkit-datetime-edit {
+    color: transparent;
+}
+
+.date-input-wrapper input[type="date"]:not(:focus):invalid::before {
+    content: "------";
+    color: #6c757d;
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Show the selected date text when focused or has value */
+.date-input-wrapper input[type="date"]:focus,
+.date-input-wrapper input[type="date"]:valid {
+    color: #495057;
+}
+
+.date-input-wrapper input[type="date"]:focus::-webkit-datetime-edit-text,
+.date-input-wrapper input[type="date"]:focus::-webkit-datetime-edit-month-field,
+.date-input-wrapper input[type="date"]:focus::-webkit-datetime-edit-day-field,
+.date-input-wrapper input[type="date"]:focus::-webkit-datetime-edit-year-field,
+.date-input-wrapper input[type="date"]:valid::-webkit-datetime-edit-text,
+.date-input-wrapper input[type="date"]:valid::-webkit-datetime-edit-month-field,
+.date-input-wrapper input[type="date"]:valid::-webkit-datetime-edit-day-field,
+.date-input-wrapper input[type="date"]:valid::-webkit-datetime-edit-year-field {
+    color: #495057;
+}
+
+
+
+
+
+.date-input-wrapper label {
+    position: absolute;
+    top: 0;
+    left: 10px;
+    transform: translateY(-50%) scale(0.85);
+    font-size: 16px;
+    color: #2a2a2a98;
+    font-weight: 500;
+    pointer-events: none;
+    background: white;
+    padding: 0 4px;
+    z-index: 2;
+}
+
+/* Focus styles */
+.date-input-wrapper input[type="date"]:focus {
+    border-color: #59595951;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.clear-date-filter {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.2s ease;
+}
+
+.clear-date-filter:hover {
+    background: #5a6268;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .filter-controls {
+        flex-wrap: wrap;
+    }
+    
+    .date-range-filter-container {
+        order: 1;
+        width: 100%;
+        margin-bottom: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .date-input-wrapper {
+        margin-bottom: 8px;
+    }
+    
+    .status-filter-container {
+        order: 2;
+    }
+    
+    .search-container {
+        order: 3;
+    }
+}
+
+@media (max-width: 768px) {
+    .date-range-filter-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .date-input-wrapper {
+        width: 100%;
+    }
+    
+    .date-input-wrapper input[type="date"] {
+        width: 100%;
+    }
+    
+    .clear-date-filter {
+        align-self: center;
+        margin-top: 8px;
+    }
 }
