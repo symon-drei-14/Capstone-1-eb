@@ -597,22 +597,22 @@ let showDeletedData = {
         });
     }
     
-    // Update pagination info
+    
     if (pageInfo) {
         pageInfo.textContent = `Page ${data[type].currentPage} of ${totalPages || 1}`;
     }
     
-    // IMPORTANT: Re-setup dropdown functionality after rendering new content
+  
     setupDropdowns();
 }
     
     function setupDropdowns() {
-    // Remove existing listeners to prevent duplicates
+    
     document.removeEventListener('click', handleDocumentClick);
     document.removeEventListener('click', handleDropdownClick);
     document.removeEventListener('click', handleDropdownItemClick);
     
-    // Add event listeners
+ 
     document.addEventListener('click', handleDocumentClick);
     document.addEventListener('click', handleDropdownClick);
     document.addEventListener('click', handleDropdownItemClick);
