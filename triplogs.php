@@ -1757,11 +1757,7 @@ eventClick: function(event, jsEvent, view) {
             }, 100);
 
             // Show/hide buttons based on status
-            if (eventData.status === 'Completed') {
-                $('#viewExpensesBtn').show();
-            } else {
-                $('#viewExpensesBtn').hide();
-            }
+           
 
             if (eventData.driver_id && eventData.status !== 'Cancelled') {
                 $('#viewChecklistBtn').show();
@@ -2094,50 +2090,53 @@ $(document).on('click', '.dropdown-item.edit', function() {
     }
 });
 
-    $(document).on('click', '.dropdown-item.view-expenses', function() {
-        var tripId = $('#editEventId').val();
-        
-        $.ajax({
-            url: 'include/handlers/trip_operations.php',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                action: 'get_expenses',
-                tripId: tripId
-            }),
-            success: function(response) {
-                if (response.success) {
-                    $('#expensesTableBody').empty();
-                    
-                    if (response.expenses.length > 0) {
-                        response.expenses.forEach(function(expense) {
-                            var row = `
-                                <tr>
-                                    <td>${expense.expense_type}</td>
-                                    <td>${expense.amount}</td>
-                                </tr>
-                            `;
-                            $('#expensesTableBody').append(row);
-                        });
-                    } else {
-                        $('#expensesTableBody').html('<tr><td colspan="2" style="text-align: center;">No expenses recorded for this trip</td></tr>');
-                    }
-                    
-                    $('#expensesModal').show();
+  $(document).on('click', '.dropdown-item.view-expenses', function() {
+    var tripId = $(this).data('id');
+    
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_expenses',
+            tripId: tripId
+        }),
+        success: function(response) {
+            if (response.success) {
+                $('#expensesTableBody').empty();
+                
+                if (response.expenses.length > 0) {
+                    response.expenses.forEach(function(expense) {
+                        var row = `
+                            <tr>
+                                <td>${expense.expense_type}</td>
+                                <td>${expense.amount}</td>
+                            </tr>
+                        `;
+                        $('#expensesTableBody').append(row);
+                    });
                 } else {
-                    alert('Error: ' + response.message);
+                    $('#expensesTableBody').html('<tr><td colspan="2" style="text-align: center;">No expenses recorded for this trip</td></tr>');
                 }
-            },
-            error: function() {
-                 Swal.fire({
+                
+                $('#expensesModal').show();
+            } else {
+                Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Server error occurred while loading expenses',
-                    });
-           
+                    text: response.message || 'Failed to load expenses'
+                });
             }
-        });
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Server error occurred while loading expenses'
+            });
+        }
     });
+});
             
 
             $(document).on('click', '.dropdown-item.delete', function() {
