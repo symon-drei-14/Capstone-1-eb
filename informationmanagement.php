@@ -89,6 +89,7 @@ checkAccess(); // No role needed—logic is handled internally
         <button class="tab-btn" data-tab="consignees">Consignees</button>
         <button class="tab-btn" data-tab="helpers">Helpers</button>
         <button class="tab-btn" data-tab="suppliers">Suppliers</button>
+         <button class="tab-btn" data-tab="ports">Ports</button>
     </div>
     
     <!-- Dispatchers Tab -->
@@ -345,6 +346,41 @@ checkAccess(); // No role needed—logic is handled internally
     </div>
 </div>
 
+<div class="tab-content" id="ports-tab">
+    <div class="table-controls">
+        <button class="add-btn" onclick="openModal('ports')"><i class="fa-solid fa-plus"></i> Add Port</button>
+        <div class="search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" id="ports-search" placeholder="Search ports..." oninput="searchTable('ports')">
+        </div>
+
+        <div class="toggle-deleted-container">
+            <input type="checkbox" id="showDeleted-ports" onchange="toggleDeletedData('ports')">
+            <label for="showDeleted-ports">Show Deleted</label>
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <table id="ports-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Last Modified By</th>
+                    <th>Last Modified At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="ports-table-body"></tbody>
+        </table>
+    </div>
+    
+    <div class="pagination">
+        <button class="prev" onclick="changePage('ports', -1)">◄</button>
+        <span id="ports-page-info">Page 1</span>
+        <button class="next" onclick="changePage('ports', 1)">►</button>
+    </div>
+</div>
+
 
 </div>
 <!-- Modal for Add/Edit -->
@@ -410,7 +446,8 @@ let showDeletedData = {
     'shipping-lines': false,
     consignees: false,
     helpers: false,
-    suppliers: false
+    suppliers: false,
+    ports: false 
 };
 
     let data = {
@@ -420,7 +457,8 @@ let showDeletedData = {
         'shipping-lines': { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
         consignees: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
         helpers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
-    suppliers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' }
+    suppliers: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' },
+    ports: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' } 
     };
     
     // Initialize when DOM is loaded
@@ -479,7 +517,7 @@ let showDeletedData = {
     }
     
    function fetchAllData() {
-    const types = ['dispatchers', 'destinations', 'clients', 'shipping-lines', 'consignees', 'helpers', 'suppliers'];
+    const types = ['dispatchers', 'destinations', 'clients', 'shipping-lines', 'consignees', 'helpers', 'suppliers', 'ports'];
     types.forEach(type => {
         fetchData(type);
     });

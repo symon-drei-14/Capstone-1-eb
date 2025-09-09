@@ -432,6 +432,67 @@ case 'fullDeleteHelper':
     $stmt->execute();
     echo json_encode(['success' => true, 'message' => 'Helper permanently deleted']);
     break;
+
+
+    case 'getPorts':
+    $stmt = $conn->prepare("SELECT port_id, name, is_deleted, delete_reason, last_modified_by, last_modified_at FROM ports ORDER BY name");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $ports = $result->fetch_all(MYSQLI_ASSOC);
+    echo json_encode(['success' => true, 'data' => $ports]);
+    break;
+    
+case 'addPort':
+    $name = $_POST['name'] ?? '';
+    if (empty($name)) throw new Exception("Name is required");
+    
+    $stmt = $conn->prepare("INSERT INTO ports (name, last_modified_by) VALUES (?, ?)");
+    $stmt->bind_param("ss", $name, $currentUser);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Port added successfully']);
+    break;
+    
+case 'updatePort':
+    $id = $_POST['id'] ?? '';
+    $name = $_POST['name'] ?? '';
+    if (empty($id) || empty($name)) throw new Exception("ID and name are required");
+    
+    $stmt = $conn->prepare("UPDATE ports SET name = ?, last_modified_by = ?, last_modified_at = NOW() WHERE port_id = ?");
+    $stmt->bind_param("ssi", $name, $currentUser, $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Port updated successfully']);
+    break;
+    
+case 'softDeletePort':
+    $id = $_POST['id'] ?? '';
+    $reason = $_POST['reason'] ?? '';
+    if (empty($id) || empty($reason)) throw new Exception("ID and reason are required");
+    
+    $stmt = $conn->prepare("UPDATE ports SET is_deleted = 1, delete_reason = ?, last_modified_by = ?, last_modified_at = NOW() WHERE port_id = ?");
+    $stmt->bind_param("ssi", $reason, $currentUser, $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Port deleted successfully']);
+    break;
+    
+case 'restorePort':
+    $id = $_POST['id'] ?? '';
+    if (empty($id)) throw new Exception("ID is required");
+    
+    $stmt = $conn->prepare("UPDATE ports SET is_deleted = 0, delete_reason = NULL, last_modified_by = ?, last_modified_at = NOW() WHERE port_id = ?");
+    $stmt->bind_param("si", $currentUser, $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Port restored successfully']);
+    break;
+    
+case 'fullDeletePort':
+    $id = $_POST['id'] ?? '';
+    if (empty($id)) throw new Exception("ID is required");
+    
+    $stmt = $conn->prepare("DELETE FROM ports WHERE port_id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    echo json_encode(['success' => true, 'message' => 'Port permanently deleted']);
+    break;
             
         default:
             throw new Exception("Invalid action");
