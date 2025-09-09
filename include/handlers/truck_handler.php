@@ -104,11 +104,13 @@ function updateAllTruckStatuses($conn) {
         $truckId = $truck['truck_id'];
         $plateNo = $truck['plate_no'];
 
-      $tripStatus = null;
+        // First check if truck is currently on an En Route trip
+        $tripStatus = null;
         $tripQuery = $conn->prepare("
             SELECT status 
             FROM trips 
             WHERE truck_id = ? 
+            AND status = 'En Route'
             ORDER BY trip_date DESC 
             LIMIT 1
         ");
@@ -154,7 +156,8 @@ function updateAllTruckStatuses($conn) {
 
         $newStatus = 'In Terminal';
 
-        if ($tripStatus === 'Enroute') {
+        // PRIORITIZE TRIP STATUS OVER MAINTENANCE STATUS
+        if ($tripStatus === 'En Route') {
             $newStatus = 'Enroute';
         } elseif ($maintenanceStatus === 'In Progress') {
             $newStatus = 'In Repair';
@@ -166,11 +169,12 @@ function updateAllTruckStatuses($conn) {
             $newStatus = 'In Terminal';
         }
 
-      $updateStmt = $conn->prepare("
-    UPDATE truck_table 
-    SET status = ?, last_modified_at = NOW() 
-    WHERE truck_id = ? AND status <> ?
-");
+        // Only update if status has changed
+        $updateStmt = $conn->prepare("
+            UPDATE truck_table 
+            SET status = ?, last_modified_at = NOW() 
+            WHERE truck_id = ? AND status <> ?
+        ");
         $updateStmt->bind_param("sis", $newStatus, $truckId, $newStatus);
         $updateStmt->execute();
     }
