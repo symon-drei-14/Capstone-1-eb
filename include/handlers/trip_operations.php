@@ -916,6 +916,110 @@ try {
     break;
 
           
+case 'get_trips_today':
+    $statusFilter = $data['statusFilter'] ?? 'all';
+    $sortOrder = $data['sortOrder'] ?? 'desc';
+    $page = $data['page'] ?? 1;
+    $perPage = $data['perPage'] ?? 10;
+    
+    // Get today's date
+    $today = date('Y-m-d');
+    
+    $query = "SELECT 
+        t.trip_id,
+        t.container_no,
+        t.trip_date,
+        t.status,
+        t.fcl_status,
+        t.created_at,
+        tr.plate_no, 
+        tr.capacity as truck_capacity,
+        d.name as driver,
+        d.driver_id,
+        h.name as helper,
+        disp.name as dispatcher,
+        c.name as client,
+        p.name as port,  
+        dest.name as destination,
+        sl.name as shipping_line,
+        cons.name as consignee,
+        al.modified_by as last_modified_by,
+        al.modified_at as last_modified_at,
+        al.edit_reason,
+        COALESCE(te.cash_advance, 0) as cash_advance,
+        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+        COALESCE(te.diesel, 0) as diesel
+      FROM trips t
+      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+      LEFT JOIN helpers h ON t.helper_id = h.helper_id
+      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+      LEFT JOIN clients c ON t.client_id = c.client_id
+      LEFT JOIN ports p ON t.port_id = p.port_id  
+      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+      LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
+      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+      WHERE NOT EXISTS (
+          SELECT 1 FROM audit_logs_trips al2 
+          WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+      )
+      AND DATE(t.trip_date) = ?";
+    
+    if ($statusFilter !== 'all') {
+        $query .= " AND t.status = ?";
+    }
+    
+    $query .= " ORDER BY t.trip_date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
+    $offset = ($page - 1) * $perPage;
+    $query .= " LIMIT ? OFFSET ?";
+    
+    if ($statusFilter !== 'all') {
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ssii", $today, $statusFilter, $perPage, $offset);
+    } else {
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("sii", $today, $perPage, $offset);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $trips = [];
+    while ($row = $result->fetch_assoc()) {
+        $trips[] = $row;
+    }
+    
+    // Get total count
+    $countQuery = "SELECT COUNT(*) as total FROM trips t
+                  WHERE NOT EXISTS (
+                      SELECT 1 FROM audit_logs_trips al2 
+                      WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+                  )
+                  AND DATE(t.trip_date) = ?";
+    
+    if ($statusFilter !== 'all') {
+        $countQuery .= " AND t.status = ?";
+        $countStmt = $conn->prepare($countQuery);
+        $countStmt->bind_param("ss", $today, $statusFilter);
+    } else {
+        $countStmt = $conn->prepare($countQuery);
+        $countStmt->bind_param("s", $today);
+    }
+    
+    $countStmt->execute();
+    $total = $countStmt->get_result()->fetch_assoc()['total'];
+    
+    echo json_encode([
+        'success' => true, 
+        'trips' => $trips,
+        'total' => $total,
+        'perPage' => $perPage,
+        'currentPage' => $page
+    ]);
+    break;
+
 //eto pa babaguhin ko ehe
 case 'get_helpers':
     $stmt = $conn->prepare("SELECT helper_id, name FROM helpers ORDER BY name");

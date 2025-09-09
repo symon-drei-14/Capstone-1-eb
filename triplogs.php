@@ -260,6 +260,7 @@ if ($result->num_rows > 0) {
                             <option value="Completed">Completed</option>
                             <option value="Cancelled">Cancelled</option>
                             <option value="deleted">Deleted</option>
+                            <option value="today">Trips Today</option> 
                         </select>
                         
                         <div class="search-container">
@@ -805,6 +806,7 @@ if ($result->num_rows > 0) {
     <option value="Completed">Completed</option>
     <option value="Cancelled">Cancelled</option>
     <option value="deleted">Deleted</option>
+    <option value="today">Trips Today</option> 
 </select>
     <div class="search-container">
             <i class="fa fa-search"></i>
@@ -938,14 +940,16 @@ let filteredEvents = [];
         // Update immediately and then every second
         updateDateTime();
         setInterval(updateDateTime, 1000);
-
-    function renderTable() {
+function renderTable() {
     const showDeleted = currentStatusFilter === 'deleted';
+    const showToday = currentStatusFilter === 'today'; // Add this line
     const rowsPerPage = parseInt($('#rowsPerPage').val()); 
     
     let action;
     if (showDeleted) {
         action = 'get_deleted_trips';
+    } else if (showToday) { // Add this condition
+        action = 'get_trips_today';
     } else {
         action = 'get_active_trips';
     }
@@ -956,7 +960,7 @@ let filteredEvents = [];
         contentType: 'application/json',
         data: JSON.stringify({ 
             action: action, 
-            statusFilter: currentStatusFilter === 'deleted' ? 'all' : currentStatusFilter, 
+            statusFilter: showToday ? 'all' : (currentStatusFilter === 'deleted' ? 'all' : currentStatusFilter), 
             sortOrder: dateSortOrder,
             page: currentPage,
             perPage: rowsPerPage
@@ -985,7 +989,6 @@ let filteredEvents = [];
                     title: 'Error',
                     text: 'Server error occurred while loading trips',
                     });
- 
         }
     });
 }
