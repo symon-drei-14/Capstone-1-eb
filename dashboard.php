@@ -293,16 +293,23 @@ $eventsDataJson = json_encode($eventsData);
         return strtolower($trip['status']) === 'en route';
     });
 
-    if (!empty($enrouteTrips)):
-        $isSingleCard = count($enrouteTrips) === 1;
-        $singleCardClass = $isSingleCard ? 'single-card' : '';
-
-        $chunkSize = $isSingleCard ? 1 : 3;
-        $chunkedTrips = array_chunk($enrouteTrips, $chunkSize);
+  if (!empty($enrouteTrips)):
+    $tripCount = count($enrouteTrips);
+    $specialLayoutClass = '';
+    
+    // Determine special layout classes
+    if ($tripCount === 1) {
+        $specialLayoutClass = 'single-card';
+    } elseif ($tripCount === 2) {
+        $specialLayoutClass = 'two-cards';
+    }
+    
+    $chunkSize = ($tripCount === 1) ? 1 : 3;
+    $chunkedTrips = array_chunk($enrouteTrips, $chunkSize);
 
         foreach ($chunkedTrips as $tripRow): ?>
-            <div class="shipment-row <?php echo $singleCardClass; ?>">
-                <?php foreach ($tripRow as $trip):
+        <div class="shipment-row <?php echo $specialLayoutClass; ?>">
+            <?php foreach ($tripRow as $trip):
                     $departureDate = date('d-m-y g:ia', strtotime($trip['date']));
                     $statusClass = strtolower(str_replace(' ', '-', $trip['status']));
                 ?>
@@ -326,7 +333,7 @@ $eventsDataJson = json_encode($eventsData);
                         </div>
                     </div>
 
-                    <?php if ($isSingleCard): ?>
+                    <?php if ($tripCount === 1): ?>
                         <!-- Horizontal layout for single card -->
                         <div class="horizontal-route-container">
                             <div class="horizontal-top-section">
