@@ -11,40 +11,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 session_start();
 require 'dbhandler.php';
 
-/**
- * Update summary for a specific trip
- */
+function safePrepare($conn, $sql, $context = '') {
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        throw new Exception("[$context] SQL prepare failed: " . $conn->error . " | Query: $sql");
+    }
+    return $stmt;
+}
+
 function updateTripSummary($conn, $tripId) {
     try {
-        $stmt = $conn->prepare("
+        $stmt = safePrepare($conn, "
             SELECT 
-                a.trip_id,
+                t.trip_id,
                 d.name as driver,
                 (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_budget,
                 COALESCE(expense_totals.total_expenses, 0) as total_expenses,
                 ((COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) - COALESCE(expense_totals.total_expenses, 0)) as balance
-            FROM assign a
-            LEFT JOIN drivers_table d ON a.driver_id = d.driver_id
-            LEFT JOIN trip_expenses te ON a.trip_id = te.trip_id
+            FROM trips t
+            LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+            LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
             LEFT JOIN (
-                SELECT 
-                    trip_id,
-                    SUM(amount) as total_expenses
+                SELECT trip_id, SUM(amount) as total_expenses
                 FROM driver_expenses 
-                WHERE trip_id = ?
                 GROUP BY trip_id
-            ) expense_totals ON a.trip_id = expense_totals.trip_id
-            WHERE a.trip_id = ?
-        ");
-        
-        $stmt->bind_param("ii", $tripId, $tripId);
-        $stmt->execute();
+            ) expense_totals ON t.trip_id = expense_totals.trip_id
+            WHERE t.trip_id = ?
+        ", "updateTripSummary");
+
+        $stmt->bind_param("i", $tripId);
+        if (!$stmt->execute()) {
+            throw new Exception("[updateTripSummary] Execute failed: " . $stmt->error);
+        }
         $result = $stmt->get_result();
         $data = $result->fetch_assoc();
         $stmt->close();
         
         if ($data) {
-            $updateStmt = $conn->prepare("
+            $updateStmt = safePrepare($conn, "
                 INSERT INTO trip_summary_expenses 
                 (trip_id, driver, total_budget, total_expenses, balance)
                 VALUES (?, ?, ?, ?, ?)
@@ -53,9 +57,10 @@ function updateTripSummary($conn, $tripId) {
                     total_budget = VALUES(total_budget),
                     total_expenses = VALUES(total_expenses),
                     balance = VALUES(balance)
-            ");
-            
-            $updateStmt->bind_param("isddd", 
+            ", "updateTripSummary - insert");
+
+            $updateStmt->bind_param(
+                "isddd", 
                 $data['trip_id'],
                 $data['driver'],
                 $data['total_budget'],
@@ -63,15 +68,17 @@ function updateTripSummary($conn, $tripId) {
                 $data['balance']
             );
             
-            $updateStmt->execute();
+            if (!$updateStmt->execute()) {
+                throw new Exception("[updateTripSummary] Insert/Update failed: " . $updateStmt->error);
+            }
             $updateStmt->close();
             
-            error_log("Updated trip summary for trip_id: $tripId");
+            error_log("✅ Updated trip summary for trip_id: $tripId");
             return true;
         }
         return false;
     } catch (Exception $e) {
-        error_log("Error updating trip summary for trip $tripId: " . $e->getMessage());
+        error_log("❌ Error updating trip summary for trip $tripId: " . $e->getMessage());
         return false;
     }
 }
@@ -95,234 +102,140 @@ error_log("Expense Handler - Action: $action, Data: " . json_encode($data));
 try {
     switch ($action) {
         case 'add_expense':
-            $tripId = $data['trip_id'] ?? null;
-            $driverId = $data['driver_id'] ?? null;
+            $tripId = intval($data['trip_id'] ?? 0);
+            $driverId = intval($data['driver_id'] ?? 0);
             $expenseType = $data['expense_type'] ?? null;
-            $amount = $data['amount'] ?? null;
+            $amount = floatval($data['amount'] ?? 0);
 
-            error_log("ADD EXPENSE - Received data: " . json_encode($data));
-            error_log("ADD EXPENSE - Trip ID: $tripId (type: " . gettype($tripId) . ")");
-            error_log("ADD EXPENSE - Driver ID: $driverId (type: " . gettype($driverId) . ")");
-            
-            if (!$tripId || !$driverId || !$expenseType || !$amount) {
-                throw new Exception("Missing required fields. Trip ID: $tripId, Driver ID: $driverId, Type: $expenseType, Amount: $amount");
+            if ($tripId <= 0 || $driverId <= 0 || !$expenseType || $amount <= 0) {
+                throw new Exception("Missing or invalid required fields.");
             }
 
-            $tripId = intval($tripId);
-            if ($tripId <= 0) {
-                throw new Exception("Invalid trip ID: must be a positive integer, received: " . $data['trip_id']);
+            $tableCheck = $conn->query("SHOW TABLES LIKE 'expense_types'");
+            if ($tableCheck->num_rows == 0) {
+                $create = "
+                    CREATE TABLE IF NOT EXISTS expense_types (
+                        type_id INT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL UNIQUE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ";
+                if (!$conn->query($create)) {
+                    throw new Exception("Failed to create expense_types: " . $conn->error);
+                }
+                $defaultTypes = ['Gas', 'Toll Gate', 'Maintenance', 'Food', 'Parking', 'Other'];
+                $insertDefault = safePrepare($conn, "INSERT IGNORE INTO expense_types (name) VALUES (?)", "add_expense - insert defaults");
+                foreach ($defaultTypes as $t) {
+                    $insertDefault->bind_param("s", $t);
+                    $insertDefault->execute();
+                }
+                $insertDefault->close();
             }
 
-            $driverId = intval($driverId);
-            if ($driverId <= 0) {
-                throw new Exception("Invalid driver ID: must be a positive integer, received: " . $data['driver_id']);
-            }
-
-            if ($amount <= 0) {
-                throw new Exception("Amount must be greater than 0");
-            }
-
-            // First, check or create expense type
-            $expenseTypeId = null;
-            $typeCheckStmt = $conn->prepare("SELECT type_id FROM expense_types WHERE name = ?");
-            if ($typeCheckStmt === false) {
-                throw new Exception("Failed to prepare type check query: " . $conn->error);
-            }
-            
-            $typeCheckStmt->bind_param("s", $expenseType);
-            $typeCheckStmt->execute();
-            $typeResult = $typeCheckStmt->get_result();
-            
-            if ($typeResult->num_rows > 0) {
-                $typeData = $typeResult->fetch_assoc();
-                $expenseTypeId = $typeData['type_id'];
-                error_log("Found existing expense type: $expenseType (ID: $expenseTypeId)");
+            $typeStmt = safePrepare($conn, "SELECT type_id FROM expense_types WHERE name = ?", "add_expense - select type");
+            $typeStmt->bind_param("s", $expenseType);
+            $typeStmt->execute();
+            $typeResult = $typeStmt->get_result();
+            if ($typeResult && $typeResult->num_rows > 0) {
+                $expenseTypeId = $typeResult->fetch_assoc()['type_id'];
             } else {
-                // Create new expense type
-                $typeCheckStmt->close();
-                $createTypeStmt = $conn->prepare("INSERT INTO expense_types (name) VALUES (?)");
-                if ($createTypeStmt === false) {
-                    throw new Exception("Failed to prepare type creation query: " . $conn->error);
+                $createType = safePrepare($conn, "INSERT INTO expense_types (name) VALUES (?)", "add_expense - create type");
+                $createType->bind_param("s", $expenseType);
+                if (!$createType->execute()) {
+                    throw new Exception("Failed creating expense type: " . $createType->error);
                 }
-                
-                $createTypeStmt->bind_param("s", $expenseType);
-                if (!$createTypeStmt->execute()) {
-                    throw new Exception("Failed to create expense type: " . $createTypeStmt->error);
-                }
-                
                 $expenseTypeId = $conn->insert_id;
-                $createTypeStmt->close();
-                error_log("Created new expense type: $expenseType (ID: $expenseTypeId)");
+                $createType->close();
             }
-            
-            if (!$expenseTypeId) {
-                $typeCheckStmt->close();
-                throw new Exception("Failed to get or create expense type ID");
-            }
-            $typeCheckStmt->close();
+            $typeStmt->close();
 
-            // Insert into driver_expenses table
-            error_log("Final values - Trip ID: $tripId, Driver ID: $driverId, Type ID: $expenseTypeId, Amount: $amount");
+            $expenseTableCheck = $conn->query("SHOW TABLES LIKE 'driver_expenses'");
+            if ($expenseTableCheck->num_rows == 0) {
+                $createExpenseTable = "
+                    CREATE TABLE IF NOT EXISTS driver_expenses (
+                        expense_id INT AUTO_INCREMENT PRIMARY KEY,
+                        trip_id INT NOT NULL,
+                        driver_id INT NOT NULL,
+                        expense_type_id INT NOT NULL,
+                        amount DECIMAL(10,2) NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        created_by VARCHAR(255) DEFAULT 'System',
+                        FOREIGN KEY (expense_type_id) REFERENCES expense_types(type_id)
+                    )
+                ";
+                if (!$conn->query($createExpenseTable)) {
+                    throw new Exception("Failed to create driver_expenses: " . $conn->error);
+                }
+            }
 
-            $stmt = $conn->prepare("INSERT INTO driver_expenses
-                (trip_id, driver_id, expense_type_id, amount, created_by)
-                VALUES (?, ?, ?, ?, ?)");
-           
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare insert statement: " . $conn->error);
+            // Insert expense
+            $insert = safePrepare($conn, "
+                INSERT INTO driver_expenses (trip_id, driver_id, expense_type_id, amount, created_by)
+                VALUES (?, ?, ?, ?, ?)
+            ", "add_expense - insert");
+            $insert->bind_param("iiids", $tripId, $driverId, $expenseTypeId, $amount, $currentUser);
+            if (!$insert->execute()) {
+                throw new Exception("Insert expense failed: " . $insert->error);
             }
-           
-            $stmt->bind_param("iiids", $tripId, $driverId, $expenseTypeId, $amount, $currentUser);
-           
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute insert: " . $stmt->error);
-            }
-           
             $newExpenseId = $conn->insert_id;
-            $stmt->close();
-            
-            // Update the trip summary table
+            $insert->close();
+
             updateTripSummary($conn, $tripId);
-           
-            error_log("✅ Expense added successfully. ID: $newExpenseId, Trip: $tripId, Driver: $driverId, Type: $expenseTypeId");
+
             echo json_encode(['success' => true, 'expense_id' => $newExpenseId]);
             break;
 
         case 'get_expenses_by_trip':
-            $tripId = $data['trip_id'] ?? null;
-           
-            if (!$tripId) {
-                throw new Exception("Trip ID required");
-            }
-           
-            error_log("Fetching expenses for trip_id: $tripId");
+            $tripId = intval($data['trip_id'] ?? 0);
+            if ($tripId <= 0) throw new Exception("Trip ID required");
 
-            $statusStmt = $conn->prepare("
-                SELECT status FROM assign WHERE trip_id = ? LIMIT 1
-            ");
-            if ($statusStmt === false) {
-                throw new Exception("Failed to prepare status query: " . $conn->error);
-            }
-            
+            $statusStmt = safePrepare($conn, "SELECT status FROM trips WHERE trip_id = ? LIMIT 1", "get_expenses_by_trip - status");
             $statusStmt->bind_param("i", $tripId);
-            if (!$statusStmt->execute()) {
-                throw new Exception("Failed to execute status query: " . $statusStmt->error);
-            }
-            
-            $statusResult = $statusStmt->get_result();
-            $statusData = $statusResult->fetch_assoc();
+            $statusStmt->execute();
+            $status = $statusStmt->get_result()->fetch_assoc();
             $statusStmt->close();
-            
-            $isEnRoute = $statusData && strtolower($statusData['status']) === 'en route';
-            error_log("Trip status check - Trip ID: $tripId, Status: " . ($statusData['status'] ?? 'not found') . ", Is En Route: " . ($isEnRoute ? 'true' : 'false'));
 
-            // Get budget from trip_expenses and total expenses from driver_expenses
-            $summaryStmt = $conn->prepare("
-                SELECT 
-                    (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_budget,
-                    COALESCE(SUM(de.amount), 0) as total_expenses,
-                    ((COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) - COALESCE(SUM(de.amount), 0)) as balance
+            $isEnRoute = $status && strtolower($status['status']) === 'en route';
+
+            $summaryStmt = safePrepare($conn, "
+                SELECT (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_budget,
+                       COALESCE(SUM(de.amount), 0) as total_expenses
                 FROM trip_expenses te
                 LEFT JOIN driver_expenses de ON te.trip_id = de.trip_id
                 WHERE te.trip_id = ?
                 GROUP BY te.trip_id, te.cash_advance, te.additional_cash_advance
-            ");
-            if ($summaryStmt === false) {
-                throw new Exception("Failed to prepare summary query: " . $conn->error);
-            }
-           
+            ", "get_expenses_by_trip - summary");
             $summaryStmt->bind_param("i", $tripId);
-            if (!$summaryStmt->execute()) {
-                throw new Exception("Failed to execute summary query: " . $summaryStmt->error);
-            }
-           
-            $summaryResult = $summaryStmt->get_result();
-            $summary = $summaryResult->fetch_assoc();
+            $summaryStmt->execute();
+            $summary = $summaryStmt->get_result()->fetch_assoc();
             $summaryStmt->close();
-           
-            if ($summary) {
-                $totalBudget = floatval($summary['total_budget']);
-                $totalExpenses = floatval($summary['total_expenses']);
-                $remainingBalance = floatval($summary['balance']);
-               
-                error_log("From query - Budget: $totalBudget, Expenses: $totalExpenses, Balance: " . ($remainingBalance !== null ? $remainingBalance : 'N/A (not en route)'));
-            } else {
-                // If no trip_expenses record, check if trip exists and create one
-                $checkTripStmt = $conn->prepare("
-                    SELECT a.trip_id, 
-                           COALESCE(a.cash_adv, 0) as cash_advance,
-                           COALESCE(a.additional_cash_advance, 0) as additional_cash_advance
-                    FROM assign a 
-                    WHERE a.trip_id = ?
-                ");
-                $checkTripStmt->bind_param("i", $tripId);
-                $checkTripStmt->execute();
-                $checkResult = $checkTripStmt->get_result();
-                $tripData = $checkResult->fetch_assoc();
-                $checkTripStmt->close();
-                
-                if ($tripData) {
-                    // Create trip_expenses record
-                    $createTripStmt = $conn->prepare("
-                        INSERT INTO trip_expenses (trip_id, cash_advance, additional_cash_advance) 
-                        VALUES (?, ?, ?)
-                        ON DUPLICATE KEY UPDATE 
-                            cash_advance = VALUES(cash_advance),
-                            additional_cash_advance = VALUES(additional_cash_advance)
-                    ");
-                    $additionalCashAdv = floatval($tripData['additional_cash_advance'] ?? 0);
-                    $createTripStmt->bind_param("idd", $tripId, $tripData['cash_advance'], $additionalCashAdv);
-                    $createTripStmt->execute();
-                    $createTripStmt->close();
-                    
-                    $totalBudget = floatval($tripData['cash_advance']) + $additionalCashAdv;
-                    $totalExpenses = 0;
-                    $remainingBalance = $isEnRoute ? $totalBudget : null;
-                } else {
-                    $totalBudget = 0;
-                    $totalExpenses = 0;
-                    $remainingBalance = null;
-                }
-            }
 
-            // Get detailed expenses with expense type names
-            $sql = "
-                SELECT de.*, et.name as expense_type, d.name as driver_name, a.destination,
+            $totalBudget = $summary ? floatval($summary['total_budget']) : 0;
+            $totalExpenses = $summary ? floatval($summary['total_expenses']) : 0;
+            $remainingBalance = $isEnRoute ? ($totalBudget - $totalExpenses) : null;
+
+            $listStmt = safePrepare($conn, "
+                SELECT de.*, et.name as expense_type, d.name as driver_name,
                        DATE_FORMAT(de.created_at, '%m/%d/%y') as formatted_date
                 FROM driver_expenses de
                 LEFT JOIN expense_types et ON de.expense_type_id = et.type_id
                 LEFT JOIN drivers_table d ON de.driver_id = d.driver_id
-                LEFT JOIN assign a ON de.trip_id = a.trip_id
                 WHERE de.trip_id = ?
                 ORDER BY de.expense_id DESC
-            ";
-           
-            $stmt = $conn->prepare($sql);
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare expenses query: " . $conn->error);
-            }
-           
-            $stmt->bind_param("i", $tripId);
-           
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute expenses query: " . $stmt->error);
-            }
-           
-            $result = $stmt->get_result();
-           
+            ", "get_expenses_by_trip - list");
+            $listStmt->bind_param("i", $tripId);
+            $listStmt->execute();
+            $result = $listStmt->get_result();
             $expenses = [];
             while ($row = $result->fetch_assoc()) {
                 $expenses[] = $row;
             }
-           
-            $stmt->close();
-           
-            error_log("Final result - Trip ID: $tripId, Expenses: " . count($expenses) . ", Total Budget: $totalBudget, Total Expenses: $totalExpenses, Balance: " . ($remainingBalance !== null ? $remainingBalance : 'N/A'));
-           
+            $listStmt->close();
+
             echo json_encode([
                 'success' => true,
                 'expenses' => $expenses,
-                'total_budget' => $totalBudget,
+                'total_budget' => $isEnRoute ? $totalBudget : null,
                 'total_expenses' => $totalExpenses,
                 'remaining_balance' => $remainingBalance,
                 'is_en_route' => $isEnRoute
@@ -330,185 +243,114 @@ try {
             break;
 
         case 'get_trip_summary':
-            $tripId = $data['trip_id'] ?? null;
-           
-            if (!$tripId) {
-                throw new Exception("Trip ID required");
-            }
+            $tripId = intval($data['trip_id'] ?? 0);
+            if ($tripId <= 0) throw new Exception("Trip ID required");
 
-            $statusStmt = $conn->prepare("
-                SELECT status FROM assign WHERE trip_id = ? LIMIT 1
-            ");
-            if ($statusStmt === false) {
-                throw new Exception("Failed to prepare status query: " . $conn->error);
-            }
-            
+            $statusStmt = safePrepare($conn, "SELECT status FROM trips WHERE trip_id = ? LIMIT 1", "get_trip_summary - status");
             $statusStmt->bind_param("i", $tripId);
-            if (!$statusStmt->execute()) {
-                throw new Exception("Failed to execute status query: " . $statusStmt->error);
-            }
-            
-            $statusResult = $statusStmt->get_result();
-            $statusData = $statusResult->fetch_assoc();
+            $statusStmt->execute();
+            $status = $statusStmt->get_result()->fetch_assoc();
             $statusStmt->close();
-            
-            $isEnRoute = $statusData && strtolower($statusData['status']) === 'en route';
 
-            // Get summary from new table structure
-            $stmt = $conn->prepare("
-                SELECT 
-                    te.trip_id,
-                    d.name as driver,
-                    (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_budget,
-                    COALESCE(SUM(de.amount), 0) as total_expenses,
-                    ((COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) - COALESCE(SUM(de.amount), 0)) as balance
+            $isEnRoute = $status && strtolower($status['status']) === 'en route';
+
+            $stmt = safePrepare($conn, "
+                SELECT te.trip_id, d.name as driver,
+                       (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_budget,
+                       COALESCE(SUM(de.amount), 0) as total_expenses
                 FROM trip_expenses te
-                LEFT JOIN assign a ON te.trip_id = a.trip_id
-                LEFT JOIN drivers_table d ON a.driver_id = d.driver_id
+                LEFT JOIN trips t ON te.trip_id = t.trip_id
+                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
                 LEFT JOIN driver_expenses de ON te.trip_id = de.trip_id
                 WHERE te.trip_id = ?
                 GROUP BY te.trip_id, te.cash_advance, te.additional_cash_advance, d.name
-            ");
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare summary query: " . $conn->error);
-            }
-           
+            ", "get_trip_summary - summary");
             $stmt->bind_param("i", $tripId);
-           
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute summary query: " . $stmt->error);
-            }
-           
-            $result = $stmt->get_result();
-            $summary = $result->fetch_assoc();
+            $stmt->execute();
+            $summary = $stmt->get_result()->fetch_assoc();
             $stmt->close();
-           
+
             if (!$summary) {
                 throw new Exception("Trip summary not found for trip_id: $tripId");
             }
-           
+
+            $totalBudget = floatval($summary['total_budget']);
+            $totalExpenses = floatval($summary['total_expenses']);
+            $balance = $isEnRoute ? ($totalBudget - $totalExpenses) : null;
+
             echo json_encode([
                 'success' => true,
                 'summary' => [
                     'trip_id' => $summary['trip_id'],
                     'driver' => $summary['driver'],
-                    'total_budget' => floatval($summary['total_budget']),
-                    'total_expenses' => floatval($summary['total_expenses']),
-                    'remaining_balance' => $isEnRoute ? floatval($summary['balance']) : null,
+                    'total_budget' => $isEnRoute ? $totalBudget : null,
+                    'total_expenses' => $totalExpenses,
+                    'remaining_balance' => $balance,
                     'is_en_route' => $isEnRoute
                 ]
             ]);
             break;
 
         case 'get_all_trips_summary':
-            // Get from new table structure
-            $stmt = $conn->prepare("
-                SELECT 
-                    te.trip_id,
-                    d.name as driver,
-                    (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_budget,
-                    COALESCE(SUM(de.amount), 0) as total_expenses,
-                    ((COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) - COALESCE(SUM(de.amount), 0)) as balance,
-                    a.status
+            $stmt = safePrepare($conn, "
+                SELECT te.trip_id, d.name as driver,
+                       (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_budget,
+                       COALESCE(SUM(de.amount), 0) as total_expenses,
+                       t.status
                 FROM trip_expenses te
-                LEFT JOIN assign a ON te.trip_id = a.trip_id
-                LEFT JOIN drivers_table d ON a.driver_id = d.driver_id
+                LEFT JOIN trips t ON te.trip_id = t.trip_id
+                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
                 LEFT JOIN driver_expenses de ON te.trip_id = de.trip_id
-                GROUP BY te.trip_id, te.cash_advance, te.additional_cash_advance, d.name, a.status
+                GROUP BY te.trip_id, te.cash_advance, te.additional_cash_advance, d.name, t.status
                 ORDER BY te.trip_id DESC
-            ");
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare all summaries query: " . $conn->error);
-            }
-           
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute all summaries query: " . $stmt->error);
-            }
-           
+            ", "get_all_trips_summary");
+            $stmt->execute();
             $result = $stmt->get_result();
-           
             $summaries = [];
             while ($row = $result->fetch_assoc()) {
                 $isEnRoute = $row['status'] && strtolower($row['status']) === 'en route';
-                
                 $summaries[] = [
                     'trip_id' => $row['trip_id'],
                     'driver' => $row['driver'],
-                    'total_budget' => floatval($row['total_budget']),
+                    'total_budget' => $isEnRoute ? floatval($row['total_budget']) : null,
                     'total_expenses' => floatval($row['total_expenses']),
-                    'remaining_balance' => $isEnRoute ? floatval($row['balance']) : null,
+                    'remaining_balance' => $isEnRoute ? (floatval($row['total_budget']) - floatval($row['total_expenses'])) : null,
                     'is_en_route' => $isEnRoute,
                     'status' => $row['status']
                 ];
             }
-           
             $stmt->close();
-           
-            echo json_encode([
-                'success' => true,
-                'summaries' => $summaries
-            ]);
+            echo json_encode(['success' => true, 'summaries' => $summaries]);
             break;
 
         case 'get_expense_types':
-            $stmt = $conn->prepare("SELECT type_id, name FROM expense_types ORDER BY name");
-            if ($stmt === false) {
-                throw new Exception("Failed to prepare expense types query: " . $conn->error);
-            }
-            
-            if (!$stmt->execute()) {
-                throw new Exception("Failed to execute expense types query: " . $stmt->error);
-            }
-            
+            $stmt = safePrepare($conn, "SELECT type_id, name FROM expense_types ORDER BY name", "get_expense_types");
+            $stmt->execute();
             $result = $stmt->get_result();
-            $expenseTypes = [];
-            
-            while ($row = $result->fetch_assoc()) {
-                $expenseTypes[] = $row;
-            }
-            
+            $types = [];
+            while ($row = $result->fetch_assoc()) $types[] = $row;
             $stmt->close();
-            
-            echo json_encode([
-                'success' => true,
-                'expense_types' => $expenseTypes
-            ]);
+            echo json_encode(['success' => true, 'expense_types' => $types]);
             break;
 
         case 'delete_expense':
-            $expenseId = $data['expense_id'] ?? null;
-            
-            if (!$expenseId) {
-                throw new Exception("Expense ID required");
-            }
-            
-            // Get trip_id before deleting
-            $getTripStmt = $conn->prepare("SELECT trip_id FROM driver_expenses WHERE expense_id = ?");
-            $getTripStmt->bind_param("i", $expenseId);
-            $getTripStmt->execute();
-            $result = $getTripStmt->get_result();
-            $expenseData = $result->fetch_assoc();
-            $getTripStmt->close();
-            
-            if (!$expenseData) {
-                throw new Exception("Expense not found");
-            }
-            
-            $tripId = $expenseData['trip_id'];
-            
-            // Delete the expense
-            $deleteStmt = $conn->prepare("DELETE FROM driver_expenses WHERE expense_id = ?");
-            $deleteStmt->bind_param("i", $expenseId);
-            
-            if (!$deleteStmt->execute()) {
-                throw new Exception("Failed to delete expense: " . $deleteStmt->error);
-            }
-            
-            $deleteStmt->close();
-            
-            // Update the trip summary
+            $expenseId = intval($data['expense_id'] ?? 0);
+            if ($expenseId <= 0) throw new Exception("Expense ID required");
+
+            $getTrip = safePrepare($conn, "SELECT trip_id FROM driver_expenses WHERE expense_id = ?", "delete_expense - get trip");
+            $getTrip->bind_param("i", $expenseId);
+            $getTrip->execute();
+            $tripData = $getTrip->get_result()->fetch_assoc();
+            $getTrip->close();
+            if (!$tripData) throw new Exception("Expense not found");
+            $tripId = $tripData['trip_id'];
+
+            $delete = safePrepare($conn, "DELETE FROM driver_expenses WHERE expense_id = ?", "delete_expense - delete");
+            $delete->bind_param("i", $expenseId);
+            if (!$delete->execute()) throw new Exception("Delete failed: " . $delete->error);
+            $delete->close();
+
             updateTripSummary($conn, $tripId);
-            
             echo json_encode(['success' => true, 'message' => 'Expense deleted successfully']);
             break;
 
@@ -516,11 +358,11 @@ try {
             throw new Exception("Invalid action: $action");
     }
 } catch (Exception $e) {
-    error_log("Expense handler error: " . $e->getMessage());
+    error_log("❌ Expense handler error: " . $e->getMessage());
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } catch (Throwable $e) {
-    error_log("Fatal error in expense handler: " . $e->getMessage() . " in " . $e->getFile() . " line " . $e->getLine());
+    error_log("🔥 Fatal error in expense handler: " . $e->getMessage() . " in " . $e->getFile() . " line " . $e->getLine());
     http_response_code(500);
     echo json_encode([
         'success' => false,
@@ -529,8 +371,6 @@ try {
         'file' => $e->getFile()
     ]);
 } finally {
-    if (isset($conn)) {
-        $conn->close();
-    }
+    if (isset($conn) && $conn) $conn->close();
 }
 ?>
