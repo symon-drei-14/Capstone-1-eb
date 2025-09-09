@@ -860,61 +860,62 @@ try {
     break;
 
 
-        case 'get_expenses':
-            $tripId = $data['tripId'] ?? 0;
-            
-            // Get expenses from the trip_expenses table
-            $stmt = $conn->prepare("
-                SELECT 
-                    'Cash Advance' as expense_type,
-                    CONCAT('₱', FORMAT(cash_advance, 2)) as amount
-                FROM trip_expenses 
-                WHERE trip_id = ? AND cash_advance > 0
-                
-                UNION ALL
-                
-                SELECT 
-                    'Additional Cash Advance' as expense_type,
-                    CONCAT('₱', FORMAT(additional_cash_advance, 2)) as amount
-                FROM trip_expenses 
-                WHERE trip_id = ? AND additional_cash_advance > 0
-                
-                UNION ALL
-                
-                SELECT 
-                    'Diesel' as expense_type,
-                    CONCAT('₱', FORMAT(diesel, 2)) as amount
-                FROM trip_expenses 
-                WHERE trip_id = ? AND diesel > 0
-                
-                UNION ALL
-                
-                SELECT 
-                    expense_type,
-                    CONCAT('₱', FORMAT(amount, 2)) as amount
-                FROM expenses 
-                WHERE trip_id = ?
-                
-                ORDER BY 
-                    CASE expense_type 
-                        WHEN 'Cash Advance' THEN 1
-                        WHEN 'Additional Cash Advance' THEN 2
-                        WHEN 'Diesel' THEN 3
-                        ELSE 4
-                    END
-            ");
-            
-            $stmt->bind_param("iiii", $tripId, $tripId, $tripId, $tripId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            $expenses = [];
-            while ($row = $result->fetch_assoc()) {
-                $expenses[] = $row;
-            }
-            
-            echo json_encode(['success' => true, 'expenses' => $expenses]);
-            break;
+      case 'get_expenses':
+    $tripId = $data['tripId'] ?? 0;
+    
+    // Get expenses from the driver_expenses table
+    $stmt = $conn->prepare("
+        SELECT 
+            'Cash Advance' as expense_type,
+            CONCAT('₱', FORMAT(cash_advance, 2)) as amount
+        FROM trip_expenses 
+        WHERE trip_id = ? AND cash_advance > 0
+        
+        UNION ALL
+        
+        SELECT 
+            'Additional Cash Advance' as expense_type,
+            CONCAT('₱', FORMAT(additional_cash_advance, 2)) as amount
+        FROM trip_expenses 
+        WHERE trip_id = ? AND additional_cash_advance > 0
+        
+        UNION ALL
+        
+        SELECT 
+            'Diesel' as expense_type,
+            CONCAT('₱', FORMAT(diesel, 2)) as amount
+        FROM trip_expenses 
+        WHERE trip_id = ? AND diesel > 0
+        
+        UNION ALL
+        
+        SELECT 
+            et.name as expense_type,
+            CONCAT('₱', FORMAT(de.amount, 2)) as amount
+        FROM driver_expenses de
+        INNER JOIN expense_types et ON de.expense_type_id = et.type_id
+        WHERE de.trip_id = ?
+        
+        ORDER BY 
+            CASE expense_type 
+                WHEN 'Cash Advance' THEN 1
+                WHEN 'Additional Cash Advance' THEN 2
+                WHEN 'Diesel' THEN 3
+                ELSE 4
+            END
+    ");
+    
+    $stmt->bind_param("iiii", $tripId, $tripId, $tripId, $tripId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $expenses = [];
+    while ($row = $result->fetch_assoc()) {
+        $expenses[] = $row;
+    }
+    
+    echo json_encode(['success' => true, 'expenses' => $expenses]);
+    break;
 
           
 //eto pa babaguhin ko ehe

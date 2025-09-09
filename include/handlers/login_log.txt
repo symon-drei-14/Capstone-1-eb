@@ -896,3 +896,10 @@
 2025-09-03 17:52:59 - Data validation passed
 2025-09-03 17:52:59 - Database connection successful
 2025-09-03 17:52:59 - Login successful for: glen@gmail.com
+2025-09-09 08:25:31 - Login request received
+{"email":"Tester@gmail.com","password":"12345678"}
+
+2025-09-09 08:25:31 - JSON parsed successfully
+2025-09-09 08:25:31 - Data validation passed
+2025-09-09 08:25:31 - Database connection successful
+2025-09-09 08:25:31 - Login successful for: Tester@gmail.com

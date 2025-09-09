@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 session_start();
+date_default_timezone_set('Asia/Manila');
 require 'dbhandler.php';
 
 // Check database connection first
@@ -701,7 +702,8 @@ try {
             echo json_encode(['success' => true, 'message' => 'Status updated successfully']);
             break;
 
-        case 'save_checklist':
+     // Replace the existing 'save_checklist' case with this:
+case 'save_checklist':
     // First check if the trip exists and get its date for validation
     $tripCheck = $conn->prepare("SELECT trip_date FROM trips WHERE trip_id = ?");
     $tripCheck->bind_param("i", $data['trip_id']);
@@ -717,19 +719,33 @@ try {
     $trip = $tripResult->fetch_assoc();
     $tripCheck->close();
     
-    // Validate if checklist can be submitted (same day or 2 hours before)
-    $tripDate = new DateTime($trip['trip_date']);
+    // Validate if checklist can be submitted (2 hours before up to 1 minute before trip)
+    $tripDateTime = new DateTime($trip['trip_date']);
     $now = new DateTime();
     
-    // Calculate 2 hours before the trip
-    $twoHoursBefore = clone $tripDate;
+    // Calculate 2 hours before the trip (start of window)
+    $twoHoursBefore = clone $tripDateTime;
     $twoHoursBefore->modify('-2 hours');
     
-    // Check if current time is before the allowed window (more than 2 hours before)
+    // Calculate 1 minute before the trip (end of window)
+    $oneMinuteBefore = clone $tripDateTime;
+    $oneMinuteBefore->modify('-1 minute');
+    
+    // Check if current time is before the allowed window
     if ($now < $twoHoursBefore) {
+        $formattedTime = $twoHoursBefore->format('g:i A');
         echo json_encode([
             'success' => false, 
-            'message' => 'Checklist can only be completed on the day of delivery or up to 2 hours before.'
+            'message' => "Checklist will be available starting at $formattedTime (2 hours before the scheduled trip)."
+        ]);
+        break;
+    }
+    
+    // Check if current time is after the allowed window
+    if ($now > $oneMinuteBefore) {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Checklist submission closed 1 minute before the scheduled trip time.'
         ]);
         break;
     }
@@ -750,7 +766,8 @@ try {
             no_illness = ?,
             fit_to_work = ?,
             alcohol_test = ?,
-            hours_sleep = ?
+            hours_sleep = ?,
+            submitted_at = NOW()
             WHERE trip_id = ?");
         $stmt->bind_param("iiiiiddi", 
             $data['no_fatigue'],
@@ -772,8 +789,9 @@ try {
             no_illness,
             fit_to_work,
             alcohol_test,
-            hours_sleep
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            hours_sleep,
+            submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         $stmt->bind_param("iiiiiidd", 
             $data['trip_id'],
             $data['no_fatigue'],
@@ -786,58 +804,62 @@ try {
         );
     }
     
-    $stmt->execute();
-    echo json_encode(['success' => true]);
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'message' => 'Checklist submitted successfully']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to save checklist']);
+    }
+    $stmt->close();
     break;
 
         case 'get_checklist':
-            $tripId = $data['trip_id'] ?? null;
-            
-            if (!$tripId) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Trip ID is required']);
-                break;
-            }
-            
-            try {
-                $stmt = $conn->prepare("SELECT * FROM driver_checklist WHERE trip_id = ?");
-                if ($stmt === false) {
-                    throw new Exception("Failed to prepare statement: " . $conn->error);
-                }
-                
-                $stmt->bind_param("i", $tripId);
-                
-                if (!$stmt->execute()) {
-                    throw new Exception("Failed to execute query: " . $stmt->error);
-                }
-                
-                $result = $stmt->get_result();
-                
-                if ($result->num_rows > 0) {
-                    $checklist = $result->fetch_assoc();
-                    echo json_encode([
-                        'success' => true, 
-                        'checklist' => $checklist,
-                        'message' => 'Checklist found'
-                    ]);
-                } else {
-                    echo json_encode([
-                        'success' => false, 
-                        'message' => 'No checklist found for this trip'
-                    ]);
-                }
-            } catch (Exception $e) {
-                http_response_code(500);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Error fetching checklist: ' . $e->getMessage()
-                ]);
-            } finally {
-                if (isset($stmt)) {
-                    $stmt->close();
-                }
-            }
-            break;
+    $tripId = $data['trip_id'] ?? null;
+    
+    if (!$tripId) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Trip ID is required']);
+        break;
+    }
+    
+    try {
+        $stmt = $conn->prepare("SELECT *, DATE_FORMAT(submitted_at, '%Y-%m-%d %H:%i:%s') as formatted_submitted_at FROM driver_checklist WHERE trip_id = ?");
+        if ($stmt === false) {
+            throw new Exception("Failed to prepare statement: " . $conn->error);
+        }
+        
+        $stmt->bind_param("i", $tripId);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to execute query: " . $stmt->error);
+        }
+        
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            $checklist = $result->fetch_assoc();
+            echo json_encode([
+                'success' => true, 
+                'checklist' => $checklist,
+                'message' => 'Checklist found'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'No checklist found for this trip'
+            ]);
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error fetching checklist: ' . $e->getMessage()
+        ]);
+    } finally {
+        if (isset($stmt)) {
+            $stmt->close();
+        }
+    }
+    break;
 
         default:
             throw new Exception("Invalid action: $action");
