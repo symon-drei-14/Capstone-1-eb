@@ -2636,6 +2636,10 @@ function formatCurrency(amount) {
         }
     }
 
+    function closeModal() {
+    $('.modal').hide();
+}
+
 $(document).on('click', '.dropdown-item.full-delete', function(e) {
     e.stopPropagation(); // Prevent event bubbling to parent elements
     
