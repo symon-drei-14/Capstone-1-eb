@@ -23,7 +23,6 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     </head>
-
     <body>
         <?php
         require 'include/handlers/dbhandler.php';
@@ -585,56 +584,63 @@ if ($result->num_rows > 0) {
     </div>
 </div>
 
-    
-
-
-
-
    <div id="expensesModal" class="modal">
-    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; ">
-        <span class="close">&times;</span>
-        <h3 style="margin-top: 0;">Expense Reports</h3>
-        
-        <!-- Cash Advance and Diesel Summary -->
-        <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
-            <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Initial Funds</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <strong>Cash Advance:</strong> <span id="expenseCashAdvance">₱0.00</span>
+        <div class="expensemodal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 class="modal-header">Expense Report</h3>
+  <div class="employee">
+                <div class="employee-info-container">
+                    <h4 class="employee-info"><i class="fas fa-user"></i>Driver: Pablo Escobar</h4>
+                    <h4 class="employee-info"><i class="fas fa-user-secret"></i>Helper: Joel Villanueva</h4>
                 </div>
-                <div>
-                    <strong>Additional Cash:</strong> <span id="expenseAdditionalCash">₱0.00</span>
-                </div>
-                <div>
-                    <strong>Diesel:</strong> <span id="expenseDiesel">₱0.00</span>
+                <h4 class="trip-date"><i class="fas fa-calendar-alt"></i> Date: April 69, 2024</h4>
+            </div>
+            
+              <div class="initialFund-container">
+                <div class="initialFund">
+                    <div class="initialFund-header">
+                        <h4>Initial Funds</h4>
+                    </div>
+                    <div class="initialFund-item">
+                        <strong>Cash Advance:</strong> <span id="expenseCashAdvance">₱0.00</span>
+                    </div>
+                    <div class="initialFund-item">
+                        <strong>Additional Cash:</strong> <span id="expenseAdditionalCash">₱0.00</span>
+                    </div>
+                    <div class="initialFund-item">
+                        <strong>Diesel:</strong> <span id="expenseDiesel">₱0.00</span>
+                    </div>
+                    <div class="initialFund-total">
+                        <strong>Total Initial Funds:</strong> <span id="totalInitialFunds">₱0.00 di pa nagana hehe</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Expense Type Section -->
-        <h4 style="margin-bottom: 15px; color: #333;">Expenditure</h4>
-        
-        
-        <table class="events-table" style="width: 100%; margin-top: 15px;">
-            <thead>
-                <tr>
-                    <th>Expense Type</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tbody id="expensesTableBody"></tbody>
-        </table>
-        
-        <!-- Total Expenses Section -->
-        <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h4 style="margin: 0; color: #333;">Total Expenses</h4>
-                <span id="totalExpensesAmount" style="font-weight: bold; font-size: 18px;">₱0.00</span>
+            <div class="expense-section">
+                <h4><i class="fas fa-receipt"></i> Expenditure</h4>
+                
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Expense Type</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody">
+                    </tbody>
+                </table>
             </div>
-            <button type="button" class="close-btn cancel-btn" style="margin-top: 20px; width: 100%;">Close</button>
+            
+            <!-- Total Expenses Section -->
+            <div class="total-expenses">
+                <div class="total-row">
+                    <h4>Total Expenses</h4>
+                    <span id="totalExpensesAmount">₱0.00</span>
+                </div>
+                <button type="button" class="expense-close-btn" onclick="closeModal()">Close Report</button>
+            </div>
         </div>
     </div>
-</div>
 
 <div id="addScheduleModal" class="modal">
     <!-- etong css gamit ng add modal -->
@@ -783,7 +789,7 @@ if ($result->num_rows > 0) {
             </div>
 
             <!-- Form buttons -->
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+               <div class="buttons" style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
                 <button type="button" class="close-btn cancel-btn" style="padding: 5px 10px;">Cancel</button>
                 <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
             </div>
