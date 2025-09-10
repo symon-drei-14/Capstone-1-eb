@@ -584,63 +584,63 @@ if ($result->num_rows > 0) {
     </div>
 </div>
 
-   <div id="expensesModal" class="modal">
-        <div class="expensemodal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h3 class="modal-header">Expense Report</h3>
-  <div class="employee">
-                <div class="employee-info-container">
-                    <h4 class="employee-info"><i class="fas fa-user"></i>Driver: Pablo Escobar</h4>
-                    <h4 class="employee-info"><i class="fas fa-user-secret"></i>Helper: Joel Villanueva</h4>
-                </div>
-                <h4 class="trip-date"><i class="fas fa-calendar-alt"></i> Date: April 69, 2024</h4>
+  <div id="expensesModal" class="modal">
+    <div class="expensemodal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3 class="modal-header">Expense Report</h3>
+        <div class="employee">
+            <div class="employee-info-container">
+                <h4 class="employee-info"><i class="fas fa-user"></i>Driver: <span id="expenseDriverName">Loading...</span></h4>
+                <h4 class="employee-info"><i class="fas fa-user-secret"></i>Helper: <span id="expenseHelperName">Loading...</span></h4>
             </div>
-            
-              <div class="initialFund-container">
-                <div class="initialFund">
-                    <div class="initialFund-header">
-                        <h4>Initial Funds</h4>
-                    </div>
-                    <div class="initialFund-item">
-                        <strong>Cash Advance:</strong> <span id="expenseCashAdvance">₱0.00</span>
-                    </div>
-                    <div class="initialFund-item">
-                        <strong>Additional Cash:</strong> <span id="expenseAdditionalCash">₱0.00</span>
-                    </div>
-                    <div class="initialFund-item">
-                        <strong>Diesel:</strong> <span id="expenseDiesel">₱0.00</span>
-                    </div>
-                    <div class="initialFund-total">
-                        <strong>Total Initial Funds:</strong> <span id="totalInitialFunds">₱0.00 di pa nagana hehe</span>
-                    </div>
+            <h4 class="trip-date"><i class="fas fa-calendar-alt"></i> Date: <span id="expenseTripDate">Loading...</span></h4>
+        </div>
+        
+        <div class="initialFund-container">
+            <div class="initialFund">
+                <div class="initialFund-header">
+                    <h4>Initial Funds</h4>
                 </div>
-            </div>
-
-            <div class="expense-section">
-                <h4><i class="fas fa-receipt"></i> Expenditure</h4>
-                
-                <table class="expense-table">
-                    <thead>
-                        <tr>
-                            <th>Expense Type</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody id="expensesTableBody">
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Total Expenses Section -->
-            <div class="total-expenses">
-                <div class="total-row">
-                    <h4>Total Expenses</h4>
-                    <span id="totalExpensesAmount">₱0.00</span>
+                <div class="initialFund-item">
+                    <strong>Cash Advance:</strong> <span id="expenseCashAdvance">₱0.00</span>
                 </div>
-                <button type="button" class="expense-close-btn" onclick="closeModal()">Close Report</button>
+                <div class="initialFund-item">
+                    <strong>Additional Cash:</strong> <span id="expenseAdditionalCash">₱0.00</span>
+                </div>
+                <div class="initialFund-item">
+                    <strong>Diesel:</strong> <span id="expenseDiesel">₱0.00</span>
+                </div>
+                <div class="initialFund-total">
+                    <strong>Total Initial Funds:</strong> <span id="totalInitialFunds">₱0.00</span>
+                </div>
             </div>
         </div>
+
+        <div class="expense-section">
+            <h4><i class="fas fa-receipt"></i> Expenditure</h4>
+            
+            <table class="expense-table">
+                <thead>
+                    <tr>
+                        <th>Expense Type</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="expensesTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Total Expenses Section -->
+        <div class="total-expenses">
+            <div class="total-row">
+                <h4>Total Expenses</h4>
+                <span id="totalExpensesAmount">₱0.00</span>
+            </div>
+            <button type="button" class="expense-close-btn" onclick="closeModal()">Close Report</button>
+        </div>
     </div>
+</div>
 
 <div id="addScheduleModal" class="modal">
     <!-- etong css gamit ng add modal -->
@@ -2126,8 +2126,13 @@ $(document).on('click', '.dropdown-item.edit', function() {
     }
 });
 
-  $(document).on('click', '.dropdown-item.view-expenses', function() {
+ $(document).on('click', '.dropdown-item.view-expenses', function() {
     var tripId = $(this).data('id');
+    
+    // Find the trip data from eventsData
+    var tripData = eventsData.find(function(trip) { 
+        return trip.id == tripId; 
+    });
     
     $.ajax({
         url: 'include/handlers/trip_operations.php',
@@ -2142,10 +2147,35 @@ $(document).on('click', '.dropdown-item.edit', function() {
                 // Clear previous data
                 $('#expensesTableBody').empty();
                 
+                // Populate trip information
+                if (tripData) {
+                    $('#expenseDriverName').text(tripData.driver || 'N/A');
+                    $('#expenseHelperName').text(tripData.helper || 'N/A');
+                    
+                    // Format the date
+                    if (tripData.date) {
+                        const tripDate = new Date(tripData.date);
+                        const formattedDate = tripDate.toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        });
+                        $('#expenseTripDate').text(formattedDate);
+                    } else {
+                        $('#expenseTripDate').text('N/A');
+                    }
+                }
+                
                 // Set initial funds
-                $('#expenseCashAdvance').text('₱' + parseFloat(response.cashAdvance || 0).toFixed(2));
-                $('#expenseAdditionalCash').text('₱' + parseFloat(response.additionalCashAdvance || 0).toFixed(2));
-                $('#expenseDiesel').text('₱' + parseFloat(response.diesel || 0).toFixed(2));
+                const cashAdvance = parseFloat(response.cashAdvance || 0);
+                const additionalCash = parseFloat(response.additionalCashAdvance || 0);
+                const diesel = parseFloat(response.diesel || 0);
+                const totalInitialFunds = cashAdvance + additionalCash + diesel;
+                
+                $('#expenseCashAdvance').text('₱' + cashAdvance.toFixed(2));
+                $('#expenseAdditionalCash').text('₱' + additionalCash.toFixed(2));
+                $('#expenseDiesel').text('₱' + diesel.toFixed(2));
+                $('#totalInitialFunds').text('₱' + totalInitialFunds.toFixed(2));
                 
                 let totalExpenses = 0;
                 
@@ -2192,6 +2222,7 @@ $(document).on('click', '.dropdown-item.edit', function() {
         }
     });
 });
+
             
 
             $(document).on('click', '.dropdown-item.delete', function() {
@@ -2552,6 +2583,10 @@ if (!$(this).is(':checked')) {
 $('#otherReasonText').val('');
 }
 });
+
+function formatCurrency(amount) {
+    return '₱' + parseFloat(amount || 0).toFixed(2);
+}
 
   function populatePortDropdowns() {
     $.ajax({
