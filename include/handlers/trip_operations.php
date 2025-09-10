@@ -863,7 +863,15 @@ try {
       case 'get_expenses':
     $tripId = $data['tripId'] ?? 0;
     
-    // Get expenses from both trip_expenses and driver_expenses tables
+    // First get the cash advance and diesel amounts
+    $stmt = $conn->prepare("SELECT cash_advance, additional_cash_advance, diesel FROM trip_expenses WHERE trip_id = ?");
+    $stmt->bind_param("i", $tripId);
+    $stmt->execute();
+    $expenseResult = $stmt->get_result();
+    $tripExpenses = $expenseResult->fetch_assoc();
+    $stmt->close();
+    
+    // Then get the driver expenses
     $stmt = $conn->prepare("
         SELECT 
             'Cash Advance' as expense_type,
@@ -912,7 +920,13 @@ try {
         $expenses[] = $row;
     }
     
-    echo json_encode(['success' => true, 'expenses' => $expenses]);
+    echo json_encode([
+        'success' => true, 
+        'expenses' => $expenses,
+        'cashAdvance' => $tripExpenses['cash_advance'] ?? 0,
+        'additionalCashAdvance' => $tripExpenses['additional_cash_advance'] ?? 0,
+        'diesel' => $tripExpenses['diesel'] ?? 0
+    ]);
     break;
 
           

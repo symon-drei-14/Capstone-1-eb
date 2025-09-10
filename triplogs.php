@@ -590,24 +590,51 @@ if ($result->num_rows > 0) {
 
 
 
-    <div id="expensesModal" class="modal">
-        <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; ">
-            <span class="close">&times;</span>
-            <h3 style="margin-top: 0;">Expense Reports</h3>
-            <div id="expensesContent">
-                <table class="events-table" style="width: 100%; margin-top: 15px;">
-                    <thead>
-                        <tr>
-                            <th>Expense Type</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody id="expensesTableBody"></tbody>
-                </table>
+   <div id="expensesModal" class="modal">
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; ">
+        <span class="close">&times;</span>
+        <h3 style="margin-top: 0;">Expense Reports</h3>
+        
+        <!-- Cash Advance and Diesel Summary -->
+        <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+            <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Initial Funds</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <strong>Cash Advance:</strong> <span id="expenseCashAdvance">₱0.00</span>
+                </div>
+                <div>
+                    <strong>Additional Cash:</strong> <span id="expenseAdditionalCash">₱0.00</span>
+                </div>
+                <div>
+                    <strong>Diesel:</strong> <span id="expenseDiesel">₱0.00</span>
+                </div>
             </div>
-            <button type="button" class="close-btn cancel-btn" style="margin-top: 20px;">Close</button>
+        </div>
+
+        <!-- Expense Type Section -->
+        <h4 style="margin-bottom: 15px; color: #333;">Expenditure</h4>
+        
+        
+        <table class="events-table" style="width: 100%; margin-top: 15px;">
+            <thead>
+                <tr>
+                    <th>Expense Type</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody id="expensesTableBody"></tbody>
+        </table>
+        
+        <!-- Total Expenses Section -->
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="margin: 0; color: #333;">Total Expenses</h4>
+                <span id="totalExpensesAmount" style="font-weight: bold; font-size: 18px;">₱0.00</span>
+            </div>
+            <button type="button" class="close-btn cancel-btn" style="margin-top: 20px; width: 100%;">Close</button>
         </div>
     </div>
+</div>
 
 <div id="addScheduleModal" class="modal">
     <!-- etong css gamit ng add modal -->
@@ -2106,10 +2133,26 @@ $(document).on('click', '.dropdown-item.edit', function() {
         }),
         success: function(response) {
             if (response.success) {
+                // Clear previous data
                 $('#expensesTableBody').empty();
                 
+                // Set initial funds
+                $('#expenseCashAdvance').text('₱' + parseFloat(response.cashAdvance || 0).toFixed(2));
+                $('#expenseAdditionalCash').text('₱' + parseFloat(response.additionalCashAdvance || 0).toFixed(2));
+                $('#expenseDiesel').text('₱' + parseFloat(response.diesel || 0).toFixed(2));
+                
+                let totalExpenses = 0;
+                
                 if (response.expenses.length > 0) {
-                    response.expenses.forEach(function(expense) {
+                    // Filter out diesel and cash advance expenses
+                    const filteredExpenses = response.expenses.filter(expense => 
+                        !['Diesel', 'Cash Advance', 'Additional Cash Advance'].includes(expense.expense_type)
+                    );
+                    
+                    filteredExpenses.forEach(function(expense) {
+                        const amount = parseFloat(expense.amount.replace('₱', '').replace(',', ''));
+                        totalExpenses += amount;
+                        
                         var row = `
                             <tr>
                                 <td>${expense.expense_type}</td>
@@ -2121,6 +2164,9 @@ $(document).on('click', '.dropdown-item.edit', function() {
                 } else {
                     $('#expensesTableBody').html('<tr><td colspan="2" style="text-align: center;">No expenses recorded for this trip</td></tr>');
                 }
+                
+                // Update total expenses
+                $('#totalExpensesAmount').text('₱' + totalExpenses.toFixed(2));
                 
                 $('#expensesModal').show();
             } else {

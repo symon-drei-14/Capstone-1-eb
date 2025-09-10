@@ -2383,3 +2383,35 @@ h3.title {
     background-color: #17a2b8;
     color: white;
 }
+
+/* para sa expense modals contents */
+
+#expensesModal.modal {
+    overflow-x: hidden;
+}
+
+#expensesModal .modal-content {
+    overflow-x: hidden !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#expensesModal .modal-content::-webkit-scrollbar {
+    display: none;
+}
+
+#expensesModal table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+#expensesModal table th:nth-child(1),
+#expensesModal table td:nth-child(1) {
+    width: 70%;
+}
+
+#expensesModal table th:nth-child(2),
+#expensesModal table td:nth-child(2) {
+    width: 30%;
+    text-align: right;
+}
