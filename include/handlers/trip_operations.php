@@ -30,7 +30,7 @@ function checkDriverAvailability($conn, $driverId, $tripDate, $excludeTripId = n
               FROM trips t
               JOIN drivers_table d ON t.driver_id = d.driver_id
               LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-              LEFT JOIN audit_logs_trips alt ON t.trip_id = alt.trip_id AND alt.is_deleted = 0
+              LEFT JOIN audit_logs_trips alt ON t.trip_id = alt.trip_id
               WHERE t.driver_id = ? 
               AND t.status IN ('Pending', 'En Route')
               AND (alt.is_deleted IS NULL OR alt.is_deleted = 0)
@@ -84,10 +84,12 @@ function validateTripDate($tripDate, $isEdit = false) {
 function checkDriverEnRouteTrips($conn, $driverId, $excludeTripId = null) {
     $query = "SELECT COUNT(*) as count 
               FROM trips t
-              LEFT JOIN audit_logs_trips alt ON t.trip_id = alt.trip_id AND alt.is_deleted = 0
               WHERE t.driver_id = ? 
               AND t.status = 'En Route'
-              AND (alt.is_deleted IS NULL OR alt.is_deleted = 0)";
+              AND NOT EXISTS (
+                  SELECT 1 FROM audit_logs_trips alt 
+                  WHERE alt.trip_id = t.trip_id AND alt.is_deleted = 1
+              )";
     
     if ($excludeTripId) {
         $query .= " AND t.trip_id != ?";
