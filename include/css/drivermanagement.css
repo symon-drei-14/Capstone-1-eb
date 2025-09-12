@@ -399,10 +399,10 @@ button[type="submit"]:hover {
 }
 
 .page-number {
-    width: 32px;
+    width: 20px;
     height: 32px;
     border-radius: 50%;
-    border: 1px solid #ccc;
+
     display: flex;
     justify-content: center;
     align-items: center;
@@ -410,18 +410,20 @@ button[type="submit"]:hover {
     font-weight: bold;
     background-color: rgb(255, 255, 255);
     transition: background-color 0.3s, color 0.3s;
+      transition: ease 0.3s;
 }
 
 .page-number:hover {
-    background-color: rgba(183, 181, 181, 0.95);
-    color: #fff;
+  
+  
+    transform:scale(1.5);
 }
 
 .page-number.active {
     background-color: rgba(255, 255, 255, 0.82);
-    color: black;
-    border-color: rgb(255, 255, 255);
-    border-width: 2px;
+    color: rgb(255, 14, 14);
+    font-size: 18px;
+    font-weight:bold;
 }
 
 /* ------------------------------------------------------ */
@@ -911,4 +913,14 @@ h3 {
 .addbtn:hover{
     background-color: rgb(24, 62, 37); 
 
+}
+
+.date {
+    font-weight: bold;
+    color: #333;
+}
+
+.time {
+    font-style: italic;
+    color: #838383;
 }

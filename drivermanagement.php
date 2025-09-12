@@ -297,7 +297,7 @@ function fetchTripCounts() {
                     "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
                     "<td>" + (driver.total_completed || 0) + "</td>" +
                     "<td>" + (driver.monthly_completed || 0) + "</td>" +
-                    "<td>" + driver.created_at + "</td>" +
+                   "<td>" + formatDateWithTime(driver.created_at) + "</td>" +
                     "<td>" + formattedLastLogin + "</td>" +
                     "<td class='actions'>" +
                     "<div class='dropdown'>" +
@@ -325,27 +325,49 @@ function fetchTripCounts() {
     }
 
         function formatTime(dateString) {
-            if (!dateString || dateString === 'NULL') return 'Never';
-            
-            const date = new Date(dateString);
-            
-            const options = {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true,  
-            };
-            
-            return date.toLocaleString('en-US', options);
-        }
+    if (!dateString || dateString === 'NULL') return 'Never';
+    
+    const date = new Date(dateString);
+    
+    const options = {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,  
+    };
+    
+    return date.toLocaleString('en-US', options);
+}
+
+function formatDateWithTime(dateString) {
+    if (!dateString || dateString === 'NULL') return 'Not set';
+    
+    const date = new Date(dateString);
+    
+     const dateOptions = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    };
+    const timeOptions  = {
+     
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    };
+    
+    const formattedDate = date.toLocaleDateString('en-US', dateOptions);
+    const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
+
+    return `<span class="date">${formattedDate}</span> <span class="time">${formattedTime}</span>`;
+}
         
        function updatePagination() {
     totalPages = Math.ceil(driversData.length / rowsPerPage);
     
-    // Clear existing page numbers
     $('#page-numbers').empty();
-    
-    // Don't show pagination if no data or only one page
+
     if (totalPages <= 1) {
         $('#prevPageBtn').prop('disabled', true);
         $('#nextPageBtn').prop('disabled', true);
@@ -359,8 +381,7 @@ function fetchTripCounts() {
     if (currentPage < 1) {
         currentPage = 1;
     }
-    
-    // Create page number buttons - FIXED VERSION
+
     for (var i = 1; i <= totalPages; i++) {
         var pageNumClass = i === currentPage ? 'page-number active' : 'page-number';
         var pageNumberElement = $('<div class="' + pageNumClass + '" data-page="' + i + '">' + i + '</div>');
@@ -368,7 +389,6 @@ function fetchTripCounts() {
         $('#page-numbers').append(pageNumberElement);
     }
     
-    // Update navigation buttons
     $('#prevPageBtn').prop('disabled', currentPage === 1);
     $('#nextPageBtn').prop('disabled', currentPage === totalPages);
 }
@@ -652,7 +672,7 @@ function fetchTripCounts() {
                 "<td>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
                 "<td>" + highlightText(driver.total_completed || 0) + "</td>" +
                 "<td>" + highlightText(driver.monthly_completed || 0) + "</td>" +
-                "<td>" + highlightText(driver.created_at) + "</td>" +
+                "<td>" + highlightText(formatDateWithTime(driver.created_at)) + "</td>" +
                 "<td>" + highlightText(formattedLastLogin) + "</td>" +
                  "<td class='actions'>" +
                     "<div class='dropdown'>" +
