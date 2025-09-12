@@ -152,6 +152,12 @@ function insertTripExpenses($conn, $tripId, $cashAdvance) {
     return true;
 }
 
+function deleteTripChecklist($conn, $tripId) {
+    $stmt = $conn->prepare("DELETE FROM driver_checklist WHERE trip_id = ?");
+    $stmt->bind_param("i", $tripId);
+    return $stmt->execute();
+}
+
 function updateTripExpenses($conn, $tripId, $cashAdvance) {
     $checkStmt = $conn->prepare("SELECT expense_id FROM trip_expenses WHERE trip_id = ?");
     $checkStmt->bind_param("i", $tripId);
@@ -252,93 +258,108 @@ try {
             break;
 
         case 'edit':
-            $conn->begin_transaction();
-            
-            try {
-                // Get current trip info
-                $getCurrent = $conn->prepare("SELECT status, truck_id FROM trips WHERE trip_id = ?");
-                $getCurrent->bind_param("i", $data['id']);
-                $getCurrent->execute();
-                $current = $getCurrent->get_result()->fetch_assoc();
-                
-                if (!$current) {
-                    throw new Exception("Trip not found");
-                }
-                
-                // Get foreign key IDs
-                $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
-                $driverId = getDriverIdByName($conn, $data['driver']);
-                $clientId = getOrCreateClientId($conn, $data['client']);
-                $helperId = getHelperId($conn, $data['helper']);
-                $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
-                $destinationId = getOrCreateDestinationId($conn, $data['destination']);
-                $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
-                $consigneeId = getConsigneeId($conn, $data['consignee']);
+    $conn->begin_transaction();
+    
+    try {
+        // Get current trip info
+        $getCurrent = $conn->prepare("SELECT status, truck_id, driver_id FROM trips WHERE trip_id = ?");
+        $getCurrent->bind_param("i", $data['id']);
+        $getCurrent->execute();
+        $current = $getCurrent->get_result()->fetch_assoc();
+        
+        if (!$current) {
+            throw new Exception("Trip not found");
+        }
+        
+        // Get current driver ID before update
+        $currentDriverId = $current['driver_id'];
+        
+        // Get foreign key IDs
+        $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
+        $driverId = getDriverIdByName($conn, $data['driver']);
+        $clientId = getOrCreateClientId($conn, $data['client']);
+        $helperId = getHelperId($conn, $data['helper']);
+        $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
+        $destinationId = getOrCreateDestinationId($conn, $data['destination']);
+        $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
+        $consigneeId = getConsigneeId($conn, $data['consignee']);
 
-                if (!$truckId) {
-                    throw new Exception("Truck with plate number {$data['plateNo']} not found");
-                }
-                if (!$driverId) {
-                    throw new Exception("Driver {$data['driver']} not found");
-                }
-
-                // Update trip
-                $stmt = $conn->prepare("UPDATE trips SET 
-                    truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, 
-                    destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
-                    trip_date=?, status=?
-                    WHERE trip_id=?");
-                $stmt->bind_param("iiiiiiiisssi",
-                    $truckId,
-                    $driverId, 
-                    $helperId,
-                    $dispatcherId,
-                    $clientId,
-                    $destinationId,
-                    $shippingLineId,
-                    $consigneeId,
-                    $data['containerNo'],
-                    $data['date'],
-                    $data['status'],
-                    $data['id']
-                );
-                
-                if (!$stmt->execute()) {
-                    throw new Exception("Failed to update trip: " . $stmt->error);
-                }
-                
-                // Update trip expenses
-                $cashAdvance = floatval($data['cashAdvance'] ?? 0);
-                updateTripExpenses($conn, $data['id'], $cashAdvance);
-                
-                // Update audit log
-                $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
-                $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
-                $auditStmt->bind_param("ssi", $currentUser, $editReasons, $data['id']);
-                $auditStmt->execute();
-                
-                // Update truck status if status changed
-                if ($current['status'] !== $data['status']) {
-                    $newTruckStatus = 'In Terminal';
-                    if ($data['status'] === 'En Route') {
-                        $newTruckStatus = 'Enroute';
-                    } elseif ($data['status'] === 'Pending') {
-                        $newTruckStatus = 'Pending';
-                    }
-                    
-                    $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
-                    $updateTruck->bind_param("si", $newTruckStatus, $truckId);
-                    $updateTruck->execute();
-                }
-                
-                $conn->commit();
-                echo json_encode(['success' => true]);
-                
-            } catch (Exception $e) {
-                $conn->rollback();
-                throw $e;
+        // Check if driver is being changed
+        if ($currentDriverId != $driverId) {
+            // Delete the existing checklist when driver changes
+            if (!deleteTripChecklist($conn, $data['id'])) {
+                throw new Exception("Failed to reset checklist for new driver");
             }
-            break;
+        }
+
+        if (!$truckId) {
+            throw new Exception("Truck with plate number {$data['plateNo']} not found");
+        }
+        if (!$driverId) {
+            throw new Exception("Driver {$data['driver']} not found");
+        }
+
+        // Update trip
+        $stmt = $conn->prepare("UPDATE trips SET 
+            truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, 
+            destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
+            trip_date=?, status=?
+            WHERE trip_id=?");
+        $stmt->bind_param("iiiiiiiisssi",
+            $truckId,
+            $driverId, 
+            $helperId,
+            $dispatcherId,
+            $clientId,
+            $destinationId,
+            $shippingLineId,
+            $consigneeId,
+            $data['containerNo'],
+            $data['date'],
+            $data['status'],
+            $data['id']
+        );
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to update trip: " . $stmt->error);
+        }
+        
+        // Update trip expenses
+        $cashAdvance = floatval($data['cashAdvance'] ?? 0);
+        updateTripExpenses($conn, $data['id'], $cashAdvance);
+        
+        // Update audit log
+        $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
+        $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
+        $auditStmt->bind_param("ssi", $currentUser, $editReasons, $data['id']);
+        $auditStmt->execute();
+        
+        // Update truck status if status changed
+        if ($current['status'] !== $data['status']) {
+            $newTruckStatus = 'In Terminal';
+            if ($data['status'] === 'En Route') {
+                $newTruckStatus = 'Enroute';
+            } elseif ($data['status'] === 'Pending') {
+                $newTruckStatus = 'Pending';
+            }
+            
+            $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
+            if ($updateTruck === false) {
+                throw new Exception("Failed to prepare truck status update: " . $conn->error);
+            }
+            $updateTruck->bind_param("si", $newTruckStatus, $truckId);
+            $updateTruck->execute();
+            $updateTruck->close();
+        }
+        
+        $conn->commit();
+        echo json_encode(['success' => true]);
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        throw $e;
+    }
+    break;
 
         case 'delete':
             // Mark trip as deleted in audit log (soft delete)
