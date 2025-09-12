@@ -104,14 +104,24 @@ function updateAllTruckStatuses($conn) {
         $truckId = $truck['truck_id'];
         $plateNo = $truck['plate_no'];
 
-        // First check if truck is currently on an En Route trip
+        // First check if truck is currently on an En Route trip (excluding soft-deleted trips)
         $tripStatus = null;
         $tripQuery = $conn->prepare("
-            SELECT status 
-            FROM trips 
-            WHERE truck_id = ? 
-            AND status = 'En Route'
-            ORDER BY trip_date DESC 
+            SELECT t.status 
+            FROM trips t
+            WHERE t.truck_id = ? 
+            AND t.status = 'En Route'
+            AND NOT EXISTS (
+                SELECT 1 FROM audit_logs_trips al 
+                WHERE al.trip_id = t.trip_id 
+                AND al.is_deleted = 1
+                AND al.modified_at = (
+                    SELECT MAX(al2.modified_at)
+                    FROM audit_logs_trips al2
+                    WHERE al2.trip_id = t.trip_id
+                )
+            )
+            ORDER BY t.trip_date DESC 
             LIMIT 1
         ");
         $tripQuery->bind_param("i", $truckId);
