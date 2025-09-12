@@ -547,40 +547,54 @@ try {
     break;
 
         case 'delete':
-            // Mark trip as deleted in audit log
-            $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
-                is_deleted = 1,
-                delete_reason = ?,
-                modified_by = ?,
-                modified_at = NOW()
-                WHERE trip_id = ? AND is_deleted = 0");
-            $stmt->bind_param("ssi", 
-                $data['reason'],
-                $currentUser,
-                $data['id']
-            );
-            $stmt->execute();
-            
-            // Get trip details for truck status update
-            $getTrip = $conn->prepare("
-                SELECT t.status, tr.truck_id 
-                FROM trips t 
-                JOIN truck_table tr ON t.truck_id = tr.truck_id 
-                WHERE t.trip_id = ?
-            ");
-            $getTrip->bind_param("i", $data['id']);
-            $getTrip->execute();
-            $trip = $getTrip->get_result()->fetch_assoc();
-            
-            if ($trip) {
-                $newTruckStatus = 'In Terminal';
-                $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
-                $updateTruck->bind_param("si", $newTruckStatus, $trip['truck_id']);
-                $updateTruck->execute();
-            }
-            
-            echo json_encode(['success' => true]);
-            break;
+    // First check if the trip is in 'En Route' status
+    $checkStatusStmt = $conn->prepare("SELECT status FROM trips WHERE trip_id = ?");
+    $checkStatusStmt->bind_param("i", $data['id']);
+    $checkStatusStmt->execute();
+    $statusResult = $checkStatusStmt->get_result();
+    
+    if ($statusResult->num_rows > 0) {
+        $tripStatus = $statusResult->fetch_assoc()['status'];
+        
+        if ($tripStatus === 'En Route') {
+            throw new Exception("Cannot delete a trip that is currently 'En Route'. Please complete or cancel the trip first.");
+        }
+    }
+    
+    // Mark trip as deleted in audit log
+    $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
+        is_deleted = 1,
+        delete_reason = ?,
+        modified_by = ?,
+        modified_at = NOW()
+        WHERE trip_id = ? AND is_deleted = 0");
+    $stmt->bind_param("ssi", 
+        $data['reason'],
+        $currentUser,
+        $data['id']
+    );
+    $stmt->execute();
+    
+    // Get trip details for truck status update
+    $getTrip = $conn->prepare("
+        SELECT t.status, tr.truck_id 
+        FROM trips t 
+        JOIN truck_table tr ON t.truck_id = tr.truck_id 
+        WHERE t.trip_id = ?
+    ");
+    $getTrip->bind_param("i", $data['id']);
+    $getTrip->execute();
+    $trip = $getTrip->get_result()->fetch_assoc();
+    
+    if ($trip) {
+        $newTruckStatus = 'In Terminal';
+        $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
+        $updateTruck->bind_param("si", $newTruckStatus, $trip['truck_id']);
+        $updateTruck->execute();
+    }
+    
+    echo json_encode(['success' => true]);
+    break;
 
         case 'get_active_trips':
             $statusFilter = $data['statusFilter'] ?? 'all';
@@ -818,51 +832,65 @@ try {
             break;
 
         case 'full_delete':
-            // First mark as deleted in audit log (if not already)
-            $checkStmt = $conn->prepare("SELECT is_deleted FROM audit_logs_trips WHERE trip_id = ? AND is_deleted = 1");
-            $checkStmt->bind_param("i", $data['id']);
-            $checkStmt->execute();
-            $isDeleted = $checkStmt->get_result()->num_rows > 0;
-            
-            if (!$isDeleted) {
-                throw new Exception("Trip must be soft-deleted first");
-            }
-            
-            // Permanently delete the trip and related records
-            $conn->begin_transaction();
-            
-            try {
-                // Delete trip expenses first (if any)
-                $deleteExpenses = $conn->prepare("DELETE FROM trip_expenses WHERE trip_id = ?");
-                $deleteExpenses->bind_param("i", $data['id']);
-                $deleteExpenses->execute();
-                
-                // Delete audit logs (foreign key constraint)
-                $deleteAudit = $conn->prepare("DELETE FROM audit_logs_trips WHERE trip_id = ?");
-                $deleteAudit->bind_param("i", $data['id']);
-                $deleteAudit->execute();
-                
-                // Delete the trip
-                $deleteTrip = $conn->prepare("DELETE FROM trips WHERE trip_id = ?");
-                $deleteTrip->bind_param("i", $data['id']);
-                $deleteTrip->execute();
-                
-                $conn->commit();
-                
-                // Get updated stats
-                require 'triplogstats.php';
-                $stats = getTripStatistics($conn);
-                
-                echo json_encode([
-                    'success' => true,
-                    'stats' => $stats,
-                    'message' => 'Trip permanently deleted'
-                ]);
-            } catch (Exception $e) {
-                $conn->rollback();
-                throw $e;
-            }
-            break;
+    // First check if the trip is in 'En Route' status
+    $checkStatusStmt = $conn->prepare("SELECT status FROM trips WHERE trip_id = ?");
+    $checkStatusStmt->bind_param("i", $data['id']);
+    $checkStatusStmt->execute();
+    $statusResult = $checkStatusStmt->get_result();
+    
+    if ($statusResult->num_rows > 0) {
+        $tripStatus = $statusResult->fetch_assoc()['status'];
+        
+        if ($tripStatus === 'En Route') {
+            throw new Exception("Cannot permanently delete a trip that is currently 'En Route'. Please complete or cancel the trip first.");
+        }
+    }
+    
+    // First mark as deleted in audit log (if not already)
+    $checkStmt = $conn->prepare("SELECT is_deleted FROM audit_logs_trips WHERE trip_id = ? AND is_deleted = 1");
+    $checkStmt->bind_param("i", $data['id']);
+    $checkStmt->execute();
+    $isDeleted = $checkStmt->get_result()->num_rows > 0;
+    
+    if (!$isDeleted) {
+        throw new Exception("Trip must be soft-deleted first");
+    }
+    
+    // Permanently delete the trip and related records
+    $conn->begin_transaction();
+    
+    try {
+        // Delete trip expenses first (if any)
+        $deleteExpenses = $conn->prepare("DELETE FROM trip_expenses WHERE trip_id = ?");
+        $deleteExpenses->bind_param("i", $data['id']);
+        $deleteExpenses->execute();
+        
+        // Delete audit logs (foreign key constraint)
+        $deleteAudit = $conn->prepare("DELETE FROM audit_logs_trips WHERE trip_id = ?");
+        $deleteAudit->bind_param("i", $data['id']);
+        $deleteAudit->execute();
+        
+        // Delete the trip
+        $deleteTrip = $conn->prepare("DELETE FROM trips WHERE trip_id = ?");
+        $deleteTrip->bind_param("i", $data['id']);
+        $deleteTrip->execute();
+        
+        $conn->commit();
+        
+        // Get updated stats
+        require 'triplogstats.php';
+        $stats = getTripStatistics($conn);
+        
+        echo json_encode([
+            'success' => true,
+            'stats' => $stats,
+            'message' => 'Trip permanently deleted'
+        ]);
+    } catch (Exception $e) {
+        $conn->rollback();
+        throw $e;
+    }
+    break;
 
             case 'get_ports':
     $stmt = $conn->prepare("SELECT port_id, name FROM ports ORDER BY name");
