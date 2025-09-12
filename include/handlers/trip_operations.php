@@ -1086,6 +1086,59 @@ case 'get_trips_today':
     ]);
     break;
 
+    case 'get_trip_by_id':
+    $tripId = $data['id'] ?? 0;
+    
+    $query = "SELECT 
+        t.trip_id as id,
+        t.container_no as containerNo,
+        t.trip_date as date,
+        t.status,
+        t.fcl_status,
+        tr.plate_no as plateNo, 
+        tr.capacity as truck_capacity,
+        d.name as driver,
+        d.driver_id,
+        h.name as helper,
+        disp.name as dispatcher,
+        c.name as client,
+        p.name as port,  
+        dest.name as destination,
+        sl.name as shippingLine,
+        cons.name as consignee,
+        al.modified_by as modifiedby,
+        al.modified_at as modifiedat,
+        al.edit_reason as edit_reasons,
+        COALESCE(te.cash_advance, 0) as cashAdvance,
+        COALESCE(te.additional_cash_advance, 0) as additionalCashAdvance,
+        COALESCE(te.diesel, 0) as diesel
+      FROM trips t
+      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+      LEFT JOIN helpers h ON t.helper_id = h.helper_id
+      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+      LEFT JOIN clients c ON t.client_id = c.client_id
+      LEFT JOIN ports p ON t.port_id = p.port_id  
+      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+      LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
+      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+      WHERE t.trip_id = ?";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $tripId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $trip = $result->fetch_assoc();
+        echo json_encode(['success' => true, 'trip' => $trip]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Trip not found']);
+    }
+    break;
+
 //eto pa babaguhin ko ehe
 case 'get_helpers':
     $stmt = $conn->prepare("SELECT helper_id, name FROM helpers ORDER BY name");

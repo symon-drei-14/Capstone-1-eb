@@ -2064,67 +2064,105 @@ setTimeout(function() {
             // Edit button click handler
 $(document).on('click', '.dropdown-item.edit', function() {
     var eventId = $(this).data('id');
+    
+    // First try to find the event in the existing eventsData
     var event = eventsData.find(function(e) { return e.id == eventId; });
     
     if (event) {
-        $('#editEventId').val(event.id);
-        $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
-        
-        var eventDate = event.date || event.trip_date;
-        if (eventDate) {
-            if (eventDate.includes('T')) {
-                eventDate = eventDate.substring(0, 16); 
+        // Event found in eventsData, proceed normally
+        populateEditModal(event);
+    } else {
+        // Event not found in eventsData (likely a restored trip), fetch it from server
+        $.ajax({
+            url: 'include/handlers/trip_operations.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'get_trip_by_id',
+                id: eventId
+            }),
+            success: function(response) {
+                if (response.success && response.trip) {
+                    // Add to eventsData for future reference
+                    eventsData.push(response.trip);
+                    populateEditModal(response.trip);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Failed to load trip data'
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Server error occurred while loading trip data'
+                });
             }
-        }
-        $('#editEventDate').val(eventDate);
-
-        // Populate all dropdowns first
-        populateDriverDropdowns(event.size);
-        populateHelperDropdowns();
-        populateDispatcherDropdowns();
-        populateConsigneeDropdowns();
-        populateClientDropdowns();
-        populatePortDropdowns();  // Add this line
-        populateDestinationDropdowns();
-        populateShippingLineDropdowns();
-
-        // Set immediate values (non-dropdown fields)
-        $('#editEventContainerNo').val(event.containerNo);
-        $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
-        $('#editEventFCL').val(event.fcl_status || event.size);
-        $('#editEventCashAdvance').val(event.cashAdvance);
-        $('#editEventAdditionalCashAdvance').val(event.additionalCashAdvance);
-        $('#editEventDiesel').val(event.diesel);
-        $('#editEventStatus').val(event.status);
-
-        // Set dropdown values after they're populated
-        setTimeout(() => {
-            $('#editEventDriver').val(event.driver);
-            $('#editEventHelper').val(event.helper);
-            $('#editEventDispatcher').val(event.dispatcher || '');
-            $('#editEventConsignee').val(event.consignee);
-            $('#editEventClient').val(event.client);
-            $('#editEventPort').val(event.port || '');  // Move this here
-            $('#editEventDestination').val(event.destination);
-            $('#editEventShippingLine').val(event.shippingLine);
-        }, 100);
-
-        // Show/hide buttons based on status
-        if (event.status === 'Completed') {
-            $('#viewExpensesBtn').show();
-        } else {
-            $('#viewExpensesBtn').hide();
-        }
-
-        if (event.driver_id && event.status !== 'Cancelled') {
-            $('#viewChecklistBtn').show();
-        } else {
-            $('#viewChecklistBtn').hide();
-        }
-       
-        $('#editModal').show();
+        });
     }
 });
+
+function populateEditModal(event) {
+    $('#editEventId').val(event.id);
+    $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
+    
+    var eventDate = event.date || event.trip_date;
+    if (eventDate) {
+        if (eventDate.includes('T')) {
+            eventDate = eventDate.substring(0, 16); 
+        }
+    }
+    $('#editEventDate').val(eventDate);
+
+    // Populate all dropdowns first
+    populateDriverDropdowns(event.size);
+    populateHelperDropdowns();
+    populateDispatcherDropdowns();
+    populateConsigneeDropdowns();
+    populateClientDropdowns();
+    populatePortDropdowns();
+    populateDestinationDropdowns();
+    populateShippingLineDropdowns();
+
+    // Set immediate values (non-dropdown fields)
+    $('#editEventContainerNo').val(event.containerNo);
+    $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
+    $('#editEventFCL').val(event.fcl_status || event.size);
+    $('#editEventCashAdvance').val(event.cashAdvance);
+    $('#editEventAdditionalCashAdvance').val(event.additionalCashAdvance);
+    $('#editEventDiesel').val(event.diesel);
+    $('#editEventStatus').val(event.status);
+
+    // Set dropdown values after they're populated
+    setTimeout(() => {
+        $('#editEventDriver').val(event.driver);
+        $('#editEventHelper').val(event.helper);
+        $('#editEventDispatcher').val(event.dispatcher || '');
+        $('#editEventConsignee').val(event.consignee);
+        $('#editEventClient').val(event.client);
+        $('#editEventPort').val(event.port || '');
+        $('#editEventDestination').val(event.destination);
+        $('#editEventShippingLine').val(event.shippingLine);
+    }, 100);
+
+    // Show/hide buttons based on status
+    if (event.status === 'Completed') {
+        $('#viewExpensesBtn').show();
+    } else {
+        $('#viewExpensesBtn').hide();
+    }
+
+    if (event.driver_id && event.status !== 'Cancelled') {
+        $('#viewChecklistBtn').show();
+    } else {
+        $('#viewChecklistBtn').hide();
+    }
+   
+    $('#editModal').show();
+}
 
  $(document).on('click', '.dropdown-item.view-expenses', function() {
     var tripId = $(this).data('id');
