@@ -798,44 +798,73 @@ try {
             ]);
             break;
 
-        case 'restore':
-            // Restore trip by marking as not deleted
-            $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
-                is_deleted = 0,
-                delete_reason = NULL,
-                modified_by = ?,
-                modified_at = NOW()
-                WHERE trip_id = ? AND is_deleted = 1");
-            $stmt->bind_param("si", $currentUser, $data['id']);
-            $stmt->execute();
-            
-            // Get trip details for truck status update
-            $getTrip = $conn->prepare("
-                SELECT t.status, tr.truck_id 
-                FROM trips t 
-                JOIN truck_table tr ON t.truck_id = tr.truck_id 
-                WHERE t.trip_id = ?
-            ");
-            $getTrip->bind_param("i", $data['id']);
-            $getTrip->execute();
-            $trip = $getTrip->get_result()->fetch_assoc();
-            
-            // Update truck status if needed
-            if ($trip && $trip['status'] === 'En Route') {
-                $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
-                $updateTruck->bind_param("i", $trip['truck_id']);
-                $updateTruck->execute();
-            }
-            
-            // Get updated stats
-            require 'triplogstats.php';
-            $stats = getTripStatistics($conn);
-            
-            echo json_encode([
-                'success' => true,
-                'stats' => $stats
-            ]);
-            break;
+       case 'restore':
+    // First get the trip details before restoring
+    $getTripDetails = $conn->prepare("
+        SELECT t.trip_date, t.driver_id, d.name as driver_name
+        FROM trips t
+        JOIN drivers_table d ON t.driver_id = d.driver_id
+        WHERE t.trip_id = ?
+    ");
+    $getTripDetails->bind_param("i", $data['id']);
+    $getTripDetails->execute();
+    $tripDetails = $getTripDetails->get_result()->fetch_assoc();
+    
+    if (!$tripDetails) {
+        throw new Exception("Trip not found");
+    }
+    
+    // Check if restoring would create a conflict with existing active trips
+    $conflictingTrips = checkDriverAvailability($conn, $tripDetails['driver_id'], $tripDetails['trip_date'], $data['id']);
+    
+    if (!empty($conflictingTrips)) {
+        $conflictDetails = "";
+        foreach ($conflictingTrips as $trip) {
+            $tripDate = date('M j, Y', strtotime($trip['trip_date']));
+            $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
+        }
+        
+        throw new Exception("Cannot restore trip: Driver {$tripDetails['driver_name']} has conflicting trips within 3 days of the selected date:\n\n" . 
+                           $conflictDetails . "\nPlease resolve the conflict before restoring.");
+    }
+    
+    // Restore trip by marking as not deleted
+    $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
+        is_deleted = 0,
+        delete_reason = NULL,
+        modified_by = ?,
+        modified_at = NOW()
+        WHERE trip_id = ? AND is_deleted = 1");
+    $stmt->bind_param("si", $currentUser, $data['id']);
+    $stmt->execute();
+    
+    // Get trip details for truck status update
+    $getTrip = $conn->prepare("
+        SELECT t.status, tr.truck_id 
+        FROM trips t 
+        JOIN truck_table tr ON t.truck_id = tr.truck_id 
+        WHERE t.trip_id = ?
+    ");
+    $getTrip->bind_param("i", $data['id']);
+    $getTrip->execute();
+    $trip = $getTrip->get_result()->fetch_assoc();
+    
+    // Update truck status if needed
+    if ($trip && $trip['status'] === 'En Route') {
+        $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
+        $updateTruck->bind_param("i", $trip['truck_id']);
+        $updateTruck->execute();
+    }
+    
+    // Get updated stats
+    require 'triplogstats.php';
+    $stats = getTripStatistics($conn);
+    
+    echo json_encode([
+        'success' => true,
+        'stats' => $stats
+    ]);
+    break;
 
         case 'full_delete':
     // First check if the trip is in 'En Route' status
