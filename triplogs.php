@@ -261,7 +261,18 @@ if ($result->num_rows > 0) {
                             <option value="deleted">Deleted</option>
                             <option value="today">Trips Today</option> 
                         </select>
-                        
+                         <div class="date-filter-container">
+    <div class="date-input-group">
+        <label for="dateFrom">From:</label>
+        <input type="date" id="dateFrom" class="date-input">
+    </div>
+    <div class="date-input-group">
+        <label for="dateTo">To:</label>
+        <input type="date" id="dateTo" class="date-input">
+    </div>
+    <button id="resetDateFilter" class="clear-date-btn">
+         <i class="fas fa-times"></i> Clear</button>
+</div>
                         <div class="search-container">
                             <i class="fa fa-search"></i>
                             <input type="text" id="searchInput" placeholder="Search trips...">
@@ -944,7 +955,9 @@ let totalItems = 0;
   let currentStatusFilter = 'all';
   let dateSortOrder = 'desc';
 let filteredEvents = [];
-        
+let currentDateFrom = '';
+let currentDateTo = '';
+
        $(document).ready(function() {
     rowsPerPage = parseInt($('#rowsPerPage').val());
     let now = new Date();
@@ -959,6 +972,37 @@ let filteredEvents = [];
         currentPage = 1;
         renderTable();
     });
+       $('#dateFrom, #dateTo').on('change', filterTableByDateRange);
+    
+ $('#resetDateFilter').on('click', function() {
+    $('#dateFrom').val('');
+    $('#dateTo').val('');
+    currentPage = 1;
+    renderTable();
+});
+
+    
+function filterTableByDateRange() {
+    const dateFrom = $('#dateFrom').val();
+    const dateTo = $('#dateTo').val();
+    
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Date Range',
+            text: 'Start date cannot be later than end date'
+        });
+        return;
+    }
+    currentDateFrom = dateFrom;
+    currentDateTo = dateTo;
+    
+    // Reset to first page when applying new filters
+    currentPage = 1;
+    
+    // Re-render the table with new filters
+    renderTable();
+}
 
 
             function updateDateTime() {
@@ -975,17 +1019,21 @@ let filteredEvents = [];
         setInterval(updateDateTime, 1000);
 function renderTable() {
     const showDeleted = currentStatusFilter === 'deleted';
-    const showToday = currentStatusFilter === 'today'; // Add this line
-    const rowsPerPage = parseInt($('#rowsPerPage').val()); 
+    const showToday = currentStatusFilter === 'today';
+    const rowsPerPage = parseInt($('#rowsPerPage').val());
     
     let action;
     if (showDeleted) {
         action = 'get_deleted_trips';
-    } else if (showToday) { // Add this condition
+    } else if (showToday) {
         action = 'get_trips_today';
     } else {
         action = 'get_active_trips';
     }
+    
+    // Get date filter values
+    const dateFrom = $('#dateFrom').val();
+    const dateTo = $('#dateTo').val();
     
     $.ajax({
         url: 'include/handlers/trip_operations.php',
@@ -996,14 +1044,16 @@ function renderTable() {
             statusFilter: showToday ? 'all' : (currentStatusFilter === 'deleted' ? 'all' : currentStatusFilter), 
             sortOrder: dateSortOrder,
             page: currentPage,
-            perPage: rowsPerPage
+            perPage: rowsPerPage,
+            dateFrom: dateFrom,
+            dateTo: dateTo
         }),
         success: function(response) {
             if (response.success) {
                 $('#eventTableBody').empty();
                 
                 if (response.trips.length === 0) {
-                    $('#eventTableBody').html('<tr><td colspan="16">No trips found</td></tr>');
+                    $('#eventTableBody').html('<tr><td colspan="18">No trips found</td></tr>');
                 } else {
                     renderTripRows(response.trips, showDeleted);
                 }
@@ -1013,15 +1063,19 @@ function renderTable() {
                 updatePagination(totalItems);
                 updateTableInfo(totalItems, response.trips.length);
             } else {
-                alert('Error: ' + response.message);
-            }
-        },
-        error: function() {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Server error occurred while loading trips',
-                    });
+                    text: response.message || 'Failed to load trips',
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Server error occurred while loading trips',
+            });
         }
     });
 }

@@ -110,7 +110,7 @@
                                 <th>Assigned Truck</th>
                                 <th>Total Completed Trips</th>
                                 <th>Completed Trips This Month</th>
-                                <th>Created At <br> (Y-M-D)</th>
+                                <th>Created At</th>
                                 <th>Last Login</th>
                                 <th>Actions</th>
                             </tr>
@@ -343,7 +343,7 @@ function formatDateWithTime(dateString) {
     if (!dateString || dateString === 'NULL') return 'Not set';
     
     const date = new Date(dateString);
-    
+
      const dateOptions = {
         year: 'numeric',
         month: 'short',
