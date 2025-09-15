@@ -67,6 +67,7 @@ try {
     if (
         empty($data['name']) ||
         empty($data['email']) ||
+        empty($data['contact_no']) ||
         empty($data['password']) ||
         !isset($data['assigned_truck_id'])
     ) {
@@ -116,8 +117,8 @@ try {
     $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
 
     // Insert into MySQL (now includes driver_pic)
-    $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, password, assigned_truck_id, driver_pic, created_at) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+    $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, contact_no, password, assigned_truck_id, driver_pic, created_at) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
               
     $stmt = $mysql_conn->prepare($query);
     
@@ -130,11 +131,12 @@ try {
         FILE_APPEND);
     
     $stmt->bind_param(
-        "sssssss",
+    "ssssssss",
         $driver_id,
         $firebase_uid,
         $data['name'],
         $data['email'],
+         $data['contact_no'],
         $hashed_password,
         $data['assigned_truck_id'],
         $driverPic

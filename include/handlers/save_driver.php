@@ -31,21 +31,21 @@ if (!empty($_FILES['driverProfile']['name']) && $_FILES['driverProfile']['error'
 $data = $_POST;
 
 // Validate required fields
-if (!isset($data['name']) || !isset($data['email'])) {
-    echo json_encode(["success" => false, "message" => "Name and email are required"]);
+if (!isset($data['name']) || !isset($data['email']) || !isset($data['contact_no'])) {
+    echo json_encode(["success" => false, "message" => "Name, email, and contact number are required"]);
     exit;
 }
 
 try {
     if ($data['mode'] === 'add') {
         // Adding a new driver
-        $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, password, assigned_truck_id, driver_pic, created_at) 
-                               VALUES (?, ?, ?, ?, ?, NOW())");
+        $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, contact_no, password, assigned_truck_id, driver_pic, created_at) 
+                               VALUES (?, ?, ?, ?, ?, ?, NOW())");
         
         $assignedTruck = !empty($data['assigned_truck_id']) ? $data['assigned_truck_id'] : null;
         $password = !empty($data['password']) ? password_hash($data['password'], PASSWORD_DEFAULT) : null;
         
-        $stmt->bind_param("sssss", $data['name'], $data['email'], $password, $assignedTruck, $driverPic);
+        $stmt->bind_param("ssssss", $data['name'], $data['email'], $data['contact_no'], $password, $assignedTruck, $driverPic);
         
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Driver added successfully"]);
@@ -68,6 +68,13 @@ try {
         if (!empty($data['email'])) {
             $updateFields[] = "email = ?";
             $params[] = $data['email'];
+            $types .= "s";
+        }
+        
+        // Handle contact number update
+        if (!empty($data['contact_no'])) {
+            $updateFields[] = "contact_no = ?";
+            $params[] = $data['contact_no'];
             $types .= "s";
         }
         
@@ -107,7 +114,7 @@ try {
         $stmt->bind_param($types, ...$params);
         
         if ($stmt->execute()) {
-            // Always update Firebase when any field is updated
+            // Always update Firebase when any field is updated (note: contact_no is NOT included in Firebase update)
             updateFirebaseDriver($data['driverId'], $data);
             echo json_encode(["success" => true, "message" => "Driver updated successfully"]);
         } else {
@@ -136,7 +143,7 @@ function updateFirebaseDriver($driverId, $data) {
         if ($current_data) {
             $firebase_data = json_decode($current_data, true);
             
-            // Update only the fields that were changed
+            // Update only the fields that were changed (contact_no is intentionally excluded)
             if (!empty($data['name'])) {
                 $firebase_data['name'] = $data['name'];
             }

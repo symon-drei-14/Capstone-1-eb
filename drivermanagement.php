@@ -107,6 +107,7 @@
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Email</th>
+                                <th>Contact No.</th>
                                 <th>Assigned Truck</th>
                                 <th>Total Completed Trips</th>
                                 <th>Completed Trips This Month</th>
@@ -151,6 +152,11 @@
                     <label for="driverEmail">Email *</label>
                     <input type="email" id="driverEmail" name="driverEmail" required>
                 </div>
+
+                <div class="form-group">
+    <label for="driverContact">Contact Number *</label>
+    <input type="tel" id="driverContact" name="driverContact" required>
+</div>
                 
                 <div class="form-group">
                     <label for="password">Password *</label>
@@ -214,6 +220,7 @@ let totalPages = 0;
     document.getElementById("driverId").value = "";
     document.getElementById("driverName").value = "";
     document.getElementById("driverEmail").value = "";
+    document.getElementById("driverContact").value = "";
     document.getElementById("password").value = "";
     document.getElementById("assignedTruck").value = "";
     document.getElementById("driverProfile").value = ""; // Clear file input
@@ -285,40 +292,41 @@ function fetchTripCounts() {
             let formattedLastLogin = formatTime(driver.last_login);
             
         var row = "<tr>" +
-                    "<td>" + 
-                    (driver.driver_pic ? 
-                        '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
-                        '<i class="fa-solid fa-circle-user profile-icon"></i>'
-                    ) + 
-                    "</td>" +
-                    "<td>" + driver.driver_id + "</td>" +
-                    "<td>" + driver.name + "</td>" +
-                    "<td>" + driver.email + "</td>" +
-                    "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
-                    "<td>" + (driver.total_completed || 0) + "</td>" +
-                    "<td>" + (driver.monthly_completed || 0) + "</td>" +
-                   "<td>" + formatDateWithTime(driver.created_at) + "</td>" +
-                    "<td>" + formattedLastLogin + "</td>" +
-                    "<td class='actions'>" +
-                    "<div class='dropdown'>" +
-                    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'>" +
-                    "<i class='fas fa-ellipsis-v'></i>" +
-                    "</button>" +
-                    "<div class='dropdown-content'>" +
-                    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'>" +
-                    "<i class='fas fa-edit'></i> Edit Driver" +
-                    "</button>" +
-                    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>" +
-                    "<i class='fas fa-trash-alt'></i> Delete Driver" +
-                    "</button>" +
-                    "</div>" +
-                    "</div>" +
-                    "</td>" +
-                    "</tr>";
+    "<td>" + 
+    (driver.driver_pic ? 
+        '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
+        '<i class="fa-solid fa-circle-user profile-icon"></i>'
+    ) + 
+    "</td>" +
+    "<td>" + driver.driver_id + "</td>" +
+    "<td>" + driver.name + "</td>" +
+    "<td>" + driver.email + "</td>" +
+    "<td>" + (driver.contact_no || 'N/A') + "</td>" +
+    "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
+    "<td>" + (driver.total_completed || 0) + "</td>" +
+    "<td>" + (driver.monthly_completed || 0) + "</td>" +
+    "<td>" + formatDateWithTime(driver.created_at) + "</td>" +
+    "<td>" + formattedLastLogin + "</td>" +
+    "<td class='actions'>" +
+    "<div class='dropdown'>" +
+    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'>" +
+    "<i class='fas fa-ellipsis-v'></i>" +
+    "</button>" +
+    "<div class='dropdown-content'>" +
+    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'>" +
+    "<i class='fas fa-edit'></i> Edit Driver" +
+    "</button>" +
+    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>" +
+    "<i class='fas fa-trash-alt'></i> Delete Driver" +
+    "</button>" +
+    "</div>" +
+    "</div>" +
+    "</td>" +
+    "</tr>";
                 $('#driverTableBody').append(row);
             });
         } else {
-            $('#driverTableBody').append("<tr><td colspan='10'>No drivers found</td></tr>");
+           $('#driverTableBody').append("<tr><td colspan='11'>No drivers found</td></tr>");
         }
         
         updatePagination();
@@ -454,6 +462,7 @@ function formatDateWithTime(dateString) {
                 document.getElementById("password").required = false;
                 
                 document.getElementById("driverId").value = driver.driver_id;
+                document.getElementById("driverContact").value = driver.contact_no || '';
                 document.getElementById("driverName").value = driver.name;
                 document.getElementById("driverEmail").value = driver.email;
                 document.getElementById("password").value = '';
@@ -529,6 +538,7 @@ function formatDateWithTime(dateString) {
     formData.append("email", document.getElementById("driverEmail").value);
     formData.append("password", document.getElementById("password").value);
     formData.append("assigned_truck_id", document.getElementById("assignedTruck").value);
+    formData.append("contact_no", document.getElementById("driverContact").value);
     formData.append("mode", mode);
     
     // Add driver ID for edit mode
@@ -631,16 +641,17 @@ function formatDateWithTime(dateString) {
         return;
     }
 
-    const filteredDrivers = driversData.filter(driver => {
-        return (
-            String(driver.driver_id).toLowerCase().includes(searchTerm) ||
-            String(driver.name).toLowerCase().includes(searchTerm) ||
-            String(driver.email).toLowerCase().includes(searchTerm) ||
-            String(driver.assigned_truck_id || 'None').toLowerCase().includes(searchTerm) ||
-            String(driver.created_at).toLowerCase().includes(searchTerm) ||
-            String(formatTime(driver.last_login)).toLowerCase().includes(searchTerm)
-        );
-    });
+   const filteredDrivers = driversData.filter(driver => {
+    return (
+        String(driver.driver_id).toLowerCase().includes(searchTerm) ||
+        String(driver.name).toLowerCase().includes(searchTerm) ||
+        String(driver.email).toLowerCase().includes(searchTerm) ||
+        String(driver.contact_no || '').toLowerCase().includes(searchTerm) || 
+        String(driver.assigned_truck_id || 'None').toLowerCase().includes(searchTerm) ||
+        String(driver.created_at).toLowerCase().includes(searchTerm) ||
+        String(formatTime(driver.last_login)).toLowerCase().includes(searchTerm)
+    );
+});
 
     renderFilteredDrivers(filteredDrivers, searchTerm);
 }
@@ -669,6 +680,7 @@ function formatDateWithTime(dateString) {
                 "<td>" + highlightText(driver.driver_id) + "</td>" +
                 "<td>" + highlightText(driver.name) + "</td>" +
                 "<td>" + highlightText(driver.email) + "</td>" +
+                    "<td>" + highlightText(driver.contact_no || 'N/A') + "</td>" +
                 "<td>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
                 "<td>" + highlightText(driver.total_completed || 0) + "</td>" +
                 "<td>" + highlightText(driver.monthly_completed || 0) + "</td>" +
@@ -693,7 +705,7 @@ function formatDateWithTime(dateString) {
                 $('#driverTableBody').append(row);
         });
     } else {
-        $('#driverTableBody').append("<tr><td colspan='10'>No matching drivers found</td></tr>");
+        $('#driverTableBody').append("<tr><td colspan='11'>No drivers found</td></tr>");
     }
     
     // Hide pagination during search
