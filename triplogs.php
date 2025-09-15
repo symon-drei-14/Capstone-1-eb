@@ -922,6 +922,83 @@ if ($result->num_rows > 0) {
     </div>
 
 
+<div id="cancelTripModal" class="modal">
+    <div class="cancel-modal-content">
+        <div class="cancel-modal-header">
+            <h3><i class="fas fa-ban"></i> Cancel Trip</h3>
+            <span class="close">&times;</span>
+        </div>
+        
+        <div class="cancel-modal-body">
+        
+            <!-- Email Section -->
+            <div class="email-section">
+                <h4><i class="fas fa-envelope"></i> Cancellation Email</h4>
+                
+                <div class="email-field">
+                    <label for="cancelEmailTo">To:</label>
+                    <input type="email" id="cancelEmailTo" value="operations@mansarlogistics.com">
+                </div>
+                
+                <div class="email-field">
+                    <label for="cancelEmailSubject">Subject:</label>
+                    <input type="text" id="cancelEmailSubject" 
+                        value="URGENT: Trip Cancellation">
+                </div>
+            </div>
+
+            <!-- Cancellation Reason Section -->
+            <div class="reason-section">
+                <h4><i class="fas fa-exclamation-triangle"></i> Reason for Cancellation</h4>
+                
+                <div class="email-field">
+                    <label for="cancelReasonSelect">Select Reason:</label>
+                    <select id="cancelReasonSelect">
+                        <option value="">-- Please choose a reason --</option>
+                        <option value="Vehicle breakdown/maintenance issue">Vehicle breakdown/maintenance issue</option>
+                        <option value="Driver unavailability/emergency">Driver unavailability/emergency</option>
+                        <option value="Client request/postponement">Client request/postponement</option>
+                        <option value="Weather conditions/safety concerns">Weather conditions/safety concerns</option>
+                        <option value="Port/destination closure">Port/destination closure</option>
+                        <option value="Container/cargo issues">Container/cargo issues</option>
+                    </select>
+                </div>
+                
+                <div class="email-field" id="otherReasonContainer" style="display: none; margin-top: 15px;">
+                    <label for="otherReasonText">Please specify the reason:</label>
+                    <textarea id="otherReasonText" placeholder="Enter specific reason for cancellation..." rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- Email Body Preview -->
+            <div class="email-field">
+                <label for="cancelEmailBody">Email Content:</label>
+                <textarea id="cancelEmailBody" rows="8">Dear "Client",
+
+This is to notify you that the following trip has been cancelled:
+
+Trip ID: TR-2024-001
+Scheduled Date: January 15, 2024 12:59 pm
+From: Kuwait
+Destination: Manila Port
+// Dagdag nalang kung ano pang details kailangan
+
+Reason for Cancellation: [Reason will be updated based on selection]
+we are sorry for the inconvenience chuchu basta ganon ganon
+
+Best regards,
+Mansar Trucking </textarea>
+            </div>
+        </div>
+        
+        <div class="cancel-modal-actions">
+            <button type="button" class="cancel-btn-action cancel-close-btn">Close</button>
+            <button type="button" class="cancel-btn-action cancel-send-btn" id="sendCancellationBtn">
+                <i class="fas fa-paper-plane"></i> Send Cancellation Notice
+            </button>
+        </div>
+    </div>
+</div>
 
     <script>
 function formatDateTime(datetimeString) {
@@ -1177,6 +1254,7 @@ function renderTripRows(trips, showDeleted) {
             <button class="dropdown-item view-checklist" data-id="${trip.trip_id}" data-driver-id="${trip.driver_id}">
                 <i class="fas fa-clipboard-check"></i> Driver Checklist
             </button>
+             
             
             ${trip.edit_reason && trip.edit_reason !== 'null' && trip.edit_reason !== '' ? 
             `<button class="dropdown-item view-reasons" data-id="${trip.trip_id}">
@@ -1185,6 +1263,9 @@ function renderTripRows(trips, showDeleted) {
             
             <button class="dropdown-item delete" data-id="${trip.trip_id}">
                 <i class="fas fa-trash-alt"></i> Delete
+            </button>
+             <button class="dropdown-item cancel-trip" data-id="${trip.trip_id}">
+                <i class="fas fa-ban"></i> Cancel Trip
             </button>
         </div>
     </div>
@@ -3078,7 +3159,13 @@ function updateTableInfo(totalItems, currentItemsCount) {
  
 }   
 
+document.addEventListener('click', function(e) {
+        if (e.target.closest('.cancel-trip')) {
+            const tripId = e.target.closest('.cancel-trip').dataset.id;
 
+            document.getElementById('cancelTripModal').style.display = 'block';
+        }
+    });
 
     </script>
 
