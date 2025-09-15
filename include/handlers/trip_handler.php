@@ -724,6 +724,7 @@ try {
             break;
 
      // Replace the existing 'save_checklist' case with this:
+// Replace the time validation logic in the 'save_checklist' case
 case 'save_checklist':
     // First check if the trip exists and get its date for validation
     $tripCheck = $conn->prepare("SELECT trip_date FROM trips WHERE trip_id = ?");
@@ -740,33 +741,33 @@ case 'save_checklist':
     $trip = $tripResult->fetch_assoc();
     $tripCheck->close();
     
-    // Validate if checklist can be submitted (2 hours before up to 1 minute before trip)
+    // Validate if checklist can be submitted (3 hours before up to 1 hour before trip)
     $tripDateTime = new DateTime($trip['trip_date']);
     $now = new DateTime();
     
-    // Calculate 2 hours before the trip (start of window)
-    $twoHoursBefore = clone $tripDateTime;
-    $twoHoursBefore->modify('-2 hours');
+    // Calculate 3 hours before the trip (start of window)
+    $threeHoursBefore = clone $tripDateTime;
+    $threeHoursBefore->modify('-3 hours');
     
-    // Calculate 1 minute before the trip (end of window)
-    $oneMinuteBefore = clone $tripDateTime;
-    $oneMinuteBefore->modify('-1 minute');
+    // Calculate 1 hour before the trip (end of window)
+    $oneHourBefore = clone $tripDateTime;
+    $oneHourBefore->modify('-1 hour');
     
     // Check if current time is before the allowed window
-    if ($now < $twoHoursBefore) {
-        $formattedTime = $twoHoursBefore->format('g:i A');
+    if ($now < $threeHoursBefore) {
+        $formattedTime = $threeHoursBefore->format('g:i A');
         echo json_encode([
             'success' => false, 
-            'message' => "Checklist will be available starting at $formattedTime (2 hours before the scheduled trip)."
+            'message' => "Checklist will be available starting at $formattedTime (3 hours before the scheduled trip)."
         ]);
         break;
     }
     
     // Check if current time is after the allowed window
-    if ($now > $oneMinuteBefore) {
+    if ($now > $oneHourBefore) {
         echo json_encode([
             'success' => false, 
-            'message' => 'Checklist submission closed 1 minute before the scheduled trip time.'
+            'message' => 'Checklist submission closed 1 hour before the scheduled trip time.'
         ]);
         break;
     }
@@ -832,6 +833,8 @@ case 'save_checklist':
     }
     $stmt->close();
     break;
+
+
 
         case 'get_checklist':
     $tripId = $data['trip_id'] ?? null;
