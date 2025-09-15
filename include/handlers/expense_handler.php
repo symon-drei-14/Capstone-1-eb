@@ -83,6 +83,22 @@ function updateTripSummary($conn, $tripId) {
     }
 }
 
+function ensureExpenseTableStructure($conn) {
+    try {
+        $result = $conn->query("SHOW COLUMNS FROM driver_expenses LIKE 'receipt_image'");
+        if ($result->num_rows == 0) {
+            $alterSql = "ALTER TABLE driver_expenses ADD COLUMN receipt_image VARCHAR(500) NULL AFTER amount";
+            if (!$conn->query($alterSql)) {
+                error_log("Warning: Could not add receipt_image column: " . $conn->error);
+            } else {
+                error_log("✅ Added receipt_image column to driver_expenses table");
+            }
+        }
+    } catch (Exception $e) {
+        error_log("❌ Error checking table structure: " . $e->getMessage());
+    }
+}
+
 if (!$conn) {
     http_response_code(500);
     echo json_encode([
@@ -91,6 +107,8 @@ if (!$conn) {
     ]);
     exit;
 }
+
+ensureExpenseTableStructure($conn);
 
 $currentUser = $_SESSION['username'] ?? 'System';
 $json = file_get_contents('php://input');
@@ -106,6 +124,7 @@ try {
             $driverId = intval($data['driver_id'] ?? 0);
             $expenseType = $data['expense_type'] ?? null;
             $amount = floatval($data['amount'] ?? 0);
+            $receiptImage = $data['receipt_image'] ?? null;
 
             if ($tripId <= 0 || $driverId <= 0 || !$expenseType || $amount <= 0) {
                 throw new Exception("Missing or invalid required fields.");
@@ -158,6 +177,7 @@ try {
                         driver_id INT NOT NULL,
                         expense_type_id INT NOT NULL,
                         amount DECIMAL(10,2) NOT NULL,
+                        receipt_image VARCHAR(500) NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         created_by VARCHAR(255) DEFAULT 'System',
                         FOREIGN KEY (expense_type_id) REFERENCES expense_types(type_id)
@@ -168,12 +188,11 @@ try {
                 }
             }
 
-            // Insert expense
             $insert = safePrepare($conn, "
-                INSERT INTO driver_expenses (trip_id, driver_id, expense_type_id, amount, created_by)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO driver_expenses (trip_id, driver_id, expense_type_id, amount, receipt_image, created_by)
+                VALUES (?, ?, ?, ?, ?, ?)
             ", "add_expense - insert");
-            $insert->bind_param("iiids", $tripId, $driverId, $expenseTypeId, $amount, $currentUser);
+            $insert->bind_param("iiidss", $tripId, $driverId, $expenseTypeId, $amount, $receiptImage, $currentUser);
             if (!$insert->execute()) {
                 throw new Exception("Insert expense failed: " . $insert->error);
             }
@@ -337,18 +356,25 @@ try {
             $expenseId = intval($data['expense_id'] ?? 0);
             if ($expenseId <= 0) throw new Exception("Expense ID required");
 
-            $getTrip = safePrepare($conn, "SELECT trip_id FROM driver_expenses WHERE expense_id = ?", "delete_expense - get trip");
+            $getTrip = safePrepare($conn, "SELECT trip_id, receipt_image FROM driver_expenses WHERE expense_id = ?", "delete_expense - get trip");
             $getTrip->bind_param("i", $expenseId);
             $getTrip->execute();
             $tripData = $getTrip->get_result()->fetch_assoc();
             $getTrip->close();
             if (!$tripData) throw new Exception("Expense not found");
             $tripId = $tripData['trip_id'];
+            $receiptImage = $tripData['receipt_image'];
 
             $delete = safePrepare($conn, "DELETE FROM driver_expenses WHERE expense_id = ?", "delete_expense - delete");
             $delete->bind_param("i", $expenseId);
             if (!$delete->execute()) throw new Exception("Delete failed: " . $delete->error);
             $delete->close();
+
+            if ($receiptImage && file_exists("../" . $receiptImage)) {
+                if (!unlink("../" . $receiptImage)) {
+                    error_log("Warning: Could not delete receipt image file: " . $receiptImage);
+                }
+            }
 
             updateTripSummary($conn, $tripId);
             echo json_encode(['success' => true, 'message' => 'Expense deleted successfully']);
@@ -358,11 +384,11 @@ try {
             throw new Exception("Invalid action: $action");
     }
 } catch (Exception $e) {
-    error_log("❌ Expense handler error: " . $e->getMessage());
+    error_log("Expense handler error: " . $e->getMessage());
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 } catch (Throwable $e) {
-    error_log("🔥 Fatal error in expense handler: " . $e->getMessage() . " in " . $e->getFile() . " line " . $e->getLine());
+    error_log("Fatal error in expense handler: " . $e->getMessage() . " in " . $e->getFile() . " line " . $e->getLine());
     http_response_code(500);
     echo json_encode([
         'success' => false,
