@@ -622,28 +622,7 @@ if ($result->num_rows > 0) {
                             <div class="detail-label">Container No</div>
                             <div class="detail-value" id="expenseContainerNo"></div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Container Size</div>
-                            <div class="detail-value" id="expenseContainerSize"></div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">FCL Status</div>
-                            <div class="detail-value" id="expenseFCL"></div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Status</div>
-                            <div class="detail-value" id="expenseStatus"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-section">
-                    <h4 class="section-title">
-                        <div class="section-icon"><i class="fas fa-users"></i></div>
-                        Personnel
-                    </h4>
-                    <div class="details-grid">
-                        <div class="detail-item">
+                         <div class="detail-item">
                             <div class="detail-label">Driver</div>
                             <div class="detail-value" id="expenseDriverName"></div>
                         </div>
@@ -651,41 +630,14 @@ if ($result->num_rows > 0) {
                             <div class="detail-label">Helper</div>
                             <div class="detail-value" id="expenseHelperName"></div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Dispatcher</div>
-                            <div class="detail-value" id="expenseDispatcher"></div>
+                         <div class="detail-item">
+                            <div class="detail-label">Destination</div>
+                            <div class="detail-value" id="expenseDestination"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="info-section">
-                    <h4 class="section-title">
-                        <div class="section-icon"><i class="fas fa-map-marker-alt"></i></div>
-                        Client & Destination
-                    </h4>
-                    <div class="details-grid">
-                        <div class="detail-item">
-                            <div class="detail-label">Client</div>
-                            <div class="detail-value" id="expenseClient"></div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Port</div>
-                            <div class="detail-value" id="expensePort"></div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Destination</div>
-                            <div class="detail-value" id="expenseDestination"></div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Shipping Line</div>
-                            <div class="detail-value" id="expenseShippingLine"></div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Consignee</div>
-                            <div class="detail-value" id="expenseConsignee"></div>
-                        </div>
-                    </div>
-                </div>
+                
 
                 <div class="funds-card">
                     <div class="funds-header">
@@ -2440,8 +2392,7 @@ $(document).on('click', '.dropdown-item.view-expenses', function() {
                     $('#expensePlateNo').text(tripData.plateNo || tripData.truck_plate_no || 'N/A');
                     $('#expenseContainerNo').text(tripData.containerNo || 'N/A');
                     $('#expenseContainerSize').text(tripData.truck_capacity ? tripData.truck_capacity + 'ft' : tripData.size || 'N/A');
-                    $('#expenseFCL').text(tripData.fcl_status || 'N/A');
-                    $('#expenseStatus').text(tripData.status || 'N/A');
+                
 
                     if (tripData.date || tripData.trip_date) {
                         const tripDate = new Date(tripData.date || tripData.trip_date);
@@ -2459,13 +2410,8 @@ $(document).on('click', '.dropdown-item.view-expenses', function() {
                     
                     $('#expenseDriverName').text(tripData.driver || 'N/A');
                     $('#expenseHelperName').text(tripData.helper || 'N/A');
-                    $('#expenseDispatcher').text(tripData.dispatcher || 'N/A');
-                    
-                    $('#expenseClient').text(tripData.client || 'N/A');
-                    $('#expensePort').text(tripData.port || 'N/A');
                     $('#expenseDestination').text(tripData.destination || 'N/A');
-                    $('#expenseShippingLine').text(tripData.shippingLine || 'N/A');
-                    $('#expenseConsignee').text(tripData.consignee || 'N/A');
+               
                 }
                 
                 const cashAdvance = parseFloat(response.cashAdvance || tripData.cashAdvance || 0);
