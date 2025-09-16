@@ -594,64 +594,178 @@ if ($result->num_rows > 0) {
         </form>
     </div>
 </div>
+ <div id="expensesModal" class="modal">
+        <div class="expensemodal-content">
+            <div class="modal-header">
+                <span class="expenseclose" onclick="closeModal()">&times;</span>
+                <h3 class="expensemodal-header">Trip Expense Report</h3>
 
-  <div id="expensesModal" class="modal">
-    <div class="expensemodal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h3 class="modal-header">Expense Report</h3>
-        <div class="employee">
-            <div class="employee-info-container">
-                <h4 class="employee-info"><i class="fas fa-user"></i>Driver: <span id="expenseDriverName">Loading...</span></h4>
-                <h4 class="employee-info"><i class="fas fa-user-secret"></i>Helper: <span id="expenseHelperName">Loading...</span></h4>
             </div>
-            <h4 class="trip-date"><i class="fas fa-calendar-alt"></i> Date: <span id="expenseTripDate">Loading...</span></h4>
-        </div>
-        
-        <div class="initialFund-container">
-            <div class="initialFund">
-                <div class="initialFund-header">
-                    <h4>Initial Funds</h4>
-                </div>
-                <div class="initialFund-item">
-                    <strong>Cash Advance:</strong> <span id="expenseCashAdvance">₱0.00</span>
-                </div>
-                <div class="initialFund-item">
-                    <strong>Additional Cash:</strong> <span id="expenseAdditionalCash">₱0.00</span>
-                </div>
-                <div class="initialFund-item">
-                    <strong>Diesel:</strong> <span id="expenseDiesel">₱0.00</span>
-                </div>
-                <div class="initialFund-total">
-                    <strong>Total Initial Funds:</strong> <span id="totalInitialFunds">₱0.00</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="expense-section">
-            <h4><i class="fas fa-receipt"></i> Expenditure</h4>
             
-            <table class="expense-table">
-                <thead>
-                    <tr>
-                        <th>Expense Type</th>
-                        <th>Amount</th>
-                    </tr>
-                </thead>
-                <tbody id="expensesTableBody">
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Total Expenses Section -->
-        <div class="total-expenses">
-            <div class="total-row">
-                <h4>Total Expenses</h4>
-                <span id="totalExpensesAmount">₱0.00</span>
+            <div class="modal-body">
+
+                <div class="info-section">
+                    <h4 class="section-title">
+                        <div class="section-icon"><i class="fas fa-route"></i></div>
+                        Trip Information
+                    </h4>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Plate Number</div>
+                            <div class="detail-value" id="expensePlateNo"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Trip Date</div>
+                            <div class="detail-value" id="expenseTripDate"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Container No</div>
+                            <div class="detail-value" id="expenseContainerNo"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Container Size</div>
+                            <div class="detail-value" id="expenseContainerSize"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">FCL Status</div>
+                            <div class="detail-value" id="expenseFCL"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value" id="expenseStatus"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4 class="section-title">
+                        <div class="section-icon"><i class="fas fa-users"></i></div>
+                        Personnel
+                    </h4>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Driver</div>
+                            <div class="detail-value" id="expenseDriverName"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Helper</div>
+                            <div class="detail-value" id="expenseHelperName"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Dispatcher</div>
+                            <div class="detail-value" id="expenseDispatcher"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4 class="section-title">
+                        <div class="section-icon"><i class="fas fa-map-marker-alt"></i></div>
+                        Client & Destination
+                    </h4>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Client</div>
+                            <div class="detail-value" id="expenseClient"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Port</div>
+                            <div class="detail-value" id="expensePort"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Destination</div>
+                            <div class="detail-value" id="expenseDestination"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Shipping Line</div>
+                            <div class="detail-value" id="expenseShippingLine"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Consignee</div>
+                            <div class="detail-value" id="expenseConsignee"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="funds-card">
+                    <div class="funds-header">
+                        <div class="funds-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <h4 class="funds-title">Initial Funds</h4>
+                    </div>
+                    <div class="funds-item">
+                        <strong>Cash Advance:</strong> 
+                        <span id="expenseCashAdvance"></span>
+                    </div>
+                    <div class="funds-item">
+                        <strong>Additional Cash:</strong> 
+                        <span id="expenseAdditionalCash"></span>
+                    </div>
+                    <div class="funds-item">
+                        <strong>Diesel:</strong> 
+                        <span id="expenseDiesel"></span>
+                    </div>
+                    <div class="funds-total">
+                        <strong>Total Initial Funds:</strong> 
+                        <span id="totalInitialFunds"></span>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4 class="section-title">
+                        <div class="section-icon"><i class="fas fa-receipt"></i></div>
+                        Breakdown of Expenses
+                    </h4>
+                    
+                    <div class="expense-table-container">
+                        <table class="expense-table">
+                            <thead>
+                                <tr>
+                                    <th>Expense Type</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesTableBody">
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                          <div class="total-amount">
+                        <span class="total-label">Total Expenses</span>
+                        <span class="total-value" id="totalExpensesAmount">₱15,500.00</span>
+                    </div>
+                    </div>
+                </div>
+                
+      
+           
+                  
+                    <button type="button" class="expense-close-btn" onclick="closeModal()">
+                        <i class="fas fa-check-circle"></i> Close Report
+                    </button>
+              
             </div>
-            <button type="button" class="expense-close-btn" onclick="closeModal()">Close Report</button>
         </div>
     </div>
-</div>
 
 <div id="addScheduleModal" class="modal">
     <!-- etong css gamit ng add modal -->
@@ -2299,7 +2413,7 @@ function populateEditModal(event) {
     $('#editModal').show();
 }
 
- $(document).on('click', '.dropdown-item.view-expenses', function() {
+$(document).on('click', '.dropdown-item.view-expenses', function() {
     var tripId = $(this).data('id');
     
     // Find the trip data from eventsData
@@ -2317,32 +2431,46 @@ function populateEditModal(event) {
         }),
         success: function(response) {
             if (response.success) {
-                // Clear previous data
+
                 $('#expensesTableBody').empty();
                 
-                // Populate trip information
+
                 if (tripData) {
-                    $('#expenseDriverName').text(tripData.driver || 'N/A');
-                    $('#expenseHelperName').text(tripData.helper || 'N/A');
-                    
-                    // Format the date
-                    if (tripData.date) {
-                        const tripDate = new Date(tripData.date);
+
+                    $('#expensePlateNo').text(tripData.plateNo || tripData.truck_plate_no || 'N/A');
+                    $('#expenseContainerNo').text(tripData.containerNo || 'N/A');
+                    $('#expenseContainerSize').text(tripData.truck_capacity ? tripData.truck_capacity + 'ft' : tripData.size || 'N/A');
+                    $('#expenseFCL').text(tripData.fcl_status || 'N/A');
+                    $('#expenseStatus').text(tripData.status || 'N/A');
+
+                    if (tripData.date || tripData.trip_date) {
+                        const tripDate = new Date(tripData.date || tripData.trip_date);
                         const formattedDate = tripDate.toLocaleDateString('en-US', { 
                             year: 'numeric', 
                             month: 'long', 
-                            day: 'numeric' 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
                         });
                         $('#expenseTripDate').text(formattedDate);
                     } else {
                         $('#expenseTripDate').text('N/A');
                     }
+                    
+                    $('#expenseDriverName').text(tripData.driver || 'N/A');
+                    $('#expenseHelperName').text(tripData.helper || 'N/A');
+                    $('#expenseDispatcher').text(tripData.dispatcher || 'N/A');
+                    
+                    $('#expenseClient').text(tripData.client || 'N/A');
+                    $('#expensePort').text(tripData.port || 'N/A');
+                    $('#expenseDestination').text(tripData.destination || 'N/A');
+                    $('#expenseShippingLine').text(tripData.shippingLine || 'N/A');
+                    $('#expenseConsignee').text(tripData.consignee || 'N/A');
                 }
                 
-                // Set initial funds
-                const cashAdvance = parseFloat(response.cashAdvance || 0);
-                const additionalCash = parseFloat(response.additionalCashAdvance || 0);
-                const diesel = parseFloat(response.diesel || 0);
+                const cashAdvance = parseFloat(response.cashAdvance || tripData.cashAdvance || 0);
+                const additionalCash = parseFloat(response.additionalCashAdvance || tripData.additionalCashAdvance || 0);
+                const diesel = parseFloat(response.diesel || tripData.diesel || 0);
                 const totalInitialFunds = cashAdvance + additionalCash + diesel;
                 
                 $('#expenseCashAdvance').text('₱' + cashAdvance.toFixed(2));
@@ -2352,8 +2480,8 @@ function populateEditModal(event) {
                 
                 let totalExpenses = 0;
                 
-                if (response.expenses.length > 0) {
-                    // Filter out diesel and cash advance expenses
+                if (response.expenses && response.expenses.length > 0) {
+
                     const filteredExpenses = response.expenses.filter(expense => 
                         !['Diesel', 'Cash Advance', 'Additional Cash Advance'].includes(expense.expense_type)
                     );
@@ -2371,10 +2499,9 @@ function populateEditModal(event) {
                         $('#expensesTableBody').append(row);
                     });
                 } else {
-                    $('#expensesTableBody').html('<tr><td colspan="2" style="text-align: center;">No expenses recorded for this trip</td></tr>');
+                    $('#expensesTableBody').html('<tr><td colspan="2" style="text-align: center;">No additional expenses recorded for this trip</td></tr>');
                 }
                 
-                // Update total expenses
                 $('#totalExpensesAmount').text('₱' + totalExpenses.toFixed(2));
                 
                 $('#expensesModal').show();
@@ -3350,7 +3477,7 @@ document.addEventListener('click', function(e) {
         return;
       }
       
-      // Only show loading for forms that will cause page navigation
+
       const form = e.target;
       if (form.method && form.method.toLowerCase() === 'post' && form.action) {
         const loading = this.startAction(
@@ -3364,7 +3491,7 @@ document.addEventListener('click', function(e) {
       }
     });
     
-    // Handle browser back/forward buttons
+
     window.addEventListener('popstate', () => {
       this.show('Loading Page', 'Loading previous page...');
       setTimeout(() => {
@@ -3394,8 +3521,7 @@ document.addEventListener('click', function(e) {
       }
     };
   },
-  
-  // Public methods for manual control
+ 
   showManual: function(title, message) {
     this.show(title, message);
   },
@@ -3409,20 +3535,19 @@ document.addEventListener('click', function(e) {
   }
 };
 
-// Initialize when DOM is loaded
+
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
-  
-  // Add smooth transition to the GIF
+
   const loadingGif = document.querySelector('.loading-gif');
   if (loadingGif) {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
   
-  // Hide loading on page show (handles browser back button)
+
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
-      // Page was loaded from cache (back/forward button)
+    
       setTimeout(() => {
         AdminLoading.hideManual();
       }, 500);
@@ -3430,13 +3555,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Handle page unload
-// window.addEventListener('beforeunload', () => {
-//   // Set flag that we're navigating
-//   sessionStorage.setItem('showAdminLoading', 'true');
-// });
 
-// Export for global access (optional)
 window.AdminLoading = AdminLoading;
 
 </script>
