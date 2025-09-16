@@ -2740,9 +2740,22 @@ $('#editForm').on('submit', function(e) {
             renderTable();
         });
 
-        document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
-            document.querySelector('.sidebar').classList.toggle('expanded');
-        });
+const toggleBtn = document.getElementById('toggleSidebarBtn');
+const sidebar = document.querySelector('.sidebar');
+
+    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
+        document.querySelector('.sidebar').classList.toggle('expanded');
+    });
+
+    document.addEventListener('click', function (e) {
+    if (
+        sidebar.classList.contains('expanded') &&
+        !sidebar.contains(e.target) && 
+        !toggleBtn.contains(e.target) 
+    ) {
+        sidebar.classList.remove('expanded');
+    }
+});
 
        $('#otherReasonText').on('input', function() {
 if ($(this).val().trim() !== '') {
@@ -3197,14 +3210,51 @@ document.addEventListener('click', function(e) {
     this.progressBar = document.querySelector('.progress-bar');
     this.progressText = document.querySelector('.progress-text');
     
+    // Show loading immediately if coming from another page
+    // this.checkForIncomingNavigation();
     this.setupNavigationInterception();
   },
   
+  checkForIncomingNavigation() {
+    // Check if we're coming from another page in the same site
+    const referrer = document.referrer;
+    const currentDomain = window.location.origin;
+    
+    // Also check sessionStorage for loading state
+    const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
+    
+    if ((referrer && referrer.startsWith(currentDomain)) || shouldShowLoading) {
+      // Clear the flag
+      sessionStorage.removeItem('showAdminLoading');
+      
+      // Show loading animation for incoming navigation
+      this.show('Loading Page', 'Loading content...');
+      
+      // Simulate realistic loading progress
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 25 + 10;
+        this.updateProgress(Math.min(progress, 100));
+        
+        if (progress >= 100) {
+          clearInterval(progressInterval);
+          setTimeout(() => {
+            this.hide();
+          }, 600);
+        }
+      }, 180);
+    }
+  },
+  
   show(title = 'Processing Request', message = 'Please wait while we complete this action...') {
+    if (!this.loadingEl) return;
+    
     this.titleEl.textContent = title;
     this.messageEl.textContent = message;
     
-    // Start the sequence with longer delays
+    // Reset progress
+    this.updateProgress(0);
+    
     this.loadingEl.style.display = 'flex';
     setTimeout(() => {
       this.loadingEl.classList.add('active');
@@ -3212,99 +3262,154 @@ document.addEventListener('click', function(e) {
   },
   
   hide() {
-    // Longer fade out
+    if (!this.loadingEl) return;
+    
     this.loadingEl.classList.remove('active');
     setTimeout(() => {
       this.loadingEl.style.display = 'none';
-    }, 800); 
+    }, 800);
   },
   
   updateProgress(percent) {
-    this.progressBar.style.width = `${percent}%`;
-    this.progressText.textContent = `${percent}%`;
+    if (this.progressBar) {
+      this.progressBar.style.width = `${percent}%`;
+    }
+    if (this.progressText) {
+      this.progressText.textContent = `${Math.round(percent)}%`;
+    }
   },
   
- setupNavigationInterception() {
-  document.addEventListener('click', (e) => {
-    // Skip if click is inside SweetAlert modal
-    if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal')) {
-      return;
-    }
+  setupNavigationInterception() {
+    document.addEventListener('click', (e) => {
+      // Skip if click is inside SweetAlert modal, regular modals, or calendar
+      if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal, .modal, .modal-content, .fc-event, #calendar')) {
+        return;
+      }
+      
+      const link = e.target.closest('a');
+      if (link && !link.hasAttribute('data-no-loading') && 
+          link.href && !link.href.startsWith('javascript:') &&
+          !link.href.startsWith('#') && !link.href.startsWith('mailto:') &&
+          !link.href.startsWith('tel:')) {
+        
+        // Only intercept internal links
+        try {
+          const linkUrl = new URL(link.href);
+          const currentUrl = new URL(window.location.href);
+          
+          if (linkUrl.origin !== currentUrl.origin) {
+            return; // Let external links work normally
+          }
+          
+          // Skip if it's the same page
+          if (linkUrl.pathname === currentUrl.pathname) {
+            return;
+          }
+          
+        } catch (e) {
+          return; // Invalid URL, let it work normally
+        }
+        
+        e.preventDefault();
+        
+        // Set flag for next page
+        sessionStorage.setItem('showAdminLoading', 'true');
+        
+        const loading = this.startAction(
+          'Loading Page', 
+          `Preparing ${link.textContent.trim() || 'page'}...`
+        );
+        
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          progress += Math.random() * 15 + 8;
+          if (progress >= 85) {
+            clearInterval(progressInterval);
+            progress = 90; // Stop at 90% until page actually loads
+          }
+          loading.updateProgress(Math.min(progress, 90));
+        }, 150);
+        
+        // Minimum delay to show animation
+        const minLoadTime = 1200;
+        
+        setTimeout(() => {
+          // Complete the progress bar
+          loading.updateProgress(100);
+          setTimeout(() => {
+            window.location.href = link.href;
+          }, 300);
+        }, minLoadTime);
+      }
+    });
+
+    // Handle form submissions
+    document.addEventListener('submit', (e) => {
+      // Skip if form is inside SweetAlert or modal
+      if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
+        return;
+      }
+      
+      // Only show loading for forms that will cause page navigation
+      const form = e.target;
+      if (form.method && form.method.toLowerCase() === 'post' && form.action) {
+        const loading = this.startAction(
+          'Submitting Form', 
+          'Processing your data...'
+        );
+        
+        setTimeout(() => {
+          loading.complete();
+        }, 2000);
+      }
+    });
     
-    // Skip if click is on any modal element
-    if (e.target.closest('.modal, .modal-content')) {
-      return;
-    }
-    
-    const link = e.target.closest('a');
-    if (link && !link.hasAttribute('data-no-loading') && 
-        link.href && !link.href.startsWith('javascript:') &&
-        !link.href.startsWith('#')) {
-      e.preventDefault();
-      
-      const loading = this.startAction(
-        'Loading Page', 
-        `Preparing ${link.textContent.trim()}...`
-      );
-      
-      let progress = 0;
-      const progressInterval = setInterval(() => {
-        progress += Math.random() * 40; 
-        if (progress >= 90) clearInterval(progressInterval);
-        loading.updateProgress(Math.min(progress, 100));
-      }, 300); 
-      
-      const minLoadTime = 2000;
-      const startTime = Date.now();
-      
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', () => {
+      this.show('Loading Page', 'Loading previous page...');
       setTimeout(() => {
-        window.location.href = link.href;
-      }, minLoadTime);
-    }
-  });
-
-  document.addEventListener('submit', (e) => {
-    // Skip if form is inside SweetAlert or modal
-    if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
-      return;
-    }
-    
-    const loading = this.startAction(
-      'Submitting Form', 
-      'Processing your data...'
-    );
-    
-    setTimeout(() => {
-      loading.complete();
-    }, 1500);
-  });
-}
-    
-    
-
+        this.hide();
+      }, 800);
+    });
+  },
   
   startAction(actionName, message) {
     this.show(actionName, message);
     return {
       updateProgress: (percent) => this.updateProgress(percent),
       updateMessage: (message) => {
-        this.messageEl.textContent = message;
-        this.messageEl.style.opacity = 0;
-        setTimeout(() => {
-          this.messageEl.style.opacity = 1;
-          this.messageEl.style.transition = 'opacity 0.5s ease';
-        }, 50);
+        if (this.messageEl) {
+          this.messageEl.textContent = message;
+          this.messageEl.style.opacity = 0;
+          setTimeout(() => {
+            this.messageEl.style.opacity = 1;
+            this.messageEl.style.transition = 'opacity 0.5s ease';
+          }, 50);
+        }
       },
       complete: () => {
-
         this.updateProgress(100);
         this.updateMessage('Done!');
         setTimeout(() => this.hide(), 800);
       }
     };
+  },
+  
+  // Public methods for manual control
+  showManual: function(title, message) {
+    this.show(title, message);
+  },
+  
+  hideManual: function() {
+    this.hide();
+  },
+  
+  setProgress: function(percent) {
+    this.updateProgress(percent);
   }
 };
 
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
   
@@ -3313,7 +3418,27 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loadingGif) {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
+  
+  // Hide loading on page show (handles browser back button)
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      // Page was loaded from cache (back/forward button)
+      setTimeout(() => {
+        AdminLoading.hideManual();
+      }, 500);
+    }
+  });
 });
+
+// Handle page unload
+// window.addEventListener('beforeunload', () => {
+//   // Set flag that we're navigating
+//   sessionStorage.setItem('showAdminLoading', 'true');
+// });
+
+// Export for global access (optional)
+window.AdminLoading = AdminLoading;
+
 </script>
     <footer class="site-footer">
 

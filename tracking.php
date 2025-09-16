@@ -127,9 +127,22 @@ checkAccess(); // No role needed—logic is handled internally
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
+           const toggleBtn = document.getElementById('toggleSidebarBtn');
+const sidebar = document.querySelector('.sidebar');
+
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
+
+    document.addEventListener('click', function (e) {
+    if (
+        sidebar.classList.contains('expanded') &&
+        !sidebar.contains(e.target) && 
+        !toggleBtn.contains(e.target) 
+    ) {
+        sidebar.classList.remove('expanded');
+    }
+});
 
     document.addEventListener('DOMContentLoaded', function() {
     // Get current page filename

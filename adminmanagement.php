@@ -576,10 +576,22 @@ document.getElementById('showDeletedCheckbox').addEventListener('change', toggle
         // Update immediately and then every second
         updateDateTime();
         setInterval(updateDateTime, 1000);
+      const toggleBtn = document.getElementById('toggleSidebarBtn');
+const sidebar = document.querySelector('.sidebar');
+
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
 
+    document.addEventListener('click', function (e) {
+    if (
+        sidebar.classList.contains('expanded') &&
+        !sidebar.contains(e.target) && // not inside sidebar
+        !toggleBtn.contains(e.target)  // not the toggle button
+    ) {
+        sidebar.classList.remove('expanded');
+    }
+});
     document.addEventListener('DOMContentLoaded', function() {
     // Get current page filename
     const currentPage = window.location.pathname.split('/').pop();
