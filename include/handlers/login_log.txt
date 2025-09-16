@@ -931,3 +931,10 @@
 2025-09-16 07:39:34 - Data validation passed
 2025-09-16 07:39:34 - Database connection successful
 2025-09-16 07:39:34 - Login successful for: Symons@gmail.com
+2025-09-16 09:04:58 - Login request received
+{"email":"Symons1234@gmail.com","password":"12121212"}
+
+2025-09-16 09:04:58 - JSON parsed successfully
+2025-09-16 09:04:58 - Data validation passed
+2025-09-16 09:04:58 - Database connection successful
+2025-09-16 09:04:58 - Login successful for: Symons1234@gmail.com
