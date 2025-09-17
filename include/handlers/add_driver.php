@@ -108,17 +108,39 @@ try {
     if ($result->num_rows > 0) {
         throw new Exception("Email already exists");
     }
+    $stmt->close();
 
     file_put_contents('add_driver_log.txt', 
         date('Y-m-d H:i:s') . " - Email check passed\n", 
         FILE_APPEND);
+        
+    // --- BEGIN TRUCK ASSIGNMENT VALIDATION ---
+    $assigned_truck_id = !empty($data['assigned_truck_id']) ? $data['assigned_truck_id'] : null;
+
+    if ($assigned_truck_id !== null) {
+        // Check if the truck is already assigned to another driver
+        $check_truck = "SELECT driver_id FROM drivers_table WHERE assigned_truck_id = ?";
+        $stmt_truck = $mysql_conn->prepare($check_truck);
+        if (!$stmt_truck) {
+            throw new Exception("Truck check prepare failed: " . $mysql_conn->error);
+        }
+        $stmt_truck->bind_param("s", $assigned_truck_id);
+        $stmt_truck->execute();
+        $result_truck = $stmt_truck->get_result();
+
+        if ($result_truck->num_rows > 0) {
+            throw new Exception("This truck is already assigned to another driver.");
+        }
+        $stmt_truck->close();
+    }
+    // --- END TRUCK ASSIGNMENT VALIDATION ---
 
     // Hash password for MySQL
     $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
 
     // Insert into MySQL (now includes driver_pic)
     $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, contact_no, password, assigned_truck_id, driver_pic, created_at) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
               
     $stmt = $mysql_conn->prepare($query);
     
@@ -131,21 +153,22 @@ try {
         FILE_APPEND);
     
     $stmt->bind_param(
-    "ssssssss",
+        "ssssssss",
         $driver_id,
         $firebase_uid,
         $data['name'],
         $data['email'],
-         $data['contact_no'],
+        $data['contact_no'],
         $hashed_password,
-        $data['assigned_truck_id'],
+        $assigned_truck_id, // Use the validated variable
         $driverPic
     );
 
     if (!$stmt->execute()) {
         throw new Exception("MySQL Execute failed: " . $stmt->error);
     }
-
+    $stmt->close();
+    
     file_put_contents('add_driver_log.txt', 
         date('Y-m-d H:i:s') . " - MySQL insert successful\n", 
         FILE_APPEND);
@@ -158,7 +181,7 @@ try {
         "name" => $data['name'],
         "email" => $data['email'],
         "password" => $data['password'], // Store plain password in Firebase as per your register.js logic
-        "assigned_truck_id" => intval($data['assigned_truck_id']),
+        "assigned_truck_id" => $assigned_truck_id ? intval($assigned_truck_id) : null,
         "created_at" => date('c'), // ISO 8601 format
         "last_login" => null,
         "location" => array(
@@ -217,5 +240,7 @@ try {
         "success" => false,
         "message" => "Error: " . $e->getMessage()
     ]);
+} finally {
+    if (isset($mysql_conn)) $mysql_conn->close();
 }
 ?>

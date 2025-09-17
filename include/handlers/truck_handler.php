@@ -441,6 +441,33 @@ case 'softDeleteTruck':
     echo json_encode(['success' => true, 'counts' => $counts]);
     break;
 
+    case 'getAvailableTrucks':
+    $driverIdBeingEdited = $_GET['driverId'] ?? null;
+
+
+    $query = "SELECT t.truck_id, t.plate_no
+              FROM truck_table t
+              WHERE t.is_deleted = 0 AND t.truck_id NOT IN
+                  (SELECT d.assigned_truck_id FROM drivers_table d WHERE d.assigned_truck_id IS NOT NULL";
+    
+    if ($driverIdBeingEdited) {
+        $query .= " AND d.driver_id != ?";
+    }
+    
+    $query .= ") ORDER BY t.plate_no ASC";
+
+    $stmt = $conn->prepare($query);
+
+    if ($driverIdBeingEdited) {
+        $stmt->bind_param("s", $driverIdBeingEdited);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $trucks = $result->fetch_all(MYSQLI_ASSOC);
+    echo json_encode(['success' => true, 'trucks' => $trucks]);
+    break;
+
     case 'restoreTruck':
     // First get the truck's previous status before deletion
     $getStmt = $conn->prepare("SELECT status FROM truck_table WHERE truck_id = ?");

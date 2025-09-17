@@ -38,9 +38,9 @@ if (!isset($data['name']) || !isset($data['email']) || !isset($data['contact_no'
 
 try {
     if ($data['mode'] === 'add') {
-        // Adding a new driver
+        // This block is retained for logical consistency but is handled by add_driver.php
         $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, contact_no, password, assigned_truck_id, driver_pic, created_at) 
-                               VALUES (?, ?, ?, ?, ?, ?, NOW())");
+                                VALUES (?, ?, ?, ?, ?, ?, NOW())");
         
         $assignedTruck = !empty($data['assigned_truck_id']) ? $data['assigned_truck_id'] : null;
         $password = !empty($data['password']) ? password_hash($data['password'], PASSWORD_DEFAULT) : null;
@@ -53,6 +53,32 @@ try {
             echo json_encode(["success" => false, "message" => "Error adding driver: " . $stmt->error]);
         }
     } else {
+        // --- BEGIN TRUCK ASSIGNMENT VALIDATION (FOR EDIT MODE) ---
+        $driver_id_to_update = $data['driverId'];
+        $assigned_truck_id = $data['assigned_truck_id'] ?: null;
+
+        if ($assigned_truck_id !== null) {
+            // Check if the truck is already assigned to a DIFFERENT driver
+            $check_truck = "SELECT driver_id FROM drivers_table WHERE assigned_truck_id = ?";
+            $stmt_truck = $conn->prepare($check_truck);
+            if (!$stmt_truck) {
+                throw new Exception("Truck check prepare failed: " . $conn->error);
+            }
+            $stmt_truck->bind_param("s", $assigned_truck_id);
+            $stmt_truck->execute();
+            $result_truck = $stmt_truck->get_result();
+            
+            if ($result_truck->num_rows > 0) {
+                $row = $result_truck->fetch_assoc();
+                // If the truck is assigned, check if it's to someone other than the current driver
+                if ($row['driver_id'] != $driver_id_to_update) {
+                     throw new Exception("This truck is already assigned to another driver.");
+                }
+            }
+            $stmt_truck->close();
+        }
+        // --- END TRUCK ASSIGNMENT VALIDATION ---
+        
         // Updating an existing driver
         $updateFields = [];
         $params = [];
@@ -71,28 +97,24 @@ try {
             $types .= "s";
         }
         
-        // Handle contact number update
         if (!empty($data['contact_no'])) {
             $updateFields[] = "contact_no = ?";
             $params[] = $data['contact_no'];
             $types .= "s";
         }
         
-        // Handle password update - only update if password is provided
         if (!empty($data['password'])) {
             $updateFields[] = "password = ?";
             $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
             $types .= "s";
         }
         
-        // FIXED: Changed from 'assignedTruck' to 'assigned_truck_id' to match the form data
         if (isset($data['assigned_truck_id'])) {
             $updateFields[] = "assigned_truck_id = ?";
-            $params[] = $data['assigned_truck_id'] ?: null;
+            $params[] = $assigned_truck_id; // Use the validated variable
             $types .= "s";
         }
         
-        // Handle profile picture update if provided
         if ($driverPic !== null) {
             $updateFields[] = "driver_pic = ?";
             $params[] = $driverPic;
@@ -100,7 +122,7 @@ try {
         }
         
         if (empty($updateFields)) {
-            echo json_encode(["success" => false, "message" => "No fields to update"]);
+            echo json_encode(["success" => true, "message" => "No fields were changed."]);
             exit;
         }
         
@@ -110,11 +132,9 @@ try {
         
         $stmt = $conn->prepare($query);
         
-        // Dynamically bind parameters
         $stmt->bind_param($types, ...$params);
         
         if ($stmt->execute()) {
-            // Always update Firebase when any field is updated (note: contact_no is NOT included in Firebase update)
             updateFirebaseDriver($data['driverId'], $data);
             echo json_encode(["success" => true, "message" => "Driver updated successfully"]);
         } else {
@@ -122,7 +142,7 @@ try {
         }
     }
     
-    $stmt->close();
+    if(isset($stmt)) $stmt->close();
 } catch (Exception $e) {
     echo json_encode(["success" => false, "message" => $e->getMessage()]);
 }
@@ -143,7 +163,6 @@ function updateFirebaseDriver($driverId, $data) {
         if ($current_data) {
             $firebase_data = json_decode($current_data, true);
             
-            // Update only the fields that were changed (contact_no is intentionally excluded)
             if (!empty($data['name'])) {
                 $firebase_data['name'] = $data['name'];
             }
@@ -151,11 +170,11 @@ function updateFirebaseDriver($driverId, $data) {
                 $firebase_data['email'] = $data['email'];
             }
             if (!empty($data['password'])) {
-                $firebase_data['password'] = $data['password']; // Store plain password in Firebase
+                $firebase_data['password'] = $data['password'];
             }
-            // FIXED: Changed from 'assignedTruck' to 'assigned_truck_id'
             if (isset($data['assigned_truck_id'])) {
-                $firebase_data['assigned_truck_id'] = $data['assigned_truck_id'] ? intval($data['assigned_truck_id']) : null;
+                $assigned_truck_id = $data['assigned_truck_id'] ?: null;
+                $firebase_data['assigned_truck_id'] = $assigned_truck_id ? intval($assigned_truck_id) : null;
             }
             
             // Update Firebase
@@ -173,7 +192,6 @@ function updateFirebaseDriver($driverId, $data) {
             curl_close($ch);
         }
     } catch (Exception $e) {
-        // Log error but don't fail the main operation
         error_log("Firebase update failed: " . $e->getMessage());
     }
 }

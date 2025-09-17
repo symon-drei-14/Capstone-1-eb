@@ -165,9 +165,11 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="assignedTruck">Assigned Truck ID</label>
-                    <input type="number" id="assignedTruck" name="assignedTruck" placeholder="Enter truck ID or leave blank">
-                </div>
+    <label for="assignedTruck">Assigned Truck</label>
+    <select id="assignedTruck" name="assignedTruck">
+        <option value="">None</option>
+        </select>
+</div>
 
                 <div class="form-group">
     <label for="driverProfile">Profile Photo</label>
@@ -210,24 +212,27 @@ let totalPages = 0;
         setInterval(updateDateTime, 1000);
 
        function openAddDriverModal() {
-    document.getElementById("modalTitle").textContent = "Add New Driver";
-    document.getElementById("modalMode").value = "add";
-    document.getElementById("saveButtonText").textContent = "Add Driver";
-    document.getElementById("passwordHelp").style.display = "none";
-    document.getElementById("password").required = true;
-    
-    // Clear all fields
-    document.getElementById("driverId").value = "";
-    document.getElementById("driverName").value = "";
-    document.getElementById("driverEmail").value = "";
-    document.getElementById("driverContact").value = "";
-    document.getElementById("password").value = "";
-    document.getElementById("assignedTruck").value = "";
-    document.getElementById("driverProfile").value = ""; // Clear file input
-    document.getElementById("profilePreview").innerHTML = ""; // Clear preview
-    
-    document.getElementById("driverModal").style.display = "block";
-}
+        document.getElementById("modalTitle").textContent = "Add New Driver";
+        document.getElementById("modalMode").value = "add";
+        document.getElementById("saveButtonText").textContent = "Add Driver";
+        document.getElementById("passwordHelp").style.display = "none";
+        document.getElementById("password").required = true;
+        
+        // Clear all fields
+        document.getElementById("driverId").value = "";
+        document.getElementById("driverName").value = "";
+        document.getElementById("driverEmail").value = "";
+        document.getElementById("driverContact").value = "";
+        document.getElementById("password").value = "";
+        document.getElementById("assignedTruck").value = "";
+        document.getElementById("driverProfile").value = ""; // Clear file input
+        document.getElementById("profilePreview").innerHTML = ""; // Clear preview
+
+        // Populate available trucks for a new driver
+        populateAvailableTrucks();
+        
+        document.getElementById("driverModal").style.display = "block";
+    }
 
        function fetchDrivers() {
     $.ajax({
@@ -446,64 +451,66 @@ function formatDateWithTime(dateString) {
             document.getElementById("driverModal").style.display = "none";
         }
 
-    function editDriver(driverId) {
-    $.ajax({
-        url: 'include/handlers/get_driver.php?id=' + driverId,
-        type: 'GET',
-        dataType: 'json',
-        success: function(data) {
-            if (data.success) {
-                const driver = data.driver;
-                
-                document.getElementById("modalTitle").textContent = "Edit Driver";
-                document.getElementById("modalMode").value = "edit";
-                document.getElementById("saveButtonText").textContent = "Save Changes";
-                document.getElementById("passwordHelp").style.display = "block";
-                document.getElementById("password").required = false;
-                
-                document.getElementById("driverId").value = driver.driver_id;
-                document.getElementById("driverContact").value = driver.contact_no || '';
-                document.getElementById("driverName").value = driver.name;
-                document.getElementById("driverEmail").value = driver.email;
-                document.getElementById("password").value = '';
-                document.getElementById("assignedTruck").value = driver.assigned_truck_id || '';
-                
-                // Display existing profile picture if it exists
-                const profilePreview = document.getElementById('profilePreview');
-                if (driver.driver_pic) {
-                    profilePreview.innerHTML = `
-                        <div class="current-profile-section">
-                            <h4>Current Profile Picture:</h4>
-                            <div class="large-profile-display">
-                                <img src="data:image/jpeg;base64,${driver.driver_pic}" 
-                                     class="large-profile-preview" 
-                                     alt="Current Driver Photo">
+   function editDriver(driverId) {
+        $.ajax({
+            url: 'include/handlers/get_driver.php?id=' + driverId,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    const driver = data.driver;
+                    
+                    document.getElementById("modalTitle").textContent = "Edit Driver";
+                    document.getElementById("modalMode").value = "edit";
+                    document.getElementById("saveButtonText").textContent = "Save Changes";
+                    document.getElementById("passwordHelp").style.display = "block";
+                    document.getElementById("password").required = false;
+                    
+                    document.getElementById("driverId").value = driver.driver_id;
+                    document.getElementById("driverContact").value = driver.contact_no || '';
+                    document.getElementById("driverName").value = driver.name;
+                    document.getElementById("driverEmail").value = driver.email;
+                    document.getElementById("password").value = '';
+                    
+                    // Populate available trucks, passing the driver's ID and their currently assigned truck
+                    populateAvailableTrucks(driver.driver_id, driver.assigned_truck_id);
+                    
+                    // Display existing profile picture if it exists
+                    const profilePreview = document.getElementById('profilePreview');
+                    if (driver.driver_pic) {
+                        profilePreview.innerHTML = `
+                            <div class="current-profile-section">
+                                <h4>Current Profile Picture:</h4>
+                                <div class="large-profile-display">
+                                    <img src="data:image/jpeg;base64,${driver.driver_pic}" 
+                                         class="large-profile-preview" 
+                                         alt="Current Driver Photo">
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        profilePreview.innerHTML = `
+                            <div class="current-profile-section">
+                                <h4>Current Profile Picture:</h4>
+                                <div class="large-profile-display">
+                                    <i class="fa-solid fa-circle-user large-profile-icon"></i>
+                                    <p>No profile picture uploaded</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById("driverModal").style.display = "block";
                 } else {
-                    profilePreview.innerHTML = `
-                        <div class="current-profile-section">
-                            <h4>Current Profile Picture:</h4>
-                            <div class="large-profile-display">
-                                <i class="fa-solid fa-circle-user large-profile-icon"></i>
-                                <p>No profile picture uploaded</p>
-                            </div>
-                        </div>
-                    `;
+                    alert("Error fetching driver data: " + data.message);
                 }
-                
-                document.getElementById("driverModal").style.display = "block";
-            } else {
-                alert("Error fetching driver data: " + data.message);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert("An error occurred while fetching driver data.");
             }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error:', error);
-            alert("An error occurred while fetching driver data.");
-        }
-    });
-}
+        });
+    }
 
         function deleteDriver(driverId) {
             if (confirm("Are you sure you want to delete this driver?")) {
@@ -861,6 +868,43 @@ const sidebar = document.querySelector('.sidebar');
         }
     });
 });
+
+ function populateAvailableTrucks(driverId = null, selectedTruckId = null) {
+        const truckSelect = document.getElementById("assignedTruck");
+        truckSelect.innerHTML = '<option value="">Loading trucks...</option>';
+        truckSelect.disabled = true;
+
+        let url = `include/handlers/truck_handler.php?action=getAvailableTrucks`;
+        if (driverId) {
+            url += `&driverId=${encodeURIComponent(driverId)}`;
+        }
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                truckSelect.innerHTML = '<option value="">None</option>';
+                if (data.success && data.trucks) {
+                    data.trucks.forEach(function(truck) {
+                        const option = document.createElement('option');
+                        option.value = truck.truck_id;
+                        option.textContent = `${truck.plate_no} (ID: ${truck.truck_id})`;
+                        truckSelect.appendChild(option);
+                    });
+                }
+                if (selectedTruckId) {
+                    truckSelect.value = selectedTruckId;
+                }
+            },
+            error: function() {
+                truckSelect.innerHTML = '<option value="">Error loading trucks</option>';
+            },
+            complete: function() {
+                truckSelect.disabled = false;
+            }
+        });
+    }
     </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
