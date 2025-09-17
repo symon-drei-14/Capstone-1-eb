@@ -1033,66 +1033,39 @@ case 'get_active_trips':
 
       case 'get_expenses':
     $tripId = $data['tripId'] ?? 0;
-    
-    // First get the cash advance and diesel amounts
+
+    // First get the cash advance and diesel amounts from the main trip_expenses table
     $stmt = $conn->prepare("SELECT cash_advance, additional_cash_advance, diesel FROM trip_expenses WHERE trip_id = ?");
     $stmt->bind_param("i", $tripId);
     $stmt->execute();
     $expenseResult = $stmt->get_result();
     $tripExpenses = $expenseResult->fetch_assoc();
     $stmt->close();
-    
-    // Then get the driver expenses
+
+    // Then get all expenses, including the driver-submitted ones with their receipts and timestamps
     $stmt = $conn->prepare("
-        SELECT 
-            'Cash Advance' as expense_type,
-            CONCAT('₱', FORMAT(cash_advance, 2)) as amount,
-            created_at
-        FROM trip_expenses 
-        WHERE trip_id = ? AND cash_advance > 0
-        
-        UNION ALL
-        
-        SELECT 
-            'Additional Cash Advance' as expense_type,
-            CONCAT('₱', FORMAT(additional_cash_advance, 2)) as amount,
-            created_at
-        FROM trip_expenses 
-        WHERE trip_id = ? AND additional_cash_advance > 0
-        
-        UNION ALL
-        
-        SELECT 
-            'Diesel' as expense_type,
-            CONCAT('₱', FORMAT(diesel, 2)) as amount,
-            created_at
-        FROM trip_expenses 
-        WHERE trip_id = ? AND diesel > 0
-        
-        UNION ALL
-        
-        SELECT 
+        SELECT
             et.name as expense_type,
             CONCAT('₱', FORMAT(de.amount, 2)) as amount,
-            de.created_at
+            de.created_at as submitted_time,
+            de.receipt_image
         FROM driver_expenses de
         INNER JOIN expense_types et ON de.expense_type_id = et.type_id
         WHERE de.trip_id = ?
-        
-        ORDER BY created_at DESC
+        ORDER BY de.created_at DESC
     ");
-    
-    $stmt->bind_param("iiii", $tripId, $tripId, $tripId, $tripId);
+
+    $stmt->bind_param("i", $tripId);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     $expenses = [];
     while ($row = $result->fetch_assoc()) {
         $expenses[] = $row;
     }
-    
+
     echo json_encode([
-        'success' => true, 
+        'success' => true,
         'expenses' => $expenses,
         'cashAdvance' => $tripExpenses['cash_advance'] ?? 0,
         'additionalCashAdvance' => $tripExpenses['additional_cash_advance'] ?? 0,

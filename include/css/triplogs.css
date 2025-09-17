@@ -3037,3 +3037,64 @@ h3.title {
     }
 }
 
+#receiptModal {
+    background-color: rgba(0, 0, 0, 0.3);
+    justify-content: center;
+    align-items: center;
+}
+
+#receiptModal .modal-content {
+    background-color: transparent;
+
+    animation-name: zoom;
+    animation-duration: 0.4s;
+}
+
+@keyframes zoom {
+    from {transform:scale(0)}
+    to {transform:scale(1)}
+}
+
+#receiptModal .close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+#receiptModal .close:hover,
+#receiptModal .close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Add a pointer and hover effect for clickable expense rows */
+.clickable-expense {
+    cursor: pointer;
+}
+
+.clickable-expense:hover {
+    background-color: #f0f8ff !important; /* A light blue hover effect */
+}
+
+/* Adjust expense table columns for the new "Submitted Time" column */
+#expensesModal .expense-table th:nth-child(1),
+#expensesModal .expense-table td:nth-child(1) {
+    width: 45%; /* Expense Type */
+}
+
+#expensesModal .expense-table th:nth-child(2),
+#expensesModal .expense-table td:nth-child(2) {
+    width: 20%; /* Amount */
+    text-align: right;
+}
+
+#expensesModal .expense-table th:nth-child(3),
+#expensesModal .expense-table td:nth-child(3) {
+    width: 35%; /* Submitted Time */
+    text-align: center;
+}

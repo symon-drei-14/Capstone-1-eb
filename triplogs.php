@@ -676,6 +676,7 @@ if ($result->num_rows > 0) {
                                 <tr>
                                     <th>Expense Type</th>
                                     <th>Amount</th>
+                                    <th>Submitted Time</th>
                                 </tr>
                             </thead>
                             <tbody id="expensesTableBody">
@@ -717,6 +718,11 @@ if ($result->num_rows > 0) {
               
             </div>
         </div>
+
+        <div id="receiptModal" class="modal">
+    <span class="close receipt-close">&times;</span>
+    <img class="modal-content" id="receiptImageSrc" style="max-width: 80%; max-height: 80%; object-fit: contain;">
+</div>
     </div>
 
 <div id="addScheduleModal" class="modal">
@@ -2425,28 +2431,31 @@ $(document).on('click', '.dropdown-item.view-expenses', function() {
                 $('#totalInitialFunds').text('₱' + totalInitialFunds.toFixed(2));
                 
                 let totalExpenses = 0;
-                
-                if (response.expenses && response.expenses.length > 0) {
 
-                    const filteredExpenses = response.expenses.filter(expense => 
-                        !['Diesel', 'Cash Advance', 'Additional Cash Advance'].includes(expense.expense_type)
-                    );
-                    
-                    filteredExpenses.forEach(function(expense) {
-                        const amount = parseFloat(expense.amount.replace('₱', '').replace(',', ''));
-                        totalExpenses += amount;
-                        
-                        var row = `
-                            <tr>
-                                <td>${expense.expense_type}</td>
-                                <td>${expense.amount}</td>
-                            </tr>
-                        `;
-                        $('#expensesTableBody').append(row);
-                    });
-                } else {
-                    $('#expensesTableBody').html('<tr><td colspan="2" style="text-align: center;">No additional expenses recorded for this trip</td></tr>');
-                }
+if (response.expenses && response.expenses.length > 0) {
+    response.expenses.forEach(function(expense) {
+        const amount = parseFloat(expense.amount.replace('₱', '').replace(',', ''));
+        totalExpenses += amount;
+
+        // Add a class and data attribute if a receipt exists
+        const receiptAttr = expense.receipt_image ? `data-receipt="${expense.receipt_image}"` : '';
+        const clickableClass = expense.receipt_image ? 'clickable-expense' : '';
+
+        // Format the submitted time
+        const submittedTime = expense.submitted_time ? formatDateTime(expense.submitted_time) : 'N/A';
+
+        var row = `
+            <tr class="${clickableClass}" ${receiptAttr}>
+                <td>${expense.expense_type}</td>
+                <td>${expense.amount}</td>
+                <td>${submittedTime}</td>
+            </tr>
+        `;
+        $('#expensesTableBody').append(row);
+    });
+} else {
+    $('#expensesTableBody').html('<tr><td colspan="3" style="text-align: center;">No additional expenses recorded</td></tr>');
+}
                 
                 $('#totalExpensesAmount').text('₱' + totalExpenses.toFixed(2));
                 
@@ -3252,6 +3261,19 @@ document.addEventListener('click', function(e) {
             document.getElementById('cancelTripModal').style.display = 'block';
         }
     });
+
+    $(document).on('click', '.clickable-expense', function() {
+    const receiptUrl = $(this).data('receipt');
+    if (receiptUrl) {
+        $('#receiptImageSrc').attr('src', receiptUrl);
+        $('#receiptModal').css('display', 'flex'); // Use flex for centering
+    }
+});
+
+// Add handler for the new modal's close button
+$('.receipt-close').on('click', function() {
+    $('#receiptModal').hide();
+});
 
     </script>
 
