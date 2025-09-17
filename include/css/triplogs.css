@@ -3038,14 +3038,14 @@ h3.title {
 }
 
 #receiptModal {
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.2);
     justify-content: center;
     align-items: center;
 }
 
 #receiptModal .modal-content {
     background-color: transparent;
-
+    box-shadow: none;
     animation-name: zoom;
     animation-duration: 0.4s;
 }
