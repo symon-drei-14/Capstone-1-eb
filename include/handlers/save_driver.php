@@ -53,7 +53,7 @@ try {
             echo json_encode(["success" => false, "message" => "Error adding driver: " . $stmt->error]);
         }
     } else {
-        // --- BEGIN TRUCK ASSIGNMENT VALIDATION (FOR EDIT MODE) ---
+        
         $driver_id_to_update = $data['driverId'];
         $assigned_truck_id = $data['assigned_truck_id'] ?: null;
 
@@ -77,7 +77,7 @@ try {
             }
             $stmt_truck->close();
         }
-        // --- END TRUCK ASSIGNMENT VALIDATION ---
+        
         
         // Updating an existing driver
         $updateFields = [];

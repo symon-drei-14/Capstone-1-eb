@@ -114,7 +114,7 @@ try {
         date('Y-m-d H:i:s') . " - Email check passed\n", 
         FILE_APPEND);
         
-    // --- BEGIN TRUCK ASSIGNMENT VALIDATION ---
+    
     $assigned_truck_id = !empty($data['assigned_truck_id']) ? $data['assigned_truck_id'] : null;
 
     if ($assigned_truck_id !== null) {
@@ -133,7 +133,7 @@ try {
         }
         $stmt_truck->close();
     }
-    // --- END TRUCK ASSIGNMENT VALIDATION ---
+  
 
     // Hash password for MySQL
     $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
