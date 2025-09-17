@@ -1768,7 +1768,7 @@ function resetAddScheduleForm() {
     $('#addEventStatus').val('Pending');
 }
             // Close modal handlers
-        $('.close, .close-btn.cancel-btn').on('click', function() {
+        $('.close:not(.receipt-close), .close-btn.cancel-btn').on('click', function() {
         $('.modal').hide();
         if ($(this).closest('#addScheduleModal').length) {
             resetAddScheduleForm();
