@@ -2386,6 +2386,24 @@ h3.title {
     color: white;
 }
 
+.dropdown-item.Full-report {
+    color: rgba(86, 86, 86, 1);
+    white-space: nowrap;
+    flex-shrink: 2;
+    text-decoration: none; 
+}
+
+.dropdown-item.Full-report:link,
+.dropdown-item.Full-report:visited,
+.dropdown-item.Full-report:hover,
+.dropdown-item.Full-report:active {
+    text-decoration: none; 
+}
+
+.dropdown-item.Full-report:hover {
+    background-color: #17a2b8;
+    color: white;
+}
 /* para sa expense modals contents */
 
 #expensesModal.modal {

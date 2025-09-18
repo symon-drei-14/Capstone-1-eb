@@ -1330,7 +1330,9 @@ function renderTripRows(trips, showDeleted) {
             <button class="dropdown-item view-checklist" data-id="${trip.trip_id}" data-driver-id="${trip.driver_id}">
                 <i class="fas fa-clipboard-check"></i> Driver Checklist
             </button>
-             
+           <a href="trip_report.php?id=${trip.trip_id}" target="_blank" class="dropdown-item Full-report">
+    <i class="fas fa-file-alt"></i> Generate Report
+</a>
             
             ${trip.edit_reason && trip.edit_reason !== 'null' && trip.edit_reason !== '' ? 
             `<button class="dropdown-item view-reasons" data-id="${trip.trip_id}">
