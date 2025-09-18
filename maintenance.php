@@ -229,14 +229,14 @@
             <input type="hidden" id="maintenanceId" name="maintenanceId">
             
             <div class="form-row">
-               <div class="form-group">
-    <label for="maintenanceTypeId">Maintenance Type:</label>
-    <select id="maintenanceTypeId" name="maintenanceTypeId" required onchange="checkMaintenanceType()">
-        <option value="">Select Maintenance Type</option>
-        <option value="1">Preventive Maintenance</option>
-        <option value="2">Emergency Maintenance</option>
-    </select>
-</div>
+                <div class="form-group">
+                    <label for="maintenanceTypeId">Maintenance Type:</label>
+                    <select id="maintenanceTypeId" name="maintenanceTypeId" required onchange="checkMaintenanceType()">
+                        <option value="">Select Maintenance Type</option>
+                        <option value="1">Preventive Maintenance</option>
+                        <option value="2">Emergency Maintenance</option>
+                    </select>
+                </div>
                 
                 <div class="form-group">
                     <label for="truckId">Truck ID:</label>
@@ -257,25 +257,23 @@
                 </div>
             </div>
             
-          <div class="form-group2">
-    <div class="form-group">
-        <label>Maintenance Purpose(s):</label>
-        <div class="checkbox-grid" id="maintenancePurposes">
-        
-            <!-- Checkboxes will be populated by JavaScript -->
-        </div>
-            <input type="hidden" id="remarks" name="remarks">
-        <div class="other-purpose" style="display: none;">
-            <label for="otherPurposeText">Specify other purpose:</label>
-            <textarea id="otherPurposeText" name="otherPurposeText" rows="2" placeholder="Enter specific maintenance purpose"></textarea>
-        </div>
-    </div>
-</div>
+            <div class="form-group2">
+                <div class="form-group">
+                    <label>Maintenance Purpose(s):</label>
+                    <div class="checkbox-grid" id="maintenancePurposes">
+                        </div>
+                    <input type="hidden" id="remarks" name="remarks">
+                    <div class="other-purpose" style="display: none;">
+                        <label for="otherPurposeText">Specify other purpose:</label>
+                        <textarea id="otherPurposeText" name="otherPurposeText" rows="2" placeholder="Enter specific maintenance purpose"></textarea>
+                    </div>
+                </div>
+            </div>
             
             <div class="form-row">
                 <div class="form-group">
                     <label for="status">Status:</label>
-                    <select id="status" name="status" required>
+                    <select id="status" name="status" required onchange="toggleCostInput()">
                         <option value="Pending" selected>Pending</option>
                         <option value="Completed">Completed</option>
                         <option value="In Progress">In Progress</option>
@@ -285,12 +283,12 @@
                 
                 <div class="form-group">
                     <label for="supplierId">Supplier:</label>
-                        <select id="supplierId" name="supplierId" required>
-                        </select>
+                    <select id="supplierId" name="supplierId" required>
+                    </select>
                 </div>
             </div>
             
-            <div class="form-row">
+            <div id="costSection" class="form-row" style="display: none;">
                 <div class="form-group">
                     <label for="cost">Cost:</label>
                     <input type="number" id="cost" name="cost" step="0.01">
@@ -1149,26 +1147,39 @@ $(document).on('click', function(e) {
                 loadMaintenanceData();
             }
             
-    function openModal(mode) {
-        document.getElementById("maintenanceModal").style.display = "block";
-        
-        if (mode === 'add') {
-            isEditing = false;
-            document.getElementById("modalTitle").textContent = "Add Maintenance Schedule";
-            document.getElementById("maintenanceForm").reset();
-            document.getElementById("maintenanceId").value = "";
-            
-            // Use the new getLocalDate() function here
-            document.getElementById("date").value = getLocalDate();
-            document.getElementById("date").setAttribute("min", getLocalDate());
-            
-            document.getElementById("status").value = "Pending";
-            document.getElementById("status").disabled = true;
-            
-            // Hide edit reasons section for add mode
-            document.querySelector('.edit-reasons-section').style.display = 'none';
-        }
+
+            function toggleCostInput() {
+    const statusSelect = document.getElementById('status');
+    const costSection = document.getElementById('costSection');
+    
+    if (statusSelect.value === 'In Progress') {
+        costSection.style.display = 'block';
+    } else {
+        costSection.style.display = 'none';
+        document.getElementById('cost').value = ''; // Also clear value when hiding
     }
+}
+    function openModal(mode) {
+    document.getElementById("maintenanceModal").style.display = "block";
+    
+    if (mode === 'add') {
+        isEditing = false;
+        document.getElementById("modalTitle").textContent = "Add Maintenance Schedule";
+        document.getElementById("maintenanceForm").reset();
+        document.getElementById("maintenanceId").value = "";
+        
+        document.getElementById("date").value = getLocalDate();
+        document.getElementById("date").setAttribute("min", getLocalDate());
+        
+        document.getElementById("status").value = "Pending";
+        document.getElementById("status").disabled = true;
+        
+        document.querySelector('.edit-reasons-section').style.display = 'none';
+
+        // Call toggleCostInput to ensure cost section is hidden
+        toggleCostInput();
+    }
+}
 
 function openEditModal(id, truckId, licensePlate, date, remarks, status, supplierId, cost, maintenanceTypeId) {
     isEditing = true;
@@ -1192,6 +1203,9 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
         checkbox.checked = false;
     });
     document.getElementById('otherReasonText').value = '';
+
+    // Call toggleCostInput to set initial visibility of the cost section
+    toggleCostInput();
 
     document.getElementById("maintenanceModal").style.display = "block";
 }
