@@ -26,6 +26,7 @@ function getOrCreateClientId($conn, $clientName) {
 }
 
 function checkDriverAvailability($conn, $driverId, $tripDate, $excludeTripId = null) {
+    // The query now checks for trips within a 2-hour window (before and after)
     $query = "SELECT t.trip_date, dest.name as destination, t.status 
               FROM trips t
               JOIN drivers_table d ON t.driver_id = d.driver_id
@@ -34,7 +35,7 @@ function checkDriverAvailability($conn, $driverId, $tripDate, $excludeTripId = n
               WHERE t.driver_id = ? 
               AND t.status IN ('Pending', 'En Route')
               AND (alt.is_deleted IS NULL OR alt.is_deleted = 0)
-              AND DATE(t.trip_date) BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)";
+              AND t.trip_date BETWEEN TIMESTAMPADD(HOUR, -2, ?) AND TIMESTAMPADD(HOUR, 2, ?)";
     
     if ($excludeTripId) {
         $query .= " AND t.trip_id != ?";
@@ -60,21 +61,32 @@ function checkDriverAvailability($conn, $driverId, $tripDate, $excludeTripId = n
 }
 
 function validateTripDate($tripDate, $isEdit = false) {
-    // If this is an edit operation, skip the 3-day validation
+    // If this is an edit operation, skip the time validation
     if ($isEdit) {
         return ['valid' => true];
     }
     
-    $today = new DateTime();
+    $now = new DateTime();
     $tripDateTime = new DateTime($tripDate);
-    $interval = $today->diff($tripDateTime);
     
-    // Check if trip date is at least 3 days from today (only for new trips)
-    if ($interval->days < 3 && $tripDateTime > $today) {
-        $earliestDate = (new DateTime())->modify('+3 days')->format('Y-m-d');
+    // Calculate the total minutes difference
+    $interval = $now->diff($tripDateTime);
+    $minutesDifference = ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
+    
+    // If the trip date is in the past (indicated by the 'invert' property of the interval), it's invalid
+    if ($interval->invert) {
+         return [
+            'valid' => false,
+            'message' => "Cannot schedule a trip in the past."
+        ];
+    }
+
+    // Check if the trip date is less than 2 hours (120 minutes) from now for new trips
+    if ($minutesDifference < 120) {
+        $earliestTime = (new DateTime())->modify('+2 hours')->format('M j, Y h:i A');
         return [
             'valid' => false,
-            'message' => "Trips must be scheduled at least 3 days in advance. The earliest available date is $earliestDate."
+            'message' => "New trips must be scheduled at least 2 hours in advance. The earliest you can book is around {$earliestTime}."
         ];
     }
     
@@ -299,123 +311,123 @@ AND (
 
 try {
     switch ($action) {
-        case 'add':
-            $conn->begin_transaction();
-            
-            try {
-                // Validate trip date is at least 3 days in advance
-                $dateValidation = validateTripDate($data['date']);
-                if (!$dateValidation['valid']) {
-                    throw new Exception($dateValidation['message']);
-                }
-                
-                // Check for maintenance conflicts first
-                $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
-                
-                if (!$truckId) {
-                    throw new Exception("Truck with plate number {$data['plateNo']} not found");
-                }
-                
-                // Check if the trip date conflicts with maintenance
-                $maintenanceCheck = checkMaintenanceConflict($conn, $truckId, $data['date']);
-                
-                if ($maintenanceCheck['hasConflict']) {
-                    throw new Exception("Cannot schedule trip: Truck has maintenance scheduled on " . 
-                                       $maintenanceCheck['maintenanceDate'] . ". " .
-                                       "Trips cannot be scheduled within one week of maintenance.");
-                }
+      case 'add':
+    $conn->begin_transaction();
+    
+    try {
+        // Validate trip date is at least 3 days in advance
+        $dateValidation = validateTripDate($data['date']);
+        if (!$dateValidation['valid']) {
+            throw new Exception($dateValidation['message']);
+        }
+        
+        // Check for maintenance conflicts first
+        $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
+        
+        if (!$truckId) {
+            throw new Exception("Truck with plate number {$data['plateNo']} not found");
+        }
+        
+        // Check if the trip date conflicts with maintenance
+        $maintenanceCheck = checkMaintenanceConflict($conn, $truckId, $data['date']);
+        
+        if ($maintenanceCheck['hasConflict']) {
+            throw new Exception("Cannot schedule trip: Truck has maintenance scheduled on " . 
+                                $maintenanceCheck['maintenanceDate'] . ". " .
+                                "Trips cannot be scheduled within one week of maintenance.");
+        }
 
-                $driverId = getDriverIdByName($conn, $data['driver']);
-                $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date']);
-                
-                if (!empty($conflictingTrips)) {
-                    $conflictDetails = "";
-                    foreach ($conflictingTrips as $trip) {
-                        $tripDate = date('M j, Y', strtotime($trip['trip_date']));
-                        $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
-                    }
-                    
-                    throw new Exception("Driver {$data['driver']} has conflicting trips within 3 days of the selected date:\n\n" . 
-                                       $conflictDetails . "\nPlease choose a different date or driver.");
-                }
-                
-                $clientId = getOrCreateClientId($conn, $data['client']);
-                $helperId = getHelperId($conn, $data['helper']);
-                $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
-                $destinationId = getOrCreateDestinationId($conn, $data['destination']);
-                $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
-                $consigneeId = getConsigneeId($conn, $data['consignee']);
-                $driverId = getDriverIdByName($conn, $data['driver']);
-                
-                if (!$truckId) {
-                    throw new Exception("Truck with plate number {$data['plateNo']} not found");
-                }
-                if (!$driverId) {
-                    throw new Exception("Driver {$data['driver']} not found");
-                }
-                
-                $portId = getOrCreatePortId($conn, $data['port']);
-                
-                $stmt = $conn->prepare("INSERT INTO trips 
-                    (truck_id, driver_id, helper_id, dispatcher_id, client_id, port_id,
-                    destination_id, shipping_line_id, consignee_id, container_no, 
-                    trip_date, status, fcl_status) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                
-                $stmt->bind_param("iiiiiiiisssss",
-                    $truckId,
-                    $driverId,
-                    $helperId,
-                    $dispatcherId,
-                    $clientId,
-                    $portId,
-                    $destinationId,
-                    $shippingLineId,
-                    $consigneeId,
-                    $data['containerNo'],
-                    $data['date'],
-                    $data['status'],
-                    $data['fcl_status']
-                );
-                
-                if (!$stmt->execute()) {
-                    throw new Exception("Failed to insert trip: " . $stmt->error);
-                }
-                
-                $tripId = $conn->insert_id;
-
-                $cashAdvance = floatval($data['cashAdvance'] ?? 0);
-                $additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
-                $diesel = floatval($data['diesel'] ?? 0);
-                
-                if ($cashAdvance > 0 || $additionalCashAdvance > 0 || $diesel > 0) {
-                    if (!insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance, $diesel)) {
-                        throw new Exception("Failed to insert trip expenses");
-                    }
-                }
-
-                $auditStmt = $conn->prepare("INSERT INTO audit_logs_trips (trip_id, modified_by, edit_reason) VALUES (?, ?, 'Trip created')");
-                $auditStmt->bind_param("is", $tripId, $currentUser);
-                if (!$auditStmt->execute()) {
-                    throw new Exception("Failed to insert audit log: " . $auditStmt->error);
-                }
-
-                if ($data['status'] === 'En Route') {
-                    $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
-                    $updateTruck->bind_param("i", $truckId);
-                    $updateTruck->execute();
-                }
-
-                $conn->commit();
-                echo json_encode(['success' => true, 'trip_id' => $tripId]);
-                
-            } catch (Exception $e) {
-                $conn->rollback();
-                throw $e;
+        $driverId = getDriverIdByName($conn, $data['driver']);
+        $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date']);
+        
+        if (!empty($conflictingTrips)) {
+            $conflictDetails = "";
+            foreach ($conflictingTrips as $trip) {
+                $tripDate = date('M j, Y h:i A', strtotime($trip['trip_date']));
+                $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
             }
-            break;
+            
+            throw new Exception("Driver {$data['driver']} has a conflicting trip within 2 hours of the selected time:\n\n" . 
+                                $conflictDetails . "\nPlease choose a different time or driver.");
+        }
+        
+        $clientId = getOrCreateClientId($conn, $data['client']);
+        $helperId = getHelperId($conn, $data['helper']);
+        $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
+        $destinationId = getOrCreateDestinationId($conn, $data['destination']);
+        $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
+        $consigneeId = getConsigneeId($conn, $data['consignee']);
+        $driverId = getDriverIdByName($conn, $data['driver']);
+        
+        if (!$truckId) {
+            throw new Exception("Truck with plate number {$data['plateNo']} not found");
+        }
+        if (!$driverId) {
+            throw new Exception("Driver {$data['driver']} not found");
+        }
+        
+        $portId = getOrCreatePortId($conn, $data['port']);
+        
+        $stmt = $conn->prepare("INSERT INTO trips 
+            (truck_id, driver_id, helper_id, dispatcher_id, client_id, port_id,
+            destination_id, shipping_line_id, consignee_id, container_no, 
+            trip_date, status, fcl_status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        
+        $stmt->bind_param("iiiiiiiisssss",
+            $truckId,
+            $driverId,
+            $helperId,
+            $dispatcherId,
+            $clientId,
+            $portId,
+            $destinationId,
+            $shippingLineId,
+            $consigneeId,
+            $data['containerNo'],
+            $data['date'],
+            $data['status'],
+            $data['fcl_status']
+        );
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to insert trip: " . $stmt->error);
+        }
+        
+        $tripId = $conn->insert_id;
 
-      case 'edit':
+        $cashAdvance = floatval($data['cashAdvance'] ?? 0);
+        $additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
+        $diesel = floatval($data['diesel'] ?? 0);
+        
+        if ($cashAdvance > 0 || $additionalCashAdvance > 0 || $diesel > 0) {
+            if (!insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance, $diesel)) {
+                throw new Exception("Failed to insert trip expenses");
+            }
+        }
+
+        $auditStmt = $conn->prepare("INSERT INTO audit_logs_trips (trip_id, modified_by, edit_reason) VALUES (?, ?, 'Trip created')");
+        $auditStmt->bind_param("is", $tripId, $currentUser);
+        if (!$auditStmt->execute()) {
+            throw new Exception("Failed to insert audit log: " . $auditStmt->error);
+        }
+
+        if ($data['status'] === 'En Route') {
+            $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
+            $updateTruck->bind_param("i", $truckId);
+            $updateTruck->execute();
+        }
+
+        $conn->commit();
+        echo json_encode(['success' => true, 'trip_id' => $tripId]);
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        throw $e;
+    }
+    break;
+
+     case 'edit':
     $conn->begin_transaction();
     
     try {
@@ -427,7 +439,7 @@ try {
                 throw new Exception($dateValidation['message']);
             }
         }
-                
+            
         $getCurrent = $conn->prepare("SELECT status, truck_id, driver_id FROM trips WHERE trip_id = ?");
         $getCurrent->bind_param("i", $data['id']);
         $getCurrent->execute();
@@ -464,12 +476,12 @@ try {
         if (!empty($conflictingTrips)) {
             $conflictDetails = "";
             foreach ($conflictingTrips as $trip) {
-                $tripDate = date('M j, Y', strtotime($trip['trip_date']));
+                $tripDate = date('M j, Y h:i A', strtotime($trip['trip_date']));
                 $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
             }
             
-            throw new Exception("Driver {$data['driver']} has conflicting trips within 3 days of the selected date:\n\n" . 
-                               $conflictDetails . "\nPlease choose a different date or driver.");
+            throw new Exception("Driver {$data['driver']} has a conflicting trip within 2 hours of the selected time:\n\n" . 
+                                $conflictDetails . "\nPlease choose a different time or driver.");
         }
         
         $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
