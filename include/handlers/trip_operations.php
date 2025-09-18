@@ -1,6 +1,7 @@
 <?php
 header("Content-Type: application/json");
 session_start();
+date_default_timezone_set('Asia/Manila');
 require 'dbhandler.php';
 
 $currentUser = $_SESSION['username'] ?? 'System';
@@ -917,18 +918,19 @@ case 'get_active_trips':
     }
     
     // Check if restoring would create a conflict with existing active trips
-    $conflictingTrips = checkDriverAvailability($conn, $tripDetails['driver_id'], $tripDetails['trip_date'], $data['id']);
-    
-    if (!empty($conflictingTrips)) {
-        $conflictDetails = "";
-        foreach ($conflictingTrips as $trip) {
-            $tripDate = date('M j, Y', strtotime($trip['trip_date']));
-            $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
-        }
-        
-        throw new Exception("Cannot restore trip: Driver {$tripDetails['driver_name']} has conflicting trips within 3 days of the selected date:\n\n" . 
-                           $conflictDetails . "\nPlease resolve the conflict before restoring.");
+   $conflictingTrips = checkDriverAvailability($conn, $tripDetails['driver_id'], $tripDetails['trip_date'], $data['id']);
+ 
+if (!empty($conflictingTrips)) {
+    $conflictDetails = "";
+    foreach ($conflictingTrips as $trip) {
+        $tripDate = date('M j, Y h:i A', strtotime($trip['trip_date']));
+        $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
     }
+    
+    // This error message is now updated to mention 2 hours
+    throw new Exception("Cannot restore trip: Driver {$tripDetails['driver_name']} has a conflicting trip within 2 hours of this trip's date:\n\n" . 
+                        $conflictDetails . "\nPlease resolve the conflict before restoring.");
+}
     
     // Restore trip by marking as not deleted
     $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
