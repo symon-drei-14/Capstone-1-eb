@@ -514,28 +514,26 @@ if ($result->num_rows > 0) {
             </div>
 
             <!-- Expense Fields Section -->
-         <div style="display: flex; flex-direction: column; gap: 20px;">
-                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
-                    <legend style="font-weight: bold;">Money Money</legend>
-                    <div>
-                        <label for="editEventCashAdvance">Cash Advance:</label>
-                        <input type="number" id="editEventCashAdvance" name="eventCashAdvance" 
-                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
-                    </div>
-                    <div>
-                        <label for="editEventAdditionalCashAdvance">Additional Cash:</label>
-                        <input type="number" id="editEventAdditionalCashAdvance" name="eventAdditionalCashAdvance" 
-                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
-                    </div>
-                    <div>
-                        <label for="editEventDiesel">Diesel:</label>
-                        <input type="number" id="editEventDiesel" name="eventDiesel" 
-                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
-                    </div>
-            
-                 </legend>
-                </fieldset>
-            </div>
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+    <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+        <legend style="font-weight: bold;">Money Money</legend>
+        <div>
+            <label for="editEventCashAdvance">Cash Advance:</label>
+            <input type="number" id="editEventCashAdvance" name="eventCashAdvance" 
+                   min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+        </div>
+        <div id="editAdditionalCashContainer" style="display: none;">
+            <label for="editEventAdditionalCashAdvance">Additional Cash:</label>
+            <input type="number" id="editEventAdditionalCashAdvance" name="eventAdditionalCashAdvance" 
+                   min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+        </div>
+        <div>
+            <label for="editEventDiesel">Diesel:</label>
+            <input type="number" id="editEventDiesel" name="eventDiesel" 
+                   min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+        </div>
+    </fieldset>
+</div>
 
             <!-- Edit Reasons Section -->
             <div class="edit-reasons-section" style="grid-column: span 2; margin-top: 15px; padding: 15px; border-radius: 5px; border: 1px solid #ddd; width: 95%;">
@@ -849,27 +847,21 @@ if ($result->num_rows > 0) {
       </div>
 
             <!-- Expense Fields Section -->
-               <div style="display: flex; flex-direction: column; gap: 20px;">
-                <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
-                    <legend style="font-weight: bold;">Money Money</legend>
-                    <div>
-                        <label for="addEventCashAdvance">Cash Advance:</label>
-                        <input type="number" id="addEventCashAdvance" name="eventCashAdvance" 
-                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
-                    </div>
-                    <div>
-                        <label for="addEventAdditionalCashAdvance">Additional Cash:</label>
-                        <input type="number" id="addEventAdditionalCashAdvance" name="eventAdditionalCashAdvance" 
-                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
-                    </div>
-                    <div>
-                        <label for="addEventDiesel">Diesel:</label>
-                        <input type="number" id="addEventDiesel" name="eventDiesel" 
-                               min="0" step="0.01" placeholder="0.00" style="width: 100%;">
-                    </div>
-                    
-          
-            </div>
+           <div style="display: flex; flex-direction: column; gap: 20px;">
+    <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+        <legend style="font-weight: bold;">Money Money</legend>
+        <div>
+            <label for="addEventCashAdvance">Cash Advance:</label>
+            <input type="number" id="addEventCashAdvance" name="eventCashAdvance" 
+                   min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+        </div>
+        <div>
+            <label for="addEventDiesel">Diesel:</label>
+            <input type="number" id="addEventDiesel" name="eventDiesel" 
+                   min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+        </div>
+    </fieldset>
+</div>
 
             <!-- Form buttons -->
                <div class="buttons" style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
@@ -1107,28 +1099,40 @@ let filteredEvents = [];
 let currentDateFrom = '';
 let currentDateTo = '';
 
-       $(document).ready(function() {
+      $(document).ready(function() {
     rowsPerPage = parseInt($('#rowsPerPage').val());
     let now = new Date();
-    let formattedNow = now.toISOString().slice(0,16); 
+    let formattedNow = now.toISOString().slice(0, 16);
     $('#rowsPerPage').val(rowsPerPage);
     updateTableInfo(totalItems, 0);
     $('#statusFilter').on('change', filterTableByStatus);
     $('#editEventDate').attr('min', formattedNow);
-    $('#addEventDate').attr('min', formattedNow); 
+    $('#addEventDate').attr('min', formattedNow);
     $('#rowsPerPage').on('change', function() {
         rowsPerPage = parseInt($(this).val());
         currentPage = 1;
         renderTable();
     });
-       $('#dateFrom, #dateTo').on('change', filterTableByDateRange);
-    
- $('#resetDateFilter').on('click', function() {
-    $('#dateFrom').val('');
-    $('#dateTo').val('');
-    currentPage = 1;
-    renderTable();
-});
+
+    // Your new code is here - which is correct!
+    $('#editEventStatus').on('change', function() {
+        if ($(this).val() === 'En Route') {
+            $('#editAdditionalCashContainer').show();
+        } else {
+            $('#editAdditionalCashContainer').hide();
+            $('#editEventAdditionalCashAdvance').val(''); // Clear the value when hidden
+        }
+    });
+
+    // These should also be inside the ready function
+    $('#dateFrom, #dateTo').on('change', filterTableByDateRange);
+
+    $('#resetDateFilter').on('click', function() {
+        $('#dateFrom').val('');
+        $('#dateTo').val('');
+        currentPage = 1;
+        renderTable();
+    });
 
     
 function filterTableByDateRange() {
@@ -1750,23 +1754,23 @@ $(document).on('click', '.icon-btn.edit', function() {
         };
     });
 
-function resetAddScheduleForm() {
-    $('#addEventPlateNo').val('');
-    $('#addEventDate').val('');
-    $('#addEventDriver').val('').trigger('change');
-    $('#addEventHelper').val('');
-    $('#addEventContainerNo').val('');
-    $('#addEventClient').val('');
-    $('#addEventDestination').val('');
-    $('#addEventShippingLine').val('');
-    $('#addEventConsignee').val('');
-    $('#addEventSize').val('');
-    $('#addEventFCL').val('');
-    $('#addEventCashAdvance').val('');
-    $('#addEventAdditionalCashAdvance').val('');
-    $('#addEventDiesel').val('');
-    $('#addEventStatus').val('Pending');
-}
+ function resetAddScheduleForm() {
+        $('#addEventPlateNo').val('');
+        $('#addEventDate').val('');
+        $('#addEventDriver').val('').trigger('change');
+        $('#addEventHelper').val('');
+        $('#addEventContainerNo').val('');
+        $('#addEventClient').val('');
+        $('#addEventDestination').val('');
+        $('#addEventShippingLine').val('');
+        $('#addEventConsignee').val('');
+        $('#addEventSize').val('');
+        $('#addEventFCL').val('');
+        $('#addEventCashAdvance').val('');
+       
+        $('#addEventDiesel').val('');
+        $('#addEventStatus').val('Pending');
+    }
             // Close modal handlers
         $('.close:not(.receipt-close), .close-btn.cancel-btn').on('click', function() {
         $('.modal').hide();
@@ -2313,63 +2317,70 @@ $(document).on('click', '.dropdown-item.edit', function() {
 });
 
 function populateEditModal(event) {
-    $('#editEventId').val(event.id);
-    $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
-    
-    var eventDate = event.date || event.trip_date;
-    if (eventDate) {
-        if (eventDate.includes('T')) {
-            eventDate = eventDate.substring(0, 16); 
+        $('#editEventId').val(event.id);
+        $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
+        
+        var eventDate = event.date || event.trip_date;
+        if (eventDate) {
+            if (eventDate.includes('T')) {
+                eventDate = eventDate.substring(0, 16); 
+            }
         }
+        $('#editEventDate').val(eventDate);
+
+        // Populate all dropdowns first
+        populateDriverDropdowns(event.size);
+        populateHelperDropdowns();
+        populateDispatcherDropdowns();
+        populateConsigneeDropdowns();
+        populateClientDropdowns();
+        populatePortDropdowns();
+        populateDestinationDropdowns();
+        populateShippingLineDropdowns();
+
+        // Set immediate values (non-dropdown fields)
+        $('#editEventContainerNo').val(event.containerNo);
+        $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
+        $('#editEventFCL').val(event.fcl_status || event.size);
+        $('#editEventCashAdvance').val(event.cashAdvance);
+        $('#editEventAdditionalCashAdvance').val(event.additionalCashAdvance);
+        $('#editEventDiesel').val(event.diesel);
+        $('#editEventStatus').val(event.status);
+
+        // Show/hide additional cash field based on initial status
+        if (event.status === 'En Route') {
+            $('#editAdditionalCashContainer').show();
+        } else {
+            $('#editAdditionalCashContainer').hide();
+        }
+
+        // Set dropdown values after they're populated
+        setTimeout(() => {
+            $('#editEventDriver').val(event.driver);
+            $('#editEventHelper').val(event.helper);
+            $('#editEventDispatcher').val(event.dispatcher || '');
+            $('#editEventConsignee').val(event.consignee);
+            $('#editEventClient').val(event.client);
+            $('#editEventPort').val(event.port || '');
+            $('#editEventDestination').val(event.destination);
+            $('#editEventShippingLine').val(event.shippingLine);
+        }, 100);
+
+        // Show/hide buttons based on status
+        if (event.status === 'Completed') {
+            $('#viewExpensesBtn').show();
+        } else {
+            $('#viewExpensesBtn').hide();
+        }
+
+        if (event.driver_id && event.status !== 'Cancelled') {
+            $('#viewChecklistBtn').show();
+        } else {
+            $('#viewChecklistBtn').hide();
+        }
+        
+        $('#editModal').show();
     }
-    $('#editEventDate').val(eventDate);
-
-    // Populate all dropdowns first
-    populateDriverDropdowns(event.size);
-    populateHelperDropdowns();
-    populateDispatcherDropdowns();
-    populateConsigneeDropdowns();
-    populateClientDropdowns();
-    populatePortDropdowns();
-    populateDestinationDropdowns();
-    populateShippingLineDropdowns();
-
-    // Set immediate values (non-dropdown fields)
-    $('#editEventContainerNo').val(event.containerNo);
-    $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
-    $('#editEventFCL').val(event.fcl_status || event.size);
-    $('#editEventCashAdvance').val(event.cashAdvance);
-    $('#editEventAdditionalCashAdvance').val(event.additionalCashAdvance);
-    $('#editEventDiesel').val(event.diesel);
-    $('#editEventStatus').val(event.status);
-
-    // Set dropdown values after they're populated
-    setTimeout(() => {
-        $('#editEventDriver').val(event.driver);
-        $('#editEventHelper').val(event.helper);
-        $('#editEventDispatcher').val(event.dispatcher || '');
-        $('#editEventConsignee').val(event.consignee);
-        $('#editEventClient').val(event.client);
-        $('#editEventPort').val(event.port || '');
-        $('#editEventDestination').val(event.destination);
-        $('#editEventShippingLine').val(event.shippingLine);
-    }, 100);
-
-    // Show/hide buttons based on status
-    if (event.status === 'Completed') {
-        $('#viewExpensesBtn').show();
-    } else {
-        $('#viewExpensesBtn').hide();
-    }
-
-    if (event.driver_id && event.status !== 'Cancelled') {
-        $('#viewChecklistBtn').show();
-    } else {
-        $('#viewChecklistBtn').hide();
-    }
-   
-    $('#editModal').show();
-}
 
 $(document).on('click', '.dropdown-item.view-expenses', function() {
     var tripId = $(this).data('id');
