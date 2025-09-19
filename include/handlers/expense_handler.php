@@ -24,14 +24,10 @@ function updateTripSummary($conn, $tripId) {
         $stmt = safePrepare($conn, "
             SELECT 
                 t.trip_id,
-                t.trip_id,
                 d.name as driver,
                 (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_budget,
                 COALESCE(expense_totals.total_expenses, 0) as total_expenses,
                 ((COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) - COALESCE(expense_totals.total_expenses, 0)) as balance
-            FROM trips t
-            LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-            LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
             FROM trips t
             LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
             LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
@@ -259,7 +255,6 @@ try {
                 'success' => true,
                 'expenses' => $expenses,
                 'total_budget' => $isEnRoute ? $totalBudget : null,
-                'total_budget' => $isEnRoute ? $totalBudget : null,
                 'total_expenses' => $totalExpenses,
                 'remaining_balance' => $remainingBalance,
                 'is_en_route' => $isEnRoute
@@ -283,8 +278,6 @@ try {
                        (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_budget,
                        COALESCE(SUM(de.amount), 0) as total_expenses
                 FROM trip_expenses te
-                LEFT JOIN trips t ON te.trip_id = t.trip_id
-                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
                 LEFT JOIN trips t ON te.trip_id = t.trip_id
                 LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
                 LEFT JOIN driver_expenses de ON te.trip_id = de.trip_id
@@ -312,9 +305,6 @@ try {
                     'total_budget' => $isEnRoute ? $totalBudget : null,
                     'total_expenses' => $totalExpenses,
                     'remaining_balance' => $balance,
-                    'total_budget' => $isEnRoute ? $totalBudget : null,
-                    'total_expenses' => $totalExpenses,
-                    'remaining_balance' => $balance,
                     'is_en_route' => $isEnRoute
                 ]
             ]);
@@ -329,10 +319,7 @@ try {
                 FROM trip_expenses te
                 LEFT JOIN trips t ON te.trip_id = t.trip_id
                 LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-                LEFT JOIN trips t ON te.trip_id = t.trip_id
-                LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
                 LEFT JOIN driver_expenses de ON te.trip_id = de.trip_id
-                GROUP BY te.trip_id, te.cash_advance, te.additional_cash_advance, d.name, t.status
                 GROUP BY te.trip_id, te.cash_advance, te.additional_cash_advance, d.name, t.status
                 ORDER BY te.trip_id DESC
             ", "get_all_trips_summary");
