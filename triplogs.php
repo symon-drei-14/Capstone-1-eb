@@ -719,7 +719,7 @@ if ($result->num_rows > 0) {
 
         <div id="receiptModal" class="modal">
     <span class="close receipt-close">&times;</span>
-    <img class="modal-content" id="receiptImageSrc" style="max-width: 80%; max-height: 80%; object-fit: contain;">
+    <img class="modal-content" id="receiptImageSrc" style="max-width: 60%; max-height: 80%; object-fit: contain;">
 </div>
     </div>
 
@@ -3280,19 +3280,32 @@ document.addEventListener('click', function(e) {
         }
     });
 
-    $(document).on('click', '.clickable-expense', function() {
+$(document).on('click', '.clickable-expense', function() {
     const receiptUrl = $(this).data('receipt');
     if (receiptUrl) {
+        $('#expensesModal .expensemodal-content').addClass('shifted');
+
         $('#receiptImageSrc').attr('src', receiptUrl);
-        $('#receiptModal').css('display', 'flex'); // Use flex for centering
+        $('#receiptModal').css('display', 'flex');
     }
 });
 
-// Add handler for the new modal's close button
-$('.receipt-close').on('click', function() {
+function closeReceiptModal() {
     $('#receiptModal').hide();
+    $('#expensesModal .expensemodal-content').removeClass('shifted');
+}
+
+$('.receipt-close').on('click', function(e) {
+    e.stopPropagation(); 
+    closeReceiptModal();
 });
 
+$('#receiptModal').on('click', function(e) {
+
+    if (e.target === this) {
+        closeReceiptModal();
+    }
+});
     </script>
 
     <script src="include/js/logout-confirm.js"></script>

@@ -2459,6 +2459,13 @@ h3.title {
             animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
         }
+    .expensemodal-content.shifted {
+    transform: translateX(-25%); 
+}
+
+.expensemodal-content {
+    transition: transform 0.3s ease-in-out;
+}
 
         @keyframes slideUp {
             from { 
@@ -3056,7 +3063,7 @@ h3.title {
 }
 
 #receiptModal {
-    background-color: rgba(0, 0, 0, 0.2);
+       background: transparent;
     justify-content: center;
     align-items: center;
 }
@@ -3073,24 +3080,37 @@ h3.title {
     to {transform:scale(1)}
 }
 
-#receiptModal .close {
-    position: absolute;
-    top: 15px;
-    right: 35px;
+#receiptModal{
+    position: flex;
+    top: 0;
+    left: 10;
     color: #f1f1f1;
     font-size: 40px;
     font-weight: bold;
     transition: 0.3s;
-}
 
+}
+#receiptModal .close {
+    position: absolute;
+    top: 35px;
+    right: 25px;
+    color: #f1f1f1;
+     background: rgba(15, 23, 42, 0.6);
+    border-radius: 30px;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    padding: 5px;
+}
 #receiptModal .close:hover,
 #receiptModal .close:focus {
-    color: #bbb;
+    color: #ffffff;
     text-decoration: none;
     cursor: pointer;
+    background: rgb(232, 101, 101);
 }
 
-/* Add a pointer and hover effect for clickable expense rows */
+
 .clickable-expense {
     cursor: pointer;
 }
