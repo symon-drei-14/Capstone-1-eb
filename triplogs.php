@@ -1782,14 +1782,19 @@ $(document).on('click', '.icon-btn.edit', function() {
     });
 
     // Also reset when clicking outside the modal
-    $(window).on('click', function(event) {
-        if ($(event.target).hasClass('modal')) {
-            $('.modal').hide();
-            if ($(event.target).is('#addScheduleModal')) {
-                resetAddScheduleForm();
-            }
+  $(window).on('click', function(event) {
+    // Check if the click target is a modal background
+    if ($(event.target).hasClass('modal')) {
+        
+        // Hide only the specific modal that was clicked on its background
+        $(event.target).hide();
+
+        // If it was the add schedule modal that was closed, reset its form
+        if ($(event.target).is('#addScheduleModal')) {
+            resetAddScheduleForm();
         }
-    });
+    }
+});
             
         $('#addScheduleBtnTable').on('click', function() {
         resetAddScheduleForm(); // Clear the form first
