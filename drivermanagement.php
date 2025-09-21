@@ -158,11 +158,21 @@
     <input type="tel" id="driverContact" name="driverContact" required>
 </div>
                 
-                <div class="form-group">
-                    <label for="password">Password *</label>
-                    <input type="password" id="password" name="password" required>
-                    <small id="passwordHelp">Leave blank to keep current password</small>
-                </div>
+               <div class="form-group" id="oldPasswordGroup" style="display: none;">
+    <label for="oldPassword">Current Password *</label>
+    <input type="password" id="oldPassword" name="oldPassword">
+</div>
+
+<div class="form-group">
+    <label for="password">Password *</label>
+    <input type="password" id="password" name="password" required>
+    <small id="passwordHelp">Leave blank to keep current password</small>
+</div>
+
+<div class="form-group">
+    <label for="confirmPassword">Confirm Password *</label>
+    <input type="password" id="confirmPassword" name="confirmPassword" required>
+</div>
                 
                 <div class="form-group">
     <label for="assignedTruck">Assigned Truck</label>
@@ -217,6 +227,9 @@ let totalPages = 0;
         document.getElementById("saveButtonText").textContent = "Add Driver";
         document.getElementById("passwordHelp").style.display = "none";
         document.getElementById("password").required = true;
+        document.getElementById("oldPasswordGroup").style.display = "none";
+    document.getElementById("password").required = true;
+    document.getElementById("confirmPassword").required = true;
         
         // Clear all fields
         document.getElementById("driverId").value = "";
@@ -452,65 +465,75 @@ function formatDateWithTime(dateString) {
         }
 
    function editDriver(driverId) {
-        $.ajax({
-            url: 'include/handlers/get_driver.php?id=' + driverId,
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                if (data.success) {
-                    const driver = data.driver;
-                    
-                    document.getElementById("modalTitle").textContent = "Edit Driver";
-                    document.getElementById("modalMode").value = "edit";
-                    document.getElementById("saveButtonText").textContent = "Save Changes";
-                    document.getElementById("passwordHelp").style.display = "block";
-                    document.getElementById("password").required = false;
-                    
-                    document.getElementById("driverId").value = driver.driver_id;
-                    document.getElementById("driverContact").value = driver.contact_no || '';
-                    document.getElementById("driverName").value = driver.name;
-                    document.getElementById("driverEmail").value = driver.email;
-                    document.getElementById("password").value = '';
-                    
-                    // Populate available trucks, passing the driver's ID and their currently assigned truck
-                    populateAvailableTrucks(driver.driver_id, driver.assigned_truck_id);
-                    
-                    // Display existing profile picture if it exists
-                    const profilePreview = document.getElementById('profilePreview');
-                    if (driver.driver_pic) {
-                        profilePreview.innerHTML = `
-                            <div class="current-profile-section">
-                                <h4>Current Profile Picture:</h4>
-                                <div class="large-profile-display">
-                                    <img src="data:image/jpeg;base64,${driver.driver_pic}" 
-                                         class="large-profile-preview" 
-                                         alt="Current Driver Photo">
-                                </div>
+    $.ajax({
+        url: 'include/handlers/get_driver.php?id=' + driverId,
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            if (data.success) {
+                const driver = data.driver;
+                
+                document.getElementById("modalTitle").textContent = "Edit Driver";
+                document.getElementById("modalMode").value = "edit";
+                document.getElementById("saveButtonText").textContent = "Save Changes";
+                document.getElementById("passwordHelp").style.display = "block";
+                
+                document.getElementById("oldPasswordGroup").style.display = "block";
+                document.getElementById("password").required = false;
+                document.getElementById("confirmPassword").required = false;
+                
+                document.getElementById("driverId").value = driver.driver_id;
+                document.getElementById("driverContact").value = driver.contact_no || '';
+                document.getElementById("driverName").value = driver.name;
+                document.getElementById("driverEmail").value = driver.email;
+                
+                // Clear password fields every time
+                document.getElementById("oldPassword").value = '';
+                document.getElementById("password").value = '';
+                document.getElementById("confirmPassword").value = '';
+                
+                // Populate available trucks, passing the driver's ID and their currently assigned truck
+                populateAvailableTrucks(driver.driver_id, driver.assigned_truck_id);
+                
+                // Display existing profile picture if it exists
+                const profilePreview = document.getElementById('profilePreview');
+                if (driver.driver_pic) {
+                    profilePreview.innerHTML = `
+                        <div class="current-profile-section">
+                            <h4>Current Profile Picture:</h4>
+                            <div class="large-profile-display">
+                                <img src="data:image/jpeg;base64,${driver.driver_pic}"
+                                     class="large-profile-preview"
+                                     alt="Current Driver Photo">
                             </div>
-                        `;
-                    } else {
-                        profilePreview.innerHTML = `
-                            <div class="current-profile-section">
-                                <h4>Current Profile Picture:</h4>
-                                <div class="large-profile-display">
-                                    <i class="fa-solid fa-circle-user large-profile-icon"></i>
-                                    <p>No profile picture uploaded</p>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    document.getElementById("driverModal").style.display = "block";
+                        </div>
+                    `;
                 } else {
-                    alert("Error fetching driver data: " + data.message);
+                    profilePreview.innerHTML = `
+                        <div class="current-profile-section">
+                            <h4>Current Profile Picture:</h4>
+                            <div class="large-profile-display">
+                                <i class="fa-solid fa-circle-user large-profile-icon"></i>
+                                <p>No profile picture uploaded</p>
+                            </div>
+                        </div>
+                    `;
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                alert("An error occurred while fetching driver data.");
+                
+                // Clear the file input
+                document.getElementById("driverProfile").value = '';
+                
+                document.getElementById("driverModal").style.display = "block";
+            } else {
+                alert("Error fetching driver data: " + data.message);
             }
-        });
-    }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert("An error occurred while fetching driver data.");
+        }
+    });
+}
 
         function deleteDriver(driverId) {
             if (confirm("Are you sure you want to delete this driver?")) {
@@ -535,8 +558,13 @@ function formatDateWithTime(dateString) {
             }
         }
 
-      document.getElementById("driverForm").addEventListener("submit", function(e) {
+     document.getElementById("driverForm").addEventListener("submit", function(e) {
     e.preventDefault();
+    
+    // Validate passwords FIRST
+    if (!validatePassword()) {
+        return;
+    }
     
     const mode = document.getElementById("modalMode").value;
     const formData = new FormData();
@@ -544,12 +572,14 @@ function formatDateWithTime(dateString) {
     formData.append("name", document.getElementById("driverName").value);
     formData.append("email", document.getElementById("driverEmail").value);
     formData.append("password", document.getElementById("password").value);
+    formData.append("confirmPassword", document.getElementById("confirmPassword").value); // Add this
     formData.append("assigned_truck_id", document.getElementById("assignedTruck").value);
     formData.append("contact_no", document.getElementById("driverContact").value);
     formData.append("mode", mode);
     
-    // Add driver ID for edit mode
+    // Add old password for edit mode
     if (mode === 'edit') {
+        formData.append("oldPassword", document.getElementById("oldPassword").value); // Add this
         formData.append("driverId", document.getElementById("driverId").value);
     }
     
@@ -868,6 +898,35 @@ const sidebar = document.querySelector('.sidebar');
         }
     });
 });
+
+function validatePassword() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const mode = document.getElementById('modalMode').value;
+    const oldPassword = document.getElementById('oldPassword').value;
+    
+    // For edit mode, if password is being changed, old password is required
+    if (mode === 'edit' && password && !oldPassword) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Current password is required to set a new password'
+        });
+        return false;
+    }
+    
+    // Check if passwords match
+    if (password !== confirmPassword) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Passwords do not match'
+        });
+        return false;
+    }
+    
+    return true;
+}
 
  function populateAvailableTrucks(driverId = null, selectedTruckId = null) {
         const truckSelect = document.getElementById("assignedTruck");

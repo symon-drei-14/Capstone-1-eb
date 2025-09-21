@@ -39,7 +39,7 @@ if (!isset($data['name']) || !isset($data['email']) || !isset($data['contact_no'
 try {
     if ($data['mode'] === 'add') {
         // This block is retained for logical consistency but is handled by add_driver.php
-        $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, contact_no, password, assigned_truck_id, driver_pic, created_at) 
+        $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, contact_no, password, assigned_truck_id, driver_pic, created_at)
                                 VALUES (?, ?, ?, ?, ?, ?, NOW())");
         
         $assignedTruck = !empty($data['assigned_truck_id']) ? $data['assigned_truck_id'] : null;
@@ -53,6 +53,26 @@ try {
             echo json_encode(["success" => false, "message" => "Error adding driver: " . $stmt->error]);
         }
     } else {
+        // For edit mode, validate old password if new password is provided
+        if (!empty($data['password'])) {
+            // Verify old password
+            $checkPassword = "SELECT password FROM drivers_table WHERE driver_id = ?";
+            $stmtCheck = $conn->prepare($checkPassword);
+            $stmtCheck->bind_param("s", $data['driverId']);
+            $stmtCheck->execute();
+            $resultCheck = $stmtCheck->get_result();
+            
+            if ($resultCheck && $resultCheck->num_rows > 0) {
+                $driverData = $resultCheck->fetch_assoc();
+                
+                // Check if old password matches
+                if (!password_verify($data['oldPassword'], $driverData['password'])) {
+                    echo json_encode(["success" => false, "message" => "Current password is incorrect"]);
+                    exit;
+                }
+            }
+            $stmtCheck->close();
+        }
         
         $driver_id_to_update = $data['driverId'];
         $assigned_truck_id = $data['assigned_truck_id'] ?: null;
@@ -77,7 +97,6 @@ try {
             }
             $stmt_truck->close();
         }
-        
         
         // Updating an existing driver
         $updateFields = [];

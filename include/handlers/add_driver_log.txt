@@ -101,3 +101,22 @@
 2025-09-17 19:03:53 - MySQL SQL prepared successfully
 2025-09-17 19:03:53 - MySQL insert successful
 2025-09-17 19:03:54 - Firebase save successful
+2025-09-21 13:49:54 - Add Driver Request received
+2025-09-21 13:49:54 - POST data received successfully
+2025-09-21 13:49:54 - ERROR: Missing required fields
+2025-09-21 13:50:26 - Add Driver Request received
+2025-09-21 13:50:26 - POST data received successfully
+2025-09-21 13:50:26 - Data validation passed
+2025-09-21 13:50:26 - MySQL connection successful
+2025-09-21 13:50:26 - Email check passed
+2025-09-21 13:50:26 - MySQL SQL prepared successfully
+2025-09-21 13:50:26 - MySQL insert successful
+2025-09-21 13:50:27 - Firebase save successful
+2025-09-21 14:02:05 - Add Driver Request received
+2025-09-21 14:02:05 - POST data received successfully
+2025-09-21 14:02:05 - Data validation passed
+2025-09-21 14:02:05 - MySQL connection successful
+2025-09-21 14:02:05 - Email check passed
+2025-09-21 14:02:06 - MySQL SQL prepared successfully
+2025-09-21 14:02:06 - MySQL insert successful
+2025-09-21 14:02:06 - Firebase save successful

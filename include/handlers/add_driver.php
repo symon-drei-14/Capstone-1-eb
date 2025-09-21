@@ -2,8 +2,8 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-file_put_contents('add_driver_log.txt', 
-    date('Y-m-d H:i:s') . " - Add Driver Request received\n", 
+file_put_contents('add_driver_log.txt',
+    date('Y-m-d H:i:s') . " - Add Driver Request received\n",
     FILE_APPEND);
 
 header("Access-Control-Allow-Origin: *");
@@ -34,9 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once 'dbhandler.php';
 
 $host = "localhost";
-$db_name = "capstonedb"; 
+$db_name = "capstonedb";
 $username = "root";
-$password = ""; 
+$password = "";
 
 try {
     // Handle file upload
@@ -59,9 +59,14 @@ try {
     // Get the POST data (now from $_POST instead of JSON)
     $data = $_POST;
     
-    file_put_contents('add_driver_log.txt', 
-        date('Y-m-d H:i:s') . " - POST data received successfully\n", 
+    file_put_contents('add_driver_log.txt',
+        date('Y-m-d H:i:s') . " - POST data received successfully\n",
         FILE_APPEND);
+
+    // Validate that password and confirm password match
+    if ($data['password'] !== $data['confirmPassword']) {
+        throw new Exception("Passwords do not match");
+    }
 
     // Validate required fields
     if (
@@ -74,8 +79,8 @@ try {
         throw new Exception("Missing required fields");
     }
 
-    file_put_contents('add_driver_log.txt', 
-        date('Y-m-d H:i:s') . " - Data validation passed\n", 
+    file_put_contents('add_driver_log.txt',
+        date('Y-m-d H:i:s') . " - Data validation passed\n",
         FILE_APPEND);
 
     // Generate driver_id and firebase_uid (same as register.js)
@@ -89,8 +94,8 @@ try {
         throw new Exception("MySQL Connection failed: " . $mysql_conn->connect_error);
     }
 
-    file_put_contents('add_driver_log.txt', 
-        date('Y-m-d H:i:s') . " - MySQL connection successful\n", 
+    file_put_contents('add_driver_log.txt',
+        date('Y-m-d H:i:s') . " - MySQL connection successful\n",
         FILE_APPEND);
 
     // Check if email already exists
@@ -110,8 +115,8 @@ try {
     }
     $stmt->close();
 
-    file_put_contents('add_driver_log.txt', 
-        date('Y-m-d H:i:s') . " - Email check passed\n", 
+    file_put_contents('add_driver_log.txt',
+        date('Y-m-d H:i:s') . " - Email check passed\n",
         FILE_APPEND);
         
     
@@ -133,23 +138,22 @@ try {
         }
         $stmt_truck->close();
     }
-  
 
     // Hash password for MySQL
     $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
 
     // Insert into MySQL (now includes driver_pic)
-    $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, contact_no, password, assigned_truck_id, driver_pic, created_at) 
+    $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, contact_no, password, assigned_truck_id, driver_pic, created_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-              
+             
     $stmt = $mysql_conn->prepare($query);
     
     if (!$stmt) {
         throw new Exception("MySQL Prepare statement failed: " . $mysql_conn->error);
     }
 
-    file_put_contents('add_driver_log.txt', 
-        date('Y-m-d H:i:s') . " - MySQL SQL prepared successfully\n", 
+    file_put_contents('add_driver_log.txt',
+        date('Y-m-d H:i:s') . " - MySQL SQL prepared successfully\n",
         FILE_APPEND);
     
     $stmt->bind_param(
@@ -169,8 +173,8 @@ try {
     }
     $stmt->close();
     
-    file_put_contents('add_driver_log.txt', 
-        date('Y-m-d H:i:s') . " - MySQL insert successful\n", 
+    file_put_contents('add_driver_log.txt',
+        date('Y-m-d H:i:s') . " - MySQL insert successful\n",
         FILE_APPEND);
 
     // Now save to Firebase
@@ -219,8 +223,8 @@ try {
         throw new Exception("Firebase request failed with HTTP code: " . $http_code . " Response: " . $firebase_response);
     }
 
-    file_put_contents('add_driver_log.txt', 
-        date('Y-m-d H:i:s') . " - Firebase save successful\n", 
+    file_put_contents('add_driver_log.txt',
+        date('Y-m-d H:i:s') . " - Firebase save successful\n",
         FILE_APPEND);
 
     http_response_code(201);
@@ -231,8 +235,8 @@ try {
     ]);
 
 } catch (Exception $e) {
-    file_put_contents('add_driver_log.txt', 
-        date('Y-m-d H:i:s') . " - ERROR: " . $e->getMessage() . "\n", 
+    file_put_contents('add_driver_log.txt',
+        date('Y-m-d H:i:s') . " - ERROR: " . $e->getMessage() . "\n",
         FILE_APPEND);
     
     http_response_code(500);
