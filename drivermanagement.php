@@ -221,31 +221,36 @@ let totalPages = 0;
         updateDateTime();
         setInterval(updateDateTime, 1000);
 
-       function openAddDriverModal() {
-        document.getElementById("modalTitle").textContent = "Add New Driver";
-        document.getElementById("modalMode").value = "add";
-        document.getElementById("saveButtonText").textContent = "Add Driver";
-        document.getElementById("passwordHelp").style.display = "none";
-        document.getElementById("password").required = true;
-        document.getElementById("oldPasswordGroup").style.display = "none";
+      function openAddDriverModal() {
+    document.getElementById("modalTitle").textContent = "Add New Driver";
+    document.getElementById("modalMode").value = "add";
+    document.getElementById("saveButtonText").textContent = "Add Driver";
+    document.getElementById("passwordHelp").style.display = "none";
+    document.getElementById("password").required = true;
+    document.getElementById("oldPasswordGroup").style.display = "none";
     document.getElementById("password").required = true;
     document.getElementById("confirmPassword").required = true;
-        
-        // Clear all fields
-        document.getElementById("driverId").value = "";
-        document.getElementById("driverName").value = "";
-        document.getElementById("driverEmail").value = "";
-        document.getElementById("driverContact").value = "";
-        document.getElementById("password").value = "";
-        document.getElementById("assignedTruck").value = "";
-        document.getElementById("driverProfile").value = ""; // Clear file input
-        document.getElementById("profilePreview").innerHTML = ""; // Clear preview
+   
+    // Clear all fields
+    document.getElementById("driverId").value = "";
+    document.getElementById("driverName").value = "";
+    document.getElementById("driverEmail").value = "";
+    document.getElementById("driverContact").value = "";
+    
+    // Explicitly clear all password fields
+    document.getElementById("oldPassword").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("confirmPassword").value = "";
+    
+    document.getElementById("assignedTruck").value = "";
+    document.getElementById("driverProfile").value = ""; // Clear file input
+    document.getElementById("profilePreview").innerHTML = ""; // Clear preview
 
-        // Populate available trucks for a new driver
-        populateAvailableTrucks();
-        
-        document.getElementById("driverModal").style.display = "block";
-    }
+    // Populate available trucks for a new driver
+    populateAvailableTrucks();
+   
+    document.getElementById("driverModal").style.display = "block";
+}
 
        function fetchDrivers() {
     $.ajax({
