@@ -275,7 +275,7 @@ if ($result->num_rows > 0) {
 </div>
                         <div class="search-container">
                             <i class="fa fa-search"></i>
-                            <input type="text" id="searchInput" placeholder="Search trips...">
+                            <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()>
                         </div>
                     </div>
                     
@@ -412,7 +412,9 @@ if ($result->num_rows > 0) {
     <button class="icon-btn view-reasons" id="eventModalHistoryBtn" data-tooltip="View Edit History">
         <i class="fas fa-history"></i>
     </button>
-    
+     <button class="icon-btn delete" id="eventModalDeleteBtn" data-tooltip="Delete Trip">
+        <i class="fas fa-trash-alt"></i>
+    </button>
     <button class="icon-btn cancel-trip" data-tooltip="Cancel Trip">
         <i class="fas fa-ban"></i>
     </button>

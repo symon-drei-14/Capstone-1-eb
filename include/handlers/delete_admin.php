@@ -41,7 +41,7 @@ if ($is_full_delete) {
 } else {
     // Perform soft delete
     $deleted_by_id = $_SESSION['admin_id'] ?? null;
-    $reason = $data['delete_reason'] ?? 'No reason provided';
+    $reason = $data['reason'] ?? 'No reason provided';
 
     error_log("Attempting to soft delete admin {$data['admin_id']}");
     error_log("Deleted by admin ID: {$deleted_by_id}");
