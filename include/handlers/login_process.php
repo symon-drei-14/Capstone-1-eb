@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if the action is login
     if ($action === 'login') {
         // Query the database using prepared statements
-        $sql = "SELECT admin_id, username, password, role FROM login_admin WHERE username = ?";
+        $sql = "SELECT admin_id, username, password, role FROM login_admin WHERE username = ? AND is_deleted = 0";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $username);
         $stmt->execute();

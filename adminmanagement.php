@@ -343,7 +343,7 @@ function renderAdminsTable(admins, isSearchResult = false) {
         
         const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
         
-      row.innerHTML = `
+  row.innerHTML = `
     <td>
         ${admin.admin_pic ? 
             '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
@@ -354,21 +354,21 @@ function renderAdminsTable(admins, isSearchResult = false) {
     <td>${highlightText(admin.username)}</td>
     <td>${highlightText(admin.role || 'Full Admin')}</td>
     <td>${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
-   <td class="deleted-only">${highlightText(admin.deleted_by || '')}</td>
-<td class="deleted-only">${highlightText(deletedAt)}</td>
-<td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
+    <td class="deleted-only">${highlightText(admin.deleted_by_name || '')}</td>
+    <td class="deleted-only">${highlightText(deletedAt)}</td>
+    <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
     <td class="actions">
-     <div class="dropdown">
-                        <button class="dropdown-btn" data-tooltip="Actions">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-        <div class="dropdown-content">
-        ${admin.is_deleted ? '' : `<button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i>Edit</button>`}
-        ${admin.is_deleted ? '' : `<button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i>Delete</button>`}
-        ${admin.is_deleted ? `<button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i>Restore</button>` : ''}
-        ${admin.is_deleted ? `<button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i>Full Delete</button>` : ''}
-    </div>
-    </div>
+        <div class="dropdown">
+            <button class="dropdown-btn" data-tooltip="Actions">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="dropdown-content">
+                ${admin.is_deleted ? '' : `<button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i>Edit</button>`}
+                ${admin.is_deleted ? '' : `<button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i>Delete</button>`}
+                ${admin.is_deleted ? `<button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i>Restore</button>` : ''}
+                ${admin.is_deleted ? `<button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i>Full Delete</button>` : ''}
+            </div>
+        </div>
     </td>
 `;
         tableBody.appendChild(row);
@@ -471,6 +471,44 @@ function confirmDeleteAdmin(adminId) {
         }
     })
     .catch(error => console.error('Error:', error));
+}
+
+function deleteAdmin(adminId, reason) {
+    fetch('include/handlers/delete_admin.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            admin_id: adminId,
+            delete_reason: reason 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'Admin has been successfully deleted.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Deletion Failed',
+                text: 'Error: ' + data.message
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Request Failed',
+            text: 'Could not connect to the server.'
+        });
+    });
 }
 
 // Add restore function
