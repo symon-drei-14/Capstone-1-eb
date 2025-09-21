@@ -152,14 +152,15 @@ checkAccess();
 
     <!-- Modal for Add/Edit Admin -->
     <div id="adminModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('adminModal')">&times;</span>
-            <h2 id="modalTitle">Add Admin</h2>
-           
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('adminModal')">&times;</span>
+        <h2 id="modalTitle">Add Admin</h2>
+        
+        <form id="adminForm">
             <input type="hidden" id="adminId" name="adminId">
             
             <div class="form-group">
-                <label for="username">Username</label>
+                <label for="username">Username *</label>
                 <input type="text" id="username" name="username" class="form-control" required>
             </div>
 
@@ -172,18 +173,30 @@ checkAccess();
                 </select>
             </div>
 
+            <div class="form-group" id="oldPasswordGroup" style="display: none;">
+                <label for="oldPassword">Current Password</label>
+                <input type="password" id="oldPassword" name="oldPassword" class="form-control">
+                <small>Required only if you are setting a new password.</small>
+            </div>
+
             <div class="form-group">
-                <label for="password" id="passwordLabel">Password</label>
-                <input type="password" id="password" name="password" class="form-control" required>
-                <small id="passwordHelp" style="display: none; color: #666;">Leave blank to keep current password</small>
+                <label for="password" id="passwordLabel">Password *</label>
+                <input type="password" id="password" name="password" class="form-control">
+                <small id="passwordHelp" style="display: none;">Leave blank to keep current password.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password *</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control">
             </div>
 
             <div class="button-group">
                 <button type="button" class="save-btn" onclick="saveAdmin()">Save</button>
                 <button type="button" class="cancel-btn" onclick="closeModal('adminModal')">Cancel</button>
             </div>
-        </div>
+        </form>
     </div>
+</div>
 
     <script>
 
@@ -198,27 +211,43 @@ checkAccess();
         }
 
         function openAdminModal(adminId = null) {
-            // Reset form
-            document.getElementById('adminId').value = '';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('role').value = 'Full Admin';
-            document.getElementById('passwordHelp').style.display = 'none';
-            document.getElementById('password').required = true;
-            
-            if (adminId) {
-                // Edit mode
-                document.getElementById('modalTitle').textContent = 'Edit Admin';
-                document.getElementById('passwordHelp').style.display = 'block';
-                document.getElementById('password').required = false;
-                fetchAdminDetails(adminId);
-            } else {
-                // Add mode
-                document.getElementById('modalTitle').textContent = 'Add Admin';
-            }
-            
-            openModal('adminModal');
-        }
+    // Reset the form to clear all fields, including passwords
+    document.getElementById('adminForm').reset();
+    
+    // Get references to elements
+    const modalTitle = document.getElementById('modalTitle');
+    const passwordHelp = document.getElementById('passwordHelp');
+    const oldPasswordGroup = document.getElementById('oldPasswordGroup');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const passwordLabel = document.getElementById('passwordLabel');
+
+    if (adminId) {
+        // --- EDIT MODE ---
+        modalTitle.textContent = 'Edit Admin';
+        passwordHelp.style.display = 'block';
+        oldPasswordGroup.style.display = 'block';
+        
+        // Passwords are not required when just editing info
+        passwordInput.required = false;
+        confirmPasswordInput.required = false;
+        passwordLabel.textContent = "New Password";
+
+        fetchAdminDetails(adminId);
+    } else {
+        // --- ADD MODE ---
+        modalTitle.textContent = 'Add Admin';
+        passwordHelp.style.display = 'none';
+        oldPasswordGroup.style.display = 'none';
+
+        // Passwords are required for new admins
+        passwordInput.required = true;
+        confirmPasswordInput.required = true;
+        passwordLabel.textContent = "Password *";
+    }
+    
+    openModal('adminModal');
+}
 
         // Fetch and display admins from the database
         function fetchAdmins() {
@@ -341,71 +370,66 @@ function confirmDeleteAdmin(adminId) {
 }
         // Save admin (create or update)
         function saveAdmin() {
-            const adminId = document.getElementById('adminId').value;
-            const username = document.getElementById('username').value;
-            const role = document.getElementById('role').value;
-            const password = document.getElementById('password').value;
-            
-            if (!username) {
-                alert('Username is required');
-                return;
-            }
-            
-            if (!adminId && !password) {
-                alert('Password is required for new admins');
-                return;
-            }
-            
-            const adminData = {
-                admin_id: adminId,
-                username: username,
-                role: role,
-                password: password
-            };
-            
-            const url = adminId ? 'include/handlers/update_admin.php' : 'include/handlers/add_admin.php';
-            
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(adminData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Admin has been updated successfully',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        timerProgressBar: true
-                    }).then(() => {
-                        $('#editModal').hide();
-                        location.reload();
-                    });
-                
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
+    const adminId = document.getElementById('adminId').value;
+    const username = document.getElementById('username').value;
+    const role = document.getElementById('role').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const oldPassword = document.getElementById('oldPassword').value;
+    
+    // --- Client-side Validation ---
+    if (!username || !role) {
+        alert('Username and role are required.');
+        return;
+    }
 
-      function deleteAdmin(adminId, reason) {
-    fetch('include/handlers/delete_admin.php', {
+    if (password !== confirmPassword) {
+        alert('New passwords do not match.');
+        return;
+    }
+    
+    // In edit mode, if a new password is set, the old password must be provided
+    if (adminId && password && !oldPassword) {
+        alert('To set a new password, you must enter the current password.');
+        return;
+    }
+    
+    // For new admins, a password is required
+    if (!adminId && !password) {
+        alert('Password is required for new admins.');
+        return;
+    }
+
+    const adminData = {
+        admin_id: adminId,
+        username: username,
+        role: role,
+        password: password,
+        old_password: oldPassword // Send the old password for verification
+    };
+    
+    const url = adminId ? 'include/handlers/update_admin.php' : 'include/handlers/add_admin.php';
+    
+    fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            admin_id: adminId,
-            delete_reason: reason 
-        })
+        body: JSON.stringify(adminData)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Admin deleted successfully!');
-            fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Admin has been updated successfully',
+                timer: 2000,
+                showConfirmButton: false,
+                timerProgressBar: true
+            }).then(() => {
+                closeModal('adminModal');
+                fetchAdminsPaginated(); // Refresh table
+            });
+        
         } else {
             alert('Error: ' + data.message);
         }
