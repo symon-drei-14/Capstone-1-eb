@@ -15,7 +15,6 @@ checkAccess(); // No role needed—logic is handled internally
     <link rel="stylesheet" href="include/css/sidenav.css">
     <link rel="stylesheet" href="include/css/dashboard.css">
     <link rel="stylesheet" href="include/css/tracking.css">
-    <link rel="stylesheet" href="include/css/tracking-page.css">
 </head>
 <body>
 <header class="header2">
@@ -39,7 +38,7 @@ checkAccess(); // No role needed—logic is handled internally
             ?>
         </div>
     </div>
-    </header>
+</header>
     
 <div class="sidebar">
     <div class="sidebar-item">
@@ -80,33 +79,17 @@ checkAccess(); // No role needed—logic is handled internally
         <a href="include/handlers/logout.php" data-no-loading="true">Logout</a>
     </div>
 </div>
-   <h3><i class="fa-solid fa-location-dot"></i>Tracking</h3>
-<div class="main-content">
-    <div class="container-fluid mt-4">
 
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card drivers-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Drivers</h5>
-                        <button id="refresh-btn" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div id="drivers-list"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-8">
-                <div class="map-container position-relative">
-                    <div id="map"></div>
-                </div>
-            </div>
+<div class="tracking-container">
+    <div class="drivers-sidebar">
+        <div class="drivers-content" id="drivers-list">
         </div>
     </div>
+
+    <div class="map-container">
+        <div id="map"></div>
     </div>
+</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -127,39 +110,21 @@ checkAccess(); // No role needed—logic is handled internally
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
-           const toggleBtn = document.getElementById('toggleSidebarBtn');
-const sidebar = document.querySelector('.sidebar');
-
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
 
-    document.addEventListener('click', function (e) {
-    if (
-        sidebar.classList.contains('expanded') &&
-        !sidebar.contains(e.target) && 
-        !toggleBtn.contains(e.target) 
-    ) {
-        sidebar.classList.remove('expanded');
-    }
-});
-
     document.addEventListener('DOMContentLoaded', function() {
-    // Get current page filename
     const currentPage = window.location.pathname.split('/').pop();
-    
-    // Find all sidebar links
+
     const sidebarLinks = document.querySelectorAll('.sidebar-item a');
-    
-    // Check each link
+
     sidebarLinks.forEach(link => {
         const linkPage = link.getAttribute('href').split('/').pop();
-        
-        // If this link matches current page, add active class
+
         if (linkPage === currentPage) {
             link.parentElement.classList.add('active');
-            
-            // Also highlight the icon
+
             const icon = link.parentElement.querySelector('.icon2');
             if (icon) {
                 icon.style.color = 'white';
@@ -196,28 +161,21 @@ const sidebar = document.querySelector('.sidebar');
     this.messageEl = document.querySelector('.loading-message');
     this.progressBar = document.querySelector('.progress-bar');
     this.progressText = document.querySelector('.progress-text');
-    
-    // Show loading immediately if coming from another page
-    // this.checkForIncomingNavigation();
+
     this.setupNavigationInterception();
   },
   
   checkForIncomingNavigation() {
-    // Check if we're coming from another page in the same site
     const referrer = document.referrer;
     const currentDomain = window.location.origin;
-    
-    // Also check sessionStorage for loading state
+
     const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
     
     if ((referrer && referrer.startsWith(currentDomain)) || shouldShowLoading) {
-      // Clear the flag
       sessionStorage.removeItem('showAdminLoading');
-      
-      // Show loading animation for incoming navigation
+
       this.show('Loading Page', 'Loading content...');
-      
-      // Simulate realistic loading progress
+
       let progress = 0;
       const progressInterval = setInterval(() => {
         progress += Math.random() * 25 + 10;
@@ -238,8 +196,7 @@ const sidebar = document.querySelector('.sidebar');
     
     this.titleEl.textContent = title;
     this.messageEl.textContent = message;
-    
-    // Reset progress
+
     this.updateProgress(0);
     
     this.loadingEl.style.display = 'flex';
@@ -268,7 +225,6 @@ const sidebar = document.querySelector('.sidebar');
   
   setupNavigationInterception() {
     document.addEventListener('click', (e) => {
-      // Skip if click is inside SweetAlert modal, regular modals, or calendar
       if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal, .modal, .modal-content, .fc-event, #calendar')) {
         return;
       }
@@ -278,28 +234,25 @@ const sidebar = document.querySelector('.sidebar');
           link.href && !link.href.startsWith('javascript:') &&
           !link.href.startsWith('#') && !link.href.startsWith('mailto:') &&
           !link.href.startsWith('tel:')) {
-        
-        // Only intercept internal links
+
         try {
           const linkUrl = new URL(link.href);
           const currentUrl = new URL(window.location.href);
           
           if (linkUrl.origin !== currentUrl.origin) {
-            return; // Let external links work normally
+            return;
           }
-          
-          // Skip if it's the same page
+
           if (linkUrl.pathname === currentUrl.pathname) {
             return;
           }
           
         } catch (e) {
-          return; // Invalid URL, let it work normally
+          return;
         }
         
         e.preventDefault();
-        
-        // Set flag for next page
+
         sessionStorage.setItem('showAdminLoading', 'true');
         
         const loading = this.startAction(
@@ -312,16 +265,14 @@ const sidebar = document.querySelector('.sidebar');
           progress += Math.random() * 15 + 8;
           if (progress >= 85) {
             clearInterval(progressInterval);
-            progress = 90; // Stop at 90% until page actually loads
+            progress = 90;
           }
           loading.updateProgress(Math.min(progress, 90));
         }, 150);
-        
-        // Minimum delay to show animation
+
         const minLoadTime = 1200;
         
         setTimeout(() => {
-          // Complete the progress bar
           loading.updateProgress(100);
           setTimeout(() => {
             window.location.href = link.href;
@@ -330,14 +281,11 @@ const sidebar = document.querySelector('.sidebar');
       }
     });
 
-    // Handle form submissions
     document.addEventListener('submit', (e) => {
-      // Skip if form is inside SweetAlert or modal
       if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
         return;
       }
-      
-      // Only show loading for forms that will cause page navigation
+
       const form = e.target;
       if (form.method && form.method.toLowerCase() === 'post' && form.action) {
         const loading = this.startAction(
@@ -350,8 +298,7 @@ const sidebar = document.querySelector('.sidebar');
         }, 2000);
       }
     });
-    
-    // Handle browser back/forward buttons
+
     window.addEventListener('popstate', () => {
       this.show('Loading Page', 'Loading previous page...');
       setTimeout(() => {
@@ -381,8 +328,7 @@ const sidebar = document.querySelector('.sidebar');
       }
     };
   },
-  
-  // Public methods for manual control
+
   showManual: function(title, message) {
     this.show(title, message);
   },
@@ -396,7 +342,6 @@ const sidebar = document.querySelector('.sidebar');
   }
 };
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
   

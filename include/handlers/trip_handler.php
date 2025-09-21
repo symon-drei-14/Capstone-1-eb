@@ -662,16 +662,282 @@ try {
     echo json_encode(['success' => true, 'trips' => $trips]);
     break;
 
+    case 'get_driver_history':
+    $driverId = $data['driver_id'] ?? null;
+    $driverName = $data['driver_name'] ?? null;
+    
+    if (!$driverId && !$driverName) {
+        throw new Exception("Driver ID or name required");
+    }
+    
+    $whereClause = $driverId ? "t.driver_id = ?" : "d.name = ?";
+    $param = $driverId ? $driverId : $driverName;
+    $type = $driverId ? "i" : "s";
+    
+    $stmt = $conn->prepare("
+        SELECT 
+            t.trip_id,
+            t.container_no,
+            t.trip_date,
+            t.status,
+            t.created_at,
+            tr.plate_no,
+            tr.capacity as truck_capacity,
+            d.name as driver,
+            d.driver_id,
+            d.name as driver_name,
+            dest.name as destination,
+            c.name as client,
+            sl.name as shipping_line,
+            cons.name as consignee,
+            DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+            DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp,
+            -- Get trip start and end times from route data if available
+            (SELECT MIN(timestamp) FROM trip_routes WHERE trip_id = t.trip_id) as trip_start_time,
+            (SELECT MAX(timestamp) FROM trip_routes WHERE trip_id = t.trip_id) as trip_end_time
+        FROM trips t
+        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+        LEFT JOIN clients c ON t.client_id = c.client_id
+        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+        WHERE $whereClause 
+        AND t.status = 'Completed'
+        AND NOT EXISTS (
+            SELECT 1 FROM audit_logs_trips al2 
+            WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+        )
+        ORDER BY t.trip_date DESC, t.created_at DESC
+        LIMIT 50
+    ");
+    
+    if ($stmt === false) {
+        throw new Exception("Failed to prepare driver history query: " . $conn->error);
+    }
+    
+    $stmt->bind_param($type, $param);
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute driver history query: " . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    
+    $trips = [];
+    while ($row = $result->fetch_assoc()) {
+        $trips[] = $row;
+    }
+    
+    $stmt->close();
+    echo json_encode(['success' => true, 'trips' => $trips]);
+    break;
+
+case 'get_trip_route':
+    $tripId = $data['trip_id'] ?? null;
+    
+    if (!$tripId) {
+        throw new Exception("Trip ID required");
+    }
+    
+    $stmt = $conn->prepare("
+        SELECT 
+            latitude,
+            longitude,
+            timestamp,
+            speed,
+            heading
+        FROM trip_routes 
+        WHERE trip_id = ? 
+        ORDER BY timestamp ASC
+    ");
+    
+    if ($stmt === false) {
+        throw new Exception("Failed to prepare trip route query: " . $conn->error);
+    }
+    
+    $stmt->bind_param("i", $tripId);
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute trip route query: " . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    
+    $coordinates = [];
+    while ($row = $result->fetch_assoc()) {
+        $coordinates[] = [
+            'latitude' => floatval($row['latitude']),
+            'longitude' => floatval($row['longitude']),
+            'timestamp' => $row['timestamp'],
+            'speed' => $row['speed'] ? floatval($row['speed']) : null,
+            'heading' => $row['heading'] ? floatval($row['heading']) : null
+        ];
+    }
+    
+    $stmt->close();
+    
+    if (empty($coordinates)) {
+        echo json_encode(['success' => false, 'message' => 'No route data found for this trip']);
+    } else {
+        echo json_encode([
+            'success' => true, 
+            'route' => [
+                'trip_id' => $tripId,
+                'coordinates' => $coordinates,
+                'total_points' => count($coordinates)
+            ]
+        ]);
+    }
+    break;
+
+case 'store_route_point':
+    $tripId = $data['trip_id'] ?? null;
+    $latitude = $data['latitude'] ?? null;
+    $longitude = $data['longitude'] ?? null;
+    $timestamp = $data['timestamp'] ?? date('Y-m-d H:i:s');
+    $speed = $data['speed'] ?? null;
+    $heading = $data['heading'] ?? null;
+    
+    if (!$tripId || !$latitude || !$longitude) {
+        throw new Exception("Trip ID, latitude, and longitude are required");
+    }
+    
+    $stmt = $conn->prepare("
+        INSERT INTO trip_routes (trip_id, latitude, longitude, timestamp, speed, heading)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+    
+    if ($stmt === false) {
+        throw new Exception("Failed to prepare route storage query: " . $conn->error);
+    }
+    
+    $stmt->bind_param("iddsdd", $tripId, $latitude, $longitude, $timestamp, $speed, $heading);
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute route storage query: " . $stmt->error);
+    }
+    
+    $stmt->close();
+    echo json_encode(['success' => true, 'message' => 'Route point stored successfully']);
+    break;
+
+case 'store_route_bulk':
+    $tripId = $data['trip_id'] ?? null;
+    $routePoints = $data['route_points'] ?? [];
+    
+    if (!$tripId || empty($routePoints)) {
+        throw new Exception("Trip ID and route points are required");
+    }
+    
+    $conn->begin_transaction();
+    
+    try {
+        $stmt = $conn->prepare("
+            INSERT INTO trip_routes (trip_id, latitude, longitude, timestamp, speed, heading)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        
+        if ($stmt === false) {
+            throw new Exception("Failed to prepare bulk route storage query: " . $conn->error);
+        }
+        
+        foreach ($routePoints as $point) {
+            $latitude = $point['latitude'] ?? null;
+            $longitude = $point['longitude'] ?? null;
+            $timestamp = $point['timestamp'] ?? date('Y-m-d H:i:s');
+            $speed = $point['speed'] ?? null;
+            $heading = $point['heading'] ?? null;
+            
+            if (!$latitude || !$longitude) {
+                continue;
+            }
+            
+            $stmt->bind_param("iddsdd", $tripId, $latitude, $longitude, $timestamp, $speed, $heading);
+            $stmt->execute();
+        }
+        
+        $conn->commit();
+        $stmt->close();
+        echo json_encode(['success' => true, 'message' => 'Route data stored successfully']);
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        throw $e;
+    }
+    break;
+
+case 'get_trip_statistics':
+    $tripId = $data['trip_id'] ?? null;
+    
+    if (!$tripId) {
+        throw new Exception("Trip ID required");
+    }
+    
+    $stmt = $conn->prepare("
+        SELECT 
+            COUNT(*) as total_points,
+            MIN(timestamp) as start_time,
+            MAX(timestamp) as end_time,
+            AVG(CASE WHEN speed > 0 THEN speed END) as avg_speed,
+            MAX(speed) as max_speed,
+            -- Calculate total distance (approximate)
+            SUM(
+                6371000 * acos(
+                    cos(radians(LAG(latitude) OVER (ORDER BY timestamp))) * 
+                    cos(radians(latitude)) * 
+                    cos(radians(longitude) - radians(LAG(longitude) OVER (ORDER BY timestamp))) + 
+                    sin(radians(LAG(latitude) OVER (ORDER BY timestamp))) * 
+                    sin(radians(latitude))
+                )
+            ) as total_distance_meters
+        FROM (
+            SELECT latitude, longitude, timestamp, speed
+            FROM trip_routes 
+            WHERE trip_id = ?
+            ORDER BY timestamp ASC
+        ) as route_data
+    ");
+    
+    if ($stmt === false) {
+        throw new Exception("Failed to prepare trip statistics query: " . $conn->error);
+    }
+    
+    $stmt->bind_param("i", $tripId);
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute trip statistics query: " . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    $stats = $result->fetch_assoc();
+    
+    $stmt->close();
+
+    if ($stats['start_time'] && $stats['end_time']) {
+        $start = new DateTime($stats['start_time']);
+        $end = new DateTime($stats['end_time']);
+        $duration = $end->diff($start);
+        $stats['duration_hours'] = $duration->h + ($duration->days * 24);
+        $stats['duration_minutes'] = $duration->i;
+        $stats['duration_formatted'] = $duration->format('%h hours %i minutes');
+    }
+
+    if ($stats['total_distance_meters']) {
+        $stats['total_distance_km'] = round($stats['total_distance_meters'] / 1000, 2);
+    }
+    
+    echo json_encode(['success' => true, 'statistics' => $stats]);
+    break;
+
         case 'update_trip_status':
-            // Simplified status update for mobile app
             $tripId = $data['trip_id'] ?? null;
             $newStatus = $data['status'] ?? null;
             
             if (!$tripId || !$newStatus) {
                 throw new Exception("Trip ID and status required");
             }
-            
-            // Get current trip info
+
             $getCurrent = $conn->prepare("SELECT t.status, tr.truck_id FROM trips t JOIN truck_table tr ON t.truck_id = tr.truck_id WHERE t.trip_id = ?");
             if ($getCurrent === false) {
                 throw new Exception("Failed to prepare current status query: " . $conn->error);
@@ -684,8 +950,7 @@ try {
             if (!$current) {
                 throw new Exception("Trip not found");
             }
-            
-            // Update trip status
+
             $stmt = $conn->prepare("UPDATE trips SET status = ? WHERE trip_id = ?");
             if ($stmt === false) {
                 throw new Exception("Failed to prepare status update: " . $conn->error);
@@ -698,13 +963,11 @@ try {
             }
             
             $stmt->close();
-            
-            // Update audit log
+
             $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
             $auditStmt->bind_param("ssi", $currentUser, "Status updated to $newStatus", $tripId);
             $auditStmt->execute();
-            
-            // Update truck status accordingly
+
             $newTruckStatus = 'In Terminal';
             if ($newStatus === 'En Route') {
                 $newTruckStatus = 'Enroute';

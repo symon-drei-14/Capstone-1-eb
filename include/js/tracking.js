@@ -2,6 +2,10 @@ let map;
 let markers = {};
 let updateTimer;
 let allDrivers = {};
+let routeLayer = null;
+let routeMarkers = [];
+let currentSearchTerm = '';
+let currentFilter = 'All';
 
 const sampleData = {
     "drivers": {
@@ -41,6 +45,266 @@ const sampleData = {
         }
     }
 };
+
+async function getDriverHistory(driverId, driverName) {
+    try {
+        const response = await fetch('include/handlers/trip_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'get_driver_history',
+                driver_id: driverId,
+                driver_name: driverName
+            }),
+        });
+
+        const data = await response.json();
+        console.log('Driver history response:', data);
+
+        if (data.success) {
+            return data.trips || [];
+        }
+    } catch (error) {
+        console.error('Error fetching driver history:', error);
+    }
+    return [];
+}
+
+async function getTripRoute(tripId) {
+    try {
+        const response = await fetch('include/handlers/trip_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'get_trip_route',
+                trip_id: tripId
+            }),
+        });
+
+        const data = await response.json();
+        console.log('Trip route response:', data);
+
+        if (data.success && data.route) {
+            return data.route;
+        }
+    } catch (error) {
+        console.error('Error fetching trip route:', error);
+    }
+    return null;
+}
+
+function clearRoute() {
+    if (routeLayer) {
+        map.removeLayer(routeLayer);
+        routeLayer = null;
+    }
+
+    routeMarkers.forEach(marker => {
+        map.removeLayer(marker);
+    });
+    routeMarkers = [];
+}
+
+function displayRoute(routeData) {
+    clearRoute();
+    
+    if (!routeData || !routeData.coordinates || routeData.coordinates.length === 0) {
+        alert('No route data available for this trip');
+        return;
+    }
+    
+    const coordinates = routeData.coordinates;
+
+    const routeCoords = coordinates.map(coord => [coord.latitude, coord.longitude]);
+    routeLayer = L.polyline(routeCoords, {
+        color: '#007bff',
+        weight: 4,
+        opacity: 0.8
+    }).addTo(map);
+
+    if (coordinates.length > 0) {
+        const startMarker = L.marker([coordinates[0].latitude, coordinates[0].longitude], {
+            icon: L.divIcon({
+                className: 'route-marker start-marker',
+                html: '<i class="fas fa-play" style="color: #28a745; font-size: 16px;"></i>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map);
+        
+        startMarker.bindPopup(`
+            <div style="font-family: Arial, sans-serif;">
+                <strong>Trip Start</strong><br>
+                Time: ${new Date(coordinates[0].timestamp).toLocaleString()}<br>
+                Location: ${coordinates[0].latitude.toFixed(6)}, ${coordinates[0].longitude.toFixed(6)}
+            </div>
+        `);
+        
+        routeMarkers.push(startMarker);
+    }
+
+    if (coordinates.length > 1) {
+        const endIndex = coordinates.length - 1;
+        const endMarker = L.marker([coordinates[endIndex].latitude, coordinates[endIndex].longitude], {
+            icon: L.divIcon({
+                className: 'route-marker end-marker',
+                html: '<i class="fas fa-stop" style="color: #dc3545; font-size: 16px;"></i>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map);
+        
+        endMarker.bindPopup(`
+            <div style="font-family: Arial, sans-serif;">
+                <strong>Trip End</strong><br>
+                Time: ${new Date(coordinates[endIndex].timestamp).toLocaleString()}<br>
+                Location: ${coordinates[endIndex].latitude.toFixed(6)}, ${coordinates[endIndex].longitude.toFixed(6)}
+            </div>
+        `);
+        
+        routeMarkers.push(endMarker);
+    }
+
+    if (coordinates.length > 2) {
+        const step = Math.max(1, Math.floor(coordinates.length / 10));
+        for (let i = step; i < coordinates.length - 1; i += step) {
+            const waypoint = L.circleMarker([coordinates[i].latitude, coordinates[i].longitude], {
+                radius: 4,
+                fillColor: '#007bff',
+                color: '#ffffff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+            
+            waypoint.bindPopup(`
+                <div style="font-family: Arial, sans-serif;">
+                    <strong>Waypoint</strong><br>
+                    Time: ${new Date(coordinates[i].timestamp).toLocaleString()}<br>
+                    Location: ${coordinates[i].latitude.toFixed(6)}, ${coordinates[i].longitude.toFixed(6)}
+                </div>
+            `);
+            
+            routeMarkers.push(waypoint);
+        }
+    }
+
+    const bounds = L.latLngBounds(routeCoords);
+    map.fitBounds(bounds, { padding: [20, 20] });
+}
+
+async function showDriverHistory(driverId, driverName) {
+    const history = await getDriverHistory(driverId, driverName);
+    
+    let historyHtml = `
+        <div class="modal fade" id="historyModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-history me-2"></i>
+                            Trip History - ${driverName}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+    `;
+    
+    if (history.length === 0) {
+        historyHtml += `
+            <div class="text-center py-4">
+                <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No trip history found</h5>
+                <p class="text-muted">This driver has no completed trips yet.</p>
+            </div>
+        `;
+    } else {
+        historyHtml += `
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Click on any trip to view its route on the map
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        history.forEach(trip => {
+            const statusColor = trip.status === 'Completed' ? '#28a745' : '#007bff';
+            const statusIcon = trip.status === 'Completed' ? 'check-circle' : 'clock';
+            
+            historyHtml += `
+                <div class="card mb-2 trip-history-item" onclick="viewTripRoute('${trip.trip_id}')" style="cursor: pointer;">
+                    <div class="card-body py-2">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <strong>Trip ${trip.trip_id}</strong><br>
+                                <small class="text-muted">${trip.container_no || 'N/A'}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Date</small><br>
+                                ${new Date(trip.trip_date).toLocaleDateString()}
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Destination</small><br>
+                                ${trip.destination || 'Unknown'}
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <span class="badge" style="background-color: ${statusColor};">
+                                    <i class="fas fa-${statusIcon} me-1"></i>
+                                    ${trip.status}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    historyHtml += `
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const existingModal = document.getElementById('historyModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    document.body.insertAdjacentHTML('beforeend', historyHtml);
+
+    const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+    modal.show();
+
+    document.getElementById('historyModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+async function viewTripRoute(tripId) {
+    const routeData = await getTripRoute(tripId);
+    if (routeData) {
+        displayRoute(routeData);
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('historyModal'));
+        if (modal) {
+            modal.hide();
+        }
+    } else {
+        alert('No route data available for this trip');
+    }
+}
+
+window.showDriverHistory = showDriverHistory;
+window.viewTripRoute = viewTripRoute;
+window.clearRoute = clearRoute;
 
 async function getTripDetails(tripId) {
     if (!tripId) return null;
@@ -120,7 +384,6 @@ function initMap() {
     const refreshBtn = document.getElementById('refresh-btn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function() {
-
             const icon = this.querySelector('i');
             icon.classList.add('fa-spin');
             
@@ -422,8 +685,44 @@ function updateMap(drivers) {
 
 function updateDriversList(drivers) {
     const driversListContainer = document.getElementById('drivers-content') || document.getElementById('drivers-list');
-    if (!drivers || !driversListContainer) {
-        driversListContainer.innerHTML = '<div class="alert alert-warning">No drivers found</div>';
+    if (!driversListContainer) return;
+
+    let controlsContainer = document.getElementById('drivers-controls');
+    let driversContainer = document.getElementById('drivers-container');
+
+    if (!controlsContainer || !driversContainer) {
+        driversListContainer.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 50px);
+            overflow: hidden;
+        `;
+        
+        driversListContainer.innerHTML = `
+            <div id="drivers-controls" style="
+                flex-shrink: 0;
+                background: white;
+                z-index: 100;
+                padding: 15px;
+                border-bottom: 1px solid #e9ecef;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            "></div>
+            <div id="drivers-container" style="
+                flex: 1;
+                overflow-y: auto;
+                padding: 0 15px;
+                background: white;
+                min-height: 0;
+            "></div>
+        `;
+        controlsContainer = document.getElementById('drivers-controls');
+        driversContainer = document.getElementById('drivers-container');
+
+        setupDriversControls(controlsContainer);
+    }
+
+    if (!drivers) {
+        driversContainer.innerHTML = '<div class="alert alert-warning">No drivers found</div>';
         return;
     }
     
@@ -433,7 +732,42 @@ function updateDriversList(drivers) {
     let offlineCount = 0;
     let busyCount = 0;
 
-    const sortedDrivers = Object.entries(drivers).sort(([, a], [, b]) => {
+    let totalOnlineCount = 0;
+    let totalOfflineCount = 0;
+    let totalBusyCount = 0;
+    
+    Object.values(drivers).forEach(driverData => {
+        if (!driverData.location) return;
+        const status = getDriverStatus(driverData);
+        if (status === 'online') totalOnlineCount++;
+        else if (status === 'busy' || status === 'on-trip') totalBusyCount++;
+        else totalOfflineCount++;
+    });
+
+    updateDriversControlsHeader(totalOnlineCount, totalOfflineCount, totalBusyCount);
+
+    const filteredDrivers = Object.entries(drivers).filter(([driverId, driverData]) => {
+        if (!driverData.location) return false;
+        
+        const driverName = (driverData.name || "").toLowerCase();
+        const truckId = (driverData.assigned_truck_id || "").toString().toLowerCase();
+        const driverStatus = getDriverStatus(driverData);
+
+        const matchesSearch = currentSearchTerm === '' || 
+                             driverName.includes(currentSearchTerm.toLowerCase()) ||
+                             truckId.includes(currentSearchTerm.toLowerCase());
+
+        let matchesFilter = true;
+        if (currentFilter === 'Online') {
+            matchesFilter = driverStatus === 'online';
+        } else if (currentFilter === 'Offline') {
+            matchesFilter = driverStatus === 'offline';
+        }
+        
+        return matchesSearch && matchesFilter;
+    });
+
+    const sortedDrivers = filteredDrivers.sort(([, a], [, b]) => {
         const statusA = getDriverStatus(a);
         const statusB = getDriverStatus(b);
         
@@ -444,8 +778,6 @@ function updateDriversList(drivers) {
     });
     
     sortedDrivers.forEach(([driverId, driverData]) => {
-        if (!driverData.location) return;
-        
         hasDrivers = true;
         
         const driverStatus = getDriverStatus(driverData);
@@ -454,7 +786,6 @@ function updateDriversList(drivers) {
         const driverName = driverData.name || "Unknown Driver";
         const truckId = driverData.assigned_truck_id || 'N/A';
         const destination = driverData.destination;
-        const tripId = driverData.assigned_trip_id;
 
         if (driverStatus === 'online') {
             onlineCount++;
@@ -465,73 +796,332 @@ function updateDriversList(drivers) {
         }
 
         const timeSinceUpdate = getTimeSinceLastUpdate(driverData.location.last_updated);
-        
-        const statusClass = driverStatus === 'online' ? 'status-online' : 'status-offline';
-        const indicatorClass = driverStatus === 'online' ? 'online' : 'offline';
-        
+
         html += `
-            <div class="driver-info" data-driver-id="${driverId}" onclick="centerOnDriver('${driverId}')">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="fw-bold" style="color: #333;">${driverName}</div>
-                    <div class="d-flex align-items-center">
-                        <span class="status-indicator ${indicatorClass}" style="background-color: ${statusColor};"></span>
-                        <span class="${statusClass}" style="color: ${statusColor}; font-weight: bold; font-size: 11px;">
-                            ${statusText}
-                        </span>
-                    </div>
+            <div class="driver-card" data-driver-id="${driverId}" style="
+                background: white;
+                border: none;
+                border-bottom: 1px solid #e9ecef;
+                padding: 15px 0;
+                margin: 0;
+                transition: background-color 0.2s ease;
+                cursor: pointer;
+            " onmouseover="this.style.backgroundColor='#f8f9fa';" 
+               onmouseout="this.style.backgroundColor='white';">
+                
+                <!-- Status indicator and driver name -->
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="
+                        width: 8px; 
+                        height: 8px; 
+                        border-radius: 50%; 
+                        background-color: ${statusColor}; 
+                        margin-right: 8px;
+                        flex-shrink: 0;
+                    "></div>
+                    <span style="
+                        font-weight: 600; 
+                        font-size: 14px; 
+                        color: #333;
+                        flex-grow: 1;
+                    ">${driverName}</span>
                 </div>
-                <div class="small mb-1">
-                    <i class="fas fa-truck text-primary me-1"></i>
-                    <strong>Truck:</strong> ${truckId}
+
+                <!-- Status and truck info -->
+                <div style="
+                    margin-bottom: 6px;
+                    margin-left: 16px;
+                ">
+                    <span style="
+                        color: ${statusColor}; 
+                        font-size: 12px; 
+                        font-weight: 500;
+                        text-transform: capitalize;
+                    ">${statusText}</span>
+                    <span style="
+                        margin-left: 12px;
+                        color: #6c757d; 
+                        font-size: 12px;
+                    ">Truck ${truckId}</span>
                 </div>
-                <div class="small text-muted mb-1">
-                    <i class="fas fa-clock me-1"></i>
-                    <strong>Last seen:</strong> ${timeSinceUpdate}
+
+                <!-- Last seen -->
+                <div style="
+                    display: flex; 
+                    align-items: center; 
+                    margin-bottom: ${destination ? '6px' : '12px'};
+                    margin-left: 16px;
+                    color: #6c757d; 
+                    font-size: 12px;
+                ">
+                    <i class="far fa-clock" style="margin-right: 6px; width: 12px; font-size: 11px;"></i>
+                    Last seen: ${timeSinceUpdate}
                 </div>
+
                 ${destination ? `
-                <div class="small mb-1"">
-                    <i class="fas fa-map-marker-alt me-1"></i>
-                    <strong>Destination:</strong> <span title="${destination}">${truncateDestination(destination, 25)}</span>
-                </div>` : 
-                '<div class="small text-secondary"><i class="fas fa-pause-circle me-1"></i>No active Trip</div>'}
+                <!-- Destination -->
+                <div style="
+                    display: flex; 
+                    align-items: center; 
+                    margin-bottom: 12px;
+                    margin-left: 16px;
+                    color: #6c757d; 
+                    font-size: 12px;
+                ">
+                    <i class="fas fa-map-marker-alt" style="margin-right: 6px; width: 12px; font-size: 11px;"></i>
+                    Destination: ${truncateDestination(destination, 25)}
+                </div>` : ''}
+
+                <!-- Action buttons -->
+                <div style="
+                    display: flex; 
+                    gap: 8px; 
+                    margin-left: 16px;
+                    margin-top: 8px;
+                ">
+                    <button class="btn-locate" onclick="centerOnDriver('${driverId}')" style="
+                        background: none;
+                        border: 1px solid #dee2e6;
+                        border-radius: 4px;
+                        padding: 4px 12px;
+                        font-size: 11px;
+                        color: #6c757d;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                    " onmouseover="this.style.borderColor='#007bff'; this.style.color='#007bff';" 
+                       onmouseout="this.style.borderColor='#dee2e6'; this.style.color='#6c757d';">
+                        <i class="fas fa-crosshairs" style="font-size: 10px;"></i>
+                        Locate
+                    </button>
+                    
+                    <button class="btn-history" onclick="showDriverHistory('${driverId}', '${driverName}')" style="
+                        background: none;
+                        border: 1px solid #dee2e6;
+                        border-radius: 4px;
+                        padding: 4px 12px;
+                        font-size: 11px;
+                        color: #6c757d;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                    " onmouseover="this.style.borderColor='#6c757d'; this.style.color='#495057';" 
+                       onmouseout="this.style.borderColor='#dee2e6'; this.style.color='#6c757d';">
+                        <i class="fas fa-history" style="font-size: 10px;"></i>
+                        History
+                    </button>
+                </div>
             </div>
         `;
     });
     
     if (!hasDrivers) {
-        html = '<div class="alert alert-warning">No drivers found</div>';
-    } else {
-        const summaryHtml = `
-            <div class="alert alert-info mb-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
-                <div class="row text-center">
-                    <div class="col-4">
-                        <div class="fw-bold text-success" style="font-size: 18px;">${onlineCount}</div>
-                        <small style="color: #28a745;">Online</small>
-                    </div>
-                    ${busyCount > 0 ? `
-                    <div class="col-4">
-                        <div class="fw-bold" style="color: #ffc107; font-size: 18px;">${busyCount}</div>
-                        <small style="color: #ffc107;">Busy</small>
-                    </div>
-                    <div class="col-4">
-                        <div class="fw-bold text-danger" style="font-size: 18px;">${offlineCount}</div>
-                        <small style="color: #dc3545;">Offline</small>
-                    </div>` : `
-                    <div class="col-4">
-                        <div class="fw-bold text-danger" style="font-size: 18px;">${offlineCount}</div>
-                        <small style="color: #dc3545;">Offline</small>
-                    </div>
-                    <div class="col-4">
-                        <div class="fw-bold text-muted" style="font-size: 18px;">${onlineCount + offlineCount}</div>
-                        <small style="color: #6c757d;">Total</small>
-                    </div>`}
-                </div>
+        html = `
+            <div style="
+                text-align: center; 
+                padding: 40px 20px; 
+                color: #6c757d;
+            ">
+                <i class="fas fa-search" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                <h6 style="margin-bottom: 8px; color: #495057;">No drivers found</h6>
+                <p style="font-size: 12px; margin: 0;">
+                    ${currentSearchTerm ? `No results for "${currentSearchTerm}"` : 'Try adjusting your search or filter'}
+                </p>
             </div>
         `;
-        html = summaryHtml + html;
+    }
+
+    driversContainer.innerHTML = html;
+}
+
+function setupDriversControls(controlsContainer) {
+    controlsContainer.innerHTML = `
+        <div>
+            <!-- Header with refresh button -->
+            <div style="
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center; 
+                margin-bottom: 16px;
+            ">
+                <span id="drivers-count" style="
+                    font-weight: 600; 
+                    color: #333; 
+                    font-size: 16px;
+                ">Drivers (0)</span>
+                <button id="refresh-btn" style="
+                    background: none;
+                    border: 1px solid #dee2e6;
+                    border-radius: 4px;
+                    padding: 6px 10px;
+                    color: #6c757d;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                " onmouseover="this.style.borderColor='#007bff'; this.style.color='#007bff';" 
+                   onmouseout="this.style.borderColor='#dee2e6'; this.style.color='#6c757d';">
+                    <i class="fas fa-sync-alt" style="font-size: 10px;"></i>
+                    Refresh
+                </button>
+            </div>
+            
+            <!-- Search Box -->
+            <div style="margin-bottom: 12px;">
+                <div style="position: relative;">
+                    <i class="fas fa-search" style="
+                        position: absolute;
+                        left: 10px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: #6c757d;
+                        font-size: 12px;
+                    "></i>
+                    <input type="text" id="driver-search" placeholder="Search drivers or trucks..." style="
+                        width: 100%;
+                        padding: 8px 8px 8px 28px;
+                        border: 1px solid #dee2e6;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        background: white;
+                        transition: border-color 0.2s ease;
+                        box-sizing: border-box;
+                    " value="${currentSearchTerm || ''}">
+                </div>
+            </div>
+            
+            <!-- Status Summary and Filter -->
+            <div style="
+                display: flex; 
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0;
+            ">
+                <div id="status-summary" style="
+                    display: flex; 
+                    align-items: center; 
+                    gap: 12px; 
+                    font-size: 12px;
+                ">
+                    <!-- Status counts will be updated here -->
+                </div>
+                
+                <!-- Filter Dropdown -->
+                <select id="driver-filter" style="
+                    padding: 4px 8px;
+                    border: 1px solid #dee2e6;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    background: white;
+                    color: #333;
+                    cursor: pointer;
+                    min-width: 80px;
+                ">
+                    <option value="All" ${(currentFilter === 'All' || !currentFilter) ? 'selected' : ''}>All</option>
+                    <option value="Online" ${currentFilter === 'Online' ? 'selected' : ''}>Online</option>
+                    <option value="Offline" ${currentFilter === 'Offline' ? 'selected' : ''}>Offline</option>
+                </select>
+            </div>
+        </div>
+    `;
+
+    setupSearchAndFilterListeners();
+    
+    const refreshBtn = document.getElementById('refresh-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            icon.classList.add('fa-spin');
+            
+            fetchDriverData();
+
+            setTimeout(() => {
+                icon.classList.remove('fa-spin');
+            }, 1000);
+        });
+    }
+}
+
+function updateDriversControlsHeader(totalOnlineCount, totalOfflineCount, totalBusyCount) {
+    const driversCount = document.getElementById('drivers-count');
+    const statusSummary = document.getElementById('status-summary');
+    
+    if (driversCount) {
+        const totalCount = totalOnlineCount + totalOfflineCount + totalBusyCount;
+        driversCount.textContent = `Drivers (${totalCount})`;
     }
     
-    driversListContainer.innerHTML = html;
+    if (statusSummary) {
+        statusSummary.innerHTML = `
+            <div style="display: flex; align-items: center;">
+                <div style="
+                    width: 6px; 
+                    height: 6px; 
+                    border-radius: 50%; 
+                    background: #28a745; 
+                    margin-right: 4px;
+                "></div>
+                <span>Online: ${totalOnlineCount}</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div style="
+                    width: 6px; 
+                    height: 6px; 
+                    border-radius: 50%; 
+                    background: #6c757d; 
+                    margin-right: 4px;
+                "></div>
+                <span>Offline: ${totalOfflineCount}</span>
+            </div>
+        `;
+    }
+}
+
+function setupSearchAndFilterListeners() {
+    const searchInput = document.getElementById('driver-search');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentSearchTerm = e.target.value;
+                updateDriversList(allDrivers);
+            }, 300);
+        });
+
+        searchInput.addEventListener('focus', function() {
+            this.style.borderColor = '#007bff';
+            this.style.boxShadow = '0 0 0 2px rgba(0, 123, 255, 0.1)';
+        });
+
+        searchInput.addEventListener('blur', function() {
+            this.style.borderColor = '#dee2e6';
+            this.style.boxShadow = 'none';
+        });
+    }
+
+    const filterSelect = document.getElementById('driver-filter');
+    if (filterSelect) {
+        filterSelect.addEventListener('change', function(e) {
+            currentFilter = e.target.value;
+            updateDriversList(allDrivers);
+        });
+
+        filterSelect.addEventListener('focus', function() {
+            this.style.borderColor = '#007bff';
+            this.style.boxShadow = '0 0 0 2px rgba(0, 123, 255, 0.1)';
+        });
+
+        filterSelect.addEventListener('blur', function() {
+            this.style.borderColor = '#dee2e6';
+            this.style.boxShadow = 'none';
+        });
+    }
 }
 
 function centerOnDriver(driverId) {
