@@ -17,11 +17,12 @@ $countResult = $conn->query($countQuery);
 $totalRow = $countResult->fetch_assoc();
 $total = $totalRow['total'];
 
-// Get paginated data with deletion info
+// Get paginated data with deletion info and profile picture
 $query = "SELECT 
             a.admin_id, 
             a.username, 
-            a.role, 
+            a.role,
+            a.admin_pic,
             a.is_deleted,
             a.deleted_at,
             a.deleted_by,
@@ -52,7 +53,7 @@ echo json_encode([
     "success" => true,
     "admins" => $admins,
     "total" => $total,
-      "page" => $page,
+    "page" => $page,
     "limit" => $limit
 ]);
 

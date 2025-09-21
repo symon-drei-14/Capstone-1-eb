@@ -125,7 +125,7 @@ checkAccess();
                     <table id="adminsTable">
                         <thead>
                             <tr>
-                                <th></th>
+                                <th>Profile Picture</th>
                                 <th>Admin ID</th>
                                 <th>Username</th>
                                 <th>Role</th>
@@ -190,6 +190,12 @@ checkAccess();
                 <input type="password" id="confirmPassword" name="confirmPassword" class="form-control">
             </div>
 
+            <div class="form-group">
+    <label for="adminProfile">Profile Photo</label>
+    <input type="file" id="adminProfile" name="adminProfile" accept="image/*">
+    <div id="adminProfilePreview" style="margin-top: 10px;"></div>
+</div>
+
             <div class="button-group">
                 <button type="button" class="save-btn" onclick="saveAdmin()">Save</button>
                 <button type="button" class="cancel-btn" onclick="closeModal('adminModal')">Cancel</button>
@@ -211,39 +217,37 @@ checkAccess();
         }
 
         function openAdminModal(adminId = null) {
-    // Reset the form to clear all fields, including passwords
     document.getElementById('adminForm').reset();
     
-    // Get references to elements
     const modalTitle = document.getElementById('modalTitle');
     const passwordHelp = document.getElementById('passwordHelp');
     const oldPasswordGroup = document.getElementById('oldPasswordGroup');
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const passwordLabel = document.getElementById('passwordLabel');
+    const profilePreview = document.getElementById('adminProfilePreview');
 
     if (adminId) {
-        // --- EDIT MODE ---
         modalTitle.textContent = 'Edit Admin';
         passwordHelp.style.display = 'block';
         oldPasswordGroup.style.display = 'block';
         
-        // Passwords are not required when just editing info
         passwordInput.required = false;
         confirmPasswordInput.required = false;
         passwordLabel.textContent = "New Password";
 
         fetchAdminDetails(adminId);
     } else {
-        // --- ADD MODE ---
         modalTitle.textContent = 'Add Admin';
         passwordHelp.style.display = 'none';
         oldPasswordGroup.style.display = 'none';
 
-        // Passwords are required for new admins
         passwordInput.required = true;
         confirmPasswordInput.required = true;
         passwordLabel.textContent = "Password *";
+        
+        profilePreview.innerHTML = '';
+        document.getElementById('adminProfile').value = '';
     }
     
     openModal('adminModal');
@@ -264,22 +268,50 @@ checkAccess();
         }
 
         // Fetch single admin details for editing
-        function fetchAdminDetails(adminId) {
-            fetch(`include/handlers/get_admin.php?id=${adminId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('adminId').value = data.admin.admin_id;
-                        document.getElementById('username').value = data.admin.username;
-                        document.getElementById('role').value = data.admin.role || 'Full Admin';
-                        // Password is not fetched for security reasons
-                    } else {
-                        alert('Error fetching admin details: ' + data.message);
-                        closeModal('adminModal');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
+       function fetchAdminDetails(adminId) {
+    fetch(`include/handlers/get_admin.php?id=${adminId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const admin = data.admin;
+                
+                document.getElementById('adminId').value = admin.admin_id;
+                document.getElementById('username').value = admin.username;
+                document.getElementById('role').value = admin.role || 'Full Admin';
+                
+                // Display existing profile picture if it exists
+                const profilePreview = document.getElementById('adminProfilePreview');
+                if (admin.admin_pic) {
+                    profilePreview.innerHTML = `
+                        <div class="current-profile-section">
+                            <h4>Current Profile Picture:</h4>
+                            <div class="large-profile-display">
+                                <img src="data:image/jpeg;base64,${admin.admin_pic}"
+                                     class="large-profile-preview"
+                                     alt="Current Admin Photo">
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    profilePreview.innerHTML = `
+                        <div class="current-profile-section">
+                            <h4>Current Profile Picture:</h4>
+                            <div class="large-profile-display">
+                                <i class="fa-solid fa-circle-user large-profile-icon"></i>
+                                <p>No profile picture uploaded</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('adminProfile').value = '';
+            } else {
+                alert('Error fetching admin details: ' + data.message);
+                closeModal('adminModal');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
 
         // Render admins table
 function renderAdminsTable(admins, isSearchResult = false) {
@@ -311,8 +343,13 @@ function renderAdminsTable(admins, isSearchResult = false) {
         
         const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
         
-        row.innerHTML = `
-    <td><i class="fa-solid fa-circle-user"></i></td>
+      row.innerHTML = `
+    <td>
+        ${admin.admin_pic ? 
+            '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
+            '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
+        }
+    </td>
     <td>${highlightText(admin.admin_id)}</td>
     <td>${highlightText(admin.username)}</td>
     <td>${highlightText(admin.role || 'Full Admin')}</td>
@@ -376,8 +413,8 @@ function confirmDeleteAdmin(adminId) {
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const oldPassword = document.getElementById('oldPassword').value;
+    const profileInput = document.getElementById('adminProfile');
     
-    // --- Client-side Validation ---
     if (!username || !role) {
         alert('Username and role are required.');
         return;
@@ -388,32 +425,32 @@ function confirmDeleteAdmin(adminId) {
         return;
     }
     
-    // In edit mode, if a new password is set, the old password must be provided
     if (adminId && password && !oldPassword) {
         alert('To set a new password, you must enter the current password.');
         return;
     }
     
-    // For new admins, a password is required
     if (!adminId && !password) {
         alert('Password is required for new admins.');
         return;
     }
 
-    const adminData = {
-        admin_id: adminId,
-        username: username,
-        role: role,
-        password: password,
-        old_password: oldPassword // Send the old password for verification
-    };
+    const formData = new FormData();
+    formData.append('admin_id', adminId);
+    formData.append('username', username);
+    formData.append('role', role);
+    formData.append('password', password);
+    formData.append('old_password', oldPassword);
+    
+    if (profileInput.files.length > 0) {
+        formData.append('adminProfile', profileInput.files[0]);
+    }
     
     const url = adminId ? 'include/handlers/update_admin.php' : 'include/handlers/add_admin.php';
     
     fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(adminData)
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
@@ -427,9 +464,8 @@ function confirmDeleteAdmin(adminId) {
                 timerProgressBar: true
             }).then(() => {
                 closeModal('adminModal');
-                fetchAdminsPaginated(); // Refresh table
+                fetchAdminsPaginated();
             });
-        
         } else {
             alert('Error: ' + data.message);
         }
@@ -833,6 +869,47 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loadingGif) {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
+});
+
+document.getElementById('adminProfile') && document.getElementById('adminProfile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const profilePreview = document.getElementById('adminProfilePreview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const existingContent = profilePreview.querySelector('.current-profile-section');
+            
+            let newPreviewHtml = `
+                <div class="new-profile-section">
+                    <h4>New Profile Picture:</h4>
+                    <div class="large-profile-display">
+                        <img src="${event.target.result}" 
+                             class="large-profile-preview" 
+                             alt="New Admin Photo">
+                        <p>New image selected</p>
+                    </div>
+                </div>
+            `;
+            
+            if (existingContent) {
+                profilePreview.innerHTML = existingContent.outerHTML + newPreviewHtml;
+            } else {
+                profilePreview.innerHTML = newPreviewHtml;
+            }
+        };
+        reader.readAsDataURL(file);
+    } else {
+        const mode = document.getElementById("modalTitle").textContent === "Edit Admin" ? 'edit' : 'add';
+        if (mode === 'edit') {
+            const existingContent = profilePreview.querySelector('.current-profile-section');
+            if (existingContent) {
+                profilePreview.innerHTML = existingContent.outerHTML;
+            }
+        } else {
+            profilePreview.innerHTML = '';
+        }
+    }
 });
 
 </script>

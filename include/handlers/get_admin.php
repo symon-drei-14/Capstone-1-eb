@@ -9,7 +9,7 @@ if (!isset($_GET['id'])) {
 }
 
 $adminId = (int)$_GET['id'];
-$stmt = $conn->prepare("SELECT admin_id, username, role FROM login_admin WHERE admin_id = ?");
+$stmt = $conn->prepare("SELECT admin_id, username, role, admin_pic FROM login_admin WHERE admin_id = ?");
 $stmt->bind_param("i", $adminId);
 $stmt->execute();
 $result = $stmt->get_result();

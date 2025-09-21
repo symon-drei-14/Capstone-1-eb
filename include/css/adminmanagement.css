@@ -105,7 +105,7 @@ tr:hover {
 }
 
 /* Modal styles */
-.modal {
+/* .modal {
     display: none;
     position: fixed;
     z-index: 11000;
@@ -126,9 +126,44 @@ tr:hover {
     border-radius: 0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     position: relative;
-    overflow-x: auto; /* Add this line to contain horizontal overflow */
-    overflow-y: auto; /* Ensure vertical scrolling works properly */
-    max-height: 80vh; /* Limit height to prevent overflowing viewport */
+    overflow-x: auto; 
+    overflow-y: auto; 
+    max-height: 80vh; 
+} */
+
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 11000; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100vh;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 0;
+}
+
+.modal-content {
+    background-color: #fff;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    border: 1px solid #888;
+    border-radius: 20px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+body.modal-open {
+    overflow: hidden;
 }
 
 /* Make sure form elements don't expand beyond the modal */
@@ -1014,3 +1049,191 @@ th[onclick]:hover {
   .swal2-container {
   z-index: 999999 !important;
 }   
+
+.form-group label[for="adminProfile"] {
+    text-align: center;
+    display: block;
+    width: 100%;
+}
+
+.form-group input[type="file"] {
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+}
+
+#adminProfilePreview {
+    text-align: center;
+}
+
+.admin-photo {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 2px solid #ddd !important;
+    display: block !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    margin: 0 auto !important;
+}
+
+.admin-profile-icon {
+    font-size: 30px;
+    color: #555;
+    border-radius: 50%;
+    padding: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+}
+
+/* Ensure the table cell containing the profile picture is centered */
+td:first-child {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+#adminProfilePreview img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ddd;
+    margin-top: 10px;
+    display: block;
+}
+
+/* Large profile display styles for admin */
+.current-profile-section {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.current-profile-section h4 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.new-profile-section {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.new-profile-section h4 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.large-profile-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border: 2px dashed #ddd;
+    border-radius: 15px;
+    background-color: #f9f9f9;
+    margin-bottom: 15px;
+}
+
+.large-profile-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #007bff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    display: block;
+}
+
+.large-profile-preview:hover {
+    transform: scale(1.05);
+}
+
+.large-profile-icon {
+    font-size: 120px;
+    color: #ccc;
+    margin-bottom: 10px;
+}
+
+.large-profile-display p {
+    color: #666;
+    font-size: 14px;
+    margin: 10px 0 0 0;
+    font-style: italic;
+}
+
+/* Large profile display styles for admin */
+.current-profile-section {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.current-profile-section h4 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.new-profile-section {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.new-profile-section h4 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.large-profile-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border: 2px dashed #ddd;
+    border-radius: 15px;
+    background-color: #f9f9f9;
+    margin-bottom: 15px;
+}
+
+.large-profile-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #007bff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.large-profile-preview:hover {
+    transform: scale(1.05);
+}
+
+.large-profile-icon {
+    font-size: 120px;
+    color: #ccc;
+    margin-bottom: 10px;
+}
+
+.large-profile-display p {
+    color: #666;
+    font-size: 14px;
+    margin: 10px 0 0 0;
+    font-style: italic;
+}
