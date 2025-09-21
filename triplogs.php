@@ -395,15 +395,26 @@ if ($result->num_rows > 0) {
                 </div>
             </div>
                 
-               <div class="event-modal-actions">
-    <button class="icon-btn edit" id="eventModalEditBtn" data-tooltip="Edit Trip" > 
+          <div class="event-modal-actions">
+    <button class="icon-btn edit" id="eventModalEditBtn" data-tooltip="Edit Trip">
         <i class="fas fa-edit"></i>
     </button>
-    <button class="icon-btn delete" id="eventModalDeleteBtn" data-tooltip="Delete Trip">
-        <i class="fas fa-trash-alt"></i>
+   
+    <button class="icon-btn view-expenses" data-tooltip="View Expenses">
+        <i class="fas fa-money-bill-wave"></i>
     </button>
+    <button class="icon-btn view-checklist" data-tooltip="Driver Checklist">
+        <i class="fas fa-clipboard-check"></i>
+    </button>
+    <a href="#" class="icon-btn generate-report" target="_blank" data-tooltip="Generate Report">
+        <i class="fas fa-file-alt"></i>
+    </a>
     <button class="icon-btn view-reasons" id="eventModalHistoryBtn" data-tooltip="View Edit History">
         <i class="fas fa-history"></i>
+    </button>
+    
+    <button class="icon-btn cancel-trip" data-tooltip="Cancel Trip">
+        <i class="fas fa-ban"></i>
     </button>
 </div>
             </div>
@@ -1949,6 +1960,30 @@ eventClick: function(event, jsEvent, view) {
     $('#eventModalAdditionalCashAdvance').text('₱' + (parseFloat(event.additional_cash_advance || event.additionalCashAdvance) || 0).toFixed(2));
     $('#eventModalDiesel').text('₱' + (parseFloat(event.diesel) || 0).toFixed(2));
     
+
+
+      $('#eventModal').data('eventId', event.id);
+    $('.icon-btn.edit').attr('data-id', event.id);
+    $('.icon-btn.delete').attr('data-id', event.id);
+    $('.icon-btn.view-expenses').attr('data-id', event.id);
+    $('.icon-btn.view-checklist').attr('data-id', event.id).attr('data-driver-id', event.driver_id);
+    $('.icon-btn.generate-report').attr('href', `trip_report.php?id=${event.id}`);
+    $('.icon-btn.view-reasons').attr('data-id', event.id);
+    $('.icon-btn.cancel-trip').attr('data-id', event.id);
+
+      if (event.edit_reasons && event.edit_reasons !== 'null' && event.edit_reasons !== '') {
+        $('#eventModalHistoryBtn').show();
+    } else {
+        $('#eventModalHistoryBtn').hide();
+    }
+
+    if (event.status === 'Pending') {
+        $('.icon-btn.view-expenses').hide();
+    } else {
+        $('.icon-btn.view-expenses').show();
+    }
+
+
     // Set status with appropriate styling
     const statusElement = $('#eventModalStatus');
     statusElement.text(event.status || 'N/A');
@@ -2116,10 +2151,160 @@ eventClick: function(event, jsEvent, view) {
         }
     });
     
-    // Show the modal
+
+$(document).on('click', '#eventModal .icon-btn.view-expenses', function() {
+    var tripId = $(this).attr('data-id');
+
+    // Find the trip data from eventsData
+    var tripData = eventsData.find(function(trip) {
+        return trip.id == tripId;
+    });
+
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_expenses',
+            tripId: tripId
+        }),
+        success: function(response) {
+            if (response.success) {
+                $('#expensesTableBody').empty();
+
+                if (tripData) {
+                    $('#expensePlateNo').text(tripData.plateNo || tripData.truck_plate_no || 'N/A');
+                    $('#expenseContainerNo').text(tripData.containerNo || 'N/A');
+                    $('#expenseContainerSize').text(tripData.truck_capacity ? tripData.truck_capacity + 'ft' : tripData.size || 'N/A');
+
+                    if (tripData.date || tripData.trip_date) {
+                        const tripDate = new Date(tripData.date || tripData.trip_date);
+                        const formattedDate = tripDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        $('#expenseTripDate').text(formattedDate);
+                    } else {
+                        $('#expenseTripDate').text('N/A');
+                    }
+
+                    $('#expenseDriverName').text(tripData.driver || 'N/A');
+                    $('#expenseHelperName').text(tripData.helper || 'N/A');
+                    $('#expenseDestination').text(tripData.destination || 'N/A');
+                }
+
+                const cashAdvance = parseFloat(response.cashAdvance || tripData.cashAdvance || 0);
+                const additionalCash = parseFloat(response.additionalCashAdvance || tripData.additionalCashAdvance || 0);
+                const diesel = parseFloat(response.diesel || tripData.diesel || 0);
+                const totalInitialFunds = cashAdvance + additionalCash + diesel;
+
+                $('#expenseCashAdvance').text('₱' + cashAdvance.toFixed(2));
+                $('#expenseAdditionalCash').text('₱' + additionalCash.toFixed(2));
+                $('#expenseDiesel').text('₱' + diesel.toFixed(2));
+                $('#totalInitialFunds').text('₱' + totalInitialFunds.toFixed(2));
+
+                let totalExpenses = 0;
+                if (response.expenses && response.expenses.length > 0) {
+                    response.expenses.forEach(function(expense) {
+                        const amount = parseFloat(expense.amount.replace('₱', '').replace(',', ''));
+                        totalExpenses += amount;
+                        const receiptAttr = expense.receipt_image ? `data-receipt="${expense.receipt_image}"` : '';
+                        const clickableClass = expense.receipt_image ? 'clickable-expense' : '';
+                        const submittedTime = expense.submitted_time ? formatDateTime(expense.submitted_time) : 'N/A';
+
+                        var row = `<tr class="${clickableClass}" ${receiptAttr}>
+                                    <td>${expense.expense_type}</td>
+                                    <td>${expense.amount}</td>
+                                    <td>${submittedTime}</td>
+                                </tr>`;
+                        $('#expensesTableBody').append(row);
+                    });
+                } else {
+                    $('#expensesTableBody').html('<tr><td colspan="3" style="text-align: center;">No additional expenses recorded</td></tr>');
+                }
+
+                $('#totalExpensesAmount').text('₱' + totalExpenses.toFixed(2));
+                $('#expensesModal').show();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'Failed to load expenses'
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Server error occurred while loading expenses'
+            });
+        }
+    });
+});
+
+
+$(document).on('click', '#eventModal .icon-btn.view-checklist', function() {
+    var tripId = $(this).attr('data-id');
+    var driverId = $(this).attr('data-driver-id');
+    
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_checklist',
+            trip_id: tripId
+        }),
+        success: function(response) {
+            if (response.success && response.checklist) {
+                $('#checklistTableBody').empty();
+                
+                var checklist = response.checklist;
+                var rows = [
+                    { question: 'No body fatigue?', response: checklist.no_fatigue ? 'Yes' : 'No' },
+                    { question: 'Did not take illegal drugs?', response: checklist.no_drugs ? 'Yes' : 'No' },
+                    { question: 'No mental distractions?', response: checklist.no_distractions ? 'Yes' : 'No' },
+                    { question: 'No body illness?', response: checklist.no_illness ? 'Yes' : 'No' },
+                    { question: 'Fit to work?', response: checklist.fit_to_work ? 'Yes' : 'No' },
+                    { question: 'Alcohol test reading', response: checklist.alcohol_test },
+                    { question: 'Hours of sleep', response: checklist.hours_sleep },
+                    { question: 'Submitted at', response: formatDateTime(checklist.submitted_at) }
+                ];
+                
+                rows.forEach(function(row) {
+                    $('#checklistTableBody').append(`
+                        <tr>
+                            <td>${row.question}</td>
+                            <td>${row.response}</td>
+                        </tr>
+                    `);
+                });
+                
+                $('#checklistModal').show();
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No Data',
+                    text: 'No checklist data found for this trip'
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Server Error',
+                text: 'Failed to load checklist data'
+            });
+        }
+    });
+});
     $('#eventModal').show();
     
-    // Prevent default behavior
+
     return false;
 },
     dayClick: function(date, jsEvent, view) {

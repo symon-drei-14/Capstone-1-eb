@@ -2037,6 +2037,7 @@ h3.title {
 .event-modal-actions .icon-btn.delete {
 
     color: #dc3545;
+    
 
 }
 
@@ -2437,7 +2438,7 @@ h3.title {
 }
      #expensesModal {
             position: fixed;
-            z-index: 9000;
+            z-index: 999000;
             left: 0;
             top: 0;
             width: 100%;
@@ -3135,4 +3136,53 @@ h3.title {
 #expensesModal .expense-table td:nth-child(3) {
     width: 35%; /* Submitted Time */
     text-align: center;
+}
+
+.event-modal-actions .icon-btn.view-expenses {
+    color: #28a745;
+}
+
+.event-modal-actions .icon-btn.view-expenses:hover {
+    background-color: #28a745;
+    color: white;
+}
+
+.event-modal-actions .icon-btn.view-checklist {
+    color: #17a2b8;
+}
+
+.event-modal-actions .icon-btn.view-checklist:hover {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.event-modal-actions .icon-btn.generate-report {
+       background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    width: 18px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #007bff;
+}
+
+.event-modal-actions .icon-btn.generate-report:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.event-modal-actions .icon-btn.cancel-trip {
+    color: #dc3545;
+}
+
+.event-modal-actions .icon-btn.cancel-trip:hover {
+    background-color: #dc3545;
+    color: white;
 }

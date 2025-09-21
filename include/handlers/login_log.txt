@@ -966,3 +966,24 @@
 2025-09-21 08:42:12 - Data validation passed
 2025-09-21 08:42:12 - Database connection successful
 2025-09-21 08:42:12 - Login successful for: alcedo@gmail.com
+2025-09-21 15:22:38 - Login request received
+{"email":"glen@gmail.com","password":"1234567"}
+
+2025-09-21 15:22:38 - JSON parsed successfully
+2025-09-21 15:22:38 - Data validation passed
+2025-09-21 15:22:38 - Database connection successful
+2025-09-21 15:22:38 - Login successful for: glen@gmail.com
+2025-09-21 15:25:05 - Login request received
+{"email":"glen@gmail.com","password":"1234567"}
+
+2025-09-21 15:25:05 - JSON parsed successfully
+2025-09-21 15:25:05 - Data validation passed
+2025-09-21 15:25:05 - Database connection successful
+2025-09-21 15:25:05 - Incorrect password for: glen@gmail.com
+2025-09-21 15:25:08 - Login request received
+{"email":"glen@gmail.com","password":"12345678"}
+
+2025-09-21 15:25:08 - JSON parsed successfully
+2025-09-21 15:25:08 - Data validation passed
+2025-09-21 15:25:08 - Database connection successful
+2025-09-21 15:25:08 - Login successful for: glen@gmail.com
