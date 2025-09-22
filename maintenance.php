@@ -273,7 +273,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="status">Status:</label>
-                    <select id="status" name="status" required onchange="toggleCostInput()">
+                   <select id="status" name="status" required onchange="updateFormSectionsBasedOnStatus()">
                         <option value="Pending" selected>Pending</option>
                         <option value="Completed">Completed</option>
                         <option value="In Progress">In Progress</option>
@@ -294,6 +294,45 @@
                     <input type="number" id="cost" name="cost" step="0.01">
                 </div>
             </div>
+
+            <div id="expenseReportSection" style="display: none;">
+    <h4>Expense Report</h4>
+    <div class="expense-form-container">
+        <input type="hidden" id="expenseId" name="expenseId">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="expenseType">Expense Type:</label>
+                <input type="text" id="expenseType" name="expenseType" placeholder="e.g., Oil Change, Spare Parts">
+            </div>
+            <div class="form-group">
+                <label for="expenseAmount">Amount:</label>
+                <input type="number" id="expenseAmount" name="expenseAmount" step="0.01" placeholder="0.00">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="receiptImage">Receipt (Optional):</label>
+                <input type="file" id="receiptImage" name="receiptImage" accept="image/*" style="padding: 3px;">
+            </div>
+        </div>
+        <div class="form-actions" style="justify-content: flex-start;">
+            <button type="button" class="submitbtn" onclick="addOrUpdateExpense()">Add Expense</button>
+            <button type="button" class="cancelbtn" id="clearExpenseFormBtn" onclick="clearExpenseForm()" style="display: none;">Cancel Edit</button>
+        </div>
+    </div>
+    <div class="expense-list-container">
+        <h5>Current Expenses</h5>
+        <div id="expenseList">
+            </div>
+    </div>
+</div>
+
+<div id="receiptModal" class="modal">
+    <div class="modal-content" style="max-width: 80vw; max-height: 90vh;">
+        <span class="close" onclick="closeReceiptModal()">&times;</span>
+        <img id="receiptImageViewer" src="" alt="Receipt Image" style="width: 100%; height: auto; object-fit: contain;">
+    </div>
+</div>
             
             <div class="edit-reasons-section">
                 <label>Reason for Edit (select all that apply):</label>
@@ -1141,15 +1180,40 @@ $(document).on('click', function(e) {
             }
             
 
-            function toggleCostInput() {
+//             function toggleCostInput() {
+//     const statusSelect = document.getElementById('status');
+//     const costSection = document.getElementById('costSection');
+    
+//     if (statusSelect.value === 'In Progress') {
+//         costSection.style.display = 'block';
+//     } else {
+//         costSection.style.display = 'none';
+//         document.getElementById('cost').value = ''; // Also clear value when hiding
+//     }
+// }
+
+function updateFormSectionsBasedOnStatus() {
     const statusSelect = document.getElementById('status');
     const costSection = document.getElementById('costSection');
-    
+    const expenseReportSection = document.getElementById('expenseReportSection');
+    const maintenanceId = document.getElementById("maintenanceId").value;
+
     if (statusSelect.value === 'In Progress') {
         costSection.style.display = 'block';
+        expenseReportSection.style.display = 'block';
+
+        // For new records, show a message. For existing records, load expenses.
+        if (!isEditing || !maintenanceId) {
+            document.querySelector('#expenseReportSection .expense-form-container').style.display = 'none';
+            document.getElementById('expenseList').innerHTML = '<p>Please save the maintenance schedule first to add expenses.</p>';
+        } else {
+            document.querySelector('#expenseReportSection .expense-form-container').style.display = 'block';
+            loadExpenses(maintenanceId);
+        }
     } else {
         costSection.style.display = 'none';
-        document.getElementById('cost').value = ''; // Also clear value when hiding
+        expenseReportSection.style.display = 'none';
+        document.getElementById('cost').value = ''; 
     }
 }
     function openModal(mode) {
@@ -1198,7 +1262,7 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
     document.getElementById('otherReasonText').value = '';
 
     // Call toggleCostInput to set initial visibility of the cost section
-    toggleCostInput();
+    updateFormSectionsBasedOnStatus();
 
     document.getElementById("maintenanceModal").style.display = "block";
 }
@@ -1276,9 +1340,175 @@ function populateMaintenancePurposes(remarks) {
     });
     document.getElementById('otherPurposeText').value = '';
     document.querySelector('.other-purpose').style.display = 'none';
+     document.getElementById('expenseList').innerHTML = '';
+    clearExpenseForm();
     }
 
-    
+    function loadExpenses(maintenanceId) {
+    const expenseListDiv = document.getElementById('expenseList');
+    expenseListDiv.innerHTML = '<p>Loading expenses...</p>';
+
+    fetch(`include/handlers/maintenance_handler.php?action=getExpenses&maintenanceId=${maintenanceId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderExpenseList(data.expenses);
+                updateTotalCost(data.expenses);
+            } else {
+                expenseListDiv.innerHTML = `<p>Error: ${data.message}</p>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading expenses:', error);
+            expenseListDiv.innerHTML = '<p>Could not load expenses.</p>';
+        });
+}
+
+function renderExpenseList(expenses) {
+    const expenseListDiv = document.getElementById('expenseList');
+    expenseListDiv.innerHTML = '';
+
+    if (expenses.length === 0) {
+        expenseListDiv.innerHTML = '<p>No expenses added yet.</p>';
+        return;
+    }
+
+    expenses.forEach(expense => {
+        const item = document.createElement('div');
+        item.className = 'expense-item';
+
+        if (expense.receipt_image) {
+            item.setAttribute('data-receipt', expense.receipt_image);
+            item.title = "Click to view receipt";
+            item.onclick = () => viewReceipt(expense.receipt_image);
+        } else {
+            item.style.cursor = 'default';
+            item.title = "No receipt available";
+        }
+
+        item.innerHTML = `
+            <div class="expense-details">
+                <strong>${expense.expense_type}</strong>
+                <span>Amount: ₱${parseFloat(expense.amount).toFixed(2)} | Submitted: ${formatDateTime(expense.submitted_at)}</span>
+            </div>
+            <div class="expense-actions">
+                <button class="edit-btn" title="Edit" onclick="event.stopPropagation(); populateExpenseFormForEdit(${expense.expense_id}, '${expense.expense_type.replace(/'/g, "\\'")}', ${expense.amount});"><i class="fas fa-edit"></i></button>
+                <button class="delete-btn" title="Delete" onclick="event.stopPropagation(); deleteExpense(${expense.expense_id});"><i class="fas fa-trash-alt"></i></button>
+            </div>
+        `;
+        expenseListDiv.appendChild(item);
+    });
+}
+
+function updateTotalCost(expenses) {
+    const totalCost = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+    document.getElementById('cost').value = totalCost.toFixed(2);
+}
+
+function addOrUpdateExpense() {
+    const maintenanceId = document.getElementById('maintenanceId').value;
+    const expenseId = document.getElementById('expenseId').value;
+    const expenseType = document.getElementById('expenseType').value.trim();
+    const amount = document.getElementById('expenseAmount').value;
+    const receiptFile = document.getElementById('receiptImage').files[0];
+
+    if (!expenseType || !amount) {
+        Swal.fire('Required Fields', 'Please enter both expense type and amount.', 'warning');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const receiptBase64 = event.target.result; // This will be null if no file was selected
+
+        const expenseData = {
+            maintenanceId: parseInt(maintenanceId),
+            expenseType: expenseType,
+            amount: parseFloat(amount),
+            receiptImage: receiptBase64
+        };
+
+        let action = 'addExpense';
+        if (expenseId) {
+            action = 'updateExpense';
+            expenseData.expenseId = parseInt(expenseId);
+        }
+
+        fetch(`include/handlers/maintenance_handler.php?action=${action}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(expenseData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadExpenses(maintenanceId);
+                clearExpenseForm();
+            } else {
+                Swal.fire('Error', data.message, 'error');
+            }
+        })
+        .catch(error => console.error('Error saving expense:', error));
+    };
+
+    if (receiptFile) {
+        reader.readAsDataURL(receiptFile);
+    } else {
+        reader.onload({ target: { result: null } });
+    }
+}
+
+function clearExpenseForm() {
+    document.getElementById('expenseId').value = '';
+    document.getElementById('expenseType').value = '';
+    document.getElementById('expenseAmount').value = '';
+    document.getElementById('receiptImage').value = '';
+    document.querySelector('#expenseReportSection .submitbtn').textContent = 'Add Expense';
+    document.getElementById('clearExpenseFormBtn').style.display = 'none';
+}
+
+function populateExpenseFormForEdit(expenseId, type, amount) {
+    document.getElementById('expenseId').value = expenseId;
+    document.getElementById('expenseType').value = type;
+    document.getElementById('expenseAmount').value = amount;
+    document.querySelector('#expenseReportSection .submitbtn').textContent = 'Update Expense';
+    document.getElementById('clearExpenseFormBtn').style.display = 'inline-block';
+    document.getElementById('expenseType').focus();
+}
+
+function deleteExpense(expenseId) {
+    const maintenanceId = document.getElementById('maintenanceId').value;
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`include/handlers/maintenance_handler.php?action=deleteExpense&expenseId=${expenseId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadExpenses(maintenanceId);
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            });
+        }
+    });
+}
+
+function viewReceipt(base64String) {
+    document.getElementById('receiptImageViewer').src = base64String;
+    document.getElementById('receiptModal').style.display = 'block';
+}
+
+function closeReceiptModal() {
+    document.getElementById('receiptModal').style.display = 'none';
+    document.getElementById('receiptImageViewer').src = '';
+}
             
 function saveMaintenanceRecord() {
     if (!validateMaintenanceForm()) {

@@ -423,6 +423,19 @@ function getMaintenanceHistory($conn, $truckId) {
     return $history;
 }
 
+function updateTotalMaintenanceCost($conn, $maintenanceId) {
+    $sumStmt = $conn->prepare("SELECT SUM(amount) as total FROM maintenance_expenses WHERE maintenance_id = ?");
+    $sumStmt->bind_param("i", $maintenanceId);
+    $sumStmt->execute();
+    $result = $sumStmt->get_result();
+    $row = $result->fetch_assoc();
+    $totalCost = $row['total'] ? (float)$row['total'] : 0.00;
+
+    $updateStmt = $conn->prepare("UPDATE maintenance_table SET cost = ? WHERE maintenance_id = ?");
+    $updateStmt->bind_param("di", $totalCost, $maintenanceId);
+    $updateStmt->execute();
+}
+
 function getMaintenanceReminders($conn) {
     $sql = "SELECT 
             m.maintenance_id, 
@@ -765,6 +778,98 @@ try {
                 echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
             }
             break;
+
+             case 'getExpenses':
+        $maintenanceId = isset($_GET['maintenanceId']) ? intval($_GET['maintenanceId']) : 0;
+        if ($maintenanceId <= 0) {
+            echo json_encode(["success" => false, "message" => "Invalid Maintenance ID"]);
+            break;
+        }
+        $stmt = $conn->prepare("SELECT expense_id, expense_type, amount, receipt_image, submitted_at FROM maintenance_expenses WHERE maintenance_id = ? ORDER BY submitted_at DESC");
+        $stmt->bind_param("i", $maintenanceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $expenses = [];
+        while($row = $result->fetch_assoc()) {
+            $expenses[] = $row;
+        }
+        echo json_encode(["success" => true, "expenses" => $expenses]);
+        break;
+
+    case 'addExpense':
+        $data = json_decode(file_get_contents("php://input"));
+        if (!isset($data->maintenanceId, $data->expenseType, $data->amount)) {
+            echo json_encode(["success" => false, "message" => "Missing required expense data"]);
+            break;
+        }
+        $receiptImage = $data->receiptImage ?? null;
+        $conn->begin_transaction();
+        try {
+            $stmt = $conn->prepare("INSERT INTO maintenance_expenses (maintenance_id, expense_type, amount, receipt_image) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("isds", $data->maintenanceId, $data->expenseType, $data->amount, $receiptImage);
+            $stmt->execute();
+            updateTotalMaintenanceCost($conn, $data->maintenanceId);
+            $conn->commit();
+            echo json_encode(["success" => true, "message" => "Expense added."]);
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(["success" => false, "message" => "Database error."]);
+        }
+        break;
+
+    case 'updateExpense':
+        $data = json_decode(file_get_contents("php://input"));
+        if (!isset($data->expenseId, $data->maintenanceId, $data->expenseType, $data->amount)) {
+            echo json_encode(["success" => false, "message" => "Missing data for update"]);
+            break;
+        }
+        $conn->begin_transaction();
+        try {
+            if ($data->receiptImage) {
+                $stmt = $conn->prepare("UPDATE maintenance_expenses SET expense_type = ?, amount = ?, receipt_image = ? WHERE expense_id = ?");
+                $stmt->bind_param("sdsi", $data->expenseType, $data->amount, $data->receiptImage, $data->expenseId);
+            } else {
+                $stmt = $conn->prepare("UPDATE maintenance_expenses SET expense_type = ?, amount = ? WHERE expense_id = ?");
+                $stmt->bind_param("sdi", $data->expenseType, $data->amount, $data->expenseId);
+            }
+            $stmt->execute();
+            updateTotalMaintenanceCost($conn, $data->maintenanceId);
+            $conn->commit();
+            echo json_encode(["success" => true, "message" => "Expense updated."]);
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(["success" => false, "message" => "Database error."]);
+        }
+        break;
+
+    case 'deleteExpense':
+        $expenseId = isset($_GET['expenseId']) ? intval($_GET['expenseId']) : 0;
+        if ($expenseId <= 0) {
+            echo json_encode(["success" => false, "message" => "Invalid Expense ID"]);
+            break;
+        }
+        $conn->begin_transaction();
+        try {
+            $idStmt = $conn->prepare("SELECT maintenance_id FROM maintenance_expenses WHERE expense_id = ?");
+            $idStmt->bind_param("i", $expenseId);
+            $idStmt->execute();
+            $maintenanceId = $idStmt->get_result()->fetch_assoc()['maintenance_id'];
+
+            if ($maintenanceId) {
+                $deleteStmt = $conn->prepare("DELETE FROM maintenance_expenses WHERE expense_id = ?");
+                $deleteStmt->bind_param("i", $expenseId);
+                $deleteStmt->execute();
+                updateTotalMaintenanceCost($conn, $maintenanceId);
+                $conn->commit();
+                echo json_encode(["success" => true, "message" => "Expense deleted."]);
+            } else {
+                throw new Exception("Maintenance ID not found for expense.");
+            }
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo json_encode(["success" => false, "message" => "Database error."]);
+        }
+        break;
 
         case 'delete':
             $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
