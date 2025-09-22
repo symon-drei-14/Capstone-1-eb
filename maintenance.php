@@ -1375,34 +1375,59 @@ function renderExpenseList(expenses) {
     }
 
     expenses.forEach(expense => {
+        // Create the main container for the expense item
         const item = document.createElement('div');
         item.className = 'expense-item';
 
+        // Add the click handler for viewing receipts, if available
         if (expense.receipt_image) {
             item.setAttribute('data-receipt', expense.receipt_image);
             item.title = "Click to view receipt";
-            item.onclick = () => viewReceipt(expense.receipt_image);
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', () => viewReceipt(expense.receipt_image));
         } else {
             item.style.cursor = 'default';
             item.title = "No receipt available";
         }
 
-       
-        const escapedExpenseType = expense.expense_type
-            .replace(/\\/g, '\\\\') // Escape backslashes
-            .replace(/'/g, "\\'")  // Escape single quotes for the JS string
-            .replace(/"/g, '&quot;'); // Escape double quotes for the HTML attribute
-
-        item.innerHTML = `
-            <div class="expense-details">
-                <strong>${expense.expense_type}</strong>
-                <span>Amount: ₱${parseFloat(expense.amount).toFixed(2)} | Submitted: ${formatDateTime(expense.submitted_at)}</span>
-            </div>
-            <div class="expense-actions">
-                <button class="edit-btn" title="Edit" onclick="event.stopPropagation(); populateExpenseFormForEdit(${expense.expense_id}, '${escapedExpenseType}', ${expense.amount});"><i class="fas fa-edit"></i></button>
-                <button class="delete-btn" title="Delete" onclick="event.stopPropagation(); deleteExpense(${expense.expense_id});"><i class="fas fa-trash-alt"></i></button>
-            </div>
+        // Create and append the details section
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'expense-details';
+        detailsDiv.innerHTML = `
+            <strong>${expense.expense_type}</strong>
+            <span>Amount: ₱${parseFloat(expense.amount).toFixed(2)} | Submitted: ${formatDateTime(expense.submitted_at)}</span>
         `;
+        item.appendChild(detailsDiv);
+
+        // Create and append the actions section
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'expense-actions';
+
+        // Create, configure, and append the Edit button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.title = 'Edit';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevents the parent div's click (receipt view)
+            populateExpenseFormForEdit(expense.expense_id, expense.expense_type, expense.amount);
+        });
+        actionsDiv.appendChild(editBtn);
+
+        // Create, configure, and append the Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.title = 'Delete';
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevents the parent div's click (receipt view)
+            deleteExpense(expense.expense_id);
+        });
+        actionsDiv.appendChild(deleteBtn);
+
+        item.appendChild(actionsDiv);
+
+        // Add the fully constructed item to the list
         expenseListDiv.appendChild(item);
     });
 }
