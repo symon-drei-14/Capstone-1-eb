@@ -151,13 +151,19 @@ checkAccess();
     </div>
 
     <!-- Modal for Add/Edit Admin -->
-    <div id="adminModal" class="modal">
+<div id="adminModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal('adminModal')">&times;</span>
         <h2 id="modalTitle">Add Admin</h2>
         
         <form id="adminForm">
             <input type="hidden" id="adminId" name="adminId">
+
+            <div class="form-group">
+                <label for="adminProfile">Profile Photo (Max 2MB)</label>
+                <input type="file" id="adminProfile" name="adminProfile" accept="image/*">
+                <div id="adminProfilePreview" style="margin-top: 10px;"></div>
+            </div>
             
             <div class="form-group">
                 <label for="username">Username *</label>
@@ -189,12 +195,6 @@ checkAccess();
                 <label for="confirmPassword">Confirm Password *</label>
                 <input type="password" id="confirmPassword" name="confirmPassword" class="form-control">
             </div>
-
-            <div class="form-group">
-    <label for="adminProfile">Profile Photo</label>
-    <input type="file" id="adminProfile" name="adminProfile" accept="image/*">
-    <div id="adminProfilePreview" style="margin-top: 10px;"></div>
-</div>
 
             <div class="button-group">
                 <button type="button" class="save-btn" onclick="saveAdmin()">Save</button>
@@ -343,7 +343,7 @@ function renderAdminsTable(admins, isSearchResult = false) {
         
         const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
         
-  row.innerHTML = `
+      row.innerHTML = `
     <td>
         ${admin.admin_pic ? 
             '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
@@ -354,21 +354,21 @@ function renderAdminsTable(admins, isSearchResult = false) {
     <td>${highlightText(admin.username)}</td>
     <td>${highlightText(admin.role || 'Full Admin')}</td>
     <td>${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
-    <td class="deleted-only">${highlightText(admin.deleted_by_name || '')}</td>
-    <td class="deleted-only">${highlightText(deletedAt)}</td>
-    <td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
+   <td class="deleted-only">${highlightText(admin.deleted_by || '')}</td>
+<td class="deleted-only">${highlightText(deletedAt)}</td>
+<td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
     <td class="actions">
-        <div class="dropdown">
-            <button class="dropdown-btn" data-tooltip="Actions">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <div class="dropdown-content">
-                ${admin.is_deleted ? '' : `<button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i>Edit</button>`}
-                ${admin.is_deleted ? '' : `<button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i>Delete</button>`}
-                ${admin.is_deleted ? `<button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i>Restore</button>` : ''}
-                ${admin.is_deleted ? `<button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i>Full Delete</button>` : ''}
-            </div>
-        </div>
+     <div class="dropdown">
+                        <button class="dropdown-btn" data-tooltip="Actions">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+        <div class="dropdown-content">
+        ${admin.is_deleted ? '' : `<button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i>Edit</button>`}
+        ${admin.is_deleted ? '' : `<button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i>Delete</button>`}
+        ${admin.is_deleted ? `<button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i>Restore</button>` : ''}
+        ${admin.is_deleted ? `<button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i>Full Delete</button>` : ''}
+    </div>
+    </div>
     </td>
 `;
         tableBody.appendChild(row);
@@ -393,20 +393,49 @@ $(document).on('click', function(e) {
 }); 
 
 function confirmDeleteAdmin(adminId) {
-    const reason = prompt('Please enter the reason for deleting this admin:');
-    if (reason === null) return; 
-    
-    if (reason.trim() === '') {
-        alert('Please provide a reason for deletion');
-        return;
-    }
-    
-    if (confirm('Are you sure you want to delete this admin?')) {
-        deleteAdmin(adminId, reason);
-    }
+    Swal.fire({
+        title: 'Delete Admin?',
+        text: "Please provide a reason for deleting this admin.",
+        input: 'textarea',
+        inputPlaceholder: 'Enter your reason here...',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        preConfirm: (reason) => {
+            if (!reason) {
+                Swal.showValidationMessage('A reason is required to delete an admin.')
+            }
+            return reason;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteAdmin(adminId, result.value);
+        }
+    });
 }
+
+function deleteAdmin(adminId, reason) {
+    fetch('include/handlers/delete_admin.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_id: adminId, reason: reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Deleted!', 'The admin has been moved to the deleted list.', 'success');
+            fetchAdminsPaginated();
+        } else {
+            Swal.fire('Error!', data.message, 'error');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
         // Save admin (create or update)
-        function saveAdmin() {
+   function saveAdmin() {
     const adminId = document.getElementById('adminId').value;
     const username = document.getElementById('username').value;
     const role = document.getElementById('role').value;
@@ -416,22 +445,22 @@ function confirmDeleteAdmin(adminId) {
     const profileInput = document.getElementById('adminProfile');
     
     if (!username || !role) {
-        alert('Username and role are required.');
+        Swal.fire('Validation Error', 'Username and role are required.', 'warning');
         return;
     }
 
     if (password !== confirmPassword) {
-        alert('New passwords do not match.');
+        Swal.fire('Validation Error', 'New passwords do not match.', 'warning');
         return;
     }
     
     if (adminId && password && !oldPassword) {
-        alert('To set a new password, you must enter the current password.');
+        Swal.fire('Validation Error', 'To set a new password, you must enter the current password.', 'warning');
         return;
     }
     
     if (!adminId && !password) {
-        alert('Password is required for new admins.');
+        Swal.fire('Validation Error', 'Password is required for new admins.', 'warning');
         return;
     }
 
@@ -458,7 +487,7 @@ function confirmDeleteAdmin(adminId) {
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
-                text: 'Admin has been updated successfully',
+                text: `Admin has been ${adminId ? 'updated' : 'added'} successfully.`,
                 timer: 2000,
                 showConfirmButton: false,
                 timerProgressBar: true
@@ -467,69 +496,41 @@ function confirmDeleteAdmin(adminId) {
                 fetchAdminsPaginated();
             });
         } else {
-            alert('Error: ' + data.message);
+            Swal.fire('Error!', data.message, 'error');
         }
     })
     .catch(error => console.error('Error:', error));
 }
 
-function deleteAdmin(adminId, reason) {
-    fetch('include/handlers/delete_admin.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            admin_id: adminId,
-            delete_reason: reason 
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Deleted!',
-                text: 'Admin has been successfully deleted.',
-                timer: 2000,
-                showConfirmButton: false
-            });
-            fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Deletion Failed',
-                text: 'Error: ' + data.message
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Request Failed',
-            text: 'Could not connect to the server.'
-        });
-    });
-}
-
 // Add restore function
 function restoreAdmin(adminId) {
-    if (confirm('Are you sure you want to restore this admin?')) {
-        fetch('include/handlers/restore_admin.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ admin_id: adminId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Admin restored successfully!');
-                fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+    Swal.fire({
+        title: 'Restore Admin?',
+        text: "Are you sure you want to restore this admin?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, restore it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('include/handlers/restore_admin.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ admin_id: adminId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Restored!', 'The admin has been restored successfully.', 'success');
+                    fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
+                } else {
+                    Swal.fire('Error!', data.message, 'error');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
 }
 
 
@@ -553,11 +554,9 @@ function restoreAdmin(adminId) {
             fetchAdminsPaginated();
         }
 
-   function toggleDeletedAdmins() {
+ function toggleDeletedAdmins() {
     const showDeleted = document.getElementById('showDeletedCheckbox').checked;
     const table = document.getElementById('adminsTable');
-    
-    fetchAdminsPaginated(showDeleted);
     
     if (showDeleted) {
         table.classList.add('show-deleted');
@@ -715,26 +714,36 @@ const sidebar = document.querySelector('.sidebar');
 });
 
 function fullDeleteAdmin(adminId) {
-    if (confirm('WARNING: This will permanently delete this admin record. Are you absolutely sure?')) {
-        fetch('include/handlers/delete_admin.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                admin_id: adminId,
-                full_delete: true
+    Swal.fire({
+        title: 'PERMANENTLY DELETE?',
+        text: "This action cannot be undone! The admin will be completely removed from the database.",
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete permanently!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('include/handlers/delete_admin.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    admin_id: adminId,
+                    full_delete: true
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Admin permanently deleted!');
-                fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Permanently Deleted!', 'The admin record has been completely removed.', 'success');
+                    fetchAdminsPaginated(document.getElementById('showDeletedCheckbox').checked);
+                } else {
+                    Swal.fire('Error!', data.message, 'error');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
 }
 
 function changeRowsPerPage() {
@@ -910,10 +919,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.getElementById('adminProfile') && document.getElementById('adminProfile').addEventListener('change', function(e) {
-    const file = e.target.files[0];
+   const file = e.target.files[0];
     const profilePreview = document.getElementById('adminProfilePreview');
-    
+    const maxFileSize = 2 * 1024 * 1024; 
+
     if (file) {
+
+        if (file.size > maxFileSize) {
+            Swal.fire({
+                icon: 'error',
+                title: 'File Too Large',
+                text: 'Please select an image smaller than 5MB.'
+            });
+            e.target.value = ''; 
+            profilePreview.innerHTML = ''; 
+            return; 
+        }
+     
+
         const reader = new FileReader();
         reader.onload = function(event) {
             const existingContent = profilePreview.querySelector('.current-profile-section');
