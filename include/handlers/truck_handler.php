@@ -468,6 +468,20 @@ case 'softDeleteTruck':
     echo json_encode(['success' => true, 'trucks' => $trucks]);
     break;
 
+    case 'getPlateByTruckId':
+    $stmt = $conn->prepare("SELECT plate_no FROM truck_table WHERE truck_id = ? AND is_deleted = 0");
+    $stmt->bind_param("i", $data['truck_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $truck = $result->fetch_assoc();
+        echo json_encode(['success' => true, 'plate_no' => $truck['plate_no']]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Truck not found']);
+    }
+    break;
+
     case 'restoreTruck':
     // First get the truck's previous status before deletion
     $getStmt = $conn->prepare("SELECT status FROM truck_table WHERE truck_id = ?");

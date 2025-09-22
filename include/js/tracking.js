@@ -202,7 +202,6 @@ async function showDriverHistory(driverId, driverName) {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i class="fas fa-history me-2"></i>
                             Trip History - ${driverName}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -213,7 +212,6 @@ async function showDriverHistory(driverId, driverName) {
     if (history.length === 0) {
         historyHtml += `
             <div class="text-center py-4">
-                <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
                 <h5 class="text-muted">No trip history found</h5>
                 <p class="text-muted">This driver has no completed trips yet.</p>
             </div>
@@ -223,7 +221,6 @@ async function showDriverHistory(driverId, driverName) {
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
                         Click on any trip to view its route on the map
                     </div>
                 </div>
@@ -232,7 +229,6 @@ async function showDriverHistory(driverId, driverName) {
         
         history.forEach(trip => {
             const statusColor = trip.status === 'Completed' ? '#28a745' : '#007bff';
-            const statusIcon = trip.status === 'Completed' ? 'check-circle' : 'clock';
             
             historyHtml += `
                 <div class="card mb-2 trip-history-item" onclick="viewTripRoute('${trip.trip_id}')" style="cursor: pointer;">
@@ -252,7 +248,6 @@ async function showDriverHistory(driverId, driverName) {
                             </div>
                             <div class="col-md-3 text-end">
                                 <span class="badge" style="background-color: ${statusColor};">
-                                    <i class="fas fa-${statusIcon} me-1"></i>
                                     ${trip.status}
                                 </span>
                             </div>
@@ -286,6 +281,29 @@ async function showDriverHistory(driverId, driverName) {
     document.getElementById('historyModal').addEventListener('hidden.bs.modal', function() {
         this.remove();
     });
+}
+
+async function getDriverPlateNumber(driverId, assignedTruckId) {
+    try {
+        const response = await fetch('include/handlers/truck_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'getPlateByTruckId',
+                truck_id: assignedTruckId
+            }),
+        });
+
+        const data = await response.json();
+        console.log('Plate number response:', data);
+
+        if (data.success && data.plate_no) {
+            return data.plate_no;
+        }
+    } catch (error) {
+        console.error('Error fetching plate number for driver:', driverId, error);
+    }
+    return null;
 }
 
 async function viewTripRoute(tripId) {
@@ -429,7 +447,6 @@ async function fetchDriverData() {
         if (driversListContainer && !driversListContainer.innerHTML.includes('drivers-content')) {
             driversListContainer.innerHTML = `
                 <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i> 
                     API connection failed. Showing sample data.
                 </div>
                 <div id="drivers-content"></div>
@@ -444,13 +461,19 @@ async function enhanceDriversWithDestinations(drivers) {
     const driverPromises = Object.entries(drivers).map(async ([driverId, driverData]) => {
         try {
             const activeTripData = await getActiveTrip(driverId, driverData.name);
+
+            let plateNumber = null;
+            if (driverData.assigned_truck_id) {
+                plateNumber = await getDriverPlateNumber(driverId, driverData.assigned_truck_id);
+            }
             
             return [driverId, {
                 ...driverData,
                 assigned_trip_id: activeTripData?.trip_id || driverData.assigned_trip_id || null,
                 destination: activeTripData?.destination || driverData.destination || null,
                 origin: activeTripData?.origin || driverData.origin || null,
-                trip_status: activeTripData?.status || null
+                trip_status: activeTripData?.status || null,
+                plate_no: plateNumber || driverData.plate_no || null
             }];
         } catch (error) {
             console.error('Error enhancing driver data for:', driverId, error);
@@ -582,7 +605,7 @@ function updateMap(drivers) {
         const driverStatus = getDriverStatus(driverData);
         const statusColor = getStatusColor(driverStatus);
         const statusText = getStatusDisplayText(driverStatus);
-        let truckId = driverData.assigned_truck_id || 'N/A';
+        let truckLicense = driverData.plate_no || driverData.assigned_truck_id || 'N/A';
         const destination = driverData.destination;
         const tripId = driverData.assigned_trip_id;
 
@@ -605,12 +628,10 @@ function updateMap(drivers) {
                 </div>
                 <div style="margin-bottom: 8px;">
                     <div style="margin: 4px 0; display: flex; align-items: center;">
-                        <i class="fas fa-truck" style="color: #007bff; width: 16px; margin-right: 8px;"></i>
-                        <span><strong>Truck ID:</strong> ${truckId}</span>
+                        <span><strong>Truck License:</strong> ${truckLicense}</span>
                     </div>
                     ${destination ? `
                     <div style="margin: 4px 0; display: flex; align-items: flex-start;">
-                        <i class="fas fa-map-marker-alt" style="color: #28a745; width: 16px; margin-right: 8px; margin-top: 2px;"></i>
                         <div>
                             <strong>Destination:</strong><br>
                             <span style="font-size: 12px; line-height: 1.3;">${destination}</span>
@@ -618,15 +639,12 @@ function updateMap(drivers) {
                         </div>
                     </div>` : `
                     <div style="margin: 4px 0; display: flex; align-items: center;">
-                        <i class="fas fa-pause-circle" style="color: #6c757d; width: 16px; margin-right: 8px;"></i>
                         <span style="color: #6c757d;"><em>No active destination</em></span>
                     </div>`}
                     <div style="margin: 4px 0; display: flex; align-items: center;">
-                        <i class="fas fa-clock" style="color: #ffc107; width: 16px; margin-right: 8px;"></i>
                         <span><strong>Last Update:</strong> ${timeSinceUpdate}</span>
                     </div>
                     <div style="margin: 4px 0; display: flex; align-items: center;">
-                        <i class="fas fa-crosshairs" style="color: #dc3545; width: 16px; margin-right: 8px;"></i>
                         <span style="font-size: 11px; color: #6c757d;">${position[0].toFixed(6)}, ${position[1].toFixed(6)}</span>
                     </div>
                 </div>
@@ -750,12 +768,12 @@ function updateDriversList(drivers) {
         if (!driverData.location) return false;
         
         const driverName = (driverData.name || "").toLowerCase();
-        const truckId = (driverData.assigned_truck_id || "").toString().toLowerCase();
+        const truckLicense = (driverData.plate_no || driverData.assigned_truck_id || "").toString().toLowerCase();
         const driverStatus = getDriverStatus(driverData);
 
         const matchesSearch = currentSearchTerm === '' || 
                              driverName.includes(currentSearchTerm.toLowerCase()) ||
-                             truckId.includes(currentSearchTerm.toLowerCase());
+                             truckLicense.includes(currentSearchTerm.toLowerCase());
 
         let matchesFilter = true;
         if (currentFilter === 'Online') {
@@ -784,7 +802,7 @@ function updateDriversList(drivers) {
         const statusText = getStatusDisplayText(driverStatus);
         const statusColor = getStatusColor(driverStatus);
         const driverName = driverData.name || "Unknown Driver";
-        const truckId = driverData.assigned_truck_id || 'N/A';
+        const truckLicense = driverData.plate_no || driverData.assigned_truck_id || 'N/A';
         const destination = driverData.destination;
 
         if (driverStatus === 'online') {
@@ -842,7 +860,7 @@ function updateDriversList(drivers) {
                         margin-left: 12px;
                         color: #6c757d; 
                         font-size: 12px;
-                    ">Truck ${truckId}</span>
+                    ">Truck License ${truckLicense}</span>
                 </div>
 
                 <!-- Last seen -->
@@ -854,7 +872,6 @@ function updateDriversList(drivers) {
                     color: #6c757d; 
                     font-size: 12px;
                 ">
-                    <i class="far fa-clock" style="margin-right: 6px; width: 12px; font-size: 11px;"></i>
                     Last seen: ${timeSinceUpdate}
                 </div>
 
@@ -868,7 +885,6 @@ function updateDriversList(drivers) {
                     color: #6c757d; 
                     font-size: 12px;
                 ">
-                    <i class="fas fa-map-marker-alt" style="margin-right: 6px; width: 12px; font-size: 11px;"></i>
                     Destination: ${truncateDestination(destination, 25)}
                 </div>` : ''}
 
@@ -893,7 +909,6 @@ function updateDriversList(drivers) {
                         gap: 4px;
                     " onmouseover="this.style.borderColor='#007bff'; this.style.color='#007bff';" 
                        onmouseout="this.style.borderColor='#dee2e6'; this.style.color='#6c757d';">
-                        <i class="fas fa-crosshairs" style="font-size: 10px;"></i>
                         Locate
                     </button>
                     
@@ -911,7 +926,6 @@ function updateDriversList(drivers) {
                         gap: 4px;
                     " onmouseover="this.style.borderColor='#6c757d'; this.style.color='#495057';" 
                        onmouseout="this.style.borderColor='#dee2e6'; this.style.color='#6c757d';">
-                        <i class="fas fa-history" style="font-size: 10px;"></i>
                         History
                     </button>
                 </div>
@@ -926,7 +940,6 @@ function updateDriversList(drivers) {
                 padding: 40px 20px; 
                 color: #6c757d;
             ">
-                <i class="fas fa-search" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
                 <h6 style="margin-bottom: 8px; color: #495057;">No drivers found</h6>
                 <p style="font-size: 12px; margin: 0;">
                     ${currentSearchTerm ? `No results for "${currentSearchTerm}"` : 'Try adjusting your search or filter'}
@@ -974,14 +987,6 @@ function setupDriversControls(controlsContainer) {
             <!-- Search Box -->
             <div style="margin-bottom: 12px;">
                 <div style="position: relative;">
-                    <i class="fas fa-search" style="
-                        position: absolute;
-                        left: 10px;
-                        top: 50%;
-                        transform: translateY(-50%);
-                        color: #6c757d;
-                        font-size: 12px;
-                    "></i>
                     <input type="text" id="driver-search" placeholder="Search drivers or trucks..." style="
                         width: 100%;
                         padding: 8px 8px 8px 28px;
