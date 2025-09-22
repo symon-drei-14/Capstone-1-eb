@@ -275,7 +275,7 @@ if ($result->num_rows > 0) {
 </div>
                         <div class="search-container">
                             <i class="fa fa-search"></i>
-                            <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()>
+                              <input type="text" id="searchInput" placeholder="Search trips..." onkeyup="searchTrips()">
                         </div>
                     </div>
                     
@@ -3752,4 +3752,4 @@ window.AdminLoading = AdminLoading;
         </div>
     </footer>
     </body>
-    </html>
+    </html> 
