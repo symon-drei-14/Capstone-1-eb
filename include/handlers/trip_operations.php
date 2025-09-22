@@ -413,6 +413,13 @@ try {
             throw new Exception("Failed to insert audit log: " . $auditStmt->error);
         }
 
+         $updateDriverQueueStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = NOW() WHERE driver_id = ?");
+        $updateDriverQueueStmt->bind_param("i", $driverId);
+        if (!$updateDriverQueueStmt->execute()) {
+            // Non-critical error, but good to handle for robustness
+            throw new Exception("Failed to update driver queue position: " . $updateDriverQueueStmt->error);
+        }
+
         if ($data['status'] === 'En Route') {
             $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
             $updateTruck->bind_param("i", $truckId);
@@ -1244,6 +1251,41 @@ case 'get_trips_today':
         echo json_encode(['success' => false, 'message' => 'Trip not found']);
     }
     break;
+
+     case 'get_next_driver':
+            $capacity = $data['capacity'] ?? '';
+            if (empty($capacity)) {
+                throw new Exception("Capacity is required to find the next driver.");
+            }
+
+            // This query finds the next available driver based on the oldest assignment timestamp.
+            // It also joins with the truck_table to ensure the truck is available (not in repair, etc.).
+            $stmt = $conn->prepare("
+                SELECT 
+                    d.driver_id,
+                    d.name,
+                    t.plate_no,
+                    t.capacity
+                FROM drivers_table d
+                JOIN truck_table t ON d.assigned_truck_id = t.truck_id
+                WHERE t.capacity = ?
+                 
+                  AND t.is_deleted = 0
+                  AND t.status NOT IN ('In Repair', 'Overdue')
+                ORDER BY d.last_assigned_at ASC, d.driver_id ASC
+                LIMIT 1
+            ");
+            $stmt->bind_param("s", $capacity);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $driver = $result->fetch_assoc();
+                echo json_encode(['success' => true, 'driver' => $driver]);
+            } else {
+                echo json_encode(['success' => false, 'message' => "No available drivers found for {$capacity}ft capacity."]);
+            }
+            break;
 
 //eto pa babaguhin ko ehe
 case 'get_helpers':

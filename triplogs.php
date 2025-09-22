@@ -1624,6 +1624,60 @@ $(document).on('click', '.icon-btn.edit', function() {
         });
     }
 
+
+    function selectNextDriver(capacity) {
+    // Convert '20ft' to '20'
+    const capacityValue = capacity.replace('ft', '').trim();
+    
+    if (!capacityValue) {
+        $('#addEventDriver').val('');
+        $('#addEventPlateNo').val('');
+        return;
+    }
+
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_next_driver',
+            capacity: capacityValue
+        }),
+        success: function(response) {
+            if (response.success && response.driver) {
+                const driver = response.driver;
+                // Set the value for the dropdown and the plate number input
+                $('#addEventDriver').val(driver.name);
+                $('#addEventPlateNo').val(driver.plate_no);
+                
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'info',
+                    title: `Driver ${driver.name} automatically assigned.`,
+                    showConfirmButton: false,
+                    timer: 2500,
+                    timerProgressBar: true
+                });
+            } else {
+                $('#addEventDriver').val('');
+                $('#addEventPlateNo').val('');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Available Drivers',
+                    text: response.message || `No available drivers were found for a ${capacity} shipment.`
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Could not fetch the next available driver.'
+            });
+        }
+    });
+}
   
 
 
@@ -1671,10 +1725,17 @@ $(document).on('click', '.icon-btn.edit', function() {
         });
 
     // Add event listener for size dropdown changes
-    $('#addEventSize, #editEventSize').on('change', function() {
+     $('#addEventSize, #editEventSize').on('change', function() {
         var selectedSize = $(this).val();
         var isAddForm = $(this).attr('id') === 'addEventSize';
-        populateDriverDropdowns(selectedSize, isAddForm);
+        
+        // First, filter the dropdown list to show only capable drivers
+        populateDriverDropdowns(selectedSize); 
+        
+        // If we are in the ADD modal, automatically select the next driver from the queue
+        if(isAddForm) {
+            selectNextDriver(selectedSize);
+        }
     });
 
 
@@ -1787,27 +1848,38 @@ $(document).on('click', '.icon-btn.edit', function() {
         $('#addEventStatus').val('Pending');
     }
             // Close modal handlers
-        $('.close:not(.receipt-close), .close-btn.cancel-btn').on('click', function() {
+       $('.close:not(.receipt-close), .close-btn.cancel-btn').on('click', function() {
         $('.modal').hide();
+        
+        // Re-enable fields when closing the edit modal
+        $('#editEventDriver').prop('disabled', false);
+        $('#editEventSize').prop('disabled', false);
+
         if ($(this).closest('#addScheduleModal').length) {
             resetAddScheduleForm();
         }
     });
 
     // Also reset when clicking outside the modal
-  $(window).on('click', function(event) {
-    // Check if the click target is a modal background
-    if ($(event.target).hasClass('modal')) {
-        
-        // Hide only the specific modal that was clicked on its background
-        $(event.target).hide();
+   $(window).on('click', function(event) {
+        // Check if the click target is a modal background
+        if ($(event.target).hasClass('modal')) {
+            
+            // Hide only the specific modal that was clicked on its background
+            $(event.target).hide();
 
-        // If it was the add schedule modal that was closed, reset its form
-        if ($(event.target).is('#addScheduleModal')) {
-            resetAddScheduleForm();
+            // Re-enable fields if the edit modal was closed by clicking the background
+            if ($(event.target).is('#editModal')) {
+                 $('#editEventDriver').prop('disabled', false);
+                 $('#editEventSize').prop('disabled', false);
+            }
+    
+            // If it was the add schedule modal that was closed, reset its form
+            if ($(event.target).is('#addScheduleModal')) {
+                resetAddScheduleForm();
+            }
         }
-    }
-});
+    });
             
         $('#addScheduleBtnTable').on('click', function() {
         resetAddScheduleForm(); // Clear the form first
@@ -2574,6 +2646,8 @@ function populateEditModal(event) {
         }
         
         $('#editModal').show();
+            $('#editEventDriver').prop('disabled', true);
+    $('#editEventSize').prop('disabled', true);
     }
 
 $(document).on('click', '.dropdown-item.view-expenses', function() {
