@@ -848,7 +848,6 @@ window.onload = function() {
             }
         });
 }
-
 function renderTable(data) {
     const tableBody = document.querySelector("#maintenanceTable tbody");
     tableBody.innerHTML = ""; 
@@ -870,51 +869,45 @@ function renderTable(data) {
         const actionsCell = row.isDeleted 
             ? `
              <div class="dropdown">
-                        <button class="dropdown-btn" data-tooltip="Actions">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <div class="dropdown-content">
-                <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreMaintenance(${row.maintenanceId})">
-                   <i class="fas fa-trash-restore"></i> Restore
-                </button>
-             
-                <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
-                    <i class="fas fa-history"></i> History
-                </button>
-                   ${window.userRole === 'Full Admin' ? 
-                `<button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenanceId})">
-                    <i class="fa-solid fa-ban"></i> Full Delete
-                </button>` : ''}
-            
-            </div>
-            </div>    `
-        : `  <div class="dropdown">
-                <button class="dropdown-btn" data-tooltip="Actions">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
+                <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
                 <div class="dropdown-content">
-                <button class="dropdown-item edit" data-tooltip="Edit" onclick="openEditModal(${row.maintenanceId}, ${row.truckId}, '${row.licensePlate || ''}', '${row.maintenanceDate}', '${row.remarks || ''}', '${row.status}', ${row.supplierId || 'null'}, ${row.cost || 0}, ${row.maintenanceTypeId || 'null'})">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
-                    <i class="fas fa-history"></i> History
-                </button>
-                <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenanceId})">
-                    <i class="fas fa-trash-alt"></i> Delete
-                </button>
+                    <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreMaintenance(${row.maintenanceId})">
+                       <i class="fas fa-trash-restore"></i> Restore
+                    </button>
+                    <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
+                        <i class="fas fa-history"></i> History
+                    </button>
+                    <button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenanceId})">
+                        <i class="fa-solid fa-ban"></i> Full Delete
+                    </button>
                 </div>
+            </div>`
+            : `
+            <div class="dropdown">
+                <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
+                <div class="dropdown-content">
+                    <button class="dropdown-item edit" data-tooltip="Edit" onclick="openEditModal(${row.maintenanceId}, ${row.truckId}, '${row.licensePlate || ''}', '${row.maintenanceDate}', '${row.remarks || ''}', '${row.status}', ${row.supplierId || 'null'}, ${row.cost || 0}, ${row.maintenanceTypeId || 'null'})">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
+                        <i class="fas fa-history"></i> History
+                    </button>
+                    <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenanceId})">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
                 </div>
-            `;
+            </div>`;
         
+        // These data-label attributes provide the text for the left column
         tr.innerHTML = `
-            <td>${row.truckId}</td>
-            <td>${row.licensePlate || 'N/A'}</td>
-            <td>${formatDate(row.maintenanceDate)}</td>
-            <td>${row.remarks || 'N/A'}</td>
-            <td><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-            <td>${row.supplierName || 'N/A'}</td>
-            <td>₱ ${parseFloat(row.cost || 0).toFixed(2)}</td>
-            <td>
+            <td data-label="Truck ID">${row.truckId}</td>
+            <td data-label="License Plate">${row.licensePlate || 'N/A'}</td>
+            <td data-label="Inspection Date">${formatDate(row.maintenanceDate)}</td>
+            <td data-label="Remarks">${row.remarks || 'N/A'}</td>
+            <td data-label="Status"><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
+            <td data-label="Supplier">${row.supplierName || 'N/A'}</td>
+            <td data-label="Cost">₱ ${parseFloat(row.cost || 0).toFixed(2)}</td>
+            <td data-label="Last Modified">
                 <strong>${row.lastUpdatedBy || 'System'}</strong><br>
                 ${formatDateTime(row.lastUpdatedAt)}<br>
                 ${(row.editReason || row.deleteReason) ? 
@@ -925,7 +918,7 @@ function renderTable(data) {
                         })}'>View Remarks</button>` : ''
                 }
             </td>
-            <td class="actions">${actionsCell}</td>
+            <td data-label="Actions" class="actions">${actionsCell}</td>
         `;
         tableBody.appendChild(tr);
     });

@@ -3186,3 +3186,201 @@ h3.title {
     background-color: #dc3545;
     color: white;
 }
+
+
+@media (max-width: 992px) {
+    .main-container {
+        margin-left: 10px;
+        margin-right: 10px;
+        width: calc(100% - 20px);
+        padding: 10px;
+    }
+    .stats-container {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .stat-card {
+        flex-basis: calc(50% - 20px); 
+        margin-bottom: 15px;
+    }
+    .calendar-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .status-filter-container {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filter-toggle-container {
+        width: 100%;
+    }
+    .search-container {
+        max-width: none;
+        width: 100%;
+    }
+}
+
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+                position: absolute;
+                z-index: 999;
+                background-color: #fff;
+                width: 250px;
+                height: 100%;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            }
+
+            .sidebar.show {
+                display: block;
+            }
+            
+            h3.title {
+                margin-left: 10px;
+                font-size: 1.5rem;
+            }
+
+            .stats-container-wrapper {
+                margin: 15px 10px;
+            }
+
+            .stat-card {
+                flex-basis: 100%;
+
+            }
+
+            .calendar-container {
+                padding: 5px;
+            }
+
+            #calendar {
+                padding: 5px;
+                height: auto !important;
+
+            }
+
+            .calendar-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-toggle-container {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            body.table-view .filter-toggle-container,
+            body.table-view .status-filter-container {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+
+            .table-container {
+                overflow-x: hidden;
+            }
+
+            .events-table thead {
+                display: none;
+
+            }
+
+            .events-table,
+            .events-table tbody,
+            .events-table tr,
+            .events-table td {
+                display: block;
+                width: 98% !important; 
+            }
+
+            .events-table tr {
+                margin-bottom: 1.5rem;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 1rem;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                background-color: #fff;
+                position: relative;
+            }
+
+            .events-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: right;
+                border-bottom: 1px solid #f0f0f0;
+                padding: 0.75rem 0.5rem;
+                font-size: 14px;
+            }
+
+            .events-table td:last-of-type {
+                border-bottom: none;
+
+            }
+
+
+            .events-table td:before {
+                content: attr(data-label);
+                font-weight: 600;
+                text-align: left;
+                margin-right: 1rem;
+                color: #333;
+                flex-basis: 45%;
+
+            }
+            
+
+            .events-table td:nth-child(1) {
+                font-size: 1.1rem;
+                font-weight: bold;
+                color: #B82132;
+                padding: 0 0.5rem 0.75rem; 
+                border-bottom: 2px solid #f0f0f0;
+            }
+            .events-table td:nth-child(1)::before {
+                 font-size: 1.1rem; /
+            }
+
+            /* Handle the status badge */
+            .events-table td .status {
+                padding: 4px 12px;
+                font-size: 12px;
+                margin-left: auto; 
+            }
+            
+
+            .events-table td:nth-child(18) {
+                position: absolute;
+                top: 0.5rem;
+                right: 0rem;
+                border: none;
+                padding: 0;
+                width: auto !important;
+                background-color: transparent;
+            }
+
+            .events-table td:nth-child(18)::before {
+                content: ""; 
+            
+            }
+
+            .events-table .dropdown {
+                padding-top: 0;
+            }
+            
+   
+
+            #editModal .modal-content,
+            #addScheduleModal .modal-content,
+            #eventModal .event-details-grid {
+                grid-template-columns: 1fr;
+
+            }
+
+            #expensesModal .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }

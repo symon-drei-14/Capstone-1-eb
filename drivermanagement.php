@@ -314,38 +314,25 @@ function fetchTripCounts() {
         pageData.forEach(function(driver) {
             let formattedLastLogin = formatTime(driver.last_login);
             
-        var row = "<tr>" +
-    "<td>" + 
-    (driver.driver_pic ? 
-        '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
-        '<i class="fa-solid fa-circle-user profile-icon"></i>'
-    ) + 
-    "</td>" +
-    "<td>" + driver.driver_id + "</td>" +
-    "<td>" + driver.name + "</td>" +
-    "<td>" + driver.email + "</td>" +
-    "<td>" + (driver.contact_no || 'N/A') + "</td>" +
-    "<td>" + (driver.assigned_truck_id || 'None') + "</td>" +
-    "<td>" + (driver.total_completed || 0) + "</td>" +
-    "<td>" + (driver.monthly_completed || 0) + "</td>" +
-    "<td>" + formatDateWithTime(driver.created_at) + "</td>" +
-    "<td>" + formattedLastLogin + "</td>" +
-    "<td class='actions'>" +
-    "<div class='dropdown'>" +
-    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'>" +
-    "<i class='fas fa-ellipsis-v'></i>" +
-    "</button>" +
-    "<div class='dropdown-content'>" +
-    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'>" +
-    "<i class='fas fa-edit'></i> Edit Driver" +
-    "</button>" +
-    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>" +
-    "<i class='fas fa-trash-alt'></i> Delete Driver" +
-    "</button>" +
-    "</div>" +
-    "</div>" +
-    "</td>" +
-    "</tr>";
+       var row = "<tr>" +
+                "<td data-label='Profile'>" + (driver.driver_pic ? '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : '<i class="fa-solid fa-circle-user profile-icon"></i>') + "</td>" +
+                "<td data-label='ID'>" + driver.driver_id + "</td>" +
+                "<td data-label='Name'>" + driver.name + "</td>" +
+                "<td data-label='Email'>" + driver.email + "</td>" +
+                "<td data-label='Contact No.'>" + (driver.contact_no || 'N/A') + "</td>" +
+                "<td data-label='Assigned Truck'>" + (driver.assigned_truck_id || 'None') + "</td>" +
+                "<td data-label='Total Trips'>" + (driver.total_completed || 0) + "</td>" +
+                "<td data-label='Monthly Trips'>" + (driver.monthly_completed || 0) + "</td>" +
+                "<td data-label='Created At'>" + formatDateWithTime(driver.created_at) + "</td>" +
+                "<td data-label='Last Login'>" + formattedLastLogin + "</td>" +
+                "<td data-label='Actions' class='actions'>" +
+                    "<div class='dropdown'>" +
+                    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'><i class='fas fa-ellipsis-v'></i></button>" +
+                    "<div class='dropdown-content'>" +
+                    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i> Edit Driver</button>" +
+                    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i> Delete Driver</button>" +
+                    "</div></div></td>" +
+                "</tr>";
                 $('#driverTableBody').append(row);
             });
         } else {
@@ -712,38 +699,25 @@ function formatDateWithTime(dateString) {
                 return str.replace(regex, '<span class="highlight">$1</span>');
             };
             
-            var row = "<tr>" +
-                "<td>" + 
-                (driver.driver_pic ? 
-                    '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : 
-                    '<i class="fa-solid fa-circle-user profile-icon"></i>'
-                ) + 
-                "</td>" +
-                "<td>" + highlightText(driver.driver_id) + "</td>" +
-                "<td>" + highlightText(driver.name) + "</td>" +
-                "<td>" + highlightText(driver.email) + "</td>" +
-                    "<td>" + highlightText(driver.contact_no || 'N/A') + "</td>" +
-                "<td>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
-                "<td>" + highlightText(driver.total_completed || 0) + "</td>" +
-                "<td>" + highlightText(driver.monthly_completed || 0) + "</td>" +
-                "<td>" + highlightText(formatDateWithTime(driver.created_at)) + "</td>" +
-                "<td>" + highlightText(formattedLastLogin) + "</td>" +
-                 "<td class='actions'>" +
+               var row = "<tr>" +
+                "<td data-label='Profile'>" + (driver.driver_pic ? '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : '<i class="fa-solid fa-circle-user profile-icon"></i>') + "</td>" +
+                "<td data-label='ID'>" + highlightText(driver.driver_id) + "</td>" +
+                "<td data-label='Name'>" + highlightText(driver.name) + "</td>" +
+                "<td data-label='Email'>" + highlightText(driver.email) + "</td>" +
+                "<td data-label='Contact No.'>" + highlightText(driver.contact_no || 'N/A') + "</td>" +
+                "<td data-label='Assigned Truck'>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
+                "<td data-label='Total Trips'>" + highlightText(driver.total_completed || 0) + "</td>" +
+                "<td data-label='Monthly Trips'>" + highlightText(driver.monthly_completed || 0) + "</td>" +
+                "<td data-label='Created At'>" + highlightText(formatDateWithTime(driver.created_at)) + "</td>" +
+                "<td data-label='Last Login'>" + highlightText(formattedLastLogin) + "</td>" +
+                "<td data-label='Actions' class='actions'>" +
                     "<div class='dropdown'>" +
-                    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'>" +
-                    "<i class='fas fa-ellipsis-v'></i>" +
-                    "</button>" +
+                    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'><i class='fas fa-ellipsis-v'></i></button>" +
                     "<div class='dropdown-content'>" +
-                    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'>" +
-                    "<i class='fas fa-edit'></i> Edit Driver" +
-                    "</button>" +
-                    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'>" +
-                    "<i class='fas fa-trash-alt'></i> Delete Driver" +
-                    "</button>" +
-                    "</div>" +
-                    "</div>" +
-                    "</td>" +
-                    "</tr>";
+                    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i> Edit Driver</button>" +
+                    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i> Delete Driver</button>" +
+                    "</div></div></td>" +
+                "</tr>";
                 $('#driverTableBody').append(row);
         });
     } else {

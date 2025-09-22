@@ -1300,88 +1300,82 @@ function renderTripRows(trips, showDeleted) {
         let actionCell = '';
         
         if (showDeleted || trip.is_deleted == 1) {
-            statusCell = `<td><span class="status cancelled">Deleted</span></td>`;
+            statusCell = `<td data-label="Status"><span class="status cancelled">Deleted</span></td>`;
             actionCell = `
-               <td class="actions">
-    <div class="dropdown">
-        <button class="dropdown-btn" data-tooltip="Actions">
-            <i class="fas fa-ellipsis-v"></i>
-        </button>
-        <div class="dropdown-content">
-            <button class="dropdown-item restore" data-id="${trip.trip_id}">
-                <i class="fas fa-trash-restore"></i> Restore
-            </button>
-            ${window.userRole === 'Full Admin' ? 
-            `<button class="dropdown-item full-delete" data-id="${trip.trip_id}">
-                <i class="fa-solid fa-ban"></i> Permanent Delete
-            </button>` : ''}
-              <button type="button" id="viewChecklistBtn" class=" dropdown-item full-delete" style="background-color: #17a2b8; display: none;">
-                    View Driver Checklist
-                </button>
-        </div>
-    </div>
-</td>
+               <td data-label="Actions" class="actions">
+                    <div class="dropdown">
+                        <button class="dropdown-btn" data-tooltip="Actions">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="dropdown-content">
+                            <button class="dropdown-item restore" data-id="${trip.trip_id}">
+                                <i class="fas fa-trash-restore"></i> Restore
+                            </button>
+                            <button class="dropdown-item full-delete" data-id="${trip.trip_id}">
+                                <i class="fa-solid fa-ban"></i> Permanent Delete
+                            </button>
+                            <button type="button" id="viewChecklistBtn" class=" dropdown-item full-delete" style="background-color: #17a2b8; display: none;">
+                                    View Driver Checklist
+                            </button>
+                        </div>
+                    </div>
+                </td>
             `;
         } else {
-            statusCell = `<td><span class="status ${trip.status.toLowerCase().replace(/\s+/g, '')}">${trip.status}</span></td>`;
+            statusCell = `<td data-label="Status"><span class="status ${trip.status.toLowerCase().replace(/\s+/g, '')}">${trip.status}</span></td>`;
             actionCell = `
-             <td class="actions">
-    <div class="dropdown">
-        <button class="dropdown-btn" data-tooltip="Actions">
-            <i class="fas fa-ellipsis-v"></i>
-        </button>
-        <div class="dropdown-content">
-            <button class="dropdown-item edit" data-id="${trip.trip_id}">
-                <i class="fas fa-edit"></i> Edit
-            </button>
-            
-            <!-- New buttons added here -->
-            <button class="dropdown-item view-expenses" data-id="${trip.trip_id}">
-                <i class="fas fa-money-bill-wave"></i> View Expenses
-            </button>
-            
-            <button class="dropdown-item view-checklist" data-id="${trip.trip_id}" data-driver-id="${trip.driver_id}">
-                <i class="fas fa-clipboard-check"></i> Driver Checklist
-            </button>
-           <a href="trip_report.php?id=${trip.trip_id}" target="_blank" class="dropdown-item Full-report">
-    <i class="fas fa-file-alt"></i> Generate Report
-</a>
-            
-            ${trip.edit_reason && trip.edit_reason !== 'null' && trip.edit_reason !== '' ? 
-            `<button class="dropdown-item view-reasons" data-id="${trip.trip_id}">
-                <i class="fas fa-history"></i> View History
-            </button>` : ''}
-            
-            <button class="dropdown-item delete" data-id="${trip.trip_id}">
-                <i class="fas fa-trash-alt"></i> Delete
-            </button>
-             <button class="dropdown-item cancel-trip" data-id="${trip.trip_id}">
-                <i class="fas fa-ban"></i> Cancel Trip
-            </button>
-        </div>
-    </div>
-</td>
+             <td data-label="Actions" class="actions">
+                <div class="dropdown">
+                    <button class="dropdown-btn" data-tooltip="Actions">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-content">
+                        <button class="dropdown-item edit" data-id="${trip.trip_id}">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="dropdown-item view-expenses" data-id="${trip.trip_id}">
+                            <i class="fas fa-money-bill-wave"></i> View Expenses
+                        </button>
+                        <button class="dropdown-item view-checklist" data-id="${trip.trip_id}" data-driver-id="${trip.driver_id}">
+                            <i class="fas fa-clipboard-check"></i> Driver Checklist
+                        </button>
+                       <a href="trip_report.php?id=${trip.trip_id}" target="_blank" class="dropdown-item Full-report">
+                            <i class="fas fa-file-alt"></i> Generate Report
+                        </a>
+                        ${trip.edit_reason && trip.edit_reason !== 'null' && trip.edit_reason !== '' ? 
+                        `<button class="dropdown-item view-reasons" data-id="${trip.trip_id}">
+                            <i class="fas fa-history"></i> View History
+                        </button>` : ''}
+                        <button class="dropdown-item delete" data-id="${trip.trip_id}">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                         <button class="dropdown-item cancel-trip" data-id="${trip.trip_id}">
+                            <i class="fas fa-ban"></i> Cancel Trip
+                        </button>
+                    </div>
+                </div>
+            </td>
             `;
         }
-const row = `
+        const row = `
              <tr class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
-                <td>${trip.plate_no || 'N/A'}</td>
-                <td>${formatDateTime(trip.trip_date)}</td>
-                <td>${trip.driver || 'N/A'}</td>
-                <td>${trip.helper || 'N/A'}</td>
-                <td>${trip.dispatcher || 'N/A'}</td>
-                <td>${trip.container_no || 'N/A'}</td>
-               <td>${trip.client || 'N/A'}${trip.port ? ' - ' + trip.port : ''}</td>
-                <td>${trip.destination || 'N/A'}</td>
-                <td>${trip.shipping_line || 'N/A'}</td>
-                <td>${trip.consignee || 'N/A'}</td>
-                <td>${trip.truck_capacity ? trip.truck_capacity + 'ft' : 'N/A'}</td>
-                <td>${trip.fcl_status || 'N/A'}</td>
-                <td>₱${parseFloat(trip.cash_advance || 0).toFixed(2)}</td>
-                <td>₱${parseFloat(trip.additional_cash_advance || 0).toFixed(2)}</td>
-                <td>₱${parseFloat(trip.diesel || 0).toFixed(2)}</td>
+                <td data-label="Plate Number">${trip.plate_no || 'N/A'}</td>
+                <td data-label="Trip Date">${formatDateTime(trip.trip_date)}</td>
+                <td data-label="Driver">${trip.driver || 'N/A'}</td>
+                <td data-label="Helper">${trip.helper || 'N/A'}</td>
+                <td data-label="Dispatcher">${trip.dispatcher || 'N/A'}</td>
+                <td data-label="Container No.">${trip.container_no || 'N/A'}</td>
+                <td data-label="Client - Port">${trip.client || 'N/A'}${trip.port ? ' - ' + trip.port : ''}</td>
+                <td data-label="Destination">${trip.destination || 'N/A'}</td>
+                <td data-label="Shipping Line">${trip.shipping_line || 'N/A'}</td>
+                <td data-label="Consignee">${trip.consignee || 'N/A'}</td>
+                <td data-label="Container Size">${trip.truck_capacity ? trip.truck_capacity + 'ft' : 'N/A'}</td>
+                <td data-label="FCL">${trip.fcl_status || 'N/A'}</td>
+                <td data-label="Cash Advance">₱${parseFloat(trip.cash_advance || 0).toFixed(2)}</td>
+                <td data-label="Additional Cash">₱${parseFloat(trip.additional_cash_advance || 0).toFixed(2)}</td>
+                <td data-label="Diesel">₱${parseFloat(trip.diesel || 0).toFixed(2)}</td>
                 ${statusCell}
-                <td>${formatDateTime(trip.last_modified_at || trip.created_at)} 
+                <td data-label="Last Modified">${formatDateTime(trip.last_modified_at || trip.created_at)} 
                     ${trip.last_modified_by ? `<br> <strong>${trip.last_modified_by} </strong></small>` : ''}
                 </td>
                 ${actionCell}

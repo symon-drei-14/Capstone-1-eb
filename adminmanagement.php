@@ -310,8 +310,6 @@ checkAccess();
         })
         .catch(error => console.error('Error:', error));
 }
-
-        // Render admins table
 function renderAdminsTable(admins, isSearchResult = false) {
     const tableBody = document.getElementById('adminTableBody');
     tableBody.innerHTML = '';
@@ -341,33 +339,34 @@ function renderAdminsTable(admins, isSearchResult = false) {
         
         const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
         
-      row.innerHTML = `
-    <td>
-        ${admin.admin_pic ? 
-            '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
-            '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
-        }
-    </td>
-    <td>${highlightText(admin.admin_id)}</td>
-    <td>${highlightText(admin.username)}</td>
-    <td>${highlightText(admin.role || 'Full Admin')}</td>
-    <td>${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
-   <td class="deleted-only">${highlightText(admin.deleted_by || '')}</td>
-<td class="deleted-only">${highlightText(deletedAt)}</td>
-<td class="deleted-only">${highlightText(admin.delete_reason || '')}</td>
-    <td class="actions">
-     <div class="dropdown">
-                        <button class="dropdown-btn" data-tooltip="Actions">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-        <div class="dropdown-content">
-        ${admin.is_deleted ? '' : `<button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i>Edit</button>`}
-        ${admin.is_deleted ? '' : `<button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i>Delete</button>`}
-        ${admin.is_deleted ? `<button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i>Restore</button>` : ''}
-        ${admin.is_deleted ? `<button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i>Full Delete</button>` : ''}
-    </div>
-    </div>
-    </td>
+           row.innerHTML = `
+        <td data-label="Profile">
+            ${admin.admin_pic ? 
+                '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
+                '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
+            }
+        </td>
+        <td data-label="Admin ID">${highlightText(admin.admin_id)}</td>
+        <td data-label="Username">${highlightText(admin.username)}</td>
+        <td data-label="Role">${highlightText(admin.role || 'Full Admin')}</td>
+        <td data-label="Status">${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
+        <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
+        <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
+        <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
+        <td data-label="Actions" class="actions">
+            <div class="dropdown">
+                <button class="dropdown-btn" data-tooltip="Actions">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="dropdown-content">
+                ${admin.is_deleted ? '' : `<button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})" data-tooltip="Edit"><i class="fas fa-edit"></i>Edit</button>`}
+                ${admin.is_deleted ? '' : `<button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})" data-tooltip="Delete"><i class="fas fa-trash-alt"></i>Delete</button>`}
+                ${admin.is_deleted ? `<button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id})" data-tooltip="Restore"><i class="fas fa-trash-restore"></i>Restore</button>` : ''}
+                ${admin.is_deleted ? `<button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})" data-tooltip="Permanently Delete"><i class="fa-solid fa-ban"></i>Full Delete</button>` : ''}
+                </div>
+            </div>
+        </td>
+
 `;
         tableBody.appendChild(row);
     });

@@ -1219,3 +1219,66 @@ td:first-child {
     font-style: italic;
 }
 
+
+@media (max-width: 992px) {
+    .main-content4 {
+        margin: 10px;
+        width: calc(100% - 20px);
+    }
+}
+
+@media (max-width: 768px) {
+    h3 {
+        margin: 80px 10px 10px 10px;
+        width: auto;
+    }
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #adminSearch {
+        width: 100%;
+    }
+    
+    /* Responsive Table Transformation */
+    #adminsTable thead {
+        display: none;
+    }
+    #adminsTable, #adminsTable tbody, #adminsTable tr, #adminsTable td {
+        display: block;
+        width: 100%;
+    }
+    #adminsTable tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        background-color: #fff;
+    }
+    #adminsTable tr.deleted-row {
+        background-color: #f8d7da; /* Light red for deleted rows */
+    }
+    #adminsTable td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border-bottom: 1px solid #eee;
+        padding: 8px 0;
+    }
+    #adminsTable td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        text-align: left;
+        margin-right: 10px;
+        color: #333;
+    }
+    #adminsTable td:last-child {
+        border-bottom: none;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+}

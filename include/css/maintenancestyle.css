@@ -1083,22 +1083,7 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
-/* Responsive Adjustments */
-@media (max-width: 1200px) {
-    .stats-cards {
-        justify-content: flex-start;
-    }
-    
-    .stat-card {
-        min-width: calc(50% - 10px);
-    }
-}
 
-@media (max-width: 768px) {
-    .stat-card {
-        min-width: 100%;
-    }
-}
 
  .remarks-container {
         display: flex;
@@ -1761,5 +1746,150 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     .clear-date-filter {
         align-self: center;
         margin-top: 8px;
+    }
+}
+
+/* --- Responsive Design --- */
+
+/* For Tablets (e.g., <= 992px) */
+@media (max-width: 992px) {
+    .main-content3 {
+        margin-left: 10px;
+        margin-right: 10px;
+        width: calc(100% - 20px);
+        padding: 15px;
+    }
+    .stats-cards {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    .stat-card {
+        flex-basis: calc(50% - 20px); /* Two cards per row */
+        margin-bottom: 15px;
+    }
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .search-container {
+        left: auto;
+        width: 100%;
+    }
+    .date-range-filter-container {
+        width: 100%;
+        justify-content: space-around;
+    }
+}
+
+/* For Mobile Phones (e.g., <= 768px) */
+/* --- Cleaner Responsive Card View --- */
+/* For Mobile Phones (e.g., <= 768px) */
+@media (max-width: 768px) {
+    h3 {
+        margin-left: 10px;
+        font-size: 1.5rem;
+    }
+    .stats-cards {
+        margin: 0;
+    }
+    .stat-card {
+        flex-basis: 100%; /* One card per row */
+    }
+    .button-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    .add_sched, .reminder_btn {
+        width: 100%;
+    }
+
+    /* Hide the original table header */
+    #maintenanceTable thead {
+        display: none;
+    }
+
+    #maintenanceTable, 
+    #maintenanceTable tbody, 
+    #maintenanceTable tr, 
+    #maintenanceTable td {
+        display: block;
+        width: 100%;
+    }
+
+    /* 1. Improved Card Styling */
+    #maintenanceTable tr {
+        margin-bottom: 20px;
+        border: 1px solid #e0e0e0; /* Softer border */
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Subtle shadow */
+        background-color: #ffffff;
+    }
+
+    /* 2. Improved Cell Styling (each row within the card) */
+    #maintenanceTable td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border-bottom: 1px solid #f0f0f0; /* Lighter separator line */
+        padding: 12px 5px; /* More vertical padding */
+    }
+
+    #maintenanceTable tr td:last-child {
+        border-bottom: none; /* Remove line from the last item */
+    }
+
+    /* 3. Improved Label Styling */
+    #maintenanceTable td:before {
+        content: attr(data-label);
+        font-weight: 600; 
+        text-align: left;
+        margin-right: 15px;
+        color: #555;
+        flex-basis: 45%;
+        font-size: 0.9em;
+    }
+    
+    /* 4. Improved Data Styling */
+    #maintenanceTable td {
+        font-size: 1em;
+        color: #111;
+        font-weight: 500;
+    }
+
+   
+    #maintenanceTable .status-pending,
+    #maintenanceTable .status-completed,
+    #maintenanceTable .status-in-progress,
+    #maintenanceTable .status-overdue {
+        font-size: 0.8em;
+        font-weight: bold;
+        padding: 4px 10px;
+    }
+
+    #maintenanceTable td[data-label="Actions"] {
+        padding-top: 15px;
+        justify-content: center; 
+    }
+    
+ 
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 15px;
+    }
+    .form-row {
+        flex-direction: column;
+        margin: 0;
+    }
+    .form-group {
+        padding: 0;
+    }
+    .checkbox-grid {
+        grid-template-columns: 1fr; 
     }
 }

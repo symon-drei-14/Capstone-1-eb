@@ -652,58 +652,51 @@ function renderTrucksTable() {
         }
      
         tr.innerHTML = `
-            <td>${highlightMatches(truck.truck_id)}</td>
-           <td>
-    <div class='truck-image-container'>
-        ${truck.truck_pic ? 
-            '<img src="data:image/jpeg;base64,' + truck.truck_pic + '" ' +
-            'alt="Truck ' + truck.plate_no + '" ' +
-            'class="truck-image" ' +
-            'title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">' :
-            '<img src="include/img/truck' + (truck.capacity == 20 ? '1' : '2') + '.png" ' +
-            'alt="Truck ' + truck.plate_no + '" ' +
-            'class="truck-image" ' +
-            'title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">'
-        }
-    </div>
-</td>
-            <td>${highlightMatches(truck.plate_no)}</td>
-            <td>${highlightMatches(truck.capacity)}</td>
-            <td><span class="status-${statusClass}">${highlightMatches(statusText)}</span></td>
-            <td> <strong><span class="modifby">${highlightMatches(truck.last_modified_by)}</span></strong><br>${formatDateTime(truck.last_modified_at)}</td>
-          
-             <td class="actions">
-                    <div class="dropdown">
-                        <button class="dropdown-btn" data-tooltip="Actions">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <div class="dropdown-content">
-                            ${truck.is_deleted == 1 ? `
-                                <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreTruck(${truck.truck_id})">
-                                    <i class="fas fa-trash-restore"></i> Restore
-                                </button>
-                               
-                                <button class="dropdown-item view-reason" data-tooltip="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
-                                    <i class="fas fa-info-circle"></i> View Reason
-                                </button>
-                                 ${window.userRole === 'Full Admin' ? 
-                                    `<button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
-                                        <i class="fa-solid fa-ban"></i> Permanent Delete
-                                    </button>` : ''}
-                            ` : `
-                                <button class="dropdown-item edit" data-tooltip="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="dropdown-item history" data-tooltip="View History" onclick="viewMaintenanceHistory(${truck.truck_id})">
-                                    <i class="fas fa-history"></i> Maintenance History
-                                </button>
-                                <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteTruck(${truck.truck_id})">
-                                    <i class='fas fa-trash-alt'></i> Delete
-                                </button>
-                            `}
-                        </div>
+            <td data-label="ID">${highlightMatches(truck.truck_id)}</td>
+            <td data-label="Truck Photo">
+                <div class='truck-image-container'>
+                    ${truck.truck_pic ? 
+                        '<img src="data:image/jpeg;base64,' + truck.truck_pic + '" alt="Truck ' + truck.plate_no + '" class="truck-image" title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">' :
+                        '<img src="include/img/truck' + (truck.capacity == 20 ? '1' : '2') + '.png" alt="Truck ' + truck.plate_no + '" class="truck-image" title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">'
+                    }
+                </div>
+            </td>
+            <td data-label="Plate No.">${highlightMatches(truck.plate_no)}</td>
+            <td data-label="Capacity">${highlightMatches(truck.capacity)}</td>
+            <td data-label="Status"><span class="status-${statusClass}">${highlightMatches(statusText)}</span></td>
+            <td data-label="Last Modified"> <strong><span class="modifby">${highlightMatches(truck.last_modified_by)}</span></strong><br>${formatDateTime(truck.last_modified_at)}</td>
+            <td data-label="Actions" class="actions">
+                <div class="dropdown">
+                    <button class="dropdown-btn" data-tooltip="Actions">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-content">
+                        ${truck.is_deleted == 1 ? `
+                            <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreTruck(${truck.truck_id})">
+                                <i class="fas fa-trash-restore"></i> Restore
+                            </button>
+                           
+                            <button class="dropdown-item view-reason" data-tooltip="View Reason" onclick="viewDeletionReason(${truck.truck_id})">
+                                <i class="fas fa-info-circle"></i> View Reason
+                            </button>
+                             ${window.userRole === 'Full Admin' ? 
+                                `<button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteTruck(${truck.truck_id})">
+                                    <i class="fa-solid fa-ban"></i> Permanent Delete
+                                </button>` : ''}
+                        ` : `
+                            <button class="dropdown-item edit" data-tooltip="Edit" onclick="openTruckModal(true, ${truck.truck_id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="dropdown-item history" data-tooltip="View History" onclick="viewMaintenanceHistory(${truck.truck_id})">
+                                <i class="fas fa-history"></i> Maintenance History
+                            </button>
+                            <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteTruck(${truck.truck_id})">
+                                <i class='fas fa-trash-alt'></i> Delete
+                            </button>
+                        `}
                     </div>
-                </td>
+                </div>
+            </td>
             `;
         tableBody.appendChild(tr);
     });

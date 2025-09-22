@@ -591,18 +591,18 @@ let showDeletedData = {
         pageItems.forEach(item => {
             const tr = document.createElement('tr');
             
-            // Highlight search matches
             let nameDisplay = item.name;
             if (searchTerm) {
                 const regex = new RegExp(searchTerm, 'gi');
                 nameDisplay = item.name.replace(regex, match => `<span class="highlight">${match}</span>`);
             }
             
+            // MODIFICATION: Added data-label attributes to each <td>
             tr.innerHTML = `
-                <td>${nameDisplay}</td>
-                <td>${item.last_modified_by || 'System'}</td>
-                <td>${formatDateTime(item.last_modified_at)}</td>
-                <td class="actions">
+                <td data-label="Name">${nameDisplay}</td>
+                <td data-label="Last Modified By">${item.last_modified_by || 'System'}</td>
+                <td data-label="Last Modified At">${formatDateTime(item.last_modified_at)}</td>
+                <td data-label="Actions" class="actions">
                     <div class="dropdown">
                         <button class="dropdown-btn" data-tooltip="Actions">
                             <i class="fas fa-ellipsis-v"></i>
@@ -635,14 +635,14 @@ let showDeletedData = {
         });
     }
     
-    
     if (pageInfo) {
         pageInfo.textContent = `Page ${data[type].currentPage} of ${totalPages || 1}`;
     }
     
-  
     setupDropdowns();
 }
+    
+ 
     
     function setupDropdowns() {
     

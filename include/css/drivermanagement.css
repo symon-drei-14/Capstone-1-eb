@@ -952,3 +952,81 @@ h3 {
     margin-top: 5px;
     display: block;
 }
+
+
+@media (max-width: 1200px) {
+    .table-container {
+        overflow-x: auto; /* Allow horizontal scroll on medium screens as a fallback */
+    }
+}
+
+@media (max-width: 992px) {
+    .main-content3 {
+        margin-left: 10px;
+        margin-right: 10px;
+        width: calc(100% - 20px);
+    }
+    .button-row {
+        display: flex;
+        flex-direction: column-reverse; /* Puts Add button on top on mobile */
+        gap: 15px;
+    }
+    .search-container, .button-row div {
+        float: none !important;
+        margin: 0 !important;
+        width: 100%;
+    }
+    .search-container input {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    h3 {
+        margin-left: 10px;
+        font-size: 1.5rem;
+    }
+    .table-container {
+        overflow-x: hidden; 
+    }
+    #driverTable thead {
+        display: none;
+    }
+    #driverTable, #driverTable tbody, #driverTable tr, #driverTable td {
+        display: block;
+        width: 98%;
+    }
+    #driverTable tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+    }
+    #driverTable td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border-bottom: 1px solid #eee;
+        padding: 8px 0;
+    }
+    #driverTable td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        text-align: left;
+        margin-right: 10px;
+        color: #333;
+    }
+    #driverTable td:last-child {
+        border-bottom: none;
+    }
+    .driver-photo, .profile-icon {
+        max-width: 50px;
+    }
+    .actions {
+        width: auto;
+    }
+    .dropdown-content {
+        right: 0;
+    }
+}
