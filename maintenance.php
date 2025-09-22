@@ -1198,7 +1198,8 @@ function updateFormSectionsBasedOnStatus() {
     const expenseReportSection = document.getElementById('expenseReportSection');
     const maintenanceId = document.getElementById("maintenanceId").value;
 
-    if (statusSelect.value === 'In Progress') {
+    // Show the expense and cost sections if status is 'In Progress' or 'Completed'
+    if (statusSelect.value === 'In Progress' || statusSelect.value === 'Completed') {
         costSection.style.display = 'block';
         expenseReportSection.style.display = 'block';
 
@@ -1213,7 +1214,7 @@ function updateFormSectionsBasedOnStatus() {
     } else {
         costSection.style.display = 'none';
         expenseReportSection.style.display = 'none';
-        document.getElementById('cost').value = ''; 
+        document.getElementById('cost').value = '';
     }
 }
     function openModal(mode) {
@@ -1386,13 +1387,19 @@ function renderExpenseList(expenses) {
             item.title = "No receipt available";
         }
 
+       
+        const escapedExpenseType = expense.expense_type
+            .replace(/\\/g, '\\\\') // Escape backslashes
+            .replace(/'/g, "\\'")  // Escape single quotes for the JS string
+            .replace(/"/g, '&quot;'); // Escape double quotes for the HTML attribute
+
         item.innerHTML = `
             <div class="expense-details">
                 <strong>${expense.expense_type}</strong>
                 <span>Amount: ₱${parseFloat(expense.amount).toFixed(2)} | Submitted: ${formatDateTime(expense.submitted_at)}</span>
             </div>
             <div class="expense-actions">
-                <button class="edit-btn" title="Edit" onclick="event.stopPropagation(); populateExpenseFormForEdit(${expense.expense_id}, '${expense.expense_type.replace(/'/g, "\\'")}', ${expense.amount});"><i class="fas fa-edit"></i></button>
+                <button class="edit-btn" title="Edit" onclick="event.stopPropagation(); populateExpenseFormForEdit(${expense.expense_id}, '${escapedExpenseType}', ${expense.amount});"><i class="fas fa-edit"></i></button>
                 <button class="delete-btn" title="Delete" onclick="event.stopPropagation(); deleteExpense(${expense.expense_id});"><i class="fas fa-trash-alt"></i></button>
             </div>
         `;
