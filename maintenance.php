@@ -1405,6 +1405,7 @@ function renderExpenseList(expenses) {
 
         // Create, configure, and append the Edit button
         const editBtn = document.createElement('button');
+        editBtn.type = 'button'; // FIX: Prevents form submission
         editBtn.className = 'edit-btn';
         editBtn.title = 'Edit';
         editBtn.innerHTML = '<i class="fas fa-edit"></i>';
@@ -1416,6 +1417,7 @@ function renderExpenseList(expenses) {
 
         // Create, configure, and append the Delete button
         const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button'; // FIX: Prevents form submission
         deleteBtn.className = 'delete-btn';
         deleteBtn.title = 'Delete';
         deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
