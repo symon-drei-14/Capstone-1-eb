@@ -10,9 +10,31 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 
-// Handle file upload
+
 $adminPic = null;
-if (!empty($_FILES['adminProfile']['name']) && $_FILES['adminProfile']['error'] == UPLOAD_ERR_OK) {
+if (!empty($_FILES['adminProfile']['name'])) {
+     if ($_FILES['adminProfile']['error'] !== UPLOAD_ERR_OK) {
+        $uploadErrors = [
+            UPLOAD_ERR_INI_SIZE => "File is too large (server limit).",
+            UPLOAD_ERR_FORM_SIZE => "File is too large (form limit).",
+            UPLOAD_ERR_PARTIAL => "File was only partially uploaded.",
+            UPLOAD_ERR_NO_FILE => "No file was uploaded.",
+            UPLOAD_ERR_NO_TMP_DIR => "Missing a temporary folder.",
+            UPLOAD_ERR_CANT_WRITE => "Failed to write file to disk.",
+            UPLOAD_ERR_EXTENSION => "A PHP extension stopped the file upload.",
+        ];
+        $errorCode = $_FILES['adminProfile']['error'];
+        $errorMessage = $uploadErrors[$errorCode] ?? "An unknown upload error occurred.";
+        echo json_encode(["success" => false, "message" => $errorMessage]);
+        exit;
+    }
+
+
+    if ($_FILES['adminProfile']['size'] > 2 * 1024 * 1024) {
+        echo json_encode(["success" => false, "message" => "File is too large. Maximum size is 2MB."]);
+        exit;
+    }
+
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
     $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
     $mimeType = finfo_file($fileInfo, $_FILES['adminProfile']['tmp_name']);
@@ -49,18 +71,16 @@ try {
     }
     $checkStmt->close();
 
-    // Initialize query parts
     $query = "UPDATE login_admin SET username = ?, role = ?";
     $types = "ss";
     $params = [$data['username'], $data['role']];
 
-    // If a new password is provided, validate the old one and add it to the query
+
     if (!empty($data['password'])) {
         if (empty($data['old_password'])) {
             throw new Exception("Current password is required to set a new one.");
         }
 
-        // Fetch the current password hash from the database
         $passStmt = $conn->prepare("SELECT password FROM login_admin WHERE admin_id = ?");
         $passStmt->bind_param("i", $data['admin_id']);
         $passStmt->execute();
@@ -73,26 +93,26 @@ try {
         $currentHash = $passResult->fetch_assoc()['password'];
         $passStmt->close();
         
-        // Verify the provided old password against the stored hash
+
         if (!password_verify($data['old_password'], $currentHash)) {
             throw new Exception("Incorrect current password.");
         }
 
-        // If validation passes, add the new hashed password to the query
+
         $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
         $query .= ", password = ?";
         $types .= "s";
         $params[] = $hashedPassword;
     }
 
-    // Add profile picture if provided
+
     if ($adminPic !== null) {
         $query .= ", admin_pic = ?";
         $types .= "s";
         $params[] = $adminPic;
     }
 
-    // Finalize the query
+
     $query .= " WHERE admin_id = ?";
     $types .= "i";
     $params[] = $data['admin_id'];

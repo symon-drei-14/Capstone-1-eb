@@ -137,8 +137,7 @@ checkAccess();
                             </tr>
                         </thead>
                         <tbody id="adminTableBody">
-                            <!-- Data will be populated by JavaScript -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
@@ -150,8 +149,7 @@ checkAccess();
         </section>
     </div>
 
-    <!-- Modal for Add/Edit Admin -->
-<div id="adminModal" class="modal">
+    <div id="adminModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal('adminModal')">&times;</span>
         <h2 id="modalTitle">Add Admin</h2>
@@ -246,7 +244,7 @@ checkAccess();
         confirmPasswordInput.required = true;
         passwordLabel.textContent = "Password *";
         
-        profilePreview.innerHTML = '';
+         profilePreview.innerHTML = '<p>Upload a profile picture </p>';
         document.getElementById('adminProfile').value = '';
     }
     
@@ -695,7 +693,14 @@ const sidebar = document.querySelector('.sidebar');
     
     // Find all sidebar links
     const sidebarLinks = document.querySelectorAll('.sidebar-item a');
+       const adminProfileInput = document.getElementById('adminProfile');
+    const adminProfilePreview = document.getElementById('adminProfilePreview');
     
+    if (adminProfileInput) {
+        adminProfileInput.addEventListener('change', function(e) {
+            handleProfileImageChange(e, adminProfilePreview);
+        });
+    }
     // Check each link
     sidebarLinks.forEach(link => {
         const linkPage = link.getAttribute('href').split('/').pop();
@@ -773,6 +778,46 @@ window.onload = function() {
     
     fetchAdminsPaginated();
 };
+
+function handleProfileImageChange(e, previewElement) {
+    const file = e.target.files[0];
+    const maxFileSize = 2 * 1024 * 1024; // 2MB
+
+    if (file) {
+        if (file.size > maxFileSize) {
+            Swal.fire({
+                icon: 'error',
+                title: 'File Too Large',
+                text: 'Please select an image smaller than 2MB.'
+            });
+            e.target.value = ''; 
+            previewElement.innerHTML = ''; 
+            return; 
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            previewElement.innerHTML = `
+                <div class="new-profile-section">
+                    <h4>Profile Picture Preview:</h4>
+                    <div class="large-profile-display">
+                        <img src="${event.target.result}" 
+                             class="large-profile-preview" 
+                             alt="Admin Photo Preview">
+                        <p>Image ready for upload</p>
+                    </div>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        // No file selected - show appropriate message based on mode
+        const isEditMode = document.getElementById("modalTitle").textContent === "Edit Admin";
+        if (!isEditMode) {
+            previewElement.innerHTML = '<p>No image selected</p>';
+        }
+    }
+}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
@@ -886,17 +931,21 @@ window.onload = function() {
   });
 }
   
+  
+  
   startAction(actionName, message) {
     this.show(actionName, message);
     return {
       updateProgress: (percent) => this.updateProgress(percent),
       updateMessage: (message) => {
-        this.messageEl.textContent = message;
-        this.messageEl.style.opacity = 0;
-        setTimeout(() => {
-          this.messageEl.style.opacity = 1;
-          this.messageEl.style.transition = 'opacity 0.5s ease';
-        }, 50);
+        if (this.messageEl) {
+          this.messageEl.textContent = message;
+          this.messageEl.style.opacity = 0;
+          setTimeout(() => {
+            this.messageEl.style.opacity = 1;
+            this.messageEl.style.transition = 'opacity 0.5s ease';
+          }, 50);
+        }
       },
       complete: () => {
 
@@ -929,7 +978,7 @@ document.getElementById('adminProfile') && document.getElementById('adminProfile
             Swal.fire({
                 icon: 'error',
                 title: 'File Too Large',
-                text: 'Please select an image smaller than 5MB.'
+                text: 'Please select an image smaller than 2MB.'
             });
             e.target.value = ''; 
             profilePreview.innerHTML = ''; 
