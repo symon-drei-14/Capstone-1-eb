@@ -317,10 +317,10 @@ try {
     
     try {
         // Validate trip date is at least 3 days in advance
-        $dateValidation = validateTripDate($data['date']);
-        if (!$dateValidation['valid']) {
-            throw new Exception($dateValidation['message']);
-        }
+        // $dateValidation = validateTripDate($data['date']);
+        // if (!$dateValidation['valid']) {
+        //     throw new Exception($dateValidation['message']);
+        // }
         
         // Check for maintenance conflicts first
         $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
@@ -338,19 +338,19 @@ try {
                                 "Trips cannot be scheduled within one week of maintenance.");
         }
 
-        $driverId = getDriverIdByName($conn, $data['driver']);
-        $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date']);
+        // $driverId = getDriverIdByName($conn, $data['driver']);
+        // $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date']);
         
-        if (!empty($conflictingTrips)) {
-            $conflictDetails = "";
-            foreach ($conflictingTrips as $trip) {
-                $tripDate = date('M j, Y h:i A', strtotime($trip['trip_date']));
-                $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
-            }
+        // if (!empty($conflictingTrips)) {
+        //     $conflictDetails = "";
+        //     foreach ($conflictingTrips as $trip) {
+        //         $tripDate = date('M j, Y h:i A', strtotime($trip['trip_date']));
+        //         $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
+        //     }
             
-            throw new Exception("Driver {$data['driver']} has a conflicting trip within 2 hours of the selected time:\n\n" . 
-                                $conflictDetails . "\nPlease choose a different time or driver.");
-        }
+        //     throw new Exception("Driver {$data['driver']} has a conflicting trip within 2 hours of the selected time:\n\n" . 
+        //                         $conflictDetails . "\nPlease choose a different time or driver.");
+        // }
         
         $clientId = getOrCreateClientId($conn, $data['client']);
         $helperId = getHelperId($conn, $data['helper']);
@@ -472,18 +472,18 @@ try {
             }
         }
         
-        $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date'], $data['id']);
+        // $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date'], $data['id']);
         
-        if (!empty($conflictingTrips)) {
-            $conflictDetails = "";
-            foreach ($conflictingTrips as $trip) {
-                $tripDate = date('M j, Y h:i A', strtotime($trip['trip_date']));
-                $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
-            }
+        // if (!empty($conflictingTrips)) {
+        //     $conflictDetails = "";
+        //     foreach ($conflictingTrips as $trip) {
+        //         $tripDate = date('M j, Y h:i A', strtotime($trip['trip_date']));
+        //         $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
+        //     }
             
-            throw new Exception("Driver {$data['driver']} has a conflicting trip within 2 hours of the selected time:\n\n" . 
-                                $conflictDetails . "\nPlease choose a different time or driver.");
-        }
+        //     throw new Exception("Driver {$data['driver']} has a conflicting trip within 2 hours of the selected time:\n\n" . 
+        //                         $conflictDetails . "\nPlease choose a different time or driver.");
+        // }
         
         $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
         $clientId = getOrCreateClientId($conn, $data['client']);
