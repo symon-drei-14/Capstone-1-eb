@@ -1287,6 +1287,108 @@ case 'get_trips_today':
             }
             break;
 
+            case 'reassign_trip_on_failure':
+            $conn->begin_transaction();
+            
+            try {
+                $tripId = $data['trip_id'] ?? null;
+                $originalDriverId = $data['original_driver_id'] ?? null;
+                $reason = $data['reason'] ?? 'Unknown failure';
+
+                if (!$tripId || !$originalDriverId) {
+                    throw new Exception("Trip ID and Original Driver ID are required.");
+                }
+
+                // First, grab the trip details to find the required truck capacity
+                $tripStmt = $conn->prepare("
+                    SELECT tr.capacity 
+                    FROM trips t
+                    JOIN truck_table tr ON t.truck_id = tr.truck_id
+                    WHERE t.trip_id = ?
+                ");
+                $tripStmt->bind_param("i", $tripId);
+                $tripStmt->execute();
+                $tripDetails = $tripStmt->get_result()->fetch_assoc();
+                
+                if (!$tripDetails) {
+                    throw new Exception("Trip not found.");
+                }
+                $capacity = $tripDetails['capacity'];
+
+                // Now, find the next available driver in the queue who is not penalized
+                $nextDriverStmt = $conn->prepare("
+                    SELECT d.driver_id, d.name
+                    FROM drivers_table d
+                    JOIN truck_table t ON d.assigned_truck_id = t.truck_id
+                    WHERE t.capacity = ?
+                      AND d.driver_id != ?
+                      AND (d.penalty_until IS NULL OR d.penalty_until < NOW()) -- This is the crucial penalty check
+                      AND t.is_deleted = 0
+                      AND t.status NOT IN ('In Repair', 'Overdue')
+                    ORDER BY d.last_assigned_at ASC, d.driver_id ASC
+                    LIMIT 1
+                ");
+                $nextDriverStmt->bind_param("si", $capacity, $originalDriverId);
+                $nextDriverStmt->execute();
+                $newDriver = $nextDriverStmt->get_result()->fetch_assoc();
+
+                // No matter what, apply the 16-hour penalty to the original driver
+                $penaltyStmt = $conn->prepare("
+                    UPDATE drivers_table 
+                    SET penalty_until = TIMESTAMPADD(HOUR, 16, NOW()) 
+                    WHERE driver_id = ?
+                ");
+                $penaltyStmt->bind_param("i", $originalDriverId);
+                $penaltyStmt->execute();
+
+                if ($newDriver) {
+                    // We found a replacement driver!
+                    $newDriverId = $newDriver['driver_id'];
+                    $newDriverName = $newDriver['name'];
+
+                    $reassignStmt = $conn->prepare("UPDATE trips SET driver_id = ? WHERE trip_id = ?");
+                    $reassignStmt->bind_param("ii", $newDriverId, $tripId);
+                    $reassignStmt->execute();
+
+                    // Log this important event
+                    $reasonText = ($reason === 'failed_checklist') ? 'Trip reassigned due to failed checklist' : 'Trip reassigned due to missed deadline';
+                    $auditReason = json_encode([$reasonText . ". Original driver penalized."]);
+                    $auditStmt = $conn->prepare("
+                        UPDATE audit_logs_trips 
+                        SET modified_by = ?, modified_at = NOW(), edit_reason = ? 
+                        WHERE trip_id = ? AND is_deleted = 0
+                    ");
+                    $auditStmt->bind_param("ssi", $currentUser, $auditReason, $tripId);
+                    $auditStmt->execute();
+                    
+                    $conn->commit();
+                    echo json_encode(['success' => true, 'message' => "Trip has been successfully reassigned to {$newDriverName}."]);
+
+                } else {
+                    // If no replacement is found, we have to cancel the trip
+                    $cancelStmt = $conn->prepare("UPDATE trips SET status = 'Cancelled' WHERE trip_id = ?");
+                    $cancelStmt->bind_param("i", $tripId);
+                    $cancelStmt->execute();
+
+                    $reasonText = ($reason === 'failed_checklist') ? 'Trip cancelled: original driver failed checklist and no replacement was found.' : 'Trip cancelled: original driver missed deadline and no replacement was found.';
+                    $auditReason = json_encode([$reasonText]);
+                    $auditStmt = $conn->prepare("
+                        UPDATE audit_logs_trips 
+                        SET modified_by = ?, modified_at = NOW(), edit_reason = ? 
+                        WHERE trip_id = ? AND is_deleted = 0
+                    ");
+                    $auditStmt->bind_param("ssi", $currentUser, $auditReason, $tripId);
+                    $auditStmt->execute();
+                    
+                    $conn->commit();
+                    echo json_encode(['success' => false, 'message' => 'No available drivers for reassignment. The trip has been cancelled.']);
+                }
+            } catch (Exception $e) {
+                $conn->rollback();
+                throw $e;
+            }
+            break;
+
 //eto pa babaguhin ko ehe
 case 'get_helpers':
     $stmt = $conn->prepare("SELECT helper_id, name FROM helpers ORDER BY name");
