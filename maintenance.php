@@ -907,16 +907,16 @@ function renderTable(data) {
         
         const actionsCell = row.isDeleted 
             ? `
-             <div class="dropdown">
+            <div class="dropdown">
                 <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
                 <div class="dropdown-content">
                     <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreMaintenance(${row.maintenanceId})">
-                       <i class="fas fa-trash-restore"></i> Restore
+                        <i class="fas fa-trash-restore"></i> Restore
                     </button>
                     <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
                         <i class="fas fa-history"></i> History
                     </button>
-                    <button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenanceId})">
+                    <button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenanceId}, '${row.status}')">
                         <i class="fa-solid fa-ban"></i> Full Delete
                     </button>
                 </div>
@@ -931,7 +931,7 @@ function renderTable(data) {
                     <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
                         <i class="fas fa-history"></i> History
                     </button>
-                    <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenanceId})">
+                    <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenanceId}, '${row.status}')">
                         <i class="fas fa-trash-alt"></i> Delete
                     </button>
                 </div>
@@ -983,7 +983,18 @@ $(document).on('click', function(e) {
 });
 
     // Add this new function for full delete
-   function fullDeleteMaintenance(id) {
+   function fullDeleteMaintenance(id, status) {
+    // Check if the record's status is 'In Progress'.
+    if (status === 'In Progress') {
+        Swal.fire({
+            title: 'Action Not Allowed',
+            text: 'Cannot permanently delete a maintenance schedule that was In Progress.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
     Swal.fire({
         title: 'Permanent Deletion',
         html: '<strong>Are you sure you want to PERMANENTLY delete this maintenance record?</strong><br><br>This action cannot be undone!',
@@ -1693,51 +1704,62 @@ function saveMaintenanceRecord() {
     });
 }
             
-    function deleteMaintenance(id) {
-        if (!confirm("Are you sure you want to delete this maintenance record?")) {
-            return;
-        }
-        
-        const deleteReason = prompt("Please enter the reason for deleting this record:");
-        if (deleteReason === null) return; // User cancelled
-        if (deleteReason.trim() === "") {
-            Swal.fire({
-                title: 'You must provide a reason for deletion.',
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
+   function deleteMaintenance(id, status) {
+    // Can't delete a record that's currently being worked on.
+    if (status === 'In Progress') {
+        Swal.fire({
+            title: 'Action Not Allowed',
+            text: 'Cannot delete a maintenance schedule that is currently In Progress.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
     
-            return;
-        }
-        
-        $.ajax({
-            url: `include/handlers/maintenance_handler.php?action=delete&id=${id}&reason=${encodeURIComponent(deleteReason)}`,
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    loadMaintenanceData();
-                    updateStatsCards();
-                    Swal.fire({
-                        title: 'Maintenance record deleted successfully!',
-                        icon: 'info',
-                        confirmButtonText: 'OK'
-                    });
-                } else {
-                    alert("Error: " + (response.message || "Unknown error"));
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error deleting record: " + error);
+    if (!confirm("Are you sure you want to delete this maintenance record?")) {
+        return;
+    }
+    
+    const deleteReason = prompt("Please enter the reason for deleting this record:");
+    if (deleteReason === null) return; // User cancelled
+    if (deleteReason.trim() === "") {
+        Swal.fire({
+            title: 'You must provide a reason for deletion.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+
+        return;
+    }
+    
+    $.ajax({
+        url: `include/handlers/maintenance_handler.php?action=delete&id=${id}&reason=${encodeURIComponent(deleteReason)}`,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                loadMaintenanceData();
+                updateStatsCards();
                 Swal.fire({
-                    title: 'Failed to delete maintenance record',
+                    title: 'Maintenance record deleted successfully!',
                     icon: 'info',
                     confirmButtonText: 'OK'
                 });
-            
+            } else {
+                alert("Error: " + (response.message || "Unknown error"));
             }
-        });
-    }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error deleting record: " + error);
+            Swal.fire({
+                title: 'Failed to delete maintenance record',
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+        
+        }
+    });
+}
 
     function updateStatsCards() {
     fetch('include/handlers/maintenance_handler.php?action=getCounts')

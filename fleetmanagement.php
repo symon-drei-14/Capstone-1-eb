@@ -831,18 +831,19 @@ function fullDeleteTruck(truckId) {
 }
 
 function viewMaintenanceHistory(truckId) {
-    fetch(`include/handlers/maintenance_handler.php?action=getHistory&truckId=${truckId}`)
+    
+    fetch(`include/handlers/truck_handler.php?action=getHistory&truckId=${truckId}`)
         .then(response => response.json())
         .then(data => {
             console.log('API Response:', data);
 
             let historyRecords = [];
-            if (Array.isArray(data)) {
-                historyRecords = data;
-            } else if (data.history) {
+            // Check if the history data is in the expected 'history' property
+            if (data.success && data.history) {
                 historyRecords = data.history;
-            } else if (data.maintenance_id) {
-                historyRecords = [data];
+            } else if (Array.isArray(data)) {
+                // Fallback for older API response format, just in case
+                historyRecords = data;
             }
             
             if (historyRecords.length > 0) {
@@ -860,9 +861,9 @@ function viewMaintenanceHistory(truckId) {
                     const maintenanceDate = item.date_mtnce || item.last_modified_at;
                     const maintenanceType = item.maintenance_type_name || 'N/A';
                     const supplierName = item.supplier_name || 'N/A';
-                    const cost = item.cost ? `₱${item.cost.toLocaleString()}` : 'N/A';
+                    const cost = item.cost ? `₱${parseFloat(item.cost).toLocaleString()}` : 'N/A';
                     
-                    historyHTML += `    
+                    historyHTML += `
                         <li class="history-item">
                             <div class="history-header">
                                 <span class="history-date">${formatDateTime(maintenanceDate)}</span>

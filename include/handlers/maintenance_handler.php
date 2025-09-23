@@ -387,39 +387,52 @@ function getMaintenanceCounts($conn) {
     return $result->fetch_assoc();
 }
 
-// Get maintenance history for a specific truck
+
 function getMaintenanceHistory($conn, $truckId) {
-    $sql = "SELECT m.maintenance_id, m.date_mtnce, m.remarks, m.status, m.cost, 
-            mt.type_name as maintenance_type_name, s.name as supplier_name,
-            al.modified_by as last_modified_by, al.modified_at as last_modified_at, 
-            t.plate_no as licence_plate
+ 
+    $sql = "SELECT m.maintenance_id, m.date_mtnce, m.remarks, m.status, m.cost,
+                   mt.type_name as maintenance_type_name, s.name as supplier_name,
+                   latest_audit.modified_by as last_modified_by, latest_audit.modified_at as last_modified_at,
+                   t.plate_no as licence_plate
             FROM maintenance_table m
             LEFT JOIN truck_table t ON m.truck_id = t.truck_id
             LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
             LEFT JOIN suppliers s ON m.supplier_id = s.supplier_id
             LEFT JOIN (
-                SELECT maintenance_id, modified_by, modified_at,
-                       ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
-                FROM audit_logs_maintenance
-            ) al ON m.maintenance_id = al.maintenance_id AND al.rn = 1
-            WHERE m.truck_id = ? AND t.is_deleted = 0
+                
+                SELECT
+                    al1.maintenance_id,
+                    al1.modified_by,
+                    al1.modified_at,
+                    al1.is_deleted
+                FROM audit_logs_maintenance al1
+                WHERE al1.modified_at = (
+                    SELECT MAX(al2.modified_at)
+                    FROM audit_logs_maintenance al2
+                    WHERE al2.maintenance_id = al1.maintenance_id
+                )
+            ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id
+            WHERE m.truck_id = ?
+            AND t.is_deleted = 0
+            
+            AND (latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)
             ORDER BY m.date_mtnce DESC";
-    
+
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         error_log("Failed to prepare history query: " . $conn->error);
         return [];
     }
-    
+
     $stmt->bind_param("i", $truckId);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     $history = [];
     while ($row = $result->fetch_assoc()) {
         $history[] = $row;
     }
-    
+
     return $history;
 }
 
@@ -437,25 +450,38 @@ function updateTotalMaintenanceCost($conn, $maintenanceId) {
 }
 
 function getMaintenanceReminders($conn) {
-    $sql = "SELECT 
-            m.maintenance_id, 
-            m.truck_id, 
-            t.plate_no AS licence_plate, 
-            m.date_mtnce, 
-            m.remarks, 
-            m.status, 
-            DATEDIFF(m.date_mtnce, CURDATE()) AS days_remaining
-        FROM maintenance_table m
-        LEFT JOIN truck_table t 
-            ON m.truck_id = t.truck_id
-        LEFT JOIN audit_logs_maintenance alm 
-            ON m.maintenance_id = alm.maintenance_id 
-            AND alm.is_deleted = 1
-        WHERE m.status != 'Completed' 
-        AND t.is_deleted = 0
-        AND alm.maintenance_id IS NULL
-        AND (DATEDIFF(m.date_mtnce, CURDATE()) <= 7 OR m.date_mtnce < CURDATE())
-        ORDER BY days_remaining ASC";
+    // This query finds maintenance tasks that are upcoming or overdue
+    // but makes sure to exclude any that have been soft-deleted.
+    $sql = "SELECT
+                m.maintenance_id,
+                m.truck_id,
+                t.plate_no AS licence_plate,
+                m.date_mtnce,
+                m.remarks,
+                m.status,
+                DATEDIFF(m.date_mtnce, CURDATE()) AS days_remaining
+            FROM maintenance_table m
+            JOIN truck_table t ON m.truck_id = t.truck_id
+            WHERE
+                m.status != 'Completed'
+                AND t.is_deleted = 0
+                -- Fetch records due in the next 7 days, or that are already past their due date.
+                AND (DATEDIFF(m.date_mtnce, CURDATE()) <= 7 OR m.date_mtnce < CURDATE())
+                -- This part is key: It checks the most recent audit log for a maintenance item.
+                -- If that latest log says is_deleted=1, we exclude it.
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM audit_logs_maintenance al
+                    WHERE al.maintenance_id = m.maintenance_id
+                    AND al.is_deleted = 1
+                    -- This finds the timestamp of the very last log entry for this maintenance_id
+                    AND al.modified_at = (
+                        SELECT MAX(al2.modified_at)
+                        FROM audit_logs_maintenance al2
+                        WHERE al2.maintenance_id = m.maintenance_id
+                    )
+                )
+            ORDER BY days_remaining ASC";
     
     $result = $conn->query($sql);
     

@@ -349,6 +349,55 @@ try {
     }
     break;
 
+    case 'getHistory':
+            $truckId = $_GET['truckId'] ?? null;
+            if (!$truckId) {
+                throw new Exception("Truck ID is required to fetch history.");
+            }
+
+            // This query fetches maintenance records for a specific truck,
+            // but only if its latest audit log entry is not a soft delete.
+            $query = "
+                SELECT 
+                    m.maintenance_id,
+                    m.date_mtnce,
+                    m.status,
+                    m.cost,
+                    m.remarks,
+                    mt.maintenance_type_name,
+                    s.supplier_name
+                FROM 
+                    maintenance_table m
+                LEFT JOIN 
+                    maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+                LEFT JOIN 
+                    suppliers s ON m.supplier_id = s.supplier_id
+                WHERE 
+                    m.truck_id = ?
+                AND NOT EXISTS (
+                    SELECT 1 FROM audit_logs_maintenance al 
+                    WHERE al.maintenance_id = m.maintenance_id 
+                    AND al.is_deleted = 1
+                    AND al.modified_at = (
+                        SELECT MAX(al2.modified_at)
+                        FROM audit_logs_maintenance al2
+                        WHERE al2.maintenance_id = m.maintenance_id
+                    )
+                )
+                ORDER BY 
+                    m.date_mtnce DESC
+            ";
+            
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("i", $truckId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $history = $result->fetch_all(MYSQLI_ASSOC);
+            
+            // Sending the data back wrapped in a success object, as expected by the frontend.
+            echo json_encode(['success' => true, 'history' => $history]);
+            break;
+
     case 'getActiveTrucks':
     $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
                           t.status as display_status
