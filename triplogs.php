@@ -2127,15 +2127,8 @@ eventClick: function(event, jsEvent, view) {
             $('#editModal').show();
         }
     });
-    
-    // Update delete button handler
-    $('#eventModalDeleteBtn').off('click').on('click', function() {
-        var eventId = $('#eventModal').data('eventId');
-        $('#deleteEventId').val(eventId);
-        $('#eventModal').hide();
-        $('#deleteConfirmModal').show();
-    });
-    
+
+   
     // Update history button handler
     $('#eventModalHistoryBtn').off('click').on('click', function() {
         var eventId = $('#eventModal').data('eventId');
@@ -2753,11 +2746,6 @@ if (response.expenses && response.expenses.length > 0) {
 
             
 
-            $(document).on('click', '.dropdown-item.delete', function() {
-                var eventId = $(this).data('id');
-                $('#deleteEventId').val(eventId);
-                $('#deleteConfirmModal').show();
-            });
             
 $('#addScheduleForm').on('submit', function(e) {
     e.preventDefault();
@@ -3040,60 +3028,90 @@ $('#editForm').on('submit', function(e) {
     });
 });
                 
-        $('#confirmDeleteBtn').on('click', function() {
-        var eventId = $('#deleteEventId').val();
-        var deleteReason = $('#deleteReason').val();
-        
-        if (!deleteReason) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Required',
-            text: 'Please provide a reason for deletion'
-        });
-        return;
-        }
-        
-       $.ajax({
-    url: 'include/handlers/trip_operations.php',
-    type: 'POST',
-    contentType: 'application/json',
-    data: JSON.stringify({
-        action: 'delete',
-        id: eventId,
-        reason: deleteReason
-    }),
-    success: function(response) {
-        if (response.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: 'Trip marked as deleted successfully!',
-                timer: 2000,
-                showConfirmButton: false
-            }).then(() => {
-                $('#deleteConfirmModal').hide();
-                location.reload();
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: response.message || 'Failed to delete trip'
-            });
-        }
-    },
-    error: function() {
-        Swal.fire({
-            icon: 'error',
-            title: 'Server Error',
-            text: 'An error occurred while processing your request'
-        });
-    }
-});
-    });
             // Initial render
             renderTable();
         });
+
+
+function deleteTrip(tripId) {
+
+    Swal.fire({
+        title: 'Reason for Deletion',
+        input: 'textarea',
+        inputLabel: 'Please provide a reason for deleting this trip.',
+        inputPlaceholder: 'Type your reason here...',
+        showCancelButton: true,
+        confirmButtonText: 'Next &rarr;',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'You need to provide a reason!'
+            }
+        }
+    }).then((reasonResult) => {
+        if (reasonResult.isConfirmed && reasonResult.value) {
+            const deleteReason = reasonResult.value;
+
+            Swal.fire({
+                title: 'Are you absolutely sure?',
+                text: "This trip will be marked as deleted. You can restore it later.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((confirmResult) => {
+                if (confirmResult.isConfirmed) {
+                 
+                    $.ajax({
+                        url: 'include/handlers/trip_operations.php',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            action: 'delete',
+                            id: tripId,
+                            reason: deleteReason
+                        }),
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: 'Trip has been marked as deleted.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    location.reload(); 
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'Failed to delete trip'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'An error occurred during deletion.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+
+$(document).on('click', '.dropdown-item.delete', function() {
+    var eventId = $(this).data('id');
+    deleteTrip(eventId);
+});
+
+
+$('#eventModalDeleteBtn').off('click').on('click', function() {
+    var eventId = $('#eventModal').data('eventId');
+    $('#eventModal').hide();
+    deleteTrip(eventId);
+});
 
 const toggleBtn = document.getElementById('toggleSidebarBtn');
 const sidebar = document.querySelector('.sidebar');

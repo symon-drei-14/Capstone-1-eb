@@ -1704,8 +1704,8 @@ function saveMaintenanceRecord() {
     });
 }
             
-   function deleteMaintenance(id, status) {
-    // Can't delete a record that's currently being worked on.
+  function deleteMaintenance(id, status) {
+    // First, check if the record's status is 'In Progress'.
     if (status === 'In Progress') {
         Swal.fire({
             title: 'Action Not Allowed',
@@ -1715,48 +1715,68 @@ function saveMaintenanceRecord() {
         });
         return;
     }
-    
-    if (!confirm("Are you sure you want to delete this maintenance record?")) {
-        return;
-    }
-    
-    const deleteReason = prompt("Please enter the reason for deleting this record:");
-    if (deleteReason === null) return; // User cancelled
-    if (deleteReason.trim() === "") {
-        Swal.fire({
-            title: 'You must provide a reason for deletion.',
-            icon: 'warning',
-            confirmButtonText: 'OK'
-        });
 
-        return;
-    }
-    
-    $.ajax({
-        url: `include/handlers/maintenance_handler.php?action=delete&id=${id}&reason=${encodeURIComponent(deleteReason)}`,
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                loadMaintenanceData();
-                updateStatsCards();
-                Swal.fire({
-                    title: 'Maintenance record deleted successfully!',
-                    icon: 'info',
-                    confirmButtonText: 'OK'
-                });
-            } else {
-                alert("Error: " + (response.message || "Unknown error"));
+    // First SweetAlert: Ask for the reason for deletion.
+    Swal.fire({
+        title: 'Reason for Deletion',
+        input: 'textarea',
+        inputLabel: 'Please provide a reason for deleting this maintenance record.',
+        inputPlaceholder: 'Type your reason here...',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        inputValidator: (value) => {
+            if (!value || value.trim() === '') {
+                return 'You need to provide a reason!'
             }
-        },
-        error: function(xhr, status, error) {
-            console.error("Error deleting record: " + error);
+        }
+    }).then((reasonResult) => {
+        // Proceed only if a reason was submitted.
+        if (reasonResult.isConfirmed && reasonResult.value) {
+            const deleteReason = reasonResult.value;
+
+            // Second SweetAlert: Final confirmation.
             Swal.fire({
-                title: 'Failed to delete maintenance record',
-                icon: 'info',
-                confirmButtonText: 'OK'
+                title: 'Are you sure?',
+                text: "This record will be marked as deleted. You can restore it later.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((confirmResult) => {
+                if (confirmResult.isConfirmed) {
+                    $.ajax({
+                        url: `include/handlers/maintenance_handler.php?action=delete&id=${id}&reason=${encodeURIComponent(deleteReason)}`,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                loadMaintenanceData();
+                                updateStatsCards();
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: 'Maintenance record has been marked as deleted.',
+                                    icon: 'success'
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: response.message || "Unknown error",
+                                    icon: 'error'
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error deleting record: " + error);
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'Failed to delete maintenance record.',
+                                icon: 'error'
+                            });
+                        }
+                    });
+                }
             });
-        
         }
     });
 }

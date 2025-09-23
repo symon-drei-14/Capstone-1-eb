@@ -404,7 +404,7 @@ checkAccess(); // No role needed—logic is handled internally
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="modal">
+<!-- <div id="deleteModal" class="modal">
     <div class="modal-content" style="width: 40%;">
         <span class="close" onclick="closeModal('deleteModal')">&times;</span>
         <h2>Delete Item</h2>
@@ -419,7 +419,7 @@ checkAccess(); // No role needed—logic is handled internally
             <button type="button" class="cancel-btn" onclick="closeModal('deleteModal')">Cancel</button>
         </div>
     </div>
-</div>
+</div> -->
 
 <!-- Reason View Modal -->
 <div id="reasonModal" class="modal">
@@ -802,12 +802,79 @@ function handleDropdownItemClick(e) {
         openModal(type, id);
     }
     
-    function deleteItem(type, id) {
-        document.getElementById('deleteItemId').value = id;
-        document.getElementById('deleteItemType').value = type;
-        document.getElementById('deleteReason').value = '';
-        document.getElementById('deleteModal').style.display = 'block';
-    }
+
+function deleteItem(type, id) {
+
+    Swal.fire({
+        title: `Reason for Deleting ${capitalizeFirstLetter(type.slice(0, -1))}`,
+        input: 'textarea',
+        inputLabel: 'Please provide a reason for this action.',
+        inputPlaceholder: 'Type your reason here...',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        inputValidator: (value) => {
+            if (!value || value.trim() === '') {
+                return 'You need to provide a reason!'
+            }
+        }
+    }).then((reasonResult) => {
+
+        if (reasonResult.isConfirmed && reasonResult.value) {
+            const deleteReason = reasonResult.value;
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This item will be marked as deleted and can be restored later.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((confirmResult) => {
+                if (confirmResult.isConfirmed) {
+            
+                    const formData = new FormData();
+                    formData.append('action', `softDelete${capitalizeFirstLetter(type.slice(0, -1))}`);
+                    formData.append('id', id);
+                    formData.append('reason', deleteReason);
+                    
+                    fetch('include/handlers/info_management_handler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: result.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                fetchData(type); 
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: result.message
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred. Please try again.'
+                        });
+                    });
+                }
+            });
+        }
+    });
+}
     
     function performSoftDelete() {
         const id = document.getElementById('deleteItemId').value;

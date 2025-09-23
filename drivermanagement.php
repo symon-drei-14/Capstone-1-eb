@@ -24,7 +24,7 @@
             <i class="fa fa-bars"></i>
         </button>
         <div class="logo-container">
-         
+           
             <img src="include/img/mansar2.png" alt="Company Name" class="company">
         </div>
 
@@ -117,8 +117,7 @@
                             </tr>
                         </thead>
                         <tbody id="driverTableBody">
-                            <!-- Table data will be loaded here via JavaScript -->
-                        </tbody>
+                            </tbody>
                     </table>
                     
                     <div class="pagination">
@@ -131,13 +130,12 @@
         </section>
     </div>
 
-    <!-- Modal Structure (Add/Edit) -->
     <div id="driverModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">×</span>
             <h2 id="modalTitle">Add Driver</h2>
 
-               <div id="profilePreview"></div>
+                <div id="profilePreview"></div>
 
             <form id="driverForm">
                 <input type="hidden" id="driverId" name="driverId">
@@ -200,7 +198,7 @@
     <script>
         let currentDriverId = null;
         let driversData = [];
-     let currentPage = 1;
+       let currentPage = 1;
 let rowsPerPage = 5;
 let totalPages = 0;
 
@@ -221,7 +219,7 @@ let totalPages = 0;
         updateDateTime();
         setInterval(updateDateTime, 1000);
 
-      function openAddDriverModal() {
+       function openAddDriverModal() {
     document.getElementById("modalTitle").textContent = "Add New Driver";
     document.getElementById("modalMode").value = "add";
     document.getElementById("saveButtonText").textContent = "Add Driver";
@@ -230,7 +228,7 @@ let totalPages = 0;
     document.getElementById("oldPasswordGroup").style.display = "none";
     document.getElementById("password").required = true;
     document.getElementById("confirmPassword").required = true;
-   
+    
     // Clear all fields
     document.getElementById("driverId").value = "";
     document.getElementById("driverName").value = "";
@@ -248,7 +246,7 @@ let totalPages = 0;
 
     // Populate available trucks for a new driver
     populateAvailableTrucks();
-   
+    
     document.getElementById("driverModal").style.display = "block";
 }
 
@@ -296,7 +294,7 @@ function fetchTripCounts() {
     });
 }
 
-      function renderTable() {
+       function renderTable() {
     // Clear existing highlights
     document.querySelectorAll('.highlight').forEach(el => {
         el.outerHTML = el.innerHTML;
@@ -351,7 +349,7 @@ function fetchTripCounts() {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        hour12: true,  
+        hour12: true,   
     };
     
     return date.toLocaleString('en-US', options);
@@ -362,13 +360,13 @@ function formatDateWithTime(dateString) {
     
     const date = new Date(dateString);
 
-     const dateOptions = {
+   const dateOptions = {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
     };
     const timeOptions  = {
-     
+       
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
@@ -528,29 +526,51 @@ function formatDateWithTime(dateString) {
 }
 
         function deleteDriver(driverId) {
-            if (confirm("Are you sure you want to delete this driver?")) {
-                $.ajax({
-                    url: 'include/handlers/delete_driver.php',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ driverId: driverId }),
-                    success: function(data) {
-                        if (data.success) {
-                            alert("Driver deleted successfully.");
-                            fetchDrivers();
-                        } else {
-                            alert("Error deleting driver: " + data.message);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This action cannot be undone. All related data for this driver will be removed.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: 'include/handlers/delete_driver.php',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ driverId: driverId }),
+                        success: function(data) {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'The driver has been successfully deleted.',
+                                    'success'
+                                );
+                                fetchDrivers(); 
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    data.message || 'Could not delete the driver.',
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error:', error);
+                            Swal.fire(
+                                'Error!',
+                                'An error occurred while deleting the driver.',
+                                'error'
+                            );
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error:', error);
-                        alert("An error occurred while deleting the driver.");
-                    }
-                });
-            }
+                    });
+                }
+            });
         }
 
-     document.getElementById("driverForm").addEventListener("submit", function(e) {
+      document.getElementById("driverForm").addEventListener("submit", function(e) {
     e.preventDefault();
     
     // Validate passwords FIRST
@@ -656,7 +676,7 @@ function formatDateWithTime(dateString) {
     }
 });
 
-       function searchDrivers() {
+        function searchDrivers() {
     const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
     
     // Reset to first page when searching
@@ -850,7 +870,7 @@ const sidebar = document.querySelector('.sidebar');
     if (
         sidebar.classList.contains('expanded') &&
         !sidebar.contains(e.target) && 
-        !toggleBtn.contains(e.target)  
+        !toggleBtn.contains(e.target)   
     ) {
         sidebar.classList.remove('expanded');
     }
@@ -907,7 +927,7 @@ function validatePassword() {
     return true;
 }
 
- function populateAvailableTrucks(driverId = null, selectedTruckId = null) {
+  function populateAvailableTrucks(driverId = null, selectedTruckId = null) {
         const truckSelect = document.getElementById("assignedTruck");
         truckSelect.innerHTML = '<option value="">Loading trucks...</option>';
         truckSelect.disabled = true;

@@ -265,7 +265,7 @@ checkAccess();
         </div>
     </div>
 
-    <div id="deleteModal" class="modal">
+    <!-- <div id="deleteModal" class="modal">
     <div class="modal-content" style="width: 40%;">
         <span class="close" onclick="closeModal('deleteModal')">&times;</span>
         <h2>Delete Truck</h2>
@@ -279,7 +279,7 @@ checkAccess();
             <button type="button" class="cancel-btn" onclick="closeModal('deleteModal')">Cancel</button>
         </div>
     </div>
-</div>
+</div> -->
 
 <div id="reasonModal" class="modal">
     <div class="modal-content" style="width: 40%;">
@@ -484,27 +484,87 @@ function fetchTrucks() {
     });
 }
 
-       function deleteTruck(truckId) {
-    // Find the truck in our data
+
+function deleteTruck(truckId) {
     const truck = trucksData.find(t => t.truck_id == truckId);
-    
+
     if (truck) {
-        // Check if truck is Enroute
         if (truck.display_status === 'Enroute' || truck.status === 'Enroute') {
-           Swal.fire({
-            icon: 'warning',
-            title: 'Cannot Delete Truck',
-            text: 'Cannot delete a truck that is currently Enroute. Please change its status first.'
-        });
+            Swal.fire({
+                icon: 'warning',
+                title: 'Cannot Delete Truck',
+                text: 'Cannot delete a truck that is currently Enroute. Please change its status first.'
+            });
             return;
         }
-        
-        // If not Enroute, proceed with deletion
-        document.getElementById('deleteTruckId').value = truckId;
-        document.getElementById('deleteReason').value = '';
-        openModal('deleteModal');
+
+        Swal.fire({
+            title: 'Reason for Deletion',
+            input: 'textarea',
+            inputLabel: 'Please provide a reason for deleting this truck.',
+            inputPlaceholder: 'Type your reason here...',
+            showCancelButton: true,
+            confirmButtonText: 'Delete row',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to provide a reason!'
+                }
+            }
+        }).then((reasonResult) => {
+
+            if (reasonResult.isConfirmed && reasonResult.value) {
+                const deleteReason = reasonResult.value;
+
+                Swal.fire({
+                    title: 'Are you absolutely sure?',
+                    text: "This truck will be marked as deleted. You can restore it later.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((confirmResult) => {
+                    if (confirmResult.isConfirmed) {
+
+                        fetch('include/handlers/truck_handler.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'softDeleteTruck',
+                                truck_id: truckId,
+                                delete_reason: deleteReason
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: 'Truck has been marked as deleted.'
+                                });
+                                fetchTrucks(); 
+                                fetchTruckCounts(); 
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data.message
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'An error occurred during deletion.', 'error');
+                        });
+                    }
+                });
+            }
+        });
     }
 }
+        
+
      
 
 function performSoftDelete() {
@@ -626,7 +686,7 @@ function renderTrucksTable() {
     tableBody.innerHTML = "";
 
     if (filteredTrucks.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center;">No trucks found matching your search</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No trucks found matching your search</td></tr>`;
         updatePagination(0);
         updateShowingInfo(filteredTrucks);
         return;
