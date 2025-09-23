@@ -833,14 +833,7 @@ font-size: 13px;
         
         }
         
-        .modal button {
-            background-color:#f44336;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+       
         
         .add-schedule-btn {
             padding: 10px 20px;
@@ -875,7 +868,7 @@ font-size: 13px;
     }
 
     .cancel-btn {
-        background-color: #f443360c;
+        background-color: #ff3728e5;
         color: white;
         border: none;
         border-radius: 4px;
@@ -1915,13 +1908,18 @@ h3.title {
 
 .event-modal-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* This pushes left and right content apart */
     align-items: center;
     margin-bottom: 25px;
     padding-bottom: 15px;
-    padding-right: 50px; 
     border-bottom: 2px solid #e9ecef;
 }
+.event-modal-header .header-content-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 
 .event-modal-header h3 {
     color: #2c3e50;
@@ -1996,27 +1994,30 @@ h3.title {
     flex-wrap: wrap;
 }
 
-.event-modal-actions .icon-btn {
+
+
+
+.event-modal-actions {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    min-width: 10px;
-    justify-content: center;
-    background: none;
-    position: relative;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 0;
+    border-top: none;
+    flex-wrap: wrap;
 }
 
-.event-modal-actions .icon-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+/* Add these new rules for the dropdown positioning */
+.event-modal-actions .dropdown {
+    position: relative;
+    
+}
+
+.event-modal-actions .dropdown-content {
+    right: 0;
+    left: auto;
+    top: 100%;
+    margin-top: 5px;
+    z-index: 11001;
 }
 #eventModalStatus{
     padding:8px 12px;
@@ -2878,7 +2879,7 @@ h3.title {
     color: #e2f4e4ff;
 }
     
-.cancel-modal-content {
+/* .cancel-modal-content {
     background-color: #fff;
     margin: 1% auto;
     padding: 0;
@@ -2894,7 +2895,7 @@ h3.title {
 }
 
 .cancel-modal-header {
-    background: #dc3545; /* clean professional red */
+    background: #dc3545; 
     color: white;
     padding: 18px 24px;
     border-radius: 12px 12px 0 0;
@@ -3031,17 +3032,9 @@ h3.title {
     letter-spacing: 0.3px;
 }
 
-/* Close button */
-.cancel-close-btn {
-    background: #6c757d;
-    color: white;
-}
 
-.cancel-close-btn:hover {
-    background: #5a6268;
-}
 
-/* Send button */
+
 .cancel-send-btn {
     background: #dc3545;
     color: white;
@@ -3049,9 +3042,7 @@ h3.title {
 
 .cancel-send-btn:hover {
     background: #bb2d3b;
-}
-
-/* Animation */
+} 
 @keyframes modalSlideIn {
     from {
         opacity: 0;
@@ -3061,7 +3052,7 @@ h3.title {
         opacity: 1;
         transform: translateY(0) scale(1);
     }
-}
+} */
 
 #receiptModal {
        background: transparent;
@@ -3384,3 +3375,20 @@ h3.title {
                 grid-template-columns: 1fr;
             }
         }
+
+.event-modal-actions .dropdown {
+    position: relative;
+    right: 30px;
+    top:-15px;
+    
+}
+.event-modal-actions .dropdown-btn{
+    font-size: 24px;
+}
+.event-modal-actions .dropdown-content {
+    right: 20px;
+    left: auto;
+    top: 20%;
+    margin-top: 5px;
+    z-index: 11001;
+}

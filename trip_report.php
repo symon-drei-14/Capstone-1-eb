@@ -90,203 +90,9 @@ function formatDateTime($datetimeString) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trip Report - <?php echo htmlspecialchars($trip['container_no']); ?></title>
+    <link rel="stylesheet" href="include/css/tripreport.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f8f9fa;
-            color: #343a40;
-        }
-        
-        .report-container {
-            max-width:1000px;
-            margin: 0 auto;
-            background: white;
-       
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .report-header {
-            background-color: #f1f3f5;
-            padding: 10px;
-            text-align: center;
-     
-        }
-        
-        .company-logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 5px;
-        }
-        
-        .company-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        
-        .report-title {
-            font-size: 26px;
-            font-weight: 600;
-            margin: 0;
-            color: #495057;
-        }
-        
-        .report-subtitle {
-            font-size: 16px;
-            color: #6c757d;
-            margin: 5px 0 0;
-        }
-        
-        .report-content {
-            padding: 20px;
-        }
-        
-        .info-section {
-            margin-bottom: 30px;
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #495057;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 5px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .section-title i {
-            margin-right: 10px;
-            color: #495057;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        
-        .info-item {
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-        }
-        
-        .info-label {
-            font-size: 10px;
-            color: #6c757d;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .info-value {
-            font-size: 16px;
-            font-weight: 500;
-            color: #343a40;
-        }
-        
-        .status {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        
-        .status.pending { background-color: #fff3cd; color: #856404; }
-        .status.enroute { background-color: #d1ecf1; color: #0c5460; }
-        .status.completed { background-color: #d4edda; color: #155724; }
-        .status.cancelled { background-color: #f8d7da; color: #721c24; }
-        
-        .expense-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        
-        .expense-table th {
-            background-color: #e9ecef;
-            padding: 10px;
-            text-align: left;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .expense-table td {
-            padding: 10px;
-            border-bottom: 1px solid #e9ecef;
-            font-size: 14px;
-        }
-        
-        .total-row {
-            background-color: #f1f3f5;
-            font-weight: 600;
-            
-        }
-        
-        .print-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-        
-        .print-button:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
-        }
-        
-        .back-button {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: #95a5a6;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 1000;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-        }
-        
-        .back-button:hover {
-            background: #7f8c8d;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
-        }
-        
-        .back-button i {
-            margin-right: 8px;
-        }
-        
-        @media print {
-            body { background: white; padding: 0; }
-            .print-button, .back-button { display: none; }
-            .report-container { border: none; }
-        }
-    </style>
+
 </head>
 <body>
     <a href="triplogs.php" class="back-button">
@@ -299,9 +105,9 @@ function formatDateTime($datetimeString) {
 
     <div class="report-container">
         <div class="report-header">
-            <div class="company-logo">
+            <!-- <div class="company-logo">
                 <img src="include/img/mansar2.png" alt="Company Logo">
-            </div>
+            </div> -->
             <h1 class="report-title">TRIP REPORT</h1>
             <p class="report-subtitle">Trip ID: TR-<?php echo str_pad($trip['trip_id'], 6, '0', STR_PAD_LEFT); ?></p>
         </div>
@@ -422,18 +228,19 @@ function formatDateTime($datetimeString) {
                     <thead>
                         <tr>
                             <th>Type</th>
-                            <th>Amount</th>
                             <th>Submitted At</th>
                             <th>Receipt</th>
+                            <th>Amount</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($expenses as $expense): ?>
                         <tr>
                             <td><?php echo htmlspecialchars($expense['expense_type']); ?></td>
-                            <td><?php echo htmlspecialchars($expense['amount']); ?></td>
+                          
                             <td><?php echo formatDateTime($expense['submitted_time']); ?></td>
                             <td><?php echo $expense['receipt_image'] ? 'Yes' : 'No'; ?></td>
+                              <td><?php echo htmlspecialchars($expense['amount']); ?></td>
                         </tr>
                         <?php endforeach; ?>
                         <tr class="total-row">

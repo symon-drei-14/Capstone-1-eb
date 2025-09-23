@@ -297,13 +297,47 @@ if ($result->num_rows > 0) {
           
         </div>
 <!-- modal for the scheduled trips in the calendar -->
-         <div id="eventModal" class="modal">
-        <div class="modal-content">
-            <div class="event-modal-header">
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <div class="event-modal-header">
+            <div class="header-content-left">
                 <h3>Trip Details</h3>
                 <div id="eventModalStatus" class="completed">Completed</div>
-                <span class="close" onclick="closeModal()">&times;</span>
             </div>
+            
+            <div class="event-modal-actions">
+                <div class="dropdown">
+                    <button class="dropdown-btn" data-tooltip="Actions">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-content">
+                        <button class="dropdown-item edit" id="eventModalEditBtn">
+                            <i class="fas fa-edit"></i> Edit Trip
+                        </button>
+                        <button class="dropdown-item view-expenses">
+                            <i class="fas fa-money-bill-wave"></i> View Expenses
+                        </button>
+                        <button class="dropdown-item view-checklist">
+                            <i class="fas fa-clipboard-check"></i> Driver Checklist
+                        </button>
+                        <a href="#" class="dropdown-item generate-report" target="_blank">
+                            <i class="fas fa-file-alt"></i> Generate Report
+                        </a>
+                        <button class="dropdown-item view-reasons" id="eventModalHistoryBtn">
+                            <i class="fas fa-history"></i> View Edit History
+                        </button>
+                        <button class="dropdown-item delete" id="eventModalDeleteBtn">
+                            <i class="fas fa-trash-alt"></i> Delete Trip
+                        </button>
+                        <button class="dropdown-item cancel-trip">
+                            <i class="fas fa-ban"></i> Cancel Trip
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
             
             <div class="event-modal-body">
                 <div class="event-details-grid">
@@ -395,30 +429,8 @@ if ($result->num_rows > 0) {
                 </div>
             </div>
                 
-          <div class="event-modal-actions">
-    <button class="icon-btn edit" id="eventModalEditBtn" data-tooltip="Edit Trip">
-        <i class="fas fa-edit"></i>
-    </button>
-   
-    <button class="icon-btn view-expenses" data-tooltip="View Expenses">
-        <i class="fas fa-money-bill-wave"></i>
-    </button>
-    <button class="icon-btn view-checklist" data-tooltip="Driver Checklist">
-        <i class="fas fa-clipboard-check"></i>
-    </button>
-    <a href="#" class="icon-btn generate-report" target="_blank" data-tooltip="Generate Report">
-        <i class="fas fa-file-alt"></i>
-    </a>
-    <button class="icon-btn view-reasons" id="eventModalHistoryBtn" data-tooltip="View Edit History">
-        <i class="fas fa-history"></i>
-    </button>
-     <button class="icon-btn delete" id="eventModalDeleteBtn" data-tooltip="Delete Trip">
-        <i class="fas fa-trash-alt"></i>
-    </button>
-    <button class="icon-btn cancel-trip" data-tooltip="Cancel Trip">
-        <i class="fas fa-ban"></i>
-    </button>
-</div>
+         
+
             </div>
         </div>
 
@@ -511,13 +523,12 @@ if ($result->num_rows > 0) {
             <!-- Full width fields -->
                 <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
-                    <legend style="font-weight: bold;">Shippine line hehe</legend>
+                    <legend style="font-weight: bold;">Shipping Information</legend>
                 <label for="editEventShippingLine">Shipping Line:</label>
                 <select id="editEventShippingLine" name="eventShippingLine" required style="width: 100%;">
                     <option value="">Select Shipping Line</option>
                 </select>
-            <br>
-                   <br>
+   
                 <label for="editEventConsignee">Consignee:</label>
                 <select id="editEventConsignee" name="eventConsignee" required style="width: 100%;">
                     <option value="">Select Consignee</option>
@@ -529,11 +540,11 @@ if ($result->num_rows > 0) {
             <!-- Expense Fields Section -->
       <div style="display: flex; flex-direction: column; gap: 20px;">
     <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
-        <legend style="font-weight: bold;">Money Money</legend>
+        <legend style="font-weight: bold;">Financial Information</legend>
         <div>
             <label for="editEventCashAdvance">Cash Advance:</label>
             <input type="number" id="editEventCashAdvance" name="eventCashAdvance" 
-                   min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+                   min="2000" step="0.01" placeholder="2000.00" style="width: 100%;">
         </div>
         <div id="editAdditionalCashContainer" style="display: none;">
             <label for="editEventAdditionalCashAdvance">Additional Cash:</label>
@@ -838,7 +849,7 @@ if ($result->num_rows > 0) {
      
                   <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
-                    <legend style="font-weight: bold;">Shippine line hehe</legend>
+                    <legend style="font-weight: bold;">Shipping Information</legend>
                     <label for="addEventShippingLine">Shipping Line:</label>
                     <select id="addEventShippingLine" name="eventShippingLine" required style="width: 100%;">
                         <option value="">Select Shipping Line</option>
@@ -849,8 +860,6 @@ if ($result->num_rows > 0) {
                         <option value="Hapag-Lloyd">Hapag-Lloyd</option>
                     </select>
          
-                    <br>
-                   <br>
                     <label for="addEventConsignee">Consignee:</label>
                     <select id="addEventConsignee" name="eventConsignee" required style="width: 100%;">
                         <option value="">Select Consignee</option>
@@ -866,7 +875,7 @@ if ($result->num_rows > 0) {
         <div>
             <label for="addEventCashAdvance">Cash Advance:</label>
             <input type="number" id="addEventCashAdvance" name="eventCashAdvance" 
-                   min="0" step="0.01" placeholder="0.00" style="width: 100%;">
+                   min="2000" step="0.01" placeholder="2000.00" style="width: 100%;">
         </div>
         <div>
             <label for="addEventDiesel">Diesel:</label>
@@ -999,83 +1008,8 @@ if ($result->num_rows > 0) {
     </div>
 
 
-<div id="cancelTripModal" class="modal">
-    <div class="cancel-modal-content">
-        <div class="cancel-modal-header">
-            <h3><i class="fas fa-ban"></i> Cancel Trip</h3>
-            <span class="close">&times;</span>
-        </div>
         
-        <div class="cancel-modal-body">
-        
-            <!-- Email Section -->
-            <div class="email-section">
-                <h4><i class="fas fa-envelope"></i> Cancellation Email</h4>
-                
-                <div class="email-field">
-                    <label for="cancelEmailTo">To:</label>
-                    <input type="email" id="cancelEmailTo" value="operations@mansarlogistics.com">
-                </div>
-                
-                <div class="email-field">
-                    <label for="cancelEmailSubject">Subject:</label>
-                    <input type="text" id="cancelEmailSubject" 
-                        value="URGENT: Trip Cancellation">
-                </div>
-            </div>
-
-            <!-- Cancellation Reason Section -->
-            <div class="reason-section">
-                <h4><i class="fas fa-exclamation-triangle"></i> Reason for Cancellation</h4>
-                
-                <div class="email-field">
-                    <label for="cancelReasonSelect">Select Reason:</label>
-                    <select id="cancelReasonSelect">
-                        <option value="">-- Please choose a reason --</option>
-                        <option value="Vehicle breakdown/maintenance issue">Vehicle breakdown/maintenance issue</option>
-                        <option value="Driver unavailability/emergency">Driver unavailability/emergency</option>
-                        <option value="Client request/postponement">Client request/postponement</option>
-                        <option value="Weather conditions/safety concerns">Weather conditions/safety concerns</option>
-                        <option value="Port/destination closure">Port/destination closure</option>
-                        <option value="Container/cargo issues">Container/cargo issues</option>
-                    </select>
-                </div>
-                
-                <div class="email-field" id="otherReasonContainer" style="display: none; margin-top: 15px;">
-                    <label for="otherReasonText">Please specify the reason:</label>
-                    <textarea id="otherReasonText" placeholder="Enter specific reason for cancellation..." rows="3"></textarea>
-                </div>
-            </div>
-
-            <!-- Email Body Preview -->
-            <div class="email-field">
-                <label for="cancelEmailBody">Email Content:</label>
-                <textarea id="cancelEmailBody" rows="8">Dear "Client",
-
-This is to notify you that the following trip has been cancelled:
-
-Trip ID: TR-2024-001
-Scheduled Date: January 15, 2024 12:59 pm
-From: Kuwait
-Destination: Manila Port
-// Dagdag nalang kung ano pang details kailangan
-
-Reason for Cancellation: [Reason will be updated based on selection]
-we are sorry for the inconvenience chuchu basta ganon ganon
-
-Best regards,
-Mansar Trucking </textarea>
-            </div>
-        </div>
-        
-        <div class="cancel-modal-actions">
-            <button type="button" class="cancel-btn-action cancel-close-btn">Close</button>
-            <button type="button" class="cancel-btn-action cancel-send-btn" id="sendCancellationBtn">
-                <i class="fas fa-paper-plane"></i> Send Cancellation Notice
-            </button>
-        </div>
-    </div>
-</div>
+       
 
     <script>
 function formatDateTime(datetimeString) {
@@ -2030,14 +1964,14 @@ eventClick: function(event, jsEvent, view) {
     
 
 
-      $('#eventModal').data('eventId', event.id);
-    $('.icon-btn.edit').attr('data-id', event.id);
-    $('.icon-btn.delete').attr('data-id', event.id);
-    $('.icon-btn.view-expenses').attr('data-id', event.id);
-    $('.icon-btn.view-checklist').attr('data-id', event.id).attr('data-driver-id', event.driver_id);
-    $('.icon-btn.generate-report').attr('href', `trip_report.php?id=${event.id}`);
-    $('.icon-btn.view-reasons').attr('data-id', event.id);
-    $('.icon-btn.cancel-trip').attr('data-id', event.id);
+ $('#eventModal').data('eventId', event.id);
+    $('#eventModal .edit').attr('data-id', event.id);
+    $('#eventModal .delete').attr('data-id', event.id);
+    $('#eventModal .view-expenses').attr('data-id', event.id);
+    $('#eventModal .view-checklist').attr('data-id', event.id).attr('data-driver-id', event.driver_id);
+    $('#eventModal .generate-report').attr('href', `trip_report.php?id=${event.id}`);
+    $('#eventModal .view-reasons').attr('data-id', event.id);
+    $('#eventModal .cancel-trip').attr('data-id', event.id);
 
       if (event.edit_reasons && event.edit_reasons !== 'null' && event.edit_reasons !== '') {
         $('#eventModalHistoryBtn').show();
@@ -3041,7 +2975,7 @@ function deleteTrip(tripId) {
         inputLabel: 'Please provide a reason for deleting this trip.',
         inputPlaceholder: 'Type your reason here...',
         showCancelButton: true,
-        confirmButtonText: 'Next &rarr;',
+        confirmButtonText: 'Delete',
         inputValidator: (value) => {
             if (!value) {
                 return 'You need to provide a reason!'
@@ -3545,14 +3479,15 @@ function updateTableInfo(totalItems, currentItemsCount) {
  
 }   
 
-document.addEventListener('click', function(e) {
+
+/* document.addEventListener('click', function(e) {
         if (e.target.closest('.cancel-trip')) {
             const tripId = e.target.closest('.cancel-trip').dataset.id;
 
             document.getElementById('cancelTripModal').style.display = 'block';
         }
     });
-
+*/
 $(document).on('click', '.clickable-expense', function() {
     const receiptUrl = $(this).data('receipt');
     if (receiptUrl) {
