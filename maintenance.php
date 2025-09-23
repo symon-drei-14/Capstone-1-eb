@@ -1375,11 +1375,11 @@ function renderExpenseList(expenses) {
     }
 
     expenses.forEach(expense => {
-        // Create the main container for the expense item
+        
         const item = document.createElement('div');
         item.className = 'expense-item';
 
-        // Add the click handler for viewing receipts, if available
+       
         if (expense.receipt_image) {
             item.setAttribute('data-receipt', expense.receipt_image);
             item.title = "Click to view receipt";
@@ -1390,7 +1390,7 @@ function renderExpenseList(expenses) {
             item.title = "No receipt available";
         }
 
-        // Create and append the details section
+       
         const detailsDiv = document.createElement('div');
         detailsDiv.className = 'expense-details';
         detailsDiv.innerHTML = `
@@ -1399,37 +1399,37 @@ function renderExpenseList(expenses) {
         `;
         item.appendChild(detailsDiv);
 
-        // Create and append the actions section
+       
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'expense-actions';
 
-        // Create, configure, and append the Edit button
+    
         const editBtn = document.createElement('button');
-        editBtn.type = 'button'; // FIX: Prevents form submission
+        editBtn.type = 'button'; 
         editBtn.className = 'edit-btn';
         editBtn.title = 'Edit';
         editBtn.innerHTML = '<i class="fas fa-edit"></i>';
         editBtn.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevents the parent div's click (receipt view)
+            event.stopPropagation(); 
             populateExpenseFormForEdit(expense.expense_id, expense.expense_type, expense.amount);
         });
         actionsDiv.appendChild(editBtn);
 
-        // Create, configure, and append the Delete button
+        
         const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button'; // FIX: Prevents form submission
+        deleteBtn.type = 'button';
         deleteBtn.className = 'delete-btn';
         deleteBtn.title = 'Delete';
         deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
         deleteBtn.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevents the parent div's click (receipt view)
+            event.stopPropagation(); 
             deleteExpense(expense.expense_id);
         });
         actionsDiv.appendChild(deleteBtn);
 
         item.appendChild(actionsDiv);
 
-        // Add the fully constructed item to the list
+        
         expenseListDiv.appendChild(item);
     });
 }
