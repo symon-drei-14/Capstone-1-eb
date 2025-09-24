@@ -35,42 +35,40 @@
     
 $sql = "SELECT 
           t.*,
-          fs.name as fcl_status, -- This is the change
-          tr.plate_no as truck_plate_no, 
-          tr.capacity as truck_capacity,
-          d.name as driver,
-          h.name as helper,
-          disp.name as dispatcher,
-          c.name as client,
-          p.name as port,  
-          dest.name as destination,
-          sl.name as shipping_line,
-          cons.name as consignee,
-          al.edit_reason as edit_reason,
-          al.modified_by as last_modified_by,
-          al.modified_at as last_modified_at,
-          COALESCE(te.cash_advance, 0) as cash_advance,
-          COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-          COALESCE(te.diesel, 0) as diesel,
-          tr.plate_no,  
-          t.trip_date    
-      FROM trips t
-      LEFT JOIN fcl_status fs ON t.fcl_status_id = fs.fcl_status_id -- Added this join
-      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-      LEFT JOIN helpers h ON t.helper_id = h.helper_id
-      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-      LEFT JOIN clients c ON t.client_id = c.client_id
-      LEFT JOIN ports p ON t.port_id = p.port_id  
-      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-      LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
-      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-      WHERE NOT EXISTS (
-          SELECT 1 FROM audit_logs_trips al2 
-          WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
-      )";
+            tr.plate_no as truck_plate_no, 
+            tr.capacity as truck_capacity,
+            d.name as driver,
+            h.name as helper,
+            disp.name as dispatcher,
+            c.name as client,
+            p.name as port,  
+            dest.name as destination,
+            sl.name as shipping_line,
+            cons.name as consignee,
+            al.edit_reason as edit_reason,
+            al.modified_by as last_modified_by,
+            al.modified_at as last_modified_at,
+            COALESCE(te.cash_advance, 0) as cash_advance,
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+            COALESCE(te.diesel, 0) as diesel,
+            tr.plate_no,  
+            t.trip_date   
+        FROM trips t
+        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+        LEFT JOIN helpers h ON t.helper_id = h.helper_id
+        LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+        LEFT JOIN clients c ON t.client_id = c.client_id
+        LEFT JOIN ports p ON t.port_id = p.port_id  
+        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+        LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
+        LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+        WHERE NOT EXISTS (
+            SELECT 1 FROM audit_logs_trips al2 
+            WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+        )";
         
     $result = $conn->query($sql);
     $eventsData = [];
@@ -91,7 +89,7 @@ if ($result->num_rows > 0) {
     'destination' => $row['destination'],
     'shippingLine' => $row['shipping_line'],
     'consignee' => $row['consignee'],
-    'size' => $row['truck_capacity'],
+    'size' => $row['fcl_status'],
     'cashAdvance' => $row['cash_advance'],
     'additionalCashAdvance' => $row['additional_cash_advance'],
     'diesel' => $row['diesel'],
@@ -473,10 +471,11 @@ if ($result->num_rows > 0) {
                     <option value="">Select Helper</option>
                 </select>
 
-               <label for="editEventFCL">FCL Status:</label>
-<select id="editEventFCL" name="eventFCL" style="width: 100%;">
-    <option value="">Select FCL Status (Optional)</option>
-</select>
+                <label for="editEventFCL">FCL Status:</label>
+                <select id="editEventFCL" name="eventFCL" required style="width: 100%;">
+                    <option value="">Select FCL</option>
+                    <option value="MIP">MIP</option>
+                </select>
             </div>
 
             <!-- Column 2 -->
@@ -783,10 +782,11 @@ if ($result->num_rows > 0) {
                     <option value="">Select Helper</option>
                 </select>
 
-               <label for="addEventFCL">FCL Status:</label>
-<select id="addEventFCL" name="eventFCL" style="width: 100%;">
-    <option value="">Select FCL Status (Optional)</option>
-</select>
+                <label for="addEventFCL">FCL Status:</label>
+                <select id="addEventFCL" name="eventFCL" required style="width: 100%;">
+                    <option value="">Select FCL Status</option>
+                    <option value="MIP">MIP</option>
+                </select>
             </div>
 
             <!-- Column 2 -->
@@ -1358,34 +1358,6 @@ function populateDropdowns(action, responseKey, targetSelectors, defaultText) {
     }
 }
 
-function populateFCLStatusDropdowns() {
-    // A little check to prevent hammering the server if it's already loaded
-    if ($('#addEventFCL option').length > 1 && $('#editEventFCL option').length > 1) {
-        return;
-    }
-
-    $.ajax({
-        url: 'include/handlers/trip_operations.php',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ action: 'get_fcl_statuses' }),
-        success: function(response) {
-            if (response.success && response.fcl_statuses) {
-                // The first option allows the user to leave it blank
-                var options = '<option value="">Select FCL Status (Optional)</option>';
-                response.fcl_statuses.forEach(function(status) {
-                    options += `<option value="${status.name}">${status.name}</option>`;
-                });
-                // Update both modals at once
-                $('#addEventFCL, #editEventFCL').html(options);
-            }
-        },
-        error: function() {
-            console.error('Error fetching FCL statuses');
-        }
-    });
-}
-
 
 function populateHelperDropdowns() {
     populateDropdowns('get_helpers', 'helpers', '#editEventHelper, #addEventHelper', 'Select Helper');
@@ -1420,7 +1392,6 @@ $(document).ready(function() {
     populatePortDropdowns();
     populateDestinationDropdowns();
     populateShippingLineDropdowns();
-    populateFCLStatusDropdowns();
 
 });
 
@@ -1434,7 +1405,6 @@ $('#addScheduleBtnTable').on('click', function() {
     populateClientDropdowns();
     populateDestinationDropdowns();
     populateShippingLineDropdowns();
-    populateFCLStatusDropdowns();
     $('#addScheduleModal').show();
 });
 
@@ -2597,7 +2567,8 @@ function populateEditModal(event) {
         }
         
         $('#editModal').show();
-            
+            $('#editEventDriver').prop('disabled', true);
+    $('#editEventSize').prop('disabled', true);
     }
 
 $(document).on('click', '.dropdown-item.view-expenses', function() {
