@@ -937,12 +937,13 @@ h3 {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    color: #646464;
 }
 
 .form-group input {
     width: 100%;
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid #63636361;
     border-radius: 4px;
 }
 

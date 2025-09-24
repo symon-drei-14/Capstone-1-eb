@@ -135,9 +135,16 @@
             <span class="close" onclick="closeModal()">×</span>
             <h2 id="modalTitle">Add Driver</h2>
 
-                <div id="profilePreview"></div>
+    
 
             <form id="driverForm">
+                
+                <div class="form-group">
+    <label for="driverProfile">Profile Photo  (Max 2MB)</label>
+    <input type="file" id="driverProfile" name="driverProfile" accept="image/*">
+    <div id="profilePreview" style="margin-top: 10px;"></div>
+</div>
+
                 <input type="hidden" id="driverId" name="driverId">
                 <input type="hidden" id="modalMode" name="modalMode" value="add">
                 
@@ -177,12 +184,6 @@
     <select id="assignedTruck" name="assignedTruck">
         <option value="">None</option>
         </select>
-</div>
-
-                <div class="form-group">
-    <label for="driverProfile">Profile Photo</label>
-    <input type="file" id="driverProfile" name="driverProfile" accept="image/*">
-    <div id="profilePreview" style="margin-top: 10px;"></div>
 </div>
 
                 <button type="submit" id="saveButton" class="btn-primary">
@@ -751,53 +752,76 @@ function formatDateWithTime(dateString) {
     $('#nextPageBtn').prop('disabled', true);
 }
         
-      // Preview profile image when selected - Updated version
-document.getElementById('driverProfile') && document.getElementById('driverProfile').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const profilePreview = document.getElementById('profilePreview');
+
+    document.getElementById('driverProfile') && document.getElementById('driverProfile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const profilePreview = document.getElementById('profilePreview');
+        const maxSize = 2 * 1024 * 1024; 
+
+        if (file) {
+     
+            if (file.size > maxSize) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Too Large',
+                    text: 'The selected image exceeds the 2MB size limit. Please choose a smaller file.'
+                });
+                e.target.value = ''; 
+
+
+                const mode = document.getElementById("modalMode").value;
+                if (mode === 'edit') {
+                    const existingContent = profilePreview.querySelector('.current-profile-section');
+                    if (existingContent) {
+                        profilePreview.innerHTML = existingContent.outerHTML;
+                    }
+                } else {
+                    profilePreview.innerHTML = '';
+                }
+                return; 
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
     
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            // Check if there's existing content (for edit mode)
-            const existingContent = profilePreview.querySelector('.current-profile-section');
-            
-            let newPreviewHtml = `
-                <div class="new-profile-section">
-                    <h4>New Profile Picture:</h4>
-                    <div class="large-profile-display">
-                        <img src="${event.target.result}" 
-                             class="large-profile-preview" 
-                             alt="New Driver Photo">
-                        <p>New image selected</p>
+                const existingContent = profilePreview.querySelector('.current-profile-section');
+                
+                let newPreviewHtml = `
+                    <div class="new-profile-section">
+                        <h4>New Profile Picture:</h4>
+                        <div class="large-profile-display">
+                            <img src="${event.target.result}" 
+                                 class="large-profile-preview" 
+                                 alt="New Driver Photo">
+                            <p>New image selected</p>
+                        </div>
                     </div>
-                </div>
-            `;
-            
-            if (existingContent) {
-                // In edit mode - show both existing and new
-                profilePreview.innerHTML = existingContent.outerHTML + newPreviewHtml;
-            } else {
-                // In add mode - show only new
-                profilePreview.innerHTML = newPreviewHtml;
-            }
-        };
-        reader.readAsDataURL(file);
-    } else {
-        // If no file selected and in edit mode, restore original preview
-        const mode = document.getElementById("modalMode").value;
-        if (mode === 'edit') {
-            // Keep existing image display only
-            const existingContent = profilePreview.querySelector('.current-profile-section');
-            if (existingContent) {
-                profilePreview.innerHTML = existingContent.outerHTML;
-            }
+                `;
+                
+                if (existingContent) {
+                    // In edit mode - show both existing and new
+                    profilePreview.innerHTML = existingContent.outerHTML + newPreviewHtml;
+                } else {
+                    // In add mode - show only new
+                    profilePreview.innerHTML = newPreviewHtml;
+                }
+            };
+            reader.readAsDataURL(file);
         } else {
-            // Clear preview in add mode
-            profilePreview.innerHTML = '';
+            // If no file selected and in edit mode, restore original preview
+            const mode = document.getElementById("modalMode").value;
+            if (mode === 'edit') {
+                // Keep existing image display only
+                const existingContent = profilePreview.querySelector('.current-profile-section');
+                if (existingContent) {
+                    profilePreview.innerHTML = existingContent.outerHTML;
+                }
+            } else {
+                // Clear preview in add mode
+                profilePreview.innerHTML = '';
+            }
         }
-    }
-});
+    });
 
         window.onclick = function(event) {
             const modal = document.getElementById("driverModal");

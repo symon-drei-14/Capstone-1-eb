@@ -2,22 +2,37 @@
 header("Content-Type: application/json");
 require 'dbhandler.php';
 
-// Handle parameters
+
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
 $show_deleted = isset($_GET['show_deleted']) ? filter_var($_GET['show_deleted'], FILTER_VALIDATE_BOOLEAN) : false;
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $offset = ($page - 1) * $limit;
 
-// Get total count (filter by deleted status if needed)
-$countQuery = "SELECT COUNT(*) as total FROM login_admin";
-if (!$show_deleted) {
-    $countQuery .= " WHERE is_deleted = FALSE";
+$baseQuery = "FROM login_admin a LEFT JOIN login_admin b ON a.deleted_by = b.admin_id";
+$whereClause = $show_deleted ? " WHERE a.is_deleted = TRUE" : " WHERE a.is_deleted = FALSE";
+
+$params = [];
+$types = '';
+
+if (!empty($search)) {
+    $searchTerm = "%" . $search . "%";
+    $whereClause .= " AND (a.username LIKE ? OR a.role LIKE ? OR b.username LIKE ? OR a.delete_reason LIKE ?)";
+    array_push($params, $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+    $types .= 'ssss';
 }
-$countResult = $conn->query($countQuery);
+
+$countQuery = "SELECT COUNT(*) as total " . $baseQuery . $whereClause;
+$stmtCount = $conn->prepare($countQuery);
+if (!empty($params)) {
+    $stmtCount->bind_param($types, ...$params);
+}
+$stmtCount->execute();
+$countResult = $stmtCount->get_result();
 $totalRow = $countResult->fetch_assoc();
 $total = $totalRow['total'];
+$stmtCount->close();
 
-// Get paginated data with deletion info and profile picture
 $query = "SELECT 
             a.admin_id, 
             a.username, 
@@ -25,27 +40,23 @@ $query = "SELECT
             a.admin_pic,
             a.is_deleted,
             a.deleted_at,
-            a.deleted_by,
             a.delete_reason,
             b.username as deleted_by_name
-          FROM login_admin a
-          LEFT JOIN login_admin b ON a.deleted_by = b.admin_id";
+          " . $baseQuery . $whereClause . " ORDER BY a.is_deleted, a.admin_id LIMIT ? OFFSET ?";
 
-if (!$show_deleted) {
-    $query .= " WHERE a.is_deleted = FALSE";
-}
 
-$query .= " ORDER BY a.is_deleted, a.admin_id LIMIT ? OFFSET ?";
+array_push($params, $limit, $offset);
+$types .= 'ii';
 
 $stmt = $conn->prepare($query);
-$stmt->bind_param("ii", $limit, $offset);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
 
 $admins = [];
 while ($row = $result->fetch_assoc()) {
-    // Convert is_deleted to boolean for easier handling in JavaScript
     $row['is_deleted'] = (bool)$row['is_deleted'];
+    $row['deleted_by'] = $row['deleted_by_name'];
     $admins[] = $row;
 }
 
