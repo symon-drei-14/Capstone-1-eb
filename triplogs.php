@@ -2930,7 +2930,7 @@ $('#editForm').on('submit', function(e) {
                 consignee: $('#editEventConsignee').val(),
                 size: $('#editEventSize').val(),
                  fclStatus: $('#editEventFCL').val(),
-                fclStatus: $('#editEventFCL').val(),
+                
                 cashAdvance: $('#editEventCashAdvance').val(),
                 additionalCashAdvance: $('#editEventAdditionalCashAdvance').val(),
                 diesel: $('#editEventDiesel').val(),
