@@ -998,95 +998,123 @@ case 'get_trip_statistics':
 
     
  case 'save_checklist':
-            // Get the ID of the driver submitting the checklist
-            $submittingDriverId = $data['driver_id'] ?? null;
-        
-            if (!$submittingDriverId) {
-                throw new Exception("Submitting driver's ID is missing from the request.");
+    // Get the ID of the driver submitting the checklist
+    $submittingDriverId = $data['driver_id'] ?? null;
+
+    if (!$submittingDriverId) {
+        throw new Exception("Submitting driver's ID is missing from the request.");
+    }
+
+    // Check if the trip exists and get its details for validation
+    $tripCheck = $conn->prepare("SELECT driver_id, trip_date FROM trips WHERE trip_id = ?");
+    $tripCheck->bind_param("i", $data['trip_id']);
+    $tripCheck->execute();
+    $tripResult = $tripCheck->get_result();
+
+    if ($tripResult->num_rows === 0) {
+        echo json_encode(['success' => false, 'message' => 'Trip not found']);
+        $tripCheck->close();
+        break;
+    }
+
+    $trip = $tripResult->fetch_assoc();
+    $tripCheck->close();
+    
+    // --- FIX STARTS HERE ---
+    // Let's see if we need to bypass the standard time window check.
+    $bypassTimeCheck = false;
+
+    // We'll check the latest audit log to see if the trip was recently reassigned.
+    $auditCheck = $conn->prepare("
+        SELECT edit_reason, modified_at
+        FROM audit_logs_trips
+        WHERE trip_id = ? AND is_deleted = 0
+        ORDER BY modified_at DESC
+        LIMIT 1
+    ");
+    $auditCheck->bind_param("i", $data['trip_id']);
+    $auditCheck->execute();
+    $auditResult = $auditCheck->get_result();
+
+    if ($auditResult->num_rows > 0) {
+        $latestAudit = $auditResult->fetch_assoc();
+        // The reason text will tell us if it was a reassignment.
+        if (strpos($latestAudit['edit_reason'], 'reassigned') !== false) {
+            $modifiedTime = new DateTime($latestAudit['modified_at']);
+            $now = new DateTime();
+            $secondsSinceReassigned = $now->getTimestamp() - $modifiedTime->getTimestamp();
+            
+            // Give the new driver a one-hour grace period to get their checklist in.
+            if ($secondsSinceReassigned < 3600) { // 3600 seconds = 1 hour
+                $bypassTimeCheck = true;
             }
+        }
+    }
+    $auditCheck->close();
+    
+    // Now, let's check the time window, but only if we're not bypassing.
+    if (!$bypassTimeCheck) {
+        $tripDateTime = new DateTime($trip['trip_date']);
+        $now = new DateTime();
         
-            // Check if the trip exists and get its details for validation
-            $tripCheck = $conn->prepare("SELECT driver_id, trip_date FROM trips WHERE trip_id = ?");
-            $tripCheck->bind_param("i", $data['trip_id']);
-            $tripCheck->execute();
-            $tripResult = $tripCheck->get_result();
-        
-            if ($tripResult->num_rows === 0) {
-                echo json_encode(['success' => false, 'message' => 'Trip not found']);
-                $tripCheck->close();
-                break;
-            }
-        
-            $trip = $tripResult->fetch_assoc();
-            $tripCheck->close();
-            $assignedDriverId = $trip['driver_id'];
-        
-            // Here's the bypass logic. If the submitting driver is not the one currently
-            // assigned to the trip, it means they are a replacement and should be allowed to submit anytime.
-            $isReassignedDriver = ($submittingDriverId != $assignedDriverId);
-        
-            // Only enforce the time window check if it's the original driver.
-            if (!$isReassignedDriver) {
-                $tripDateTime = new DateTime($trip['trip_date']);
-                $now = new DateTime();
-                
-                $threeHoursBefore = (clone $tripDateTime)->modify('-3 hours');
-                $oneHourBefore = (clone $tripDateTime)->modify('-1 hour');
-        
-                if ($now < $threeHoursBefore) {
-                    $formattedTime = $threeHoursBefore->format('g:i A');
-                    echo json_encode([
-                        'success' => false,
-                        'message' => "Checklist will be available starting at {$formattedTime} (3 hours before the scheduled trip)."
-                    ]);
-                    break;
-                }
-        
-                if ($now > $oneHourBefore) {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Checklist submission closed 1 hour before the scheduled trip time.'
-                    ]);
-                    break;
-                }
-            }
-        
-            // Check if a checklist for this trip already exists
-            $checkStmt = $conn->prepare("SELECT id FROM driver_checklist WHERE trip_id = ?");
-            $checkStmt->bind_param("i", $data['trip_id']);
-            $checkStmt->execute();
-            $exists = $checkStmt->get_result()->num_rows > 0;
-            $checkStmt->close();
-        
-            if ($exists) {
-                // If it exists, we update it.
-                $stmt = $conn->prepare("UPDATE driver_checklist SET 
-                    no_fatigue = ?, no_drugs = ?, no_distractions = ?, no_illness = ?,
-                    fit_to_work = ?, alcohol_test = ?, hours_sleep = ?, submitted_at = NOW()
-                    WHERE trip_id = ?");
-                $stmt->bind_param("iiiiiddi", 
-                    $data['no_fatigue'], $data['no_drugs'], $data['no_distractions'], $data['no_illness'],
-                    $data['fit_to_work'], $data['alcohol_test'], $data['hours_sleep'], $data['trip_id']
-                );
-            } else {
-                // Otherwise, we create a new one.
-                $stmt = $conn->prepare("INSERT INTO driver_checklist (
-                    trip_id, no_fatigue, no_drugs, no_distractions, no_illness,
-                    fit_to_work, alcohol_test, hours_sleep, submitted_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-                $stmt->bind_param("iiiiiidd", 
-                    $data['trip_id'], $data['no_fatigue'], $data['no_drugs'], $data['no_distractions'],
-                    $data['no_illness'], $data['fit_to_work'], $data['alcohol_test'], $data['hours_sleep']
-                );
-            }
-        
-            if ($stmt->execute()) {
-                echo json_encode(['success' => true, 'message' => 'Checklist submitted successfully']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to save checklist']);
-            }
-            $stmt->close();
+        $threeHoursBefore = (clone $tripDateTime)->modify('-3 hours');
+        $oneHourBefore = (clone $tripDateTime)->modify('-1 hour');
+
+        if ($now < $threeHoursBefore) {
+            $formattedTime = $threeHoursBefore->format('g:i A');
+            echo json_encode([
+                'success' => false,
+                'message' => "Checklist will be available starting at {$formattedTime} (3 hours before the scheduled trip)."
+            ]);
             break;
+        }
+
+        if ($now > $oneHourBefore) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Checklist submission closed 1 hour before the scheduled trip time.'
+            ]);
+            break;
+        }
+    }
+    // --- FIX ENDS HERE ---
+
+    // Check if a checklist for this trip already exists
+    $checkStmt = $conn->prepare("SELECT id FROM driver_checklist WHERE trip_id = ?");
+    $checkStmt->bind_param("i", $data['trip_id']);
+    $checkStmt->execute();
+    $exists = $checkStmt->get_result()->num_rows > 0;
+    $checkStmt->close();
+
+    if ($exists) {
+        // If it exists, we update it.
+        $stmt = $conn->prepare("UPDATE driver_checklist SET 
+            no_fatigue = ?, no_drugs = ?, no_distractions = ?, no_illness = ?,
+            fit_to_work = ?, alcohol_test = ?, hours_sleep = ?, submitted_at = NOW()
+            WHERE trip_id = ?");
+        $stmt->bind_param("iiiiiddi", 
+            $data['no_fatigue'], $data['no_drugs'], $data['no_distractions'], $data['no_illness'],
+            $data['fit_to_work'], $data['alcohol_test'], $data['hours_sleep'], $data['trip_id']
+        );
+    } else {
+        // Otherwise, we create a new one.
+        $stmt = $conn->prepare("INSERT INTO driver_checklist (
+            trip_id, no_fatigue, no_drugs, no_distractions, no_illness,
+            fit_to_work, alcohol_test, hours_sleep, submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt->bind_param("iiiiiidd", 
+            $data['trip_id'], $data['no_fatigue'], $data['no_drugs'], $data['no_distractions'],
+            $data['no_illness'], $data['fit_to_work'], $data['alcohol_test'], $data['hours_sleep']
+        );
+    }
+
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'message' => 'Checklist submitted successfully']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to save checklist']);
+    }
+    $stmt->close();
+    break;
 
 
 
