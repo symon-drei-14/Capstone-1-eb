@@ -1022,3 +1022,52 @@
 2025-09-23 19:50:14 - Data validation passed
 2025-09-23 19:50:14 - Database connection successful
 2025-09-23 19:50:15 - Login successful for: alcedo@gmail.com
+2025-09-24 11:55:35 - Login request received
+{"email":"Testemail2@gmail.com","password":"12345678"}
+
+2025-09-24 11:55:35 - JSON parsed successfully
+2025-09-24 11:55:35 - Data validation passed
+2025-09-24 11:55:35 - Database connection successful
+2025-09-24 11:55:35 - Login successful for: Testemail2@gmail.com
+2025-09-24 12:01:12 - Login request received
+{"email":"testdriver@gmail.com","password":"12345678"}
+
+2025-09-24 12:01:12 - JSON parsed successfully
+2025-09-24 12:01:12 - Data validation passed
+2025-09-24 12:01:12 - Database connection successful
+2025-09-24 12:01:12 - Login successful for: testdriver@gmail.com
+2025-09-24 12:06:02 - Login request received
+{"email":"alcedo@gmail.com","password":"12345678"}
+
+2025-09-24 12:06:02 - JSON parsed successfully
+2025-09-24 12:06:02 - Data validation passed
+2025-09-24 12:06:02 - Database connection successful
+2025-09-24 12:06:02 - Login successful for: alcedo@gmail.com
+2025-09-24 12:11:11 - Login request received
+{"email":"driver11@gmail.com","password":"12345678"}
+
+2025-09-24 12:11:11 - JSON parsed successfully
+2025-09-24 12:11:11 - Data validation passed
+2025-09-24 12:11:11 - Database connection successful
+2025-09-24 12:11:11 - Login successful for: driver11@gmail.com
+2025-09-24 12:18:28 - Login request received
+{"email":"testdriver@gmail.com","password":"12345678"}
+
+2025-09-24 12:18:28 - JSON parsed successfully
+2025-09-24 12:18:28 - Data validation passed
+2025-09-24 12:18:28 - Database connection successful
+2025-09-24 12:18:29 - Login successful for: testdriver@gmail.com
+2025-09-24 12:19:23 - Login request received
+{"email":"driver11@gmail.com","password":"12345678"}
+
+2025-09-24 12:19:23 - JSON parsed successfully
+2025-09-24 12:19:23 - Data validation passed
+2025-09-24 12:19:23 - Database connection successful
+2025-09-24 12:19:23 - Login successful for: driver11@gmail.com
+2025-09-24 12:22:37 - Login request received
+{"email":"Test313er@gmail.com","password":"123"}
+
+2025-09-24 12:22:37 - JSON parsed successfully
+2025-09-24 12:22:37 - Data validation passed
+2025-09-24 12:22:37 - Database connection successful
+2025-09-24 12:22:37 - Login successful for: Test313er@gmail.com
