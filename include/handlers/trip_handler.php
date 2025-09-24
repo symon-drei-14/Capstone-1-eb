@@ -436,6 +436,7 @@ try {
         WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
     )";
     
+    // The query is updated to join with the audit log to get the latest modification details.
     $sql = "
         SELECT 
             t.trip_id,
@@ -462,7 +463,9 @@ try {
             COALESCE(te.cash_advance, 0) as cash_adv,
             DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
             t.trip_date as date,
-            DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp
+            DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp,
+            al.modified_at AS last_modified_at,
+            al.edit_reason
         FROM trips t
         LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
         LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
@@ -473,6 +476,13 @@ try {
         LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
         LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
         LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+        LEFT JOIN (
+            SELECT trip_id, MAX(modified_at) as max_modified_at
+            FROM audit_logs_trips
+            WHERE is_deleted = 0
+            GROUP BY trip_id
+        ) max_al ON t.trip_id = max_al.trip_id
+        LEFT JOIN audit_logs_trips al ON al.trip_id = max_al.trip_id AND al.modified_at = max_al.max_modified_at
         $whereClause
         ORDER BY t.trip_date DESC, t.created_at DESC
     ";
