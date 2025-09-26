@@ -323,35 +323,18 @@ try {
         // }
         
         // Check for maintenance conflicts first
-        $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
-        
+         $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
         if (!$truckId) {
             throw new Exception("Truck with plate number {$data['plateNo']} not found");
         }
         
-        // Check if the trip date conflicts with maintenance
         $maintenanceCheck = checkMaintenanceConflict($conn, $truckId, $data['date']);
-        
         if ($maintenanceCheck['hasConflict']) {
             throw new Exception("Cannot schedule trip: Truck has maintenance scheduled on " . 
                                 $maintenanceCheck['maintenanceDate'] . ". " .
                                 "Trips cannot be scheduled within one week of maintenance.");
         }
 
-        // $driverId = getDriverIdByName($conn, $data['driver']);
-        // $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date']);
-        
-        // if (!empty($conflictingTrips)) {
-        //     $conflictDetails = "";
-        //     foreach ($conflictingTrips as $trip) {
-        //         $tripDate = date('M j, Y h:i A', strtotime($trip['trip_date']));
-        //         $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
-        //     }
-            
-        //     throw new Exception("Driver {$data['driver']} has a conflicting trip within 2 hours of the selected time:\n\n" . 
-        //                         $conflictDetails . "\nPlease choose a different time or driver.");
-        // }
-        
         $clientId = getOrCreateClientId($conn, $data['client']);
         $helperId = getHelperId($conn, $data['helper']);
         $dispatcherId = getDispatcherId($conn, $data['dispatcher']);
@@ -360,9 +343,6 @@ try {
         $consigneeId = getConsigneeId($conn, $data['consignee']);
         $driverId = getDriverIdByName($conn, $data['driver']);
         
-        if (!$truckId) {
-            throw new Exception("Truck with plate number {$data['plateNo']} not found");
-        }
         if (!$driverId) {
             throw new Exception("Driver {$data['driver']} not found");
         }
@@ -413,11 +393,12 @@ try {
             throw new Exception("Failed to insert audit log: " . $auditStmt->error);
         }
 
-         $updateDriverQueueStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = NOW() WHERE driver_id = ?");
+        // This is the fix. We update checked_in_at to move the driver to the back of the queue.
+        $updateDriverQueueStmt = $conn->prepare("UPDATE drivers_table SET checked_in_at = NOW() WHERE driver_id = ?");
         $updateDriverQueueStmt->bind_param("i", $driverId);
         if (!$updateDriverQueueStmt->execute()) {
-            // Non-critical error, but good to handle for robustness
-            throw new Exception("Failed to update driver queue position: " . $updateDriverQueueStmt->error);
+            // Not a fatal error, but good to know if it fails.
+            error_log("Failed to update driver check-in time for driver ID: " . $driverId);
         }
 
         if ($data['status'] === 'En Route') {
@@ -1252,40 +1233,41 @@ case 'get_trips_today':
     }
     break;
 
-     case 'get_next_driver':
-            $capacity = $data['capacity'] ?? '';
-            if (empty($capacity)) {
-                throw new Exception("Capacity is required to find the next driver.");
-            }
+    case 'get_next_driver':
+    $capacity = $data['capacity'] ?? '';
+    if (empty($capacity)) {
+        throw new Exception("Capacity is required to find the next driver.");
+    }
 
-            // This query finds the next available driver based on the oldest assignment timestamp.
-            // It also joins with the truck_table to ensure the truck is available (not in repair, etc.).
-            $stmt = $conn->prepare("
-                SELECT 
-                    d.driver_id,
-                    d.name,
-                    t.plate_no,
-                    t.capacity
-                FROM drivers_table d
-                JOIN truck_table t ON d.assigned_truck_id = t.truck_id
-                WHERE t.capacity = ?
-                 
-                  AND t.is_deleted = 0
-                  AND t.status NOT IN ('In Repair', 'Overdue')
-                ORDER BY d.last_assigned_at ASC, d.driver_id ASC
-                LIMIT 1
-            ");
-            $stmt->bind_param("s", $capacity);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            if ($result->num_rows > 0) {
-                $driver = $result->fetch_assoc();
-                echo json_encode(['success' => true, 'driver' => $driver]);
-            } else {
-                echo json_encode(['success' => false, 'message' => "No available drivers found for {$capacity}ft capacity."]);
-            }
-            break;
+    
+    $stmt = $conn->prepare("
+        SELECT 
+            d.driver_id,
+            d.name,
+            t.plate_no,
+            t.capacity
+        FROM drivers_table d
+        JOIN truck_table t ON d.assigned_truck_id = t.truck_id
+        WHERE 
+            t.capacity = ?
+            AND d.checked_in_at IS NOT NULL
+            AND d.checked_in_at > TIMESTAMPADD(HOUR, -16, NOW())
+            AND t.is_deleted = 0
+            AND t.status NOT IN ('In Repair', 'Overdue', 'Enroute')
+        ORDER BY d.checked_in_at ASC -- This makes it first-come, first-served
+        LIMIT 1
+    ");
+    $stmt->bind_param("s", $capacity);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $driver = $result->fetch_assoc();
+        echo json_encode(['success' => true, 'driver' => $driver]);
+    } else {
+        echo json_encode(['success' => false, 'message' => "No available and checked-in drivers were found for a {$capacity} shipment."]);
+    }
+    break;
 
             case 'reassign_trip_on_failure':
             $conn->begin_transaction();
