@@ -1,6 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f8f9fa;
+      background-color: #f8f9fa;
     width: 100%;
     overflow-x: hidden;
     margin: 0;
@@ -596,7 +596,7 @@ button[type="submit"]:hover {
 
     .modal-content {
         background-color: #fefefe;
-        margin: 5% auto;
+        margin: 2% auto;
         padding: 20px;
         border: 1px solid #888;
         width: 80%; 
@@ -614,11 +614,7 @@ button[type="submit"]:hover {
         background-color: #45a049;
     }
 
-        body{
-            margin-top:50px;
-            font-family: Arial, sans-serif;
-             background-color:#FCFAEE;
-        }
+     
 
         .profile {
     display: flex;
@@ -683,10 +679,10 @@ button[type="submit"]:hover {
         }
         .main-content3 {
             margin-top: 10px;
-            margin-left: 5px; 
+            margin-left: 10px; 
             margin-right: 20px; 
                 background-color: #ffffff;
-            width: calc(100% - 50px); 
+            width: calc(100% - 60px); 
             height: auto;
             max-height: 900vh;
             min-height: 80vh;
@@ -695,6 +691,7 @@ button[type="submit"]:hover {
             border-radius: 10px;
             box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
             padding:20px;
+ 
         }
 
         th:nth-child(9), td:nth-child(9) {
@@ -777,6 +774,8 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     #maintenanceTable th:nth-child(4), 
     #maintenanceTable td:nth-child(4) {
         width: 20%; /* Remarks */
+
+
     }
 
     #maintenanceTable th:nth-child(5), 
@@ -919,13 +918,13 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 
     /* Update the actions section */
  .actions {
-    display: flex;
+    display: block;
     flex-wrap: nowrap;
     gap: 8px;
     justify-content: center;
     align-items: center;
     padding: 0;
-    margin: 20;
+    margin: 10;
 }
 
 
@@ -977,7 +976,7 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     }
 
 .stats-container-wrapper {
-    background: #f8f9fa;
+    background-color: #ffffff;
     padding: 10px;
     margin: 10px 10px 20px 10px;
     border-radius: 8px;
@@ -1488,13 +1487,14 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     display: none;
     position: absolute;
     right: 20;
-    top:-10;
+    top:-30;
     background-color: white;
     min-width: 160px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1000;
     border-radius: 6px;
-    overflow: hidden;
+
+    z-index: 9999;
     
 }
 
@@ -1580,14 +1580,14 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     color: white;
 }
 
-.dropdown-item.view-reason {
+.dropdown-item.view-remarks-btn {
      color: rgba(86, 86, 86, 1);
-    
+    font-weight: normal;
         white-space: nowrap;
         flex-shrink:2;
 }
 
-.dropdown-item.view-reason:hover {
+.dropdown-item.view-remarks-btn:hover {
     background-color: #17a2b8;
     color: white;
 }
@@ -1817,6 +1817,7 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     #maintenanceTable td {
         display: block;
         width: 100%;
+ 
     }
 
     /* 1. Improved Card Styling */
@@ -1854,11 +1855,12 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
         font-size: 0.9em;
     }
     
-    /* 4. Improved Data Styling */
+
     #maintenanceTable td {
         font-size: 1em;
         color: #111;
         font-weight: 500;
+        line-height: 3.5!important;
     }
 
    
@@ -1985,13 +1987,87 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     color: #dc3545;
 }
 
+#maintenanceModal .modal-content {
+    transition: transform 0.4s ease-in-out;
+}
+
+#maintenanceModal.receipt-visible .modal-content {
+    transform: translateX(-35%);
+}
+#receiptModal {
+    display: none;
+    position: fixed; 
+    z-index: 12000; 
+    top: 0;
+    left: auto;    
+    right: 0;
+    width: 45%;     
+    height: 100%;
+    background-color: transparent; 
+    overflow: hidden;
+    pointer-events: none; 
+}
+
+
 #receiptModal .modal-content {
-    display: flex;
-    flex-direction: column;
-    padding: 5px;
+    position: relative;
+    top: 47%;
+    transform: translateY(-50%);
+    margin: auto;
+    max-width: 100%;
+    max-height: 90vh; 
+    background-color:transparent; 
+
+    border: none;
+    box-shadow:none;
+    pointer-events: auto; 
+    padding: 10px;
+}
+
+#receiptModal img {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: calc(90vh - 20px);
+    object-fit: contain;
 }
 
 #receiptModal .close {
-    align-self: flex-end;
-    padding: 5px 10px;
+    position: absolute;
+    top: 5px;
+    right: 0px;
+    color: #f1f1f1;
+     background: rgba(15, 23, 42, 0.6);
+    border-radius: 50px;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+       width: 40px;                
+    height: 40px;                
+    padding: 0;                  
+    display: flex;              
+    align-items: center;        
+    justify-content: center;      
+}
+#receiptModal .close:hover,
+#receiptModal .close:focus {
+    color: #ffffff;
+    text-decoration: none;
+    cursor: pointer;
+    background: rgb(232, 101, 101);
+     transform: scale(1.1);
+}
+
+
+.seperator{
+    color: #48484826;
+
+}
+
+
+mark {
+    background-color: #ffc107;
+    color: #212529; 
+    padding: 2px 3px;
+    border-radius: 3px;
 }

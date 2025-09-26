@@ -1127,3 +1127,17 @@
 2025-09-26 16:11:00 - Data validation passed
 2025-09-26 16:11:00 - Database connection successful
 2025-09-26 16:11:00 - Login successful for: driver11@gmail.com
+2025-09-26 16:57:00 - Login request received
+{"email":"lel@gmail.com","password":"12345"}
+
+2025-09-26 16:57:00 - JSON parsed successfully
+2025-09-26 16:57:00 - Data validation passed
+2025-09-26 16:57:00 - Database connection successful
+2025-09-26 16:57:00 - Login successful for: lel@gmail.com
+2025-09-26 17:00:18 - Login request received
+{"email":"Symons@gmail.com","password":"asdasd"}
+
+2025-09-26 17:00:18 - JSON parsed successfully
+2025-09-26 17:00:18 - Data validation passed
+2025-09-26 17:00:18 - Database connection successful
+2025-09-26 17:00:18 - Login successful for: Symons@gmail.com

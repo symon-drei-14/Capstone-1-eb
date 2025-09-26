@@ -146,6 +146,7 @@
                 <option value="Completed">Completed</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Overdue">Overdue</option>
+                <option disabled class="seperator">─ ─ ─ ─ ─ ─ ─ ─ ─</option>
                 <option value="deleted">Deleted</option>
             </select>
         </div>
@@ -327,12 +328,7 @@
     </div>
 </div>
 
-<div id="receiptModal" class="modal">
-    <div class="modal-content" style="max-width: 80vw; max-height: 90vh;">
-        <span class="close" onclick="closeReceiptModal()">&times;</span>
-        <img id="receiptImageViewer" src="" alt="Receipt Image" style="width: 100%; height: auto; object-fit: contain;">
-    </div>
-</div>
+
             
             <div class="edit-reasons-section">
                 <label>Reason for Edit (select all that apply):</label>
@@ -385,7 +381,13 @@
     </div>
 </div>
 
-        <!-- Maintenance History Modal -->
+<div id="receiptModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeReceiptModal()">&times;</span>
+        <img id="receiptImageViewer" src="" alt="Receipt Image">
+    </div>
+</div>
+</div>     <!-- Maintenance History Modal -->
         <div id="historyModal" class="modal">
             <div class="modal-content">
         <div class="modal-header">
@@ -562,21 +564,20 @@ function validateMaintenanceForm() {
 function searchMaintenance() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const searchTerm = document.getElementById('searchInput').value;
         
-        if (!searchTerm) {
+        if (!searchTerm.trim()) {
             currentPage = 1;
             loadMaintenanceData();
             document.querySelector('.pagination').style.display = 'flex';
             return;
         }
 
-      
         document.querySelector('.table-container').classList.add('loading');
         
-        
         fetchAllRecordsForSearch().then(allRecords => {
-            performSearch(searchTerm, allRecords);
+            // Pass the search term to the next function
+            performSearch(searchTerm, allRecords); 
             document.querySelector('.table-container').classList.remove('loading');
         }).catch(error => {
             console.error("Error fetching records for search:", error);
@@ -586,22 +587,24 @@ function searchMaintenance() {
 }
 
 function performSearch(searchTerm, allRecords) {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
     const filteredRecords = allRecords.filter(record => {
         return (
-            String(record.truckId).toLowerCase().includes(searchTerm) ||
-            (record.licensePlate && record.licensePlate.toLowerCase().includes(searchTerm)) ||
-            (record.maintenanceDate && formatDate(record.maintenanceDate).toLowerCase().includes(searchTerm)) ||
-            (record.remarks && record.remarks.toLowerCase().includes(searchTerm)) ||
-            (record.status && record.status.toLowerCase().includes(searchTerm)) ||
-            (record.supplierName && record.supplierName.toLowerCase().includes(searchTerm)) ||
-            (record.cost && String(record.cost).toLowerCase().includes(searchTerm)) ||
-            (record.lastUpdatedBy && record.lastUpdatedBy.toLowerCase().includes(searchTerm)) ||
-            (record.editReason && record.editReason.toLowerCase().includes(searchTerm)) ||
-            (record.deleteReason && record.deleteReason.toLowerCase().includes(searchTerm))
+            String(record.truckId).toLowerCase().includes(lowerCaseSearchTerm) ||
+            (record.licensePlate && record.licensePlate.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (record.maintenanceDate && formatDate(record.maintenanceDate).toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (record.remarks && record.remarks.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (record.status && record.status.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (record.supplierName && record.supplierName.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (record.cost && String(record.cost).toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (record.lastUpdatedBy && record.lastUpdatedBy.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (record.editReason && record.editReason.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (record.deleteReason && record.deleteReason.toLowerCase().includes(lowerCaseSearchTerm))
         );
     });
     
-    renderTable(filteredRecords);
+    // Pass both the filtered data AND the search term to renderTable
+    renderTable(filteredRecords, searchTerm); 
     updateShowingInfo(filteredRecords.length, filteredRecords.length);
     document.querySelector('.pagination').style.display = 'none';
 }
@@ -887,10 +890,10 @@ window.onload = function() {
             }
         });
 }
-function renderTable(data) {
+function renderTable(data, searchTerm = '') {
     const tableBody = document.querySelector("#maintenanceTable tbody");
     tableBody.innerHTML = ""; 
-    
+
     if (data.length === 0) {
         const tr = document.createElement("tr");
         tr.innerHTML = '<td colspan="9" class="text-center">No maintenance records found</td>';
@@ -905,6 +908,30 @@ function renderTable(data) {
             tr.classList.add('deleted-row');
         }   
         
+        // Use the highlightMatches function on each piece of data
+        const truckIdDisplay = highlightMatches(String(row.truckId), searchTerm);
+        const licensePlateDisplay = highlightMatches(row.licensePlate || 'N/A', searchTerm);
+        const dateDisplay = highlightMatches(formatDate(row.maintenanceDate), searchTerm);
+        const remarksHtml = row.remarks
+            ? `<ul style="margin: 0; padding-left: 18px; text-align: left;">
+                  ${row.remarks.split(', ').map(remark => `<li>${highlightMatches(remark, searchTerm)}</li>`).join('')}
+               </ul>`
+            : 'N/A';
+        const statusDisplay = highlightMatches(row.status, searchTerm);
+        const supplierDisplay = highlightMatches(row.supplierName || 'N/A', searchTerm);
+        const costDisplay = highlightMatches(`₱ ${parseFloat(row.cost || 0).toFixed(2)}`, searchTerm);
+        const lastModifiedByDisplay = highlightMatches(row.lastUpdatedBy || 'System', searchTerm);
+
+        const remarksButtonHtml = (row.editReason || row.deleteReason) ?
+            `<button class="dropdown-item view-remarks-btn" 
+                data-reasons='${JSON.stringify({
+                    editReasons: row.editReason ? [row.editReason] : null,
+                    deleteReason: row.deleteReason
+                })}'>
+                <i class="fas fa-comment-dots"></i> View Remarks
+             </button>`
+            : '';
+
         const actionsCell = row.isDeleted 
             ? `
             <div class="dropdown">
@@ -916,6 +943,7 @@ function renderTable(data) {
                     <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
                         <i class="fas fa-history"></i> History
                     </button>
+                    ${remarksButtonHtml}
                     <button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteMaintenance(${row.maintenanceId}, '${row.status}')">
                         <i class="fa-solid fa-ban"></i> Full Delete
                     </button>
@@ -931,38 +959,29 @@ function renderTable(data) {
                     <button class="dropdown-item history" data-tooltip="View History" onclick="openHistoryModal(${row.truckId})">
                         <i class="fas fa-history"></i> History
                     </button>
+                    ${remarksButtonHtml}
                     <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteMaintenance(${row.maintenanceId}, '${row.status}')">
                         <i class="fas fa-trash-alt"></i> Delete
                     </button>
                 </div>
             </div>`;
         
-        // These data-label attributes provide the text for the left column
         tr.innerHTML = `
-            <td data-label="Truck ID">${row.truckId}</td>
-            <td data-label="License Plate">${row.licensePlate || 'N/A'}</td>
-            <td data-label="Inspection Date">${formatDate(row.maintenanceDate)}</td>
-            <td data-label="Remarks">${row.remarks || 'N/A'}</td>
-            <td data-label="Status"><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${row.status}</span></td>
-            <td data-label="Supplier">${row.supplierName || 'N/A'}</td>
-            <td data-label="Cost">₱ ${parseFloat(row.cost || 0).toFixed(2)}</td>
+            <td data-label="Truck ID">${truckIdDisplay}</td>
+            <td data-label="License Plate">${licensePlateDisplay}</td>
+            <td data-label="Inspection Date">${dateDisplay}</td>
+            <td data-label="Remarks">${remarksHtml}</td>
+            <td data-label="Status"><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${statusDisplay}</span></td>
+            <td data-label="Supplier">${supplierDisplay}</td>
+            <td data-label="Cost">${costDisplay}</td>
             <td data-label="Last Modified">
-                <strong>${row.lastUpdatedBy || 'System'}</strong><br>
-                ${formatDateTime(row.lastUpdatedAt)}<br>
-                ${(row.editReason || row.deleteReason) ? 
-                    `<button class="view-remarks-btn" 
-                        data-reasons='${JSON.stringify({
-                            editReasons: row.editReason ? [row.editReason] : null,
-                            deleteReason: row.deleteReason
-                        })}'>View Remarks</button>` : ''
-                }
+                <strong>${lastModifiedByDisplay}</strong><br>
+                ${formatDateTime(row.lastUpdatedAt)}
             </td>
             <td data-label="Actions" class="actions">${actionsCell}</td>
         `;
         tableBody.appendChild(tr);
     });
-
-    // Add event listeners for view remarks buttons
     document.querySelectorAll('.view-remarks-btn').forEach(button => {
         button.addEventListener('click', function() {
             showEditRemarks(this.getAttribute('data-reasons'));
@@ -980,6 +999,15 @@ $(document).on('click', function(e) {
     if (!$(e.target).closest('.dropdown').length) {
         $('.dropdown-content').removeClass('show');
     }
+});
+
+$(document).on('click', '.view-remarks-btn', function() {
+
+    event.stopPropagation(); 
+    
+    const reasonsData = $(this).attr('data-reasons');
+    showEditRemarks(reasonsData);
+    $(this).closest('.dropdown-content').removeClass('show');
 });
 
     // Add this new function for full delete
@@ -1547,12 +1575,15 @@ function deleteExpense(expenseId) {
 
 function viewReceipt(base64String) {
     document.getElementById('receiptImageViewer').src = base64String;
+    document.getElementById('maintenanceModal').classList.add('receipt-visible');
     document.getElementById('receiptModal').style.display = 'block';
 }
+
 
 function closeReceiptModal() {
     document.getElementById('receiptModal').style.display = 'none';
     document.getElementById('receiptImageViewer').src = '';
+    document.getElementById('maintenanceModal').classList.remove('receipt-visible');
 }
             
 function saveMaintenanceRecord() {
@@ -1796,76 +1827,82 @@ function saveMaintenanceRecord() {
         });
 }
 
-            function openHistoryModal(truckId) {
-                currentTruckId = truckId;
-                
-                $.ajax({
-                    url: 'include/handlers/maintenance_handler.php?action=getHistory&truckId=' + truckId,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        const historyList = document.getElementById("historyList");
-                        historyList.innerHTML = ""; 
-                        
-                        if (response.history.length === 0) {
-                            historyList.innerHTML = "<p>No maintenance history found for this truck.</p>";
-                        } else {
-                            response.history.forEach(item => {
-                                 let statusClass = 'status-pending';
-                                    if (item.status.toLowerCase().includes('complete')) statusClass = 'status-completed';
-                                    if (item.status.toLowerCase().includes('progress')) statusClass = 'status-in-progress';
-                                    if (item.status.toLowerCase().includes('pending')) statusClass = 'status-pending';
-                                    if (item.status.toLowerCase().includes('overdue')) statusClass = 'status-overdue';
-                                const historyItem = document.createElement("div");
-                                   const supplierName = item.supplier || item.supplier_name || item.supplierName || 'N/A';
-                                historyItem.className = "history-item";
-                            historyItem.innerHTML = `
-                            <li class="history-item">
-                                <div class="history-header">
-                                  <span class="history-date"> ${formatDate(item.date_mtnce)}</span>
-                                   <span class="history-status ${statusClass}"> ${item.status}</span>
-                                </div>
-                                <div class="history-details">   
-                                 <div class="history-detail">
-                                    <span class="detail-label">Supplier</span>
-                                    <span class="detail-value"> ${supplierName}</span>
-                                    </div>
-                                <div class="history-detail">
-                                    <span class="detail-label">Cost</span>
-                                     <span class="detail-value">₱${parseFloat(item.cost).toFixed(2)}</span>
-                                </div>
-                                  <div class="history-detail">
-                                    <span class="detail-label">Remarks</span>
-                                    <span class="detail-value"> ${item.remarks || 'No remarks provided'} </span>
-                                    </div>
-                                </div>
-                                 <div class="history-remarks">
-                                  <div class="history-detail">
-                                    <span class="detail-label">Last Modified By:</span>
-                                    <span class="detail-value">  ${item.last_modified_by} on ${formatDateTime(item.last_modified_at)} </span>
-                                </div>
-                                    </div>
+         function openHistoryModal(truckId) {
+    currentTruckId = truckId;
+    
+    $.ajax({
+        url: 'include/handlers/maintenance_handler.php?action=getHistory&truckId=' + truckId,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            const historyList = document.getElementById("historyList");
+            historyList.innerHTML = ""; 
+            
+            if (response.history.length === 0) {
+                historyList.innerHTML = "<p>No maintenance history found for this truck.</p>";
+            } else {
+                response.history.forEach(item => {
+                    let statusClass = 'status-pending';
+                    if (item.status.toLowerCase().includes('complete')) statusClass = 'status-completed';
+                    if (item.status.toLowerCase().includes('progress')) statusClass = 'status-in-progress';
+                    if (item.status.toLowerCase().includes('pending')) statusClass = 'status-pending';
+                    if (item.status.toLowerCase().includes('overdue')) statusClass = 'status-overdue';
+
+                    const historyRemarksHtml = item.remarks
+                        ? `<ul style="margin: 0; padding-left: 18px; text-align: left;">
+                              ${item.remarks.split(', ').map(remark => `<li>${remark}</li>`).join('')}
+                           </ul>`
+                        : 'No remarks provided';
+      
+
+                    const historyItem = document.createElement("div");
+                    const supplierName = item.supplier || item.supplier_name || item.supplierName || 'N/A';
+                    historyItem.className = "history-item";
+                    historyItem.innerHTML = `
+                    <li class="history-item">
+                        <div class="history-header">
+                          <span class="history-date"> ${formatDate(item.date_mtnce)}</span>
+                            <span class="history-status ${statusClass}"> ${item.status}</span>
+                        </div>
+                        <div class="history-details">   
+                         <div class="history-detail">
+                             <span class="detail-label">Supplier</span>
+                             <span class="detail-value"> ${supplierName}</span>
                             </div>
-                            
-                            </li>
-                                `;
-                                historyList.appendChild(historyItem);
-                            });
-                            
-                        }
-                        
-                        document.getElementById("historyModal").style.display = "block";
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error loading history: " + error);
-                        Swal.fire({
-                            title: 'Failed to load maintenance history.',
-                            icon: 'info',
-                            confirmButtonText: 'OK'
-                        });
-                    }
+                         <div class="history-detail">
+                             <span class="detail-label">Cost</span>
+                               <span class="detail-value">₱${parseFloat(item.cost).toFixed(2)}</span>
+                         </div>
+                            <div class="history-detail">
+                             <span class="detail-label">Remarks</span>
+                             <span class="detail-value"> ${historyRemarksHtml} </span> </div>
+                        </div>
+                          <div class="history-remarks">
+                           <div class="history-detail">
+                             <span class="detail-label">Last Modified By:</span>
+                             <span class="detail-value">  ${item.last_modified_by} on ${formatDateTime(item.last_modified_at)} </span>
+                         </div>
+                            </div>
+                        </div>
+                    </li>
+                        `;
+                    historyList.appendChild(historyItem);
                 });
+                
             }
+            
+            document.getElementById("historyModal").style.display = "block";
+        },
+        error: function(xhr, status, error) {
+            console.error("Error loading history: " + error);
+            Swal.fire({
+                title: 'Failed to load maintenance history.',
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+}
             
             function closeHistoryModal() {
                 document.getElementById("historyModal").style.display = "none";
@@ -2502,6 +2539,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for global access (optional)
 window.AdminLoading = AdminLoading;
+
+
+function highlightMatches(text, term) {
+
+    if (!term.trim() || typeof text !== 'string') {
+        return text;
+    }
+
+
+    const regex = new RegExp(`(${term})`, 'gi');
+    
+    // Replace matches with the <mark> tag
+    return text.replace(regex, '<mark>$1</mark>');
+}
+
+
+window.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+
+        if (document.getElementById('maintenanceModal').classList.contains('receipt-visible')) {
+
+            closeReceiptModal();
+        } else {
+
+            closeModal();
+            closeHistoryModal();
+            closeRemindersModal();
+            
+            const remarksModal = document.getElementById('remarksModal');
+            if (remarksModal) {
+                remarksModal.style.display = 'none';
+            }
+        }
+    }
+});
 </script>
 <footer class="site-footer">
 

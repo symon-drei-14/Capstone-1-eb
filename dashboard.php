@@ -264,26 +264,6 @@ $eventsDataJson = json_encode($eventsData);
 </div>
 </div>
 
-<!-- On going vehicles -->
-
-<!-- <div class="card-large">
-    <div class="table-container">
-        <h3>Ongoing Vehicles</h3>
-        <table>
-            <tr>
-                <th></th>
-                <th>Plate No.</th>
-                <th>Driver</th>
-                <th>Helper</th>
-                <th>Client</th>
-                <th>Delivery Address</th>
-                 <th>Date of Departure</th>
-                <th>Actions</th>
-            </tr>
-
-        </table>
-    </div>
-</div> -->
 <div class="card-large">
     <div class="shipments-container">
         <h4 class="shipment-title">Ongoing Trips <span class="otw-trips"><?php echo htmlspecialchars($ongoingCount); ?> </span></h4>
@@ -334,7 +314,6 @@ $eventsDataJson = json_encode($eventsData);
                     </div>
 
                     <?php if ($tripCount === 1): ?>
-                        <!-- Horizontal layout for single card -->
                         <div class="horizontal-route-container">
                             <div class="horizontal-top-section">
                                 <div class="info-section departure">
@@ -374,7 +353,6 @@ $eventsDataJson = json_encode($eventsData);
                             </div>
                         </div>
                     <?php else: ?>
-                        <!-- Vertical layout for multiple cards -->
                         <div class="route-container">
                             <div class="vertical-route">
                                 <div class="pointer"></div>
@@ -433,7 +411,7 @@ $eventsDataJson = json_encode($eventsData);
 <div class="dashboard-section">
   
     <div class="card-large">
-        <h3>Maintenance keneve Status</h3>
+        <h3>Maintenance Status</h3>
         <div class="maintenance-container">
             <div class="maintenance-header">
                 <span class="header-vehicle">License Plate</span>
@@ -497,9 +475,7 @@ $eventsDataJson = json_encode($eventsData);
 
         
     </div>
-    <!-- <div class="card-small">
-        <h3>Active Drivers</h3> -->
-        <?php
+    <?php
 
         // if (count($drivingDrivers) > 0) {
 
@@ -661,28 +637,26 @@ $eventsDataJson = json_encode($eventsData);
 
 </script>
 
-
 <script>
     const toggleBtn = document.getElementById('toggleSidebarBtn');
-const sidebar = document.querySelector('.sidebar');
+    const sidebar = document.querySelector('.sidebar');
 
     document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('expanded');
     });
 
     document.addEventListener('click', function (e) {
-    if (
-        sidebar.classList.contains('expanded') &&
-        !sidebar.contains(e.target) && // not inside sidebar
-        !toggleBtn.contains(e.target)  // not the toggle button
-    ) {
-        sidebar.classList.remove('expanded');
-    }
-});
+        if (
+            sidebar.classList.contains('expanded') &&
+            !sidebar.contains(e.target) && 
+            !toggleBtn.contains(e.target)  
+        ) {
+            sidebar.classList.remove('expanded');
+        }
+    });
 </script>
 
 <script>
-
      function updateDateTime() {
         const now = new Date();
 
@@ -849,11 +823,25 @@ $('.close').on('click', function() {
     $('#tripDetailsModal').hide();
 });
 
-$(window).on('click', function(event) {
-    if ($(event.target).hasClass('modal')) {
-        $('#tripDetailsModal').hide();
+// Click outside to close modal
+window.addEventListener('click', function(event) {
+    const mainModal = document.getElementById('tripDetailsModal');
+    const receiptModal = document.getElementById('receiptModal'); // Assuming you have a receipt modal with this ID
+
+    // Prioritize closing receipt modal if it's open
+    if (receiptModal && receiptModal.style.display === 'block') {
+        if (event.target == receiptModal) {
+            closeReceiptModal(); // Assumes you have a closeReceiptModal function
+        }
+        return; // Stop further processing to keep the main modal open
+    }
+    
+    // If no receipt modal, handle the main modal
+    if (mainModal && event.target == mainModal) {
+        mainModal.style.display = 'none';
     }
 });
+
 
 });
 
@@ -916,7 +904,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         <div class="trip-details-grid">
             <div class="details-section">
-                <h4 class="section-title">Vehicle Informationisnm</h4>
+                <h4 class="section-title">Vehicle Information</h4>
                 <div class="detail-row">
                     <span class="detail-label">Plate No: </span>
                     <span class="detail-value" id="td-plate"></span>
@@ -952,7 +940,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             
             <div class="details-section">
-                <h4 class="section-title">Personnel sheneve</h4>
+                <h4 class="section-title">Personnel</h4>
                 <div class="detail-row">
                     <span class="detail-label">Driver:  </span>
                     <span class="detail-value" id="td-driver"></span>
@@ -983,7 +971,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             
-            <!-- System Information Section -->
             <div class="details-section system-info">
                 <h4 class="section-title">System Information</h4>
                 <div class="detail-row">

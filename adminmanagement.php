@@ -16,26 +16,6 @@ checkAccess();
     <link rel="stylesheet" href="include/css/adminmanagement.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        /* CSS to hide/show columns based on table context */
-        #adminsTable .deleted-only {
-            display: none;
-        }
-        #deletedAdminsTable .deleted-only {
-            display: table-cell;
-        }
-        #deletedAdminsSection {
-            display: none; /* Hidden by default */
-        }
-        /* --- STYLE FOR HIGHLIGHTING SEARCH RESULTS --- */
-        .highlight {
-            background-color: yellow;
-            color: black;
-            font-weight: bold;
-        }
-        /* --- STYLE FOR PAGINATION --- */
-   
-    </style>
 </head>
 
 <body>
@@ -144,8 +124,9 @@ checkAccess();
                         <table id="adminsTable">
                             <thead>
                                 <tr>
+                                     <th>Admin ID</th>
                                     <th>Profile Picture</th>
-                                    <th>Admin ID</th>
+                                   
                                     <th>Username</th>
                                     <th>Role</th>
                                     <th>Status</th>
@@ -163,8 +144,7 @@ checkAccess();
                 </div>
 
                 <div id="deletedAdminsSection">
-                     <hr>
-                    <h3>Deleted Admins</h3>
+                   
                     <div class="table-controls">
                         <div class="table-info" id="deletedShowingInfo"></div>
                          <div class="rows-per-page-container">
@@ -384,13 +364,14 @@ checkAccess();
                 } else {
                     // Original template for the active admins table
                     row.innerHTML = `
+                     <td data-label="Admin ID">${highlightText(admin.admin_id)}</td>
                         <td data-label="Profile">
                             ${admin.admin_pic ? 
                                 '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
                                 '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
                             }
                         </td>
-                        <td data-label="Admin ID">${highlightText(admin.admin_id)}</td>
+                       
                         <td data-label="Username">${highlightText(admin.username)}</td>
                         <td data-label="Role">${highlightText(admin.role || 'Full Admin')}</td>
                         <td data-label="Status">${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>

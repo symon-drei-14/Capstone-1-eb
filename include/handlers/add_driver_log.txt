@@ -171,3 +171,19 @@
 2025-09-24 08:11:44 - MySQL insert successful
 2025-09-24 08:11:44 - Firebase save successful
 >>>>>>> Stashed changes
+2025-09-26 15:41:38 - Add Driver Request received
+2025-09-26 15:41:38 - POST data received successfully
+2025-09-26 15:41:38 - Data validation passed
+2025-09-26 15:41:38 - MySQL connection successful
+2025-09-26 15:41:38 - Email check passed
+2025-09-26 15:41:38 - MySQL SQL prepared successfully
+2025-09-26 15:41:38 - MySQL insert successful
+2025-09-26 15:41:38 - Firebase save successful
+2025-09-26 15:44:38 - Add Driver Request received
+2025-09-26 15:44:38 - POST data received successfully
+2025-09-26 15:44:38 - Data validation passed
+2025-09-26 15:44:38 - MySQL connection successful
+2025-09-26 15:44:38 - Email check passed
+2025-09-26 15:44:38 - MySQL SQL prepared successfully
+2025-09-26 15:44:38 - MySQL insert successful
+2025-09-26 15:44:38 - Firebase save successful
