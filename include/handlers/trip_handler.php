@@ -940,67 +940,6 @@ case 'get_trip_statistics':
     echo json_encode(['success' => true, 'statistics' => $stats]);
     break;
 
-    case 'driver_check_in':
-    $driverId = $data['driver_id'] ?? null;
-    if (!$driverId) {
-        throw new Exception("Driver ID is required to check in.");
-    }
-    
-    // Using NOW() here to grab the precise time from the database server.
-    $stmt = $conn->prepare("UPDATE drivers_table SET checked_in_at = NOW() WHERE driver_id = ?");
-    $stmt->bind_param("i", $driverId);
-    
-    if ($stmt->execute()) {
-        // We can send back the expiry time so the app can display it.
-        $expiryTime = (new DateTime())->modify('+16 hours')->format('Y-m-d H:i:s');
-        echo json_encode(['success' => true, 'message' => 'Successfully checked in.', 'expiry_time' => $expiryTime]);
-    } else {
-        throw new Exception("Failed to check in: " . $stmt->error);
-    }
-    $stmt->close();
-    break;
-
-case 'get_check_in_status':
-    $driverId = $data['driver_id'] ?? null;
-    if (!$driverId) {
-        throw new Exception("Driver ID is required to get check-in status.");
-    }
-    
-    $stmt = $conn->prepare("SELECT checked_in_at FROM drivers_table WHERE driver_id = ?");
-    $stmt->bind_param("i", $driverId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($row = $result->fetch_assoc()) {
-        $isCheckedIn = false;
-        $expiryTime = null;
-        $checkInTime = $row['checked_in_at'];
-
-        if ($checkInTime) {
-            $checkInDateTime = new DateTime($checkInTime);
-            // The check-in is valid for 16 hours
-            $expiryDateTime = (clone $checkInDateTime)->modify('+16 hours');
-            $now = new DateTime();
-            
-            // Check if the current time is before the expiry time
-            if ($now < $expiryDateTime) {
-                $isCheckedIn = true;
-                $expiryTime = $expiryDateTime->format('Y-m-d H:i:s');
-            }
-        }
-        
-        echo json_encode([
-            'success' => true, 
-            'isCheckedIn' => $isCheckedIn,
-            'checkInTime' => $checkInTime,
-            'expiryTime' => $expiryTime
-        ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Driver not found.']);
-    }
-    $stmt->close();
-    break;
-
         case 'update_trip_status':
             $tripId = $data['trip_id'] ?? null;
             $newStatus = $data['status'] ?? null;
