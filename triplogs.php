@@ -99,27 +99,29 @@ if ($result->num_rows > 0) {
     'truck_plate_no' => $row['truck_plate_no'],
     'truck_capacity' => $row['truck_capacity'],
     'edit_reasons' => $row['edit_reason'],
-    'fcl_status' => $row['fcl_status']  // Add this line
+    'fcl_status' => $row['fcl_status']  
 ];
     }
 }
 
     // Fetch drivers with their assigned truck capacity
-    $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capacity, d.assigned_truck_id 
-                    FROM drivers_table d
-                    LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
+$driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capacity, d.assigned_truck_id, d.checked_in_at, d.penalty_until 
+                FROM drivers_table d
+                LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
     $driverResult = $conn->query($driverQuery);
     $driversData = [];
 
     if ($driverResult->num_rows > 0) {
         while($driverRow = $driverResult->fetch_assoc()) {
-            $driversData[] = [
-                'id' => $driverRow['driver_id'],
-                'name' => $driverRow['name'],
-                'capacity' => $driverRow['capacity'],
-                'truck_plate_no' => $driverRow['truck_plate_no'],
-                'assigned_truck_id' => $driverRow['assigned_truck_id']
-            ];
+          $driversData[] = [
+    'id' => $driverRow['driver_id'],
+    'name' => $driverRow['name'],
+    'capacity' => $driverRow['capacity'],
+    'truck_plate_no' => $driverRow['truck_plate_no'],
+    'assigned_truck_id' => $driverRow['assigned_truck_id'],
+    'checked_in_at' => $driverRow['checked_in_at'], // Add this line
+    'penalty_until' => $driverRow['penalty_until']  // Add this line
+];
         }
     }
 
@@ -1435,122 +1437,114 @@ $(document).on('click', '.icon-btn.edit', function() {
 
 
             // Populate driver dropdowns
-    function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
-        // First get the list of all trucks with their statuses
-        $.ajax({
-            url: 'include/handlers/truck_handler.php?action=getTrucks',
-            type: 'GET',
-            async: false, // We need to wait for this response
-            success: function(truckResponse) {
-                if (truckResponse.success) {
-                    // Identify unavailable trucks (In Repair, Overdue, or Deleted)
-                    var unavailableTruckIds = truckResponse.trucks
-                        .filter(truck => 
-                            truck.display_status === 'In Repair' || 
-                            truck.display_status === 'Overdue' ||
-                            truck.is_deleted == 1
-                        )
-                        .map(truck => truck.truck_id.toString());
-                    
-                    var driverOptions = '<option value="">Select Driver</option>';
-                    
-                    driversData.forEach(function(driver) {
-                        // Skip drivers assigned to unavailable trucks
-                        if (driver.assigned_truck_id && 
-                            unavailableTruckIds.includes(driver.assigned_truck_id.toString())) {
-                            return; // skip this driver
+  function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
+    $.ajax({
+        url: 'include/handlers/truck_handler.php?action=getTrucks',
+        type: 'GET',
+        async: false,
+        success: function(truckResponse) {
+            if (truckResponse.success) {
+                var unavailableTruckIds = truckResponse.trucks
+                    .filter(truck =>
+                        truck.display_status === 'In Repair' ||
+                        truck.display_status === 'Overdue' ||
+                        truck.is_deleted == 1
+                    )
+                    .map(truck => truck.truck_id.toString());
+
+                var driverOptions = '<option value="">Select Driver</option>';
+                var unavailableDriverOptions = '<optgroup label="Unavailable Drivers">';
+                let unavailableCount = 0;
+                const now = new Date();
+
+                driversData.forEach(function(driver) {
+                    const isCurrentTripDriver = (driver.name === currentDriver);
+                    let isSelectable = true;
+                    let unavailabilityReason = '';
+
+                    // The driver already on this trip should always be selectable in the dropdown.
+                    // We only run the availability checks for other drivers.
+                    if (!isCurrentTripDriver) {
+                        // Check 1: Is the truck itself unavailable?
+                        if (driver.assigned_truck_id && unavailableTruckIds.includes(driver.assigned_truck_id.toString())) {
+                            var truck = truckResponse.trucks.find(t => t.truck_id.toString() === driver.assigned_truck_id.toString());
+                            isSelectable = false;
+                            unavailabilityReason = `(Truck ${truck ? truck.display_status : 'Unavailable'})`;
                         }
-                        
-                        // Filter drivers based on selected size if specified
-                        if (!selectedSize || !driver.capacity || 
-                            (selectedSize.includes('20') && driver.capacity === '20') ||
-                            (selectedSize.includes('40') && driver.capacity === '40')) {
-                            
-                            // Check if this is the current driver being edited
-                            var selectedAttr = (driver.name === currentDriver) ? ' selected' : '';
-                            
-                            // Include truck_plate_no as a data attribute
-                            driverOptions += `
-                                <option 
-                                    value="${driver.name}" 
-                                    data-plate-no="${driver.truck_plate_no || ''}"
-                                    data-driver-id="${driver.id || ''}"
-                                    ${selectedAttr}
-                                >
-                                    ${driver.name}
-                                    ${driver.truck_plate_no ? ` (${driver.truck_plate_no})` : ''}
-                                    ${driver.capacity ? ` [${driver.capacity}ft]` : ''}
-                                </option>
-                            `;
+
+                        // Check 2: Is the driver penalized? Only check if they are still selectable.
+                        if (isSelectable && driver.penalty_until) {
+                            const penaltyTime = new Date(driver.penalty_until);
+                            if (now < penaltyTime) {
+                                isSelectable = false;
+                                unavailabilityReason = `(Penalized until ${penaltyTime.toLocaleTimeString()})`;
+                            }
                         }
-                    });
+                    }
+
+                    // Just for looks, let's show who's checked in.
+                    var optionContent = `${driver.name}`;
+                    if (driver.truck_plate_no) optionContent += ` (${driver.truck_plate_no})`;
+                    if (driver.capacity) optionContent += ` [${driver.capacity}ft]`;
                     
-                    // Add a disabled option for unavailable drivers if any were filtered out
-                    var unavailableDrivers = driversData.filter(driver => 
-                        driver.assigned_truck_id && 
-                        unavailableTruckIds.includes(driver.assigned_truck_id.toString())
-                    );
+                    let checkInStatus = '';
+                    if (driver.checked_in_at) {
+                        const checkedInTime = new Date(driver.checked_in_at);
+                        const expiryTime = new Date(checkedInTime.getTime() + 16 * 60 * 60 * 1000);
+                        checkInStatus = (now < expiryTime) ? ' (Checked-In)' : ' (Not Checked-In)';
+                    } else {
+                        checkInStatus = ' (Not Checked-In)';
+                    }
                     
-                   if (unavailableDrivers.length > 0) {
-    driverOptions += '<optgroup label="Unavailable Drivers">';
-    unavailableDrivers.forEach(function(driver) {
-        // Check if driver has an assigned truck that's not deleted
-        if (driver.assigned_truck_id) {
-            var truck = truckResponse.trucks.find(t => 
-                t.truck_id.toString() === driver.assigned_truck_id.toString()
-            );
-            
-            // If truck is deleted or doesn't exist, show "No assigned trucks"
-            if (!truck || truck.is_deleted == 1) {
-                driverOptions += `
-                    <option 
-                        disabled
-                        title="No assigned truck"
-                    >
-                        ${driver.name} (Unavailable - No assigned truck)
-                    </option>
-                `;
-            } else {
-                // Truck exists but is in repair or overdue
-                driverOptions += `
-                    <option 
-                        disabled
-                        title="Assigned truck is ${truck.display_status.toLowerCase()}"
-                    >
-                        ${driver.name} (Unavailable - Truck ${truck.display_status})
-                    </option>
-                `;
-            }
-        } else {
-            // Driver has no assigned truck
-            driverOptions += `
-                <option 
-                    disabled
-                    title="No assigned truck"
-                >
-                    ${driver.name} (Unavailable - No assigned truck)
-                </option>
-            `;
-        }
-    });
-    driverOptions += '</optgroup>';
-}
-                    
-                    $('#editEventDriver').html(driverOptions);
-                    $('#addEventDriver').html(driverOptions);
-                } else {
-                    console.error('Error fetching truck data:', truckResponse.message);
-                   
-                    populateAllDrivers(selectedSize, currentDriver);
+                    let capacityMatch = !selectedSize || !driver.capacity ||
+                        (selectedSize.includes('20') && driver.capacity === '20') ||
+                        (selectedSize.includes('40') && driver.capacity === '40');
+
+                    // If it's the current driver, or they are selectable and match capacity, add them to the main list.
+                    if (isCurrentTripDriver || (isSelectable && capacityMatch)) {
+                        var selectedAttr = isCurrentTripDriver ? ' selected' : '';
+                        driverOptions += `
+                            <option
+                                value="${driver.name}"
+                                data-plate-no="${driver.truck_plate_no || ''}"
+                                data-driver-id="${driver.id || ''}"
+                                ${selectedAttr}
+                            >
+                                ${optionContent}${checkInStatus}
+                            </option>`;
+                    } else {
+                        // Otherwise, add them to the disabled list.
+                        unavailableCount++;
+                        unavailableDriverOptions += `
+                            <option
+                                value="${driver.name}"
+                                disabled
+                                title="Reason: ${unavailabilityReason.replace(/[()]/g, '') || 'Capacity mismatch'}"
+                            >
+                                ${optionContent} ${unavailabilityReason || '(Capacity Mismatch)'}
+                            </option>`;
+                    }
+                });
+
+                unavailableDriverOptions += '</optgroup>';
+                if (unavailableCount > 0) {
+                    driverOptions += unavailableDriverOptions;
                 }
-            },
-            error: function() {
-                console.error('Error fetching truck data');
-                
+
+                $('#editEventDriver').html(driverOptions);
+                $('#addEventDriver').html(driverOptions);
+
+            } else {
+                console.error('Error fetching truck data:', truckResponse.message);
                 populateAllDrivers(selectedSize, currentDriver);
             }
-        });
-    }
+        },
+        error: function() {
+            console.error('AJAX error fetching truck data');
+            populateAllDrivers(selectedSize, currentDriver);
+        }
+    });
+}
 
 
     function selectNextDriver(capacity) {
@@ -2515,8 +2509,11 @@ function populateEditModal(event) {
         }
         $('#editEventDate').val(eventDate);
 
+         const currentSize = event.truck_capacity ? event.truck_capacity + 'ft' : event.size;
+    populateDriverDropdowns(currentSize, event.driver);
+
         // Populate all dropdowns first
-        populateDriverDropdowns(event.size);
+        
         populateHelperDropdowns();
         populateDispatcherDropdowns();
         populateConsigneeDropdowns();

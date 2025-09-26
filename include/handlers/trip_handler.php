@@ -1116,7 +1116,69 @@ case 'get_trip_statistics':
     $stmt->close();
     break;
 
+case 'get_driver_queue_status':
+            $driverId = $data['driver_id'] ?? null;
+            if (!$driverId) {
+                throw new Exception("Driver ID is required.");
+            }
+        
+            $stmt = $conn->prepare("SELECT checked_in_at, penalty_until FROM drivers_table WHERE driver_id = ?");
+            $stmt->bind_param("i", $driverId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $status = $result->fetch_assoc();
+        
+            if ($status) {
+                $isCheckedIn = false;
+                // Check if the check-in time is not null and is within the last 16 hours
+                if ($status['checked_in_at']) {
+                    $checkedInTime = new DateTime($status['checked_in_at']);
+                    $now = new DateTime();
+                    $intervalSeconds = $now->getTimestamp() - $checkedInTime->getTimestamp();
+                    if ($intervalSeconds < (16 * 3600)) { // 16 hours in seconds
+                        $isCheckedIn = true;
+                    }
+                }
+                echo json_encode([
+                    'success' => true,
+                    'isCheckedIn' => $isCheckedIn,
+                    'checkedInAt' => $status['checked_in_at'],
+                    'penaltyUntil' => $status['penalty_until']
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Driver not found.']);
+            }
+            break;
 
+        case 'check_in_driver':
+            $driverId = $data['driver_id'] ?? null;
+            if (!$driverId) {
+                throw new Exception("Driver ID is required.");
+            }
+            
+            // Before checking in, we'll verify the driver isn't currently penalized.
+            $checkPenalty = $conn->prepare("SELECT penalty_until FROM drivers_table WHERE driver_id = ?");
+            $checkPenalty->bind_param("i", $driverId);
+            $checkPenalty->execute();
+            $penaltyResult = $checkPenalty->get_result()->fetch_assoc();
+            
+            if ($penaltyResult && $penaltyResult['penalty_until']) {
+                $penaltyTime = new DateTime($penaltyResult['penalty_until']);
+                $now = new DateTime();
+                if ($now < $penaltyTime) {
+                     throw new Exception("Cannot check in. You are penalized until " . $penaltyTime->format('M j, Y g:i A'));
+                }
+            }
+        
+            $stmt = $conn->prepare("UPDATE drivers_table SET checked_in_at = NOW() WHERE driver_id = ?");
+            $stmt->bind_param("i", $driverId);
+            
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true, 'message' => 'Successfully checked in to the queue.']);
+            } else {
+                throw new Exception("Failed to check in.");
+            }
+            break;
 
         case 'get_checklist':
     $tripId = $data['trip_id'] ?? null;
