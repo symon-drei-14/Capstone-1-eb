@@ -1127,6 +1127,18 @@
 2025-09-26 16:11:00 - Data validation passed
 2025-09-26 16:11:00 - Database connection successful
 2025-09-26 16:11:00 - Login successful for: driver11@gmail.com
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+2025-09-26 18:13:17 - Login request received
+{"email":"driver11@gmail.com","password":"12345678"}
+
+2025-09-26 18:13:17 - JSON parsed successfully
+2025-09-26 18:13:17 - Data validation passed
+2025-09-26 18:13:17 - Database connection successful
+2025-09-26 18:13:17 - Login successful for: driver11@gmail.com
+=======
+>>>>>>> Stashed changes
 2025-09-26 16:57:00 - Login request received
 {"email":"lel@gmail.com","password":"12345"}
 
@@ -1141,3 +1153,7 @@
 2025-09-26 17:00:18 - Data validation passed
 2025-09-26 17:00:18 - Database connection successful
 2025-09-26 17:00:18 - Login successful for: Symons@gmail.com
+<<<<<<< Updated upstream
+=======
+>>>>>>> a3db3a3fb20b8bbb6ebfccfadc1ac68ca4ddd465
+>>>>>>> Stashed changes
