@@ -105,14 +105,17 @@ if ($result->num_rows > 0) {
 }
 
     // Fetch drivers with their assigned truck capacity
-   $driverQuery = "SELECT 
+  $driverQuery = "SELECT 
                     d.driver_id, 
                     d.name, 
                     t.plate_no as truck_plate_no, 
                     t.capacity, 
                     d.assigned_truck_id,
                     d.checked_in_at,
-                    (d.checked_in_at IS NOT NULL AND d.checked_in_at > TIMESTAMPADD(HOUR, -16, NOW())) as is_checked_in
+                    -- Check if the driver is currently checked in (within the last 16 hours)
+                    (d.checked_in_at IS NOT NULL AND d.checked_in_at > TIMESTAMPADD(HOUR, -16, NOW())) as is_checked_in,
+                    -- And also check if they are currently under a penalty
+                    (d.penalty_until IS NOT NULL AND d.penalty_until > NOW()) as is_penalized
                 FROM drivers_table d
                 LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
 $driverResult = $conn->query($driverQuery);
@@ -126,7 +129,8 @@ if ($driverResult->num_rows > 0) {
             'capacity' => $driverRow['capacity'],
             'truck_plate_no' => $driverRow['truck_plate_no'],
             'assigned_truck_id' => $driverRow['assigned_truck_id'],
-            'is_checked_in' => (bool)$driverRow['is_checked_in'] // Here's the new status flag
+            'is_checked_in' => (bool)$driverRow['is_checked_in'],
+            'is_penalized' => (bool)$driverRow['is_penalized'] // Pass the new penalty status to JS
         ];
     }
 }
@@ -1444,7 +1448,7 @@ $(document).on('click', '.icon-btn.edit', function() {
 
 
             // Populate driver dropdowns
-    function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
+   function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
     // We need to get the real-time status of trucks to know who's really available.
     $.ajax({
         url: 'include/handlers/truck_handler.php?action=getTrucks',
@@ -1468,8 +1472,10 @@ $(document).on('click', '.icon-btn.edit', function() {
                     let unavailabilityReason = '';
                     const truckInfo = driver.assigned_truck_id ? truckStatusMap.get(driver.assigned_truck_id.toString()) : null;
 
-                    // Figuring out why a driver might be unavailable.
-                    if (!driver.is_checked_in) {
+                    // Let's figure out all the reasons a driver might be unavailable.
+                    if (driver.is_penalized) { // This is our new check!
+                        unavailabilityReason = 'On Penalty';
+                    } else if (!driver.is_checked_in) {
                         unavailabilityReason = 'Not Checked-in';
                     } else if (!driver.assigned_truck_id || !truckInfo) {
                         unavailabilityReason = 'No Assigned Truck';
@@ -1484,7 +1490,7 @@ $(document).on('click', '.icon-btn.edit', function() {
                         (selectedSize.includes('20') && driver.capacity === '20') ||
                         (selectedSize.includes('40') && driver.capacity === '40');
                     
-                    // A driver is available if they pass the capacity filter and have no unavailability reason.
+                    // A driver is only available if they match the capacity and have no reason to be unavailable.
                     const isAvailable = capacityMatch && unavailabilityReason === '';
                     
                     var selectedAttr = (driver.name === currentDriver) ? ' selected' : '';
