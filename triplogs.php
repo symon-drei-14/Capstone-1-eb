@@ -877,7 +877,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
         <div>
             <label for="addEventCashAdvance">Cash Advance:</label>
             <input type="number" id="addEventCashAdvance" name="eventCashAdvance" 
-                   min="2000" step="0.01" placeholder="2000.00" style="width: 100%;">
+                min="2000" step="0.01" placeholder="2000.00" value="2000" style="width: 100%;">
         </div>
         <div>
             <label for="addEventDiesel">Diesel:</label>
@@ -1076,12 +1076,22 @@ let currentDateTo = '';
     // These should also be inside the ready function
     $('#dateFrom, #dateTo').on('change', filterTableByDateRange);
 
-    $('#resetDateFilter').on('click', function() {
-        $('#dateFrom').val('');
-        $('#dateTo').val('');
-        currentPage = 1;
-        renderTable();
-    });
+        $('#resetDateFilter').on('click', function() {
+            $('#dateFrom').val('');
+            $('#dateTo').val('');
+            currentPage = 1;
+            renderTable();
+        });
+
+        // ### NEW: Search input handler with debounce ###
+        let searchTimeout;
+        $('#searchInput').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1; // Reset to the first page on a new search
+                renderTable();
+            }, 400); // Wait 400ms after the user stops typing
+        });
 
     
 function filterTableByDateRange() {
@@ -1116,14 +1126,14 @@ function filterTableByDateRange() {
             document.getElementById('current-time').textContent = now.toLocaleTimeString();
         }
 
-        // Update immediately and then every second
+
         updateDateTime();
         setInterval(updateDateTime, 1000);
 function renderTable() {
     const showDeleted = currentStatusFilter === 'deleted';
     const showToday = currentStatusFilter === 'today';
     const rowsPerPage = parseInt($('#rowsPerPage').val());
-    
+    const searchTerm = $('#searchInput').val();
     let action;
     if (showDeleted) {
         action = 'get_deleted_trips';
@@ -1148,7 +1158,8 @@ function renderTable() {
             page: currentPage,
             perPage: rowsPerPage,
             dateFrom: dateFrom,
-            dateTo: dateTo
+             dateTo: dateTo,
+                searchTerm: searchTerm
         }),
         success: function(response) {
             if (response.success) {
@@ -1229,8 +1240,16 @@ function renderTable() {
     });
 }
 
-
+function highlightText(text, searchTerm) {
+    if (!searchTerm || !text) {
+        return text;
+    }
+    const escapedSearchTerm = searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(escapedSearchTerm, 'gi');
+    return text.toString().replace(regex, (match) => `<span class="highlight">${match}</span>`);
+}
 function renderTripRows(trips, showDeleted) {
+  const searchTerm = $('#searchInput').val(); 
     trips.forEach(function(trip) {
         let statusCell = '';
         let actionCell = '';
@@ -1295,24 +1314,24 @@ function renderTripRows(trips, showDeleted) {
         }
         const row = `
              <tr class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
-                <td data-label="Plate Number">${trip.plate_no || 'N/A'}</td>
+                <td data-label="Plate Number">${highlightText(trip.plate_no || 'N/A', searchTerm)}</td>
                 <td data-label="Trip Date">${formatDateTime(trip.trip_date)}</td>
-                <td data-label="Driver">${trip.driver || 'N/A'}</td>
-                <td data-label="Helper">${trip.helper || 'N/A'}</td>
-                <td data-label="Dispatcher">${trip.dispatcher || 'N/A'}</td>
-                <td data-label="Container No.">${trip.container_no || 'N/A'}</td>
-                <td data-label="Client - Port">${trip.client || 'N/A'}${trip.port ? ' - ' + trip.port : ''}</td>
-                <td data-label="Destination">${trip.destination || 'N/A'}</td>
-                <td data-label="Shipping Line">${trip.shipping_line || 'N/A'}</td>
-                <td data-label="Consignee">${trip.consignee || 'N/A'}</td>
-                <td data-label="Container Size">${trip.truck_capacity ? trip.truck_capacity + 'ft' : 'N/A'}</td>
-                <td data-label="FCL">${trip.fcl_status || 'N/A'}</td>
+                <td data-label="Driver">${highlightText(trip.driver || 'N/A', searchTerm)}</td>
+                <td data-label="Helper">${highlightText(trip.helper || 'N/A', searchTerm)}</td>
+                <td data-label="Dispatcher">${highlightText(trip.dispatcher || 'N/A', searchTerm)}</td>
+                <td data-label="Container No.">${highlightText(trip.container_no || 'N/A', searchTerm)}</td>
+                <td data-label="Client - Port">${highlightText(trip.client || 'N/A', searchTerm)}${trip.port ? ' - ' + highlightText(trip.port, searchTerm) : ''}</td>
+                <td data-label="Destination">${highlightText(trip.destination || 'N/A', searchTerm)}</td>
+                <td data-label="Shipping Line">${highlightText(trip.shipping_line || 'N/A', searchTerm)}</td>
+                <td data-label="Consignee">${highlightText(trip.consignee || 'N/A', searchTerm)}</td>
+                <td data-label="Container Size">${highlightText(trip.truck_capacity ? trip.truck_capacity + 'ft' : 'N/A', searchTerm)}</td>
+                <td data-label="FCL">${highlightText(trip.fcl_status || 'N/A', searchTerm)}</td>
                 <td data-label="Cash Advance">₱${parseFloat(trip.cash_advance || 0).toFixed(2)}</td>
                 <td data-label="Additional Cash">₱${parseFloat(trip.additional_cash_advance || 0).toFixed(2)}</td>
                 <td data-label="Diesel">₱${parseFloat(trip.diesel || 0).toFixed(2)}</td>
                 ${statusCell}
                 <td data-label="Last Modified">${formatDateTime(trip.last_modified_at || trip.created_at)} 
-                    ${trip.last_modified_by ? `<br> <strong>${trip.last_modified_by} </strong></small>` : ''}
+                    ${trip.last_modified_by ? `<br> <strong>${highlightText(trip.last_modified_by, searchTerm)}</strong></small>` : ''}
                 </td>
                 ${actionCell}
             </tr>
@@ -1764,7 +1783,7 @@ $(document).on('click', '.icon-btn.edit', function() {
         $('#addEventConsignee').val('');
         $('#addEventSize').val('');
         $('#addEventFCL').val('');
-        $('#addEventCashAdvance').val('');
+        $('#addEventCashAdvance').val('2000');
        
         $('#addEventDiesel').val('');
         $('#addEventStatus').val('Pending');
