@@ -251,70 +251,67 @@ try {
     echo json_encode(['success' => true]);
     break;
 
-        case 'updateTruck':
+       case 'updateTruck':
     if (!validatePlateNumber($data['plate_no'])) {
         throw new Exception("Invalid plate number format. Use format like ABC123 or ABC-1234");
     }
 
-    // Validate status
     $validStatuses = ['In Terminal', 'Enroute', 'In Repair', 'Overdue'];
     if (!in_array($data['status'], $validStatuses)) {
         throw new Exception("Invalid status value");
     }
 
-    // Handle photo upload
-    $truckPic = null;
     $photoUpdate = "";
+    $types = "ssssi";
+    $params = [
+        $data['plate_no'], 
+        $data['capacity'], 
+        $data['status'],
+        $currentUser,
+    ];
+
     if (!empty($_FILES['truck_photo']['name']) && $_FILES['truck_photo']['error'] == UPLOAD_ERR_OK) {
-        // Validate file type
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
         $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($fileInfo, $_FILES['truck_photo']['tmp_name']);
         finfo_close($fileInfo);
         
         if (in_array($mimeType, $allowedTypes)) {
-            // Check file size (max 2MB)
             if ($_FILES['truck_photo']['size'] > 2 * 1024 * 1024) {
                 throw new Exception("Image file is too large. Maximum size is 2MB.");
             }
-            
-            // Read and encode the image
             $truckPic = base64_encode(file_get_contents($_FILES['truck_photo']['tmp_name']));
             $photoUpdate = ", truck_pic = ?";
+            $params[] = $truckPic;
+            $types .= "s";
         } else {
             throw new Exception("Invalid file type. Only JPG, PNG and GIF are allowed.");
         }
     }
 
-    if ($photoUpdate) {
-        $stmt = $conn->prepare("UPDATE truck_table 
-                              SET plate_no=?, capacity=?, status=?, 
-                              last_modified_by=?, last_modified_at=NOW()" . $photoUpdate . "
-                              WHERE truck_id=?");
-        $stmt->bind_param("sssssi", 
-            $data['plate_no'], 
-            $data['capacity'], 
-            $data['status'],
-            $currentUser,
-            $truckPic,
-            $data['truck_id']
-        );
-    } else {
-        $stmt = $conn->prepare("UPDATE truck_table 
-                              SET plate_no=?, capacity=?, status=?, 
-                              last_modified_by=?, last_modified_at=NOW()
-                              WHERE truck_id=?");
-        $stmt->bind_param("ssssi", 
-            $data['plate_no'], 
-            $data['capacity'], 
-            $data['status'],
-            $currentUser,
-            $data['truck_id']
-        );
-    }
+    $params[] = $data['truck_id'];
+
+    $stmt = $conn->prepare("UPDATE truck_table 
+                             SET plate_no=?, capacity=?, status=?, 
+                             last_modified_by=?, last_modified_at=NOW()" . $photoUpdate . "
+                             WHERE truck_id=?");
     
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
-    echo json_encode(['success' => true]);
+    $stmt->close();
+
+    // After updating, let's grab the fresh data to send back
+    $stmt = $conn->prepare("SELECT t.truck_id, t.plate_no, t.capacity, 
+                                  t.status as display_status, t.is_deleted,
+                                  t.last_modified_by, t.delete_reason,
+                                  t.last_modified_at, t.truck_pic
+                           FROM truck_table t WHERE t.truck_id = ?");
+    $stmt->bind_param("i", $data['truck_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $updatedTruck = $result->fetch_assoc();
+
+    echo json_encode(['success' => true, 'updatedTruck' => $updatedTruck]);
     break;
 
 

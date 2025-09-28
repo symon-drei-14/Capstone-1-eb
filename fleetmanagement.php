@@ -441,14 +441,12 @@ function fetchTrucks() {
     const status = document.getElementById('status').value;
     const photoFile = document.getElementById('truckPhoto').files[0];
     
-    // Add basic truck data
     formData.append('truck_id', truckId);
     formData.append('plate_no', plateNo);
     formData.append('capacity', capacity);
     formData.append('status', status);
     formData.append('action', isEditMode ? 'updateTruck' : 'addTruck');
     
-    // Add photo if selected
     if (photoFile) {
         formData.append('truck_photo', photoFile);
     }
@@ -463,12 +461,25 @@ function fetchTrucks() {
             Swal.fire({
                 icon: 'success',
                 title: isEditMode ? 'Truck Updated' : 'Truck Added',
-                text: isEditMode ? 'Truck updated successfully!' : 'Truck added successfully!',
+                text: isEditMode ? 'Truck details updated successfully!' : 'New truck added successfully!',
                 timer: 2000,
                 showConfirmButton: false
             });
             closeModal('truckModal');
-            fetchTrucks();
+
+            if (isEditMode && data.updatedTruck) {
+                
+                const index = trucksData.findIndex(t => t.truck_id == data.updatedTruck.truck_id);
+                if (index !== -1) {
+                    trucksData[index] = data.updatedTruck;
+                }
+                renderTrucksTable(); 
+            } else {
+                
+                fetchTrucks();
+            }
+            
+            
             fetchTruckCounts();
         } else {
             Swal.fire({
