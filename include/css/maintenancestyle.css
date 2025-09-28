@@ -205,7 +205,7 @@ form input, form select {
 
 
 button[type="submit"] {
-    background-color: #4CAF50; /* Green */
+    background-color: #4CAF50; 
     color: white;
     padding: 12px 15px;
     border: none;
@@ -219,7 +219,7 @@ button[type="submit"]:hover {
 }
 
 .cancelbtn{
-    background-color: #d02b2b; /* Green */
+    background-color: #d02b2b; 
     color: white;
     padding: 12px 15px;
     border: none;
@@ -229,7 +229,7 @@ button[type="submit"]:hover {
 }
 
 .cancelbtn:hover{
-    background-color: #a22222; /* Green */
+    background-color: #a22222; 
     color: white;
     padding: 12px 15px;
     border: none;
@@ -239,10 +239,10 @@ button[type="submit"]:hover {
 }
 
 #remindersModal .modal-content {
-    max-width: 650px; /* A bit wider for better spacing */
+    max-width: 650px;
     width: 90%;
     border-radius: 12px;
-    padding: 0; /* Remove padding to use header/list padding instead */
+    padding: 0; 
     box-shadow: 0 5px 25px rgba(0,0,0,0.15);
     border: none;
     max-height: 85vh;
@@ -256,7 +256,7 @@ button[type="submit"]:hover {
     align-items: center;
     padding: 15px 25px;
     border-bottom: 1px solid #e0e0e0;
-    flex-shrink: 0; /* Prevents header from shrinking */
+    flex-shrink: 0; 
 }
 
 #remindersModal h2 {
@@ -2201,10 +2201,10 @@ mark {
             font-size: 13px;
             font-weight: bold;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-               transform: scale(0); /* Start scaled down (hidden) */
-    transition: transform 0.3s ease-out; /* Animate the scaling */
+               transform: scale(0); 
+    transition: transform 0.3s ease-out; 
         }
 .badge.visible {
-    transform: scale(1); /* Scale to full size when visible */
+    transform: scale(1);
 }
         

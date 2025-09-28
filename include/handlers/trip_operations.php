@@ -590,7 +590,7 @@ try {
         
         // Update audit log
         $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
-        $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
+        $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0 ");
         $auditStmt->bind_param("ssi", $currentUser, $editReasons, $data['id']);
         
         if (!$auditStmt->execute()) {
@@ -669,54 +669,61 @@ try {
     }
     break;
 
-        case 'delete':
-    // First check if the trip is in 'En Route' status
-    $checkStatusStmt = $conn->prepare("SELECT status FROM trips WHERE trip_id = ?");
-    $checkStatusStmt->bind_param("i", $data['id']);
-    $checkStatusStmt->execute();
-    $statusResult = $checkStatusStmt->get_result();
-    
-    if ($statusResult->num_rows > 0) {
-        $tripStatus = $statusResult->fetch_assoc()['status'];
-        
-        if ($tripStatus === 'En Route') {
+     case 'delete':
+    $tripId = $data['id'] ?? 0;
+    if ($tripId <= 0) {
+        throw new Exception("Invalid Trip ID provided.");
+    }
+
+    $conn->begin_transaction();
+    try {
+
+        $getTripStmt = $conn->prepare("SELECT status, truck_id FROM trips WHERE trip_id = ?");
+        $getTripStmt->bind_param("i", $tripId);
+        $getTripStmt->execute();
+        $trip = $getTripStmt->get_result()->fetch_assoc();
+        $getTripStmt->close();
+
+        if (!$trip) {
+            throw new Exception("Trip not found.");
+        }
+
+        if ($trip['status'] === 'En Route') {
             throw new Exception("Cannot delete a trip that is currently 'En Route'. Please complete or cancel the trip first.");
         }
+
+        $updateStatusStmt = $conn->prepare("UPDATE trips SET status = 'Cancelled' WHERE trip_id = ?");
+        $updateStatusStmt->bind_param("i", $tripId);
+        $updateStatusStmt->execute();
+        $updateStatusStmt->close();
+
+        $auditStmt = $conn->prepare(
+            "UPDATE audit_logs_trips SET 
+                is_deleted = 1,
+                delete_reason = ?,
+                modified_by = ?,
+                modified_at = NOW()
+             WHERE trip_id = ? AND is_deleted = 0
+             ORDER BY log_id DESC LIMIT 1" 
+        );
+        $auditStmt->bind_param("ssi", $data['reason'], $currentUser, $tripId);
+        $auditStmt->execute();
+        $auditStmt->close();
+        
+        if ($trip['truck_id']) {
+            $updateTruckStmt = $conn->prepare("UPDATE truck_table SET status = 'In Terminal' WHERE truck_id = ?");
+            $updateTruckStmt->bind_param("i", $trip['truck_id']);
+            $updateTruckStmt->execute();
+            $updateTruckStmt->close();
+        }
+        
+        $conn->commit();
+        echo json_encode(['success' => true]);
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        throw $e;
     }
-    
-    // Mark trip as deleted in audit log
-    $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
-        is_deleted = 1,
-        delete_reason = ?,
-        modified_by = ?,
-        modified_at = NOW()
-        WHERE trip_id = ? AND is_deleted = 0");
-    $stmt->bind_param("ssi", 
-        $data['reason'],
-        $currentUser,
-        $data['id']
-    );
-    $stmt->execute();
-    
-    // Get trip details for truck status update
-    $getTrip = $conn->prepare("
-        SELECT t.status, tr.truck_id 
-        FROM trips t 
-        JOIN truck_table tr ON t.truck_id = tr.truck_id 
-        WHERE t.trip_id = ?
-    ");
-    $getTrip->bind_param("i", $data['id']);
-    $getTrip->execute();
-    $trip = $getTrip->get_result()->fetch_assoc();
-    
-    if ($trip) {
-        $newTruckStatus = 'In Terminal';
-        $updateTruck = $conn->prepare("UPDATE truck_table SET status = ? WHERE truck_id = ?");
-        $updateTruck->bind_param("si", $newTruckStatus, $trip['truck_id']);
-        $updateTruck->execute();
-    }
-    
-    echo json_encode(['success' => true]);
     break;
 
 
@@ -1592,6 +1599,56 @@ case 'get_trips_today':
     }
     break;
 
+case 'cancel_trip':
+
+    $tripId = $data['id'] ?? 0;
+    if ($tripId <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid Trip ID."]);
+        exit;
+    }
+
+    $username = $_SESSION['username'] ?? 'System';
+    $editReason = json_encode(["Trip status changed to Cancelled by user."]); 
+
+    $conn->begin_transaction();
+    try {
+        $getTruckStmt = $conn->prepare("SELECT truck_id FROM trips WHERE trip_id = ?");
+        $getTruckStmt->bind_param("i", $tripId);
+        $getTruckStmt->execute();
+        $tripData = $getTruckStmt->get_result()->fetch_assoc();
+        $truckId = $tripData['truck_id'] ?? null;
+        $getTruckStmt->close();
+
+        $stmt = $conn->prepare("UPDATE trips SET status = 'Cancelled' WHERE trip_id = ?");
+        $stmt->bind_param("i", $tripId);
+        $stmt->execute();
+        $stmt->close();
+
+        $auditStmt = $conn->prepare(
+            "UPDATE audit_logs_trips 
+             SET modified_by = ?, modified_at = NOW(), edit_reason = ? 
+             WHERE trip_id = ? AND is_deleted = 0 
+             ORDER BY log_id DESC LIMIT 1"
+        );
+        $auditStmt->bind_param("ssi", $username, $editReason, $tripId);
+        $auditStmt->execute();
+        $auditStmt->close();
+
+        if ($truckId) {
+            $updateTruckStmt = $conn->prepare("UPDATE truck_table SET status = 'In Terminal' WHERE truck_id = ?");
+            $updateTruckStmt->bind_param("i", $truckId);
+            $updateTruckStmt->execute();
+            $updateTruckStmt->close();
+        }
+
+        $conn->commit();
+        echo json_encode(["success" => true]);
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
+    }
+    break;
 //eto pa babaguhin ko ehe
 case 'get_helpers':
     $stmt = $conn->prepare("SELECT helper_id, name FROM helpers ORDER BY name");

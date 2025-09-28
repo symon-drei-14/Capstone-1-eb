@@ -331,9 +331,10 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                         <button class="dropdown-item delete" id="eventModalDeleteBtn">
                             <i class="fas fa-trash-alt"></i> Delete Trip
                         </button>
-                        <button class="dropdown-item cancel-trip">
+                       <button class="dropdown-item cancel-trip">
                             <i class="fas fa-ban"></i> Cancel Trip
                         </button>
+
                     </div>
                 </div>
             </div>
@@ -517,7 +518,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <option value="Pending">Pending</option>
                     <option value="En Route">En Route</option>
                     <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
+                
                 </select>
                    </legend>
                 </fieldset>
@@ -843,7 +844,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <option value="Pending">Pending</option>
                     <option value="En Route">En Route</option>
                     <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
+                    
                 </select>
                 </legend>
 </fieldset>
@@ -1306,7 +1307,7 @@ function renderTripRows(trips, showDeleted) {
                         <button class="dropdown-item delete" data-id="${trip.trip_id}">
                             <i class="fas fa-trash-alt"></i> Delete
                         </button>
-                         <button class="dropdown-item cancel-trip" data-id="${trip.trip_id}">
+                         <button class="dropdown-item cancel-trip" onclick="cancelTrip(${trip.trip_id})">
                             <i class="fas fa-ban"></i> Cancel Trip
                         </button>
                     </div>
@@ -1987,6 +1988,7 @@ eventClick: function(event, jsEvent, view) {
     $('#eventModal .generate-report').attr('href', `trip_report.php?id=${event.id}`);
     $('#eventModal .view-reasons').attr('data-id', event.id);
     $('#eventModal .cancel-trip').attr('data-id', event.id);
+    
 
       if (event.edit_reasons && event.edit_reasons !== 'null' && event.edit_reasons !== '') {
         $('#eventModalHistoryBtn').show();
@@ -3530,6 +3532,57 @@ $('#receiptModal').on('click', function(e) {
 
     if (e.target === this) {
         closeReceiptModal();
+    }
+});
+
+function cancelTrip(tripId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This will change the trip's status to 'Cancelled'.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, cancel it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            $.ajax({
+                url: 'include/handlers/trip_operations.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'cancel_trip',
+                    id: tripId
+
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Cancelled!',
+                            text: 'The trip has been successfully cancelled.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', response.message || 'Failed to cancel trip.', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'An error occurred while cancelling the trip.', 'error');
+                }
+            });
+        }
+    });
+}
+
+$(document).on('click', '#eventModal .cancel-trip', function() {
+    var tripId = $(this).data('id');
+    if (tripId) {
+        cancelTrip(tripId);
     }
 });
     </script>
