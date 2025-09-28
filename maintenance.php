@@ -752,24 +752,27 @@ function loadSuppliers() {
     }
             
             function populateTruckDropdown() {
-                const truckDropdown = document.getElementById('truckId');
-                truckDropdown.innerHTML = '';
-                
-                trucksList.forEach(truck => {
-                    const option = document.createElement('option');
-                    option.value = truck.truck_id;
-                    option.textContent = truck.truck_id ;
-                    option.setAttribute('data-plate-no', truck.plate_no);
-                    truckDropdown.appendChild(option);
-                });
-                
-                // Add event listener for truck selection change
-                truckDropdown.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    const plateNo = selectedOption.getAttribute('data-plate-no');
-                    document.getElementById('licensePlate').value = plateNo || '';
-                });
-            }
+    const truckDropdown = document.getElementById('truckId');
+    truckDropdown.innerHTML = '';
+    
+    trucksList.forEach(truck => {
+        const option = document.createElement('option');
+        option.value = truck.truck_id;
+        option.textContent = truck.truck_id ;
+        option.setAttribute('data-plate-no', truck.plate_no);
+        truckDropdown.appendChild(option);
+    });
+    
+    // Add event listener for truck selection change
+    truckDropdown.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const plateNo = selectedOption.getAttribute('data-plate-no');
+        document.getElementById('licensePlate').value = plateNo || '';
+        
+        // Check 6-month validation for preventive maintenance during edit
+        checkTruckChange();
+    });
+}
 
             let currentStatusFilter = 'all';
 
@@ -2286,6 +2289,37 @@ function checkMaintenanceType() {
         dateInput.removeAttribute('min');
     }
 }
+
+
+function checkTruckChange() {
+    const maintenanceType = document.getElementById('maintenanceTypeId').value;
+    const truckId = document.getElementById('truckId').value;
+    const dateInput = document.getElementById('date');
+    const maintenanceId = document.getElementById('maintenanceId').value;
+    
+    if (maintenanceType === '1' && truckId && isEditing) { // Preventive Maintenance during edit
+        fetch(`include/handlers/maintenance_handler.php?action=checkPreventiveEditDate&truckId=${truckId}&maintenanceId=${maintenanceId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.hasConflict) {
+                    Swal.fire({
+                        title: 'Validation Error',
+                        html: `Cannot assign this truck for preventive maintenance. ${data.message}`,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    
+                    // Reset truck selection to previous value
+                    document.getElementById('truckId').value = '';
+                    document.getElementById('licensePlate').value = '';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking preventive maintenance date for truck change:', error);
+            });
+    }
+}
+
 function applyDateFilter() {
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');

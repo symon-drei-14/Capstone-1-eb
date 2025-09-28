@@ -868,6 +868,81 @@ try {
         }
         break;
 
+        case 'checkPreventiveEditDate':
+    $truckId = isset($_GET['truckId']) ? intval($_GET['truckId']) : 0;
+    $maintenanceId = isset($_GET['maintenanceId']) ? intval($_GET['maintenanceId']) : 0;
+    
+    if ($truckId <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid truck ID"]);
+        exit;
+    }
+    
+    // Get the date of the maintenance record being edited
+    $currentDateStmt = $conn->prepare("SELECT date_mtnce FROM maintenance_table WHERE maintenance_id = ?");
+    $currentDateStmt->bind_param("i", $maintenanceId);
+    $currentDateStmt->execute();
+    $currentDateResult = $currentDateStmt->get_result();
+    
+    if ($currentDateResult->num_rows === 0) {
+        echo json_encode(["success" => false, "message" => "Maintenance record not found"]);
+        exit;
+    }
+    
+    $currentDate = $currentDateResult->fetch_assoc()['date_mtnce'];
+    
+    // Check for existing preventive maintenance for this truck (excluding the current record being edited)
+    $sql = "SELECT date_mtnce 
+            FROM maintenance_table m
+            LEFT JOIN (
+                SELECT maintenance_id, is_deleted,
+                       ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
+                FROM audit_logs_maintenance
+            ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id AND latest_audit.rn = 1
+            WHERE m.truck_id = ? 
+            AND m.maintenance_type_id = 1 
+            AND m.maintenance_id != ?
+            AND m.status IN ('Completed', 'Pending', 'In Progress')
+            AND (latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)
+            ORDER BY ABS(DATEDIFF(m.date_mtnce, ?))
+            LIMIT 1";
+    
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+        break;
+    }
+    
+    $stmt->bind_param("iis", $truckId, $maintenanceId, $currentDate);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $existingMaintenance = $result->fetch_assoc();
+        $existingDate = new DateTime($existingMaintenance['date_mtnce']);
+        $newDate = new DateTime($currentDate);
+        
+        // Calculate the difference in months
+        $interval = $existingDate->diff($newDate);
+        $monthsDiff = ($interval->y * 12) + $interval->m;
+        
+        if ($monthsDiff < 6) {
+            $message = "This truck already has a preventive maintenance scheduled/completed on " . 
+                      $existingDate->format('F j, Y') . ". Preventive maintenance must be at least 6 months apart.";
+            
+            echo json_encode([
+                "success" => true,
+                "hasConflict" => true,
+                "message" => $message,
+                "existingDate" => $existingMaintenance['date_mtnce']
+            ]);
+        } else {
+            echo json_encode(["success" => true, "hasConflict" => false]);
+        }
+    } else {
+        echo json_encode(["success" => true, "hasConflict" => false]);
+    }
+    break;
+
     case 'deleteExpense':
         $expenseId = isset($_GET['expenseId']) ? intval($_GET['expenseId']) : 0;
         if ($expenseId <= 0) {
@@ -980,45 +1055,49 @@ try {
 
     // Check 6-month interval for preventive maintenance
     if ($maintenance['maintenance_type_id'] == 1) { // Preventive maintenance
-    $checkDateStmt = $conn->prepare("
-        SELECT MAX(m.date_mtnce) as last_date 
-        FROM maintenance_table m
-        LEFT JOIN (
-            SELECT maintenance_id, is_deleted,
-                   ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
-            FROM audit_logs_maintenance
-        ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id AND latest_audit.rn = 1
-        WHERE m.truck_id = ? 
-        AND m.maintenance_type_id = 1 
-        AND m.status IN ('Completed', 'Pending', 'In Progress', 'Overdue')
-        AND m.maintenance_id != ?
-        AND (latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)
-    ");
-    
-    if ($checkDateStmt) {
-        $checkDateStmt->bind_param("ii", $maintenance['truck_id'], $id);
-        $checkDateStmt->execute();
-        $dateResult = $checkDateStmt->get_result();
+        $checkDateStmt = $conn->prepare("
+            SELECT m.date_mtnce, m.maintenance_id
+            FROM maintenance_table m
+            LEFT JOIN (
+                SELECT maintenance_id, is_deleted,
+                       ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
+                FROM audit_logs_maintenance
+            ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id AND latest_audit.rn = 1
+            WHERE m.truck_id = ? 
+            AND m.maintenance_type_id = 1 
+            AND m.status IN ('Completed', 'Pending', 'In Progress', 'Overdue')
+            AND m.maintenance_id != ?
+            AND (latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)
+        ");
         
-        if ($dateResult->num_rows > 0) {
-            $dateRow = $dateResult->fetch_assoc();
-            if ($dateRow['last_date']) {
-                $lastDate = new DateTime($dateRow['last_date']);
-                $restoreDate = new DateTime($maintenance['date_mtnce']);
-                $minAllowedDate = clone $lastDate;
-                $minAllowedDate->add(new DateInterval('P6M')); // Add 6 months
+        if ($checkDateStmt) {
+            $checkDateStmt->bind_param("ii", $maintenance['truck_id'], $id);
+            $checkDateStmt->execute();
+            $dateResult = $checkDateStmt->get_result();
+            
+            $restoreDate = new DateTime($maintenance['date_mtnce']);
+            
+            while ($row = $dateResult->fetch_assoc()) {
+                $existingDate = new DateTime($row['date_mtnce']);
                 
-                if ($restoreDate < $minAllowedDate) {
+                // Calculate absolute difference in months between the two dates
+                $interval = $restoreDate->diff($existingDate);
+                $monthsDiff = ($interval->y * 12) + $interval->m;
+                
+                // If the difference is less than 6 months, it's a violation
+                if ($monthsDiff < 6) {
+                    $conflictDate = $existingDate->format('F j, Y');
+                    $restoreDateFormatted = $restoreDate->format('F j, Y');
+                    
                     echo json_encode([
                         "success" => false, 
-                        "message" => "Cannot restore this preventive maintenance schedule. It violates the 6-month interval rule. Last/scheduled preventive maintenance is on " . $lastDate->format('F j, Y') . ". Next preventive maintenance can only be scheduled on or after " . $minAllowedDate->format('F j, Y') . "."
+                        "message" => "Cannot restore this preventive maintenance schedule. It violates the 6-month interval rule. There is already a preventive maintenance scheduled/completed on {$conflictDate}. Preventive maintenance must be at least 6 months apart from any existing preventive maintenance (restore date: {$restoreDateFormatted})."
                     ]);
                     exit;
                 }
             }
         }
     }
-}
 
     $conn->begin_transaction();
     
