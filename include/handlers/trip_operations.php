@@ -1,8 +1,19 @@
 <?php
 header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
 session_start();
 date_default_timezone_set('Asia/Manila');
 require 'dbhandler.php';
+
+require_once 'NotificationService.php';
+$notificationService = new NotificationService($conn);
 
 $currentUser = $_SESSION['username'] ?? 'System';
 
@@ -441,6 +452,30 @@ try {
             $updateTruck->execute();
         }
 
+        if ($tripId && $driverId) {
+            $getTripData = $conn->prepare("
+                            SELECT 
+                    t.trip_id,
+                    t.container_no,
+                    t.trip_date,
+                    dest.name as destination,
+                    c.name as client,
+                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date
+                FROM trips t
+                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+                LEFT JOIN clients c ON t.client_id = c.client_id
+                WHERE t.trip_id = ?
+            ");
+            $getTripData->bind_param("i", $tripId);
+            $getTripData->execute();
+            $tripData = $getTripData->get_result()->fetch_assoc();
+            $getTripData->close();
+            
+            if ($tripData) {
+                $notificationService->sendTripAssignedNotification($driverId, $tripData);
+            }
+        }
+
         $conn->commit();
         echo json_encode(['success' => true, 'trip_id' => $tripId]);
         
@@ -575,6 +610,54 @@ try {
             
             if (!$updateTruck->execute()) {
                 throw new Exception("Failed to update truck status: " . $updateTruck->error);
+            }
+        }
+
+        if ($currentDriverId != $driverId) {
+            $getTripData = $conn->prepare("
+                SELECT 
+                    t.trip_id,
+                    t.container_no,
+                    t.trip_date,
+                    dest.name as destination,
+                    c.name as client,
+                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date
+                FROM trips t
+                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+                LEFT JOIN clients c ON t.client_id = c.client_id
+                WHERE t.trip_id = ?
+            ");
+            $getTripData->bind_param("i", $data['id']);
+            $getTripData->execute();
+            $tripData = $getTripData->get_result()->fetch_assoc();
+            $getTripData->close();
+            
+            if ($tripData) {
+                $notificationService->sendTripCancelledNotification($currentDriverId, $tripData);
+
+                $notificationService->sendTripAssignedNotification($driverId, $tripData);
+            }
+        } else {
+            $getTripData = $conn->prepare("
+                SELECT 
+                    t.trip_id,
+                    t.container_no,
+                    t.trip_date,
+                    dest.name as destination,
+                    c.name as client,
+                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date
+                FROM trips t
+                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+                LEFT JOIN clients c ON t.client_id = c.client_id
+                WHERE t.trip_id = ?
+            ");
+            $getTripData->bind_param("i", $data['id']);
+            $getTripData->execute();
+            $tripData = $getTripData->get_result()->fetch_assoc();
+            $getTripData->close();
+            
+            if ($tripData) {
+                $notificationService->sendTripUpdatedNotification($driverId, $tripData);
             }
         }
         
@@ -807,6 +890,77 @@ try {
                 'currentPage' => $page
             ]);
             break;
+
+    case 'register_fcm_token':
+    $driverId = $data['driver_id'] ?? null;
+    $token = $data['fcm_token'] ?? null;
+    $deviceType = $data['device_type'] ?? 'android';
+    
+    if (!$driverId || !$token) {
+        throw new Exception("Driver ID and FCM token are required");
+    }
+    
+    $result = $notificationService->registerFCMToken($driverId, $token, $deviceType);
+    
+    if ($result) {
+        echo json_encode(['success' => true, 'message' => 'FCM token registered successfully']);
+    } else {
+        throw new Exception("Failed to register FCM token");
+    }
+    break;
+
+    case 'get_notifications':
+    $driverId = $data['driver_id'] ?? null;
+    $limit = $data['limit'] ?? 50;
+    $offset = $data['offset'] ?? 0;
+    
+    if (!$driverId) {
+        throw new Exception("Driver ID is required");
+    }
+    
+    $notifications = $notificationService->getDriverNotifications($driverId, $limit, $offset);
+    $unreadCount = $notificationService->getUnreadCount($driverId);
+    
+    echo json_encode([
+        'success' => true, 
+        'notifications' => $notifications,
+        'unread_count' => $unreadCount,
+        'total_count' => count($notifications)
+    ]);
+    break;
+
+    case 'mark_notification_read':
+    $notificationId = $data['notification_id'] ?? null;
+    $driverId = $data['driver_id'] ?? null;
+    
+    if (!$notificationId || !$driverId) {
+        throw new Exception("Notification ID and Driver ID are required");
+    }
+    
+    $result = $notificationService->markAsRead($notificationId, $driverId);
+    
+    if ($result) {
+        echo json_encode(['success' => true, 'message' => 'Notification marked as read']);
+    } else {
+        throw new Exception("Failed to mark notification as read");
+    }
+    break;
+
+    case 'get_unread_count':
+    $driverId = $data['driver_id'] ?? null;
+    
+    if (!$driverId) {
+        throw new Exception("Driver ID is required");
+    }
+    
+    $unreadCount = $notificationService->getUnreadCount($driverId);
+    
+    echo json_encode([
+        'success' => true, 
+        'unread_count' => $unreadCount
+    ]);
+    break;
+
     case 'get_deleted_trips':
     $statusFilter = $data['statusFilter'] ?? 'all';
     $sortOrder = $data['sortOrder'] ?? 'desc';
