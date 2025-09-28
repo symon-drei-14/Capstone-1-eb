@@ -125,13 +125,17 @@
         </div>
     </div>
 </div>
-</div>
+</div>   
         <div class="main-content3">
             <div class="dashboard-header">
     <div class="header-left">
         <div class="button-row">
             <button class="add_sched" onclick="openModal('add')">Add Maintenance Schedule</button>
-            <button class="reminder_btn" onclick="openRemindersModal()">Maintenance Reminders</button>
+           <button class="reminder_btn icon-btn" onclick="openRemindersModal()">
+    <i class="fas fa-bell"></i>
+    <span>Reminders</span>
+ <span id="reminders-badge" class="badge">0</span>
+</button>
         </div>
     </div>
     
@@ -405,14 +409,16 @@
         </div>
         
         <!-- Maintenance Reminders Modal -->
-        <div id="remindersModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeRemindersModal()">&times;</span>
-                <h2>Maintenance Reminders</h2>
-                <div class="reminders-list" id="remindersList">
-                </div>
-            </div>
+       <div id="remindersModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-bell"></i> Maintenance Reminders</h2>
+            <span class="close" onclick="closeRemindersModal()">&times;</span>
         </div>
+        <div class="reminders-list" id="remindersList">
+        </div>
+    </div>
+</div>
 
         <div id="remarksModal" class="modal">
         <div class="modal-content" style="max-width: 500px;">
@@ -461,6 +467,7 @@ $(document).ready(function() {
     loadMaintenancePurposes();
     loadSuppliers();
     updateStatsCards();
+    updateRemindersBadge();
 });
 
       function updateDateTime() {
@@ -1721,6 +1728,7 @@ function saveMaintenanceRecord() {
                 closeModal();
                 loadMaintenanceData();
                 updateStatsCards();
+                updateRemindersBadge();
             });
         } else {
             Swal.fire({
@@ -1943,35 +1951,55 @@ function saveMaintenanceRecord() {
                 return;
             }
             
-            // Use document fragment for better performance
+       
             const fragment = document.createDocumentFragment();
             
-            data.reminders.forEach(item => {
-                const daysRemaining = parseInt(item.days_remaining);
-                let statusClass, daysText;
-                
-                if (daysRemaining < 0) {
-                    statusClass = 'overdue';
-                    daysText = `<span class="overdue">OVERDUE by ${Math.abs(daysRemaining)} days</span>`;
-                } else if (daysRemaining === 0) {
-                    statusClass = 'due-today';
-                    daysText = `<span class="due-today">DUE TODAY</span>`;
-                } else {
-                    statusClass = 'upcoming';
-                    daysText = `<span class="upcoming">Due in ${daysRemaining} days</span>`;
-                }
-                
-                const reminderItem = document.createElement("div");
-                reminderItem.className = `reminder-item ${statusClass}`;
-                reminderItem.innerHTML = `
-                    <strong>Truck:</strong> ${item.truck_id} (${item.licence_plate || 'N/A'})<br>
-                    <strong>Maintenance:</strong> ${item.remarks}<br>
-                    <strong>Due Date:</strong> ${formatDate(item.date_mtnce)} - ${daysText}<br>
-                    <strong>Status:</strong> ${item.status}<br>
-                    <hr>
-                `;
-                fragment.appendChild(reminderItem);
-            });
+           
+        data.reminders.forEach(item => {
+            const daysRemaining = parseInt(item.days_remaining);
+            let statusClass, daysText, iconClass;
+            
+            if (daysRemaining < 0) {
+                statusClass = 'overdue';
+                daysText = `<span class="overdue">OVERDUE by ${Math.abs(daysRemaining)} days</span>`;
+                iconClass = 'fas fa-fire-alt';
+            } else if (daysRemaining === 0) {
+                statusClass = 'due-today';
+                daysText = `<span class="due-today">DUE TODAY</span>`;
+                iconClass = 'fas fa-star';
+            } else {
+                statusClass = 'upcoming';
+                daysText = `<span class="upcoming">Due in ${daysRemaining} days</span>`;
+                iconClass = 'fas fa-hourglass-start';
+            }
+            
+            const reminderItem = document.createElement("div");
+            reminderItem.className = `reminder-item ${statusClass}`;
+            
+            reminderItem.innerHTML = `
+                <div>
+                    <i class="icon ${iconClass}"></i>
+                    <strong>Truck:</strong> 
+                    <span>${item.truck_id} (${item.licence_plate || 'N/A'})</span>
+                </div>
+                <div>
+                    <i class="icon fas fa-wrench"></i>
+                    <strong>Maintenance:</strong>
+                    <span>${item.remarks}</span>
+                </div>
+                <div>
+                    <i class="icon fas fa-calendar-alt"></i>
+                    <strong>Due Date:</strong>
+                    <span>${formatDate(item.date_mtnce)} - ${daysText}</span>
+                </div>
+                <div>
+                    <i class="icon fas fa-info-circle"></i>
+                    <strong>Status:</strong>
+                    <span>${item.status}</span>
+                </div>
+            `;
+            fragment.appendChild(reminderItem);
+        });
             
             list.innerHTML = ""; // Clear loading message
             list.appendChild(fragment);
@@ -2590,6 +2618,29 @@ window.addEventListener('click', function(event) {
         }
     }
 });
+
+function updateRemindersBadge() {
+    const badge = document.getElementById('reminders-badge');
+    if (!badge) return; 
+
+    fetch('include/handlers/maintenance_handler.php?action=getReminders')
+        .then(response => response.json())
+        .then(data => {
+            let count = 0; 
+            if (data.success && data.reminders) {
+                count = data.reminders.length;
+            }
+
+            badge.textContent = count;
+
+            badge.classList.add('visible'); 
+        })
+        .catch(error => {
+            console.error("Error fetching reminder count:", error);
+            badge.textContent = '!'; 
+            badge.classList.add('visible');
+        });
+}
 </script>
 <footer class="site-footer">
 

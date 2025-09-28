@@ -542,7 +542,7 @@ try {
             
         case 'getReminders':
             $reminders = getMaintenanceReminders($conn);
-            echo json_encode(["reminders" => $reminders]);
+            echo json_encode(["success" => true, "reminders" => $reminders]); 
             break;
 
        case 'getAllRecordsForSearch':
