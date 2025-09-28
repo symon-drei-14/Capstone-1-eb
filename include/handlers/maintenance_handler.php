@@ -951,7 +951,7 @@ try {
             }
             break;
 
-        case 'restore':
+       case 'restore':
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     
     if ($id <= 0) {
@@ -959,8 +959,10 @@ try {
         exit;
     }
 
-    // Get the maintenance record details
-    $getMaintenance = $conn->prepare("SELECT truck_id, status FROM maintenance_table WHERE maintenance_id = ?");
+    // Get the maintenance record details including maintenance type
+    $getMaintenance = $conn->prepare("SELECT m.truck_id, m.status, m.maintenance_type_id, m.date_mtnce 
+                                     FROM maintenance_table m 
+                                     WHERE m.maintenance_id = ?");
     
     if (!$getMaintenance) {
         echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
@@ -976,10 +978,52 @@ try {
         exit;
     }
 
+    // Check 6-month interval for preventive maintenance
+    if ($maintenance['maintenance_type_id'] == 1) { // Preventive maintenance
+    $checkDateStmt = $conn->prepare("
+        SELECT MAX(m.date_mtnce) as last_date 
+        FROM maintenance_table m
+        LEFT JOIN (
+            SELECT maintenance_id, is_deleted,
+                   ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
+            FROM audit_logs_maintenance
+        ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id AND latest_audit.rn = 1
+        WHERE m.truck_id = ? 
+        AND m.maintenance_type_id = 1 
+        AND m.status IN ('Completed', 'Pending', 'In Progress', 'Overdue')
+        AND m.maintenance_id != ?
+        AND (latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)
+    ");
+    
+    if ($checkDateStmt) {
+        $checkDateStmt->bind_param("ii", $maintenance['truck_id'], $id);
+        $checkDateStmt->execute();
+        $dateResult = $checkDateStmt->get_result();
+        
+        if ($dateResult->num_rows > 0) {
+            $dateRow = $dateResult->fetch_assoc();
+            if ($dateRow['last_date']) {
+                $lastDate = new DateTime($dateRow['last_date']);
+                $restoreDate = new DateTime($maintenance['date_mtnce']);
+                $minAllowedDate = clone $lastDate;
+                $minAllowedDate->add(new DateInterval('P6M')); // Add 6 months
+                
+                if ($restoreDate < $minAllowedDate) {
+                    echo json_encode([
+                        "success" => false, 
+                        "message" => "Cannot restore this preventive maintenance schedule. It violates the 6-month interval rule. Last/scheduled preventive maintenance is on " . $lastDate->format('F j, Y') . ". Next preventive maintenance can only be scheduled on or after " . $minAllowedDate->format('F j, Y') . "."
+                    ]);
+                    exit;
+                }
+            }
+        }
+    }
+}
+
     $conn->begin_transaction();
     
     try {
-        // First, check if the record is currently marked as deleted in the latest audit log
+        // Check if the record is currently marked as deleted in the latest audit log
         $checkDeletedStmt = $conn->prepare("
             SELECT is_deleted 
             FROM audit_logs_maintenance 
@@ -1110,7 +1154,7 @@ AND (
     }
     break;
 
-            case 'checkPreventiveDate':
+           case 'checkPreventiveDate':
     $truckId = isset($_GET['truckId']) ? intval($_GET['truckId']) : 0;
     
     if ($truckId <= 0) {
@@ -1118,16 +1162,18 @@ AND (
         exit;
     }
     
+    // Check for any preventive maintenance (completed, pending, or in progress) in the last 6 months
     $sql = "SELECT MAX(date_mtnce) as last_date 
-            FROM maintenance_table 
-            WHERE truck_id = ? 
-            AND maintenance_type_id = 1 
-            AND status = 'Completed'
-            AND NOT EXISTS (
-                SELECT 1 FROM audit_logs_maintenance al 
-                WHERE al.maintenance_id = maintenance_table.maintenance_id 
-                AND al.is_deleted = 1
-            )";
+            FROM maintenance_table m
+            LEFT JOIN (
+                SELECT maintenance_id, is_deleted,
+                       ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
+                FROM audit_logs_maintenance
+            ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id AND latest_audit.rn = 1
+            WHERE m.truck_id = ? 
+            AND m.maintenance_type_id = 1 
+            AND m.status IN ('Completed', 'Pending', 'In Progress')
+            AND (latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)";
     
     $stmt = $conn->prepare($sql);
     if (!$stmt) {

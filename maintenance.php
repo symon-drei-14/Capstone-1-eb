@@ -2271,7 +2271,7 @@ function checkMaintenanceType() {
                         dateInput.value = minDate.toISOString().split('T')[0];
                         Swal.fire({
                             title: 'Date Adjusted',
-                            text: `Preventive maintenance must be at least 6 months after the last one (${formatDate(data.lastDate)}). Date has been adjusted accordingly.`,
+                            text: `Preventive maintenance must be at least 6 months after the last scheduled or completed one (${formatDate(data.lastDate)}). Date has been adjusted accordingly.`,
                             icon: 'info',
                             confirmButtonText: 'OK'
                         });
