@@ -1591,6 +1591,24 @@ function saveMaintenanceRecord() {
         return;
     }
 
+    const truckId = parseInt(document.getElementById("truckId").value);
+    const newStatus = document.getElementById("status").value;
+
+    // We need to check if a user is trying to set maintenance to 'In Progress' for a truck that's on the road.
+    if (newStatus === 'In Progress') {
+        const selectedTruck = trucksList.find(truck => truck.truck_id === truckId);
+        
+        // If the truck is 'Enroute', it can't be in the shop. Simple as that.
+        if (selectedTruck && selectedTruck.display_status === 'Enroute') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Action Not Allowed',
+                text: 'This truck is currently "Enroute" and cannot be set to "In Progress" for maintenance. Please update the truck\'s trip status first.'
+            });
+            return; // Stop the save process
+        }
+    }
+
     // Collect selected maintenance purposes
     const selectedPurposes = [];
     document.querySelectorAll('input[name="maintenancePurpose"]:checked').forEach(checkbox => {
@@ -1604,7 +1622,6 @@ function saveMaintenanceRecord() {
         }
     });
     
-    // Validate that at least one purpose is selected
     if (selectedPurposes.length === 0) {
         Swal.fire({
             title: 'Purpose Required',
@@ -1615,7 +1632,6 @@ function saveMaintenanceRecord() {
         return;
     }
     
-    // Join purposes into a string for the remarks field
     const remarks = selectedPurposes.join(', ');
     document.getElementById('remarks').value = remarks;
 
@@ -1648,12 +1664,12 @@ function saveMaintenanceRecord() {
     const maintenanceId = document.getElementById("maintenanceId").value;
 
     const formData = {
-        truckId: parseInt(document.getElementById("truckId").value),
+        truckId: truckId,
         maintenanceTypeId: parseInt(document.getElementById("maintenanceTypeId").value),
         supplierId: parseInt(document.getElementById("supplierId").value),
         date: document.getElementById("date").value,
         remarks: document.getElementById("remarks").value.trim(),
-        status: document.getElementById("status").value,
+        status: newStatus,
         cost: parseFloat(document.getElementById("cost").value || 0),
         editReasons: editReasons
     };
