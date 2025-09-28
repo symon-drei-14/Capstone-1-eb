@@ -113,7 +113,7 @@ function updateTruckStatusFromMaintenance($conn, $truckId) {
 function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all', $showDeleted = false, $startDate = null, $endDate = null) {
     // First, update any pending records that are now overdue
     $updateOverdue = $conn->prepare("UPDATE maintenance_table m SET status = 'Overdue' 
-                                   WHERE status IN ('Pending', 'In Progress') 
+                                    WHERE status = 'Pending'
                                    AND date_mtnce < CURDATE()
                                    AND NOT EXISTS (
                                        SELECT 1 FROM audit_logs_maintenance al 
