@@ -427,19 +427,18 @@ try {
          $updateDriverQueueStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = NOW() WHERE driver_id = ?");
         $updateDriverQueueStmt->bind_param("i", $driverId);
         if (!$updateDriverQueueStmt->execute()) {
-            // Non-critical error, but good to handle for robustness
+            
             throw new Exception("Failed to update driver queue position: " . $updateDriverQueueStmt->error);
         }
 
          $updateLastAssignedStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = NOW() WHERE driver_id = ?");
         $updateLastAssignedStmt->bind_param("i", $driverId);
         if (!$updateLastAssignedStmt->execute()) {
-            // This isn't a critical failure, but good to know if it happens.
+            
             error_log("Failed to update driver's last_assigned_at timestamp for driver_id: " . $driverId);
         }
 
-        // Now, take the driver out of the active queue by clearing their check-in time.
-        // They'll need to check in again to be eligible for another trip.
+        
         $removeFromQueueStmt = $conn->prepare("UPDATE drivers_table SET checked_in_at = NULL WHERE driver_id = ?");
         $removeFromQueueStmt->bind_param("i", $driverId);
         if (!$removeFromQueueStmt->execute()) {

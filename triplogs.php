@@ -474,10 +474,11 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 </select>
 
                 <label for="editEventFCL">FCL Status:</label>
-                <select id="editEventFCL" name="eventFCL" required style="width: 100%;">
-                    <option value="">Select FCL</option>
-                    <option value="MIP">MIP</option>
-                </select>
+            <select id="editEventFCL" name="eventFCL" required style="width: 100%;">
+                <option value="">Select FCL Status</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
             </div>
 
             <!-- Column 2 -->
@@ -786,8 +787,9 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 
                 <label for="addEventFCL">FCL Status:</label>
                 <select id="addEventFCL" name="eventFCL" required style="width: 100%;">
-                    <option value="">Select FCL Status</option>
-                    <option value="MIP">MIP</option>
+            <option value="">Select FCL Status</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
                 </select>
             </div>
 
