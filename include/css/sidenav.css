@@ -83,7 +83,19 @@
     font-weight: bold;
 }
 
-
+   .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100% - var(--header-height));
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border-color);
+            z-index: 1100;
+            transition: transform var(--transition-speed) ease;
+        }
 .sidebar-item {
     position: relative;
     display: flex;
@@ -280,3 +292,35 @@
     visibility: visible;
     opacity: 1;
 }
+
+   @media (max-width: 768px) {
+            .toggle-sidebar-btn {
+                display: block; 
+                  margin-right: 105px; 
+            }
+
+            .profile-name {
+                display: none; 
+            }
+            
+            .sidebar {
+                z-index: 1300;
+                top: 0;
+                height: 100%;
+            }
+            
+
+            .sidebar.expanded {
+                transform: translateX(0);
+            }
+            
+
+            .main-content {
+                margin-left: 0;
+            }
+            
+
+            .backdrop.show {
+                display: block;
+            }
+        }

@@ -731,7 +731,7 @@ try {
     }
     break;
 
-     case 'delete':
+    case 'delete':
     $tripId = $data['id'] ?? 0;
     if ($tripId <= 0) {
         throw new Exception("Invalid Trip ID provided.");
@@ -750,14 +750,10 @@ try {
             throw new Exception("Trip not found.");
         }
 
+
         if ($trip['status'] === 'En Route') {
             throw new Exception("Cannot delete a trip that is currently 'En Route'. Please complete or cancel the trip first.");
         }
-
-        $updateStatusStmt = $conn->prepare("UPDATE trips SET status = 'Cancelled' WHERE trip_id = ?");
-        $updateStatusStmt->bind_param("i", $tripId);
-        $updateStatusStmt->execute();
-        $updateStatusStmt->close();
 
         $auditStmt = $conn->prepare(
             "UPDATE audit_logs_trips SET 
@@ -765,8 +761,8 @@ try {
                 delete_reason = ?,
                 modified_by = ?,
                 modified_at = NOW()
-             WHERE trip_id = ? AND is_deleted = 0
-             ORDER BY log_id DESC LIMIT 1" 
+            WHERE trip_id = ? AND is_deleted = 0
+            ORDER BY log_id DESC LIMIT 1" 
         );
         $auditStmt->bind_param("ssi", $data['reason'], $currentUser, $tripId);
         $auditStmt->execute();
