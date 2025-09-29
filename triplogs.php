@@ -251,6 +251,10 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <button id="addScheduleBtnTable"> 
                         <i class="fa-solid fa-calendar-plus" style="margin-right:5px;"></i>Add Schedule
                     </button>
+
+                    <button id="dailyExpenseSummaryBtn">
+    <i class="fa-solid fa-file-invoice-dollar" style="margin-right:5px;"></i>Daily Expense Summary
+</button>
                     
                     <div class="status-filter-container">
                         <select id="statusFilter">
@@ -1014,7 +1018,20 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 
 
         
-       
+       <div id="expenseSummaryModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="close">&times;</span>
+        <h3 style="margin-top: 0;">Generate Daily Expense Summary</h3>
+        <form id="expenseSummaryForm">
+            <label for="summaryDate" style="display:block; margin-bottom:10px;">Select Date:</label>
+            <input type="date" id="summaryDate" name="summaryDate" required style="width: 100%; padding: 8px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            <div class="buttons" style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px;">Cancel</button>
+                <button type="submit" class="save-btn" style="background-color: #007bff; padding: 8px 15px;">Generate Report</button>
+            </div>
+        </form>
+    </div>
+</div>
 
     <script>
 function formatDateTime(datetimeString) {
@@ -1456,6 +1473,29 @@ $(document).on('click', '.icon-btn.edit', function() {
 });
             
 
+// expense summary things
+$('#dailyExpenseSummaryBtn').on('click', function() {
+        
+        $('#summaryDate').val(new Date().toISOString().slice(0, 10));
+        $('#expenseSummaryModal').show();
+    });
+
+    
+    $('#expenseSummaryForm').on('submit', function(e) {
+        e.preventDefault();
+        const selectedDate = $('#summaryDate').val();
+        if (selectedDate) {
+            
+            window.open(`expense_summary.php?date=${selectedDate}`, '_blank');
+            $('#expenseSummaryModal').hide();
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Date Selected',
+                text: 'Please select a date to generate the summary.'
+            });
+        }
+    });
 
 
             // Populate driver dropdowns

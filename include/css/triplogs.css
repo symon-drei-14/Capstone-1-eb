@@ -29,7 +29,21 @@
      background-color: rgb(7, 111, 7);
 }
 
+#dailyExpenseSummaryBtn {
+    background-color: #17a2b8; /* A nice teal color */
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: background-color 0.3s;
+    cursor: pointer;
+    font-family: inherit; /* To match other buttons */
+}
 
+#dailyExpenseSummaryBtn:hover {
+    background-color: #138496;
+}
     #editReasonsModal {
     align-items: left;
         justify-content: center;
