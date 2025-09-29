@@ -3414,3 +3414,21 @@ h3.title {
     padding: 1px 2px;
     border-radius: 3px;
 }
+.Generate-btn{
+   padding: 1px 8px !important;
+    background-color: rgb(23, 82, 107);
+    border: none;
+    color:white;
+    border-radius: 4px;
+    height: 40px;
+    margin-top: 9px;
+    transition: ease-in 0.3;
+}
+.Generate-btn:hover{
+ transform:scale(1.05);
+}
+
+#expenseSummaryModal .modal-content{
+    overflow-y:hidden !important;
+    overflow-x: hidden !important;
+}

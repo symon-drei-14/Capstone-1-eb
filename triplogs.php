@@ -1026,8 +1026,8 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
             <label for="summaryDate" style="display:block; margin-bottom:10px;">Select Date:</label>
             <input type="date" id="summaryDate" name="summaryDate" required style="width: 100%; padding: 8px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
             <div class="buttons" style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid #eee;">
-                <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px;">Cancel</button>
-                <button type="submit" class="save-btn" style="background-color: #007bff; padding: 8px 15px;">Generate Report</button>
+                <button type="button" class="close-btn cancel-btn">Cancel</button>
+                <button type="submit" class="Generate-btn">Generate Report</button>
             </div>
         </form>
     </div>

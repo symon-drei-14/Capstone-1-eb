@@ -433,8 +433,32 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 }
 #statusFilter option[value=""] {
     color: #999999; 
-    
+ 
 }
+
+
+
+/* Style for specific options using their value */
+#statusFilter option[value="Pending"] {
+    color: #b08d00;
+    font-weight: bold;
+}
+
+#statusFilter option[value="Completed"] {
+    color: green;
+}
+
+#statusFilter option[value="Overdue"] {
+    color: #B82132;
+    font-weight: bold;
+}
+
+/* Styling your separator class */
+#statusFilter .seperator {
+    font-weight: bold;
+    color: #ccc;
+}
+
 
 
  .search-container {
