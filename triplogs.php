@@ -1481,21 +1481,70 @@ $('#dailyExpenseSummaryBtn').on('click', function() {
     });
 
     
-    $('#expenseSummaryForm').on('submit', function(e) {
-        e.preventDefault();
-        const selectedDate = $('#summaryDate').val();
-        if (selectedDate) {
+    // $('#expenseSummaryForm').on('submit', function(e) {
+    //     e.preventDefault();
+    //     const selectedDate = $('#summaryDate').val();
+    //     if (selectedDate) {
             
-            window.open(`expense_summary.php?date=${selectedDate}`, '_blank');
-            $('#expenseSummaryModal').hide();
-        } else {
-            Swal.fire({
-                icon: 'warning',
-                title: 'No Date Selected',
-                text: 'Please select a date to generate the summary.'
-            });
-        }
-    });
+    //         window.open(`expense_summary.php?date=${selectedDate}`, '_blank');
+    //         $('#expenseSummaryModal').hide();
+    //     } else {
+    //         Swal.fire({
+    //             icon: 'warning',
+    //             title: 'No Date Selected',
+    //             text: 'Please select a date to generate the summary.'
+    //         });
+    //     }
+    // });
+
+    $('#expenseSummaryForm').on('submit', function(e) {
+    e.preventDefault();
+    const selectedDate = $('#summaryDate').val();
+    if (selectedDate) {
+        
+        $('#expenseSummaryModal').hide();
+        
+        
+        const reportUrl = `expense_summary.php?date=${selectedDate}`;
+        
+        
+        const loading = AdminLoading.startAction(
+            'Generating Report', 
+            'Preparing your daily expense summary...'
+        );
+
+        
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15 + 8; 
+            if (progress >= 85) {
+                clearInterval(progressInterval);
+                progress = 90; 
+            }
+            loading.updateProgress(Math.min(progress, 90));
+        }, 150);
+
+       
+        const minLoadTime = 1200; 
+        
+        setTimeout(() => {
+          
+            loading.updateProgress(100);
+            
+            
+            setTimeout(() => {
+                window.location.href = reportUrl; 
+            }, 300);
+        }, minLoadTime);
+
+    } else {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Date Selected',
+            text: 'Please select a date to generate the summary.'
+        });
+    }
+});
 
 
             // Populate driver dropdowns

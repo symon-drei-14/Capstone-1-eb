@@ -144,55 +144,75 @@ function formatDateTimeForReport($datetimeString) {
                 </table>
             </div>
 
-            <div class="info-section">
-                <h2 class="section-title"><i class="fas fa-list-ul"></i> Detailed Breakdown per Trip</h2>
-                <?php if (empty($trips)): ?>
-                    <p style="text-align:center; color: #6c757d; margin-top: 20px;">No trips with expenses were found for this date.</p>
-                <?php else: ?>
-                    <table class="expense-table">
-                        <thead>
+           <div class="info-section">
+    <h2 class="section-title"><i class="fas fa-list-ul"></i> Detailed Breakdown per Trip</h2>
+    <?php if (empty($trips)): ?>
+        <p style="text-align:center; color: #6c757d; margin-top: 20px;">No trips with expenses were found for this date.</p>
+    <?php else: ?>
+        <?php foreach ($trips as $tripId => $trip): 
+            // Filter driver expenses for the current trip
+            $tripDriverExpenses = array_filter($driverExpenses, function($exp) use ($tripId) {
+                return $exp['trip_id'] == $tripId;
+            });
+
+            // Calculate total for this specific trip
+            $tripTotal = $trip['cash_advance'] + $trip['additional_cash_advance'] + $trip['diesel'];
+            foreach ($tripDriverExpenses as $expense) {
+                $tripTotal += $expense['amount'];
+            }
+        ?>
+            <div class="trip-card">
+                <div class="trip-card-header">
+                    <h3>Trip ID: TR-<?php echo str_pad($tripId, 6, '0', STR_PAD_LEFT); ?></h3>
+                    <p>
+                        <strong>Plate No:</strong> <?php echo htmlspecialchars($trip['plate_no']); ?> | 
+                        <strong>Driver:</strong> <?php echo htmlspecialchars($trip['driver_name']); ?>
+                    </p>
+                </div>
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Expense Type</th>
+                            <th class="amount">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cash Advance</td>
+                            <td class="amount">₱<?php echo number_format($trip['cash_advance'], 2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Additional Cash</td>
+                            <td class="amount">₱<?php echo number_format($trip['additional_cash_advance'], 2); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Diesel</td>
+                            <td class="amount">₱<?php echo number_format($trip['diesel'], 2); ?></td>
+                        </tr>
+                        <?php if (empty($tripDriverExpenses)): ?>
                             <tr>
-                                <th>Trip ID</th>
-                                <th>Plate No.</th>
-                                <th>Driver</th>
-                                <th>Expense Type</th>
-                                <th>Amount</th>
+                                <td colspan="2" class="no-expenses-row">No driver-submitted expenses for this trip.</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($trips as $tripId => $trip): 
-                                $tripDriverExpenses = array_filter($driverExpenses, function($exp) use ($tripId) {
-                                    return $exp['trip_id'] == $tripId;
-                                });
-                                // Calculating rowspan: 3 for initial funds + one for each driver expense
-                                $rowspan = 3 + count($tripDriverExpenses);
-                            ?>
-                                <tr>
-                                    <td rowspan="<?php echo $rowspan; ?>">TR-<?php echo str_pad($tripId, 6, '0', STR_PAD_LEFT); ?></td>
-                                    <td rowspan="<?php echo $rowspan; ?>"><?php echo htmlspecialchars($trip['plate_no']); ?></td>
-                                    <td rowspan="<?php echo $rowspan; ?>"><?php echo htmlspecialchars($trip['driver_name']); ?></td>
-                                    <td>Cash Advance</td>
-                                    <td class="amount">₱<?php echo number_format($trip['cash_advance'], 2); ?></td>
-                                </tr>
-                                <tr>
-                                    <td>Additional Cash</td>
-                                    <td class="amount">₱<?php echo number_format($trip['additional_cash_advance'], 2); ?></td>
-                                </tr>
-                                 <tr>
-                                    <td>Diesel</td>
-                                    <td class="amount">₱<?php echo number_format($trip['diesel'], 2); ?></td>
-                                </tr>
-                                <?php foreach ($tripDriverExpenses as $expense): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($expense['expense_type']); ?> (Driver Submitted)</td>
-                                    <td class="amount">₱<?php echo number_format($expense['amount'], 2); ?></td>
-                                </tr>
-                                <?php endforeach; ?>
+                        <?php else: ?>
+                            <?php foreach ($tripDriverExpenses as $expense): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($expense['expense_type']); ?> (Driver Submitted)</td>
+                                <td class="amount">₱<?php echo number_format($expense['amount'], 2); ?></td>
+                            </tr>
                             <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
+                        <?php endif; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total for this Trip</th>
+                            <th class="amount">₱<?php echo number_format($tripTotal, 2); ?></th>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
         </div>
         
         <div class="report-footer">
