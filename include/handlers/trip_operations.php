@@ -369,7 +369,7 @@ try {
         $destinationId = getOrCreateDestinationId($conn, $data['destination']);
         $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
         $consigneeId = getConsigneeId($conn, $data['consignee']);
-        $driverId = getDriverIdByName($conn, $data['driver']);
+        $driverId = (string)getDriverIdByName($conn, $data['driver']);
         
         if (!$truckId) {
             throw new Exception("Truck with plate number {$data['plateNo']} not found");
@@ -425,14 +425,14 @@ try {
         }
 
          $updateDriverQueueStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = NOW() WHERE driver_id = ?");
-        $updateDriverQueueStmt->bind_param("i", $driverId);
+        $updateDriverQueueStmt->bind_param("s", $driverId);
         if (!$updateDriverQueueStmt->execute()) {
             
             throw new Exception("Failed to update driver queue position: " . $updateDriverQueueStmt->error);
         }
 
          $updateLastAssignedStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = NOW() WHERE driver_id = ?");
-        $updateLastAssignedStmt->bind_param("i", $driverId);
+        $updateLastAssignedStmt->bind_param("s", $driverId);
         if (!$updateLastAssignedStmt->execute()) {
             
             error_log("Failed to update driver's last_assigned_at timestamp for driver_id: " . $driverId);
@@ -440,7 +440,7 @@ try {
 
         
         $removeFromQueueStmt = $conn->prepare("UPDATE drivers_table SET checked_in_at = NULL WHERE driver_id = ?");
-        $removeFromQueueStmt->bind_param("i", $driverId);
+        $removeFromQueueStmt->bind_param("s", $driverId);
         if (!$removeFromQueueStmt->execute()) {
             throw new Exception("Failed to remove driver from queue: " . $removeFromQueueStmt->error);
         }
@@ -451,18 +451,24 @@ try {
             $updateTruck->execute();
         }
 
-        if ($tripId && $driverId) {
+            if ($tripId && $driverId) {
             $getTripData = $conn->prepare("
-                            SELECT 
+                SELECT 
                     t.trip_id,
                     t.container_no,
                     t.trip_date,
                     dest.name as destination,
                     c.name as client,
-                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date
+                    DATE_FORMAT(t.trip_date, '%M %d, %Y at %h:%i %p') as formatted_date,
+                    tr.plate_no,
+                    p.name as port,
+                    sl.name as shipping_line
                 FROM trips t
                 LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
                 LEFT JOIN clients c ON t.client_id = c.client_id
+                LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+                LEFT JOIN ports p ON t.port_id = p.port_id
+                LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
                 WHERE t.trip_id = ?
             ");
             $getTripData->bind_param("i", $tripId);
@@ -471,7 +477,23 @@ try {
             $getTripData->close();
             
             if ($tripData) {
-                $notificationService->sendTripAssignedNotification($driverId, $tripData);
+                $notificationResult = $notificationService->sendTripAssignedNotification($driverId, $tripData);
+
+                if ($notificationResult) {
+                    error_log("Notification sent successfully for new trip ID: $tripId to driver ID: $driverId");
+                } else {
+                    error_log("Failed to send notification for new trip ID: $tripId to driver ID: $driverId");
+                }
+
+                error_log("=== NOTIFICATION DEBUG ===");
+                error_log("Trip ID: " . ($tripId ?? 'null'));
+                error_log("Driver ID: " . $driverId . " (type: " . gettype($driverId) . ")");
+                error_log("Trip data exists: " . ($tripData ? 'YES' : 'NO'));
+                if ($tripData) {
+                    error_log("Destination: " . ($tripData['destination'] ?? 'null'));
+                }
+                error_log("Notification result: " . ($notificationResult ? 'SUCCESS' : 'FAILED'));
+                error_log("=========================");
             }
         }
 
@@ -509,7 +531,7 @@ try {
         // Get current driver ID before update
         $currentDriverId = $current['driver_id'];
         
-        $driverId = getDriverIdByName($conn, $data['driver']);
+        $driverId = (string)getDriverIdByName($conn, $data['driver']);
 
         // Check if driver is being changed
         if ($currentDriverId != $driverId) {
@@ -548,7 +570,6 @@ try {
         $destinationId = getOrCreateDestinationId($conn, $data['destination']);
         $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
         $consigneeId = getConsigneeId($conn, $data['consignee']);
-        $driverId = getDriverIdByName($conn, $data['driver']);
 
         $portId = getOrCreatePortId($conn, $data['port']);
 
@@ -558,7 +579,7 @@ try {
             trip_date=?, status=?, fcl_status=?  
             WHERE trip_id=?");
         
-        $stmt->bind_param("iiiiiiiisssssi",
+        $stmt->bind_param("isiiiiiisssssi",
             $truckId,
             $driverId, 
             $helperId,
@@ -612,53 +633,61 @@ try {
             }
         }
 
-        if ($currentDriverId != $driverId) {
             $getTripData = $conn->prepare("
-                SELECT 
-                    t.trip_id,
-                    t.container_no,
-                    t.trip_date,
-                    dest.name as destination,
-                    c.name as client,
-                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date
-                FROM trips t
-                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-                LEFT JOIN clients c ON t.client_id = c.client_id
-                WHERE t.trip_id = ?
-            ");
-            $getTripData->bind_param("i", $data['id']);
-            $getTripData->execute();
-            $tripData = $getTripData->get_result()->fetch_assoc();
-            $getTripData->close();
-            
-            if ($tripData) {
-                $notificationService->sendTripCancelledNotification($currentDriverId, $tripData);
+            SELECT 
+                t.trip_id,
+                t.container_no,
+                t.trip_date,
+                t.status,
+                dest.name as destination,
+                c.name as client,
+                DATE_FORMAT(t.trip_date, '%M %d, %Y at %h:%i %p') as formatted_date,
+                tr.plate_no,
+                p.name as port,
+                sl.name as shipping_line,
+                d_old.name as old_driver_name,
+                d_new.name as new_driver_name
+            FROM trips t
+            LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+            LEFT JOIN clients c ON t.client_id = c.client_id
+            LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+            LEFT JOIN ports p ON t.port_id = p.port_id
+            LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+            LEFT JOIN drivers_table d_old ON d_old.driver_id = ?
+            LEFT JOIN drivers_table d_new ON d_new.driver_id = ?
+            WHERE t.trip_id = ?
+        ");
+        $getTripData->bind_param("isi", $currentDriverId, $driverId, $data['id']);
+        $getTripData->execute();
+        $tripData = $getTripData->get_result()->fetch_assoc();
+        $getTripData->close();
+        
+        if ($tripData) {
+            if ($currentDriverId != $driverId) {
+                $cancelResult = $notificationService->sendTripCancelledNotification($currentDriverId, $tripData);
 
-                $notificationService->sendTripAssignedNotification($driverId, $tripData);
+                $assignResult = $notificationService->sendTripAssignedNotification($driverId, $tripData);
+                
+                error_log("Trip reassigned - Cancelled notification to driver ID $currentDriverId: " . ($cancelResult ? 'success' : 'failed'));
+                error_log("Trip reassigned - Assignment notification to driver ID $driverId: " . ($assignResult ? 'success' : 'failed'));
+                
+            } else {
+                $updateResult = $notificationService->sendTripUpdatedNotification($driverId, $tripData);
+                error_log("Trip updated notification to driver ID $driverId: " . ($updateResult ? 'success' : 'failed'));
             }
-        } else {
-            $getTripData = $conn->prepare("
-                SELECT 
-                    t.trip_id,
-                    t.container_no,
-                    t.trip_date,
-                    dest.name as destination,
-                    c.name as client,
-                    DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date
-                FROM trips t
-                LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-                LEFT JOIN clients c ON t.client_id = c.client_id
-                WHERE t.trip_id = ?
-            ");
-            $getTripData->bind_param("i", $data['id']);
-            $getTripData->execute();
-            $tripData = $getTripData->get_result()->fetch_assoc();
-            $getTripData->close();
-            
+
+            error_log("=== NOTIFICATION DEBUG ===");
+            error_log("Trip ID: " . $data['id']);
+            error_log("Driver ID: " . $driverId . " (type: " . gettype($driverId) . ")");
+            error_log("Trip data exists: " . ($tripData ? 'YES' : 'NO'));
             if ($tripData) {
-                $notificationService->sendTripUpdatedNotification($driverId, $tripData);
+                error_log("Destination: " . ($tripData['destination'] ?? 'null'));
             }
+            error_log("Current Driver ID: " . $currentDriverId);
+            error_log("Driver changed: " . ($currentDriverId != $driverId ? 'YES' : 'NO'));
+            error_log("=========================");
         }
+        
         
         $conn->commit();
         echo json_encode(['success' => true]);
@@ -666,6 +695,39 @@ try {
     } catch (Exception $e) {
         $conn->rollback();
         throw $e;
+    }
+    break;
+
+    case 'send_test_notification':
+    $driverId = $data['driver_id'] ?? null;
+    $message = $data['message'] ?? 'Test notification from Mansar Trucking';
+    
+    if (!$driverId) {
+        throw new Exception("Driver ID is required");
+    }
+
+    $checkDriver = $conn->prepare("SELECT name FROM drivers_table WHERE driver_id = ?");
+    $checkDriver->bind_param("i", $driverId);
+    $checkDriver->execute();
+    $driverResult = $checkDriver->get_result();
+    
+    if ($driverResult->num_rows === 0) {
+        throw new Exception("Driver not found");
+    }
+    
+    $driverName = $driverResult->fetch_assoc()['name'];
+    $checkDriver->close();
+
+    $result = $notificationService->sendTestNotification($driverId, $message);
+    
+    if ($result) {
+        echo json_encode([
+            'success' => true, 
+            'message' => "Test notification sent successfully to {$driverName}",
+            'driver_name' => $driverName
+        ]);
+    } else {
+        throw new Exception("Failed to send test notification to {$driverName}");
     }
     break;
 
@@ -897,43 +959,174 @@ try {
             ]);
             break;
 
-    case 'register_fcm_token':
+            case 'debug_notifications':
     $driverId = $data['driver_id'] ?? null;
-    $token = $data['fcm_token'] ?? null;
-    $deviceType = $data['device_type'] ?? 'android';
     
-    if (!$driverId || !$token) {
-        throw new Exception("Driver ID and FCM token are required");
+    if (!$driverId) {
+        echo json_encode(['success' => false, 'message' => 'Driver ID required']);
+        break;
+    }
+
+    $driverCheck = $conn->prepare("SELECT driver_id, name FROM drivers_table WHERE driver_id = ?");
+    $driverCheck->bind_param("s", $driverId);
+    $driverCheck->execute();
+    $driverResult = $driverCheck->get_result();
+    $driverExists = $driverResult->num_rows > 0;
+    $driverInfo = $driverExists ? $driverResult->fetch_assoc() : null;
+    $driverCheck->close();
+
+    $tokenCheck = $conn->prepare("SELECT fcm_token, device_type, is_active, created_at FROM fcm_tokens WHERE driver_id = ?");
+    $tokenCheck->bind_param("s", $driverId);
+    $tokenCheck->execute();
+    $tokenResult = $tokenCheck->get_result();
+    $tokens = [];
+    while ($row = $tokenResult->fetch_assoc()) {
+        $tokens[] = $row;
+    }
+    $tokenCheck->close();
+
+    $notifCheck = $conn->prepare("SELECT notification_id, title, body, type, is_read, created_at FROM notifications WHERE driver_id = ? ORDER BY created_at DESC LIMIT 10");
+    $notifCheck->bind_param("s", $driverId);
+    $notifCheck->execute();
+    $notifResult = $notifCheck->get_result();
+    $notifications = [];
+    while ($row = $notifResult->fetch_assoc()) {
+        $notifications[] = $row;
+    }
+    $notifCheck->close();
+    
+    echo json_encode([
+        'success' => true,
+        'debug_info' => [
+            'driver_id' => $driverId,
+            'driver_exists' => $driverExists,
+            'driver_info' => $driverInfo,
+            'fcm_tokens' => $tokens,
+            'notifications' => $notifications,
+            'token_count' => count($tokens),
+            'active_tokens' => array_filter($tokens, function($t) { return $t['is_active'] == 1; }),
+            'notification_count' => count($notifications)
+        ]
+    ]);
+    break;
+
+case 'register_fcm_token':
+    $driverId = null;
+    $fcmToken = null;
+    $deviceType = 'android';
+
+    if (!empty($data)) {
+        $driverId = $data['driver_id'] ?? null;
+        $fcmToken = $data['fcm_token'] ?? null;
+        $deviceType = $data['device_type'] ?? 'android';
+    }
+
+    if (empty($driverId) || empty($fcmToken)) {
+        $driverId = $_POST['driver_id'] ?? null;
+        $fcmToken = $_POST['fcm_token'] ?? null;
+        $deviceType = $_POST['device_type'] ?? 'android';
+    }
+
+    error_log("=== FCM Registration Debug ===");
+    error_log("Driver ID: " . ($driverId ?? 'null'));
+    error_log("FCM Token: " . ($fcmToken ? substr($fcmToken, 0, 50) . '...' : 'null'));
+    error_log("Device Type: " . $deviceType);
+    
+    if (empty($driverId) || empty($fcmToken)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Driver ID and FCM token are required',
+            'received_driver_id' => $driverId,
+            'received_token_length' => $fcmToken ? strlen($fcmToken) : 0
+        ]);
+        break;
+    }
+
+    $checkDriver = $conn->prepare("SELECT driver_id, name FROM drivers_table WHERE driver_id = ?");
+    $checkDriver->bind_param("s", $driverId);
+    $checkDriver->execute();
+    $driverResult = $checkDriver->get_result();
+    
+    if ($driverResult->num_rows === 0) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Driver not found with ID: ' . $driverId
+        ]);
+        break;
     }
     
-    $result = $notificationService->registerFCMToken($driverId, $token, $deviceType);
+    $driverInfo = $driverResult->fetch_assoc();
+    $checkDriver->close();
     
-    if ($result) {
-        echo json_encode(['success' => true, 'message' => 'FCM token registered successfully']);
-    } else {
-        throw new Exception("Failed to register FCM token");
+    try {
+        $deactivateStmt = $conn->prepare("UPDATE fcm_tokens SET is_active = 0 WHERE driver_id = ?");
+        $deactivateStmt->bind_param("s", $driverId);
+        $deactivateResult = $deactivateStmt->execute();
+        error_log("Deactivate existing tokens result: " . ($deactivateResult ? 'success' : 'failed'));
+        $deactivateStmt->close();
+
+        $stmt = $conn->prepare("
+            INSERT INTO fcm_tokens (driver_id, fcm_token, device_type, is_active, created_at, updated_at) 
+            VALUES (?, ?, ?, 1, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE 
+                is_active = 1, 
+                device_type = VALUES(device_type),
+                updated_at = NOW()
+        ");
+        
+        $stmt->bind_param("sss", $driverId, $fcmToken, $deviceType);
+        $result = $stmt->execute();
+        
+        if ($result) {
+            error_log("FCM token registered successfully for driver: $driverId");
+            echo json_encode([
+                'success' => true,
+                'message' => 'FCM token registered successfully',
+                'driver_name' => $driverInfo['name'],
+                'driver_id' => $driverId,
+                'token_preview' => substr($fcmToken, 0, 20) . '...'
+            ]);
+        } else {
+            error_log("Failed to register FCM token: " . $stmt->error);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to register FCM token: ' . $stmt->error
+            ]);
+        }
+        
+        $stmt->close();
+        
+    } catch (Exception $e) {
+        error_log("Exception in FCM token registration: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
     }
     break;
 
-    case 'get_notifications':
-    $driverId = $data['driver_id'] ?? null;
-    $limit = $data['limit'] ?? 50;
-    $offset = $data['offset'] ?? 0;
+case 'get_notifications':
+    $driverId = $data['driver_id'] ?? $_POST['driver_id'] ?? '';
+    $limit = $data['limit'] ?? $_POST['limit'] ?? 50;
+    $offset = $data['offset'] ?? $_POST['offset'] ?? 0;
     
     if (!$driverId) {
-        throw new Exception("Driver ID is required");
+        echo json_encode(['success' => false, 'message' => 'Driver ID is required']);
+        break;
     }
     
     $notifications = $notificationService->getDriverNotifications($driverId, $limit, $offset);
     $unreadCount = $notificationService->getUnreadCount($driverId);
     
     echo json_encode([
-        'success' => true, 
+        'success' => true,
         'notifications' => $notifications,
         'unread_count' => $unreadCount,
-        'total_count' => count($notifications)
+        'total_count' => count($notifications),
+        'driver_id' => $driverId
     ]);
     break;
+
 
     case 'mark_notification_read':
     $notificationId = $data['notification_id'] ?? null;

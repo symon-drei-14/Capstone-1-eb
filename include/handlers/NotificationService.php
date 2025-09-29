@@ -1,5 +1,4 @@
 <?php
-// NotificationService.php
 require_once 'dbhandler.php';
 
 class NotificationService {
@@ -9,9 +8,6 @@ class NotificationService {
         $this->conn = $connection;
     }
     
-    /**
-     * Store notification in database
-     */
     public function createNotification($driverId, $title, $body, $type = 'system', $tripId = null, $data = null) {
         $stmt = $this->conn->prepare("
             INSERT INTO notifications (driver_id, trip_id, title, body, type, data) 
@@ -25,7 +21,6 @@ class NotificationService {
             $notificationId = $this->conn->insert_id;
             $stmt->close();
             
-            // Send push notification
             $this->sendPushNotification($driverId, $title, $body, $data);
             
             return $notificationId;
@@ -35,37 +30,31 @@ class NotificationService {
         return false;
     }
     
-    /**
-     * Send push notification via FCM v1
-     */
     private function sendPushNotification($driverId, $title, $body, $data = null) {
         $tokens = $this->getDriverFCMTokens($driverId);
 
+        error_log("=== PUSH NOTIFICATION DEBUG ===");
+        error_log("Driver ID: $driverId");
+        error_log("Title: $title");
+        error_log("Body: $body");
+        error_log("Tokens found: " . count($tokens));
+        error_log("Data: " . json_encode($data));
+
         if (empty($tokens)) {
+            error_log("No FCM tokens found for driver ID: $driverId");
             return false;
         }
 
-        // Your service account credentials
-        $serviceAccount = [
-            "type" => "service_account",
-            "project_id" => "mansartrucking1",
-            "private_key_id" => "f98f9b812b0aa41cff4cfceaca9ba9e6071f6b5f",
-            "private_key" => "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3Gtd26huYLL0a\nBTZcIiMYJd91p1uyNzMX7jzs/7iiwitHQfslU6bccgPejxjB+8Fh26E5KSAG807c\ntnxRfnvjB3N9uNZfP361FkVsOtERc3A3K+Sw5h+qBka510gO2icHY5R6Q1ftIumS\nQFp8tF8ecW++ejNCCH6rU7FCDpH8gMPLKFS/UQ5qp2ZVTmqu/05yUd+YfwH9Axrh\nYN1bfm/XMi3IPGbta5YK7JGJKSGaIqi657PKgkhVm/+/WyXflhIqfJ3wbntrwLGc\n6jJxsj1JL/PwKRcxJDXFMopRqJg7egZXD4eqHNcfKgnzL6FwiAaPPHnox1YyS7kR\nsZeaBa+9AgMBAAECggEAER3uv3ySGM8x3FFZbBJ64mKD+b0r6sSTP6zzQBqFuZ1a\nK16lKi+gPSJhbzhEUboFsW61KyFHj67GFAbxJzMiRK5pIvsY+y113FrZIY18Btwa\nROYTCmBw3FWa3fucjlrhZCTwd998xDvLxvLCIr8/1xo2noFQ8l7V7JE11F2FUyvT\n5D2D/NlUr8FFozrNDmJlKKDRomCfdaOcjxI3lFhk2cWYHNIJtihuXCufDog7SPGw\nsIb9m+/bpzHt89V5mkJe8q5KioptNOevZkrw3SuSngzf2c0NtAEXaoEovqYR/GcQ\nkQ7WetyIC0O73NNiXdnergtTnB5j8py/CUEIvd8PQQKBgQDdsfi7PzWGAMod5KH3\n5+9zGRTSPcI5QE9U6J5GHv+bAlrzdWNbKqkYGgWFl0Jvndd+oijDiF+QsljdlJIo\nJ3dpMvwMRTiGKKC8v2saEQAzRBRss+KaL49PBiJejcjcQ+IHMhUIleUkYkR4AwFC\nOskRrh8JbC6zKxBl1isdalaWXQKBgQDTcDAHYaycfOuetOQtsrbfVpCs3POn0efP\nItOnZ56PNaO7VyqW4MbbmXIkR1dArSG1G8nmzAJEWUxR9X2SEcr/Fb68oaoB6M9B\ncDvK9xBbugo2VL6vRZ4I7EsEA5rYTIq7IhQRUg9WUQPxZSZcprQh/Zd30odLAa/h\nTchfnVEo4QKBgQDWUGUuxsU8POknCs4VNM9DSjzZncBzzhqi75mKGg9pT1aTQqkB\nCfWbihRKd9ZOxpz7G1Ii7GPOIstLsYO1c6m5NgN47TXeY8o3jSjBcyvpY2gHScLG\n4TE96KUzGQfS/4CzChRRT27LxH+CMQ13dBLKl7QDTOS8aeYZPHhDoHgCNQKBgCF9\nB15j7f7rGjaM2AcU4zoEb+2xITZXXKvGDFfbZZWxHTmy2KAFAfoOF7H/SqaHxWr1\n98iCT2mb6yagBz93aft06jzeLhsXUJxAtnezIfglQzDPw1PnZtxq8Ia2O3Q+y0pQ\nX3VO1fcJ5eH571WFYcpwa+kigyMyJTU+KJpcRFqBAoGALrDs+moAGWvcLByMmrRR\nZ4gu9WAmPzn3yeZsTlO2ltOvkk8ltb3RcASrufaDa1XOBgMEaWYD+Ld7hhU/WW2e\nr4pItZy9f+PYXwRb0pl2Ap2f1wle1JWAIFzxx2VMv8LV845pzg52yacHfnBFz9/g\nkdKwfOLKuLXenV5+viqDhoI=\n-----END PRIVATE KEY-----\n",
-            "client_email" => "firebase-adminsdk-fbsvc@mansartrucking1.iam.gserviceaccount.com",
-            "client_id" => "115468963919081645844",
-            "auth_uri" => "https://accounts.google.com/o/oauth2/auth",
-            "token_uri" => "https://oauth2.googleapis.com/token"
-        ];
-
-        // Get access token
-        $accessToken = $this->getAccessToken($serviceAccount);
+        $accessToken = $this->getAccessToken($this->getServiceAccountConfig());
 
         if (!$accessToken) {
             error_log("Failed to get access token for FCM");
             return false;
         }
 
-        $url = "https://fcm.googleapis.com/v1/projects/{$serviceAccount['project_id']}/messages:send";
+        $url = "https://fcm.googleapis.com/v1/projects/mansartrucking1/messages:send";
+        $successCount = 0;
+        $failCount = 0;
 
         foreach ($tokens as $token) {
             $message = [
@@ -73,9 +62,35 @@ class NotificationService {
                     "token" => $token,
                     "notification" => [
                         "title" => $title,
-                        "body"  => $body
+                        "body" => $body
                     ],
-                    "data" => $data ?: []
+                    "data" => array_merge($data ?: [], [
+                        'driver_id' => (string)$driverId,
+                        'timestamp' => (string)time()
+                    ]),
+                    "android" => [
+                        "priority" => "high",
+                        "notification" => [
+                            "channel_id" => "mansar_trucking_channel",
+                            "sound" => "default",
+                            "click_action" => $data['click_action'] ?? 'FLUTTER_NOTIFICATION_CLICK'
+                        ]
+                    ],
+                    "apns" => [
+                        "headers" => [
+                            "apns-priority" => "10"
+                        ],
+                        "payload" => [
+                            "aps" => [
+                                "alert" => [
+                                    "title" => $title,
+                                    "body" => $body
+                                ],
+                                "sound" => "default",
+                                "badge" => 1
+                            ]
+                        ]
+                    ]
                 ]
             ];
 
@@ -90,24 +105,32 @@ class NotificationService {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($message));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
             $result = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
             curl_close($ch);
 
-            if ($httpCode !== 200) {
-                error_log("Failed to send push notification. HTTP Code: $httpCode, Response: $result");
+            if ($httpCode === 200 && !$error) {
+                $successCount++;
+                error_log("Push notification sent successfully to driver: $driverId, token: " . substr($token, 0, 20) . "...");
             } else {
-                error_log("Push notification sent successfully to driver: $driverId");
+                $failCount++;
+                error_log("Failed to send push notification to driver: $driverId. HTTP Code: $httpCode, cURL Error: $error, Response: $result");
+
+                if ($httpCode === 404 || (strpos($result, 'invalid-token') !== false)) {
+                    $this->deactivateToken($token);
+                }
             }
         }
 
-        return true;
+        error_log("Notification summary for driver $driverId: $successCount successful, $failCount failed");
+        
+        return $successCount > 0;
     }
 
-    /**
-     * Generate OAuth2 access token
-     */
+
     private function getAccessToken($serviceAccount) {
         $jwtHeader = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
         $now = time();
@@ -121,11 +144,9 @@ class NotificationService {
 
         $jwt = $jwtHeader . '.' . $jwtClaim;
 
-        // Sign JWT
         openssl_sign($jwt, $signature, openssl_pkey_get_private($serviceAccount['private_key']), 'sha256');
         $jwtSigned = $jwt . '.' . $this->base64UrlEncode($signature);
 
-        // Exchange JWT for access token
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $serviceAccount['token_uri']);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -148,16 +169,32 @@ class NotificationService {
         return $tokenData['access_token'] ?? null;
     }
 
-    /**
-     * Base64 URL-safe encoding
-     */
+
     private function base64UrlEncode($data) {
         return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
+
+
+    private function getServiceAccountConfig() {
+        $serviceAccountPath = __DIR__ . '/firebase-service-account.json';
+        
+        if (!file_exists($serviceAccountPath)) {
+            error_log("Service account JSON file not found at: $serviceAccountPath");
+            return null;
+        }
+        
+        $serviceAccountJson = file_get_contents($serviceAccountPath);
+        $serviceAccount = json_decode($serviceAccountJson, true);
+        
+        if (!$serviceAccount) {
+            error_log("Failed to parse service account JSON");
+            return null;
+        }
+        
+        return $serviceAccount;
+    }
     
-    /**
-     * Get FCM tokens for a driver
-     */
+
     private function getDriverFCMTokens($driverId) {
         $stmt = $this->conn->prepare("
             SELECT fcm_token FROM fcm_tokens 
@@ -175,12 +212,19 @@ class NotificationService {
         $stmt->close();
         return $tokens;
     }
+
+
+    private function deactivateToken($token) {
+        $stmt = $this->conn->prepare("UPDATE fcm_tokens SET is_active = 0 WHERE fcm_token = ?");
+        $stmt->bind_param("s", $token);
+        $stmt->execute();
+        $stmt->close();
+        
+        error_log("Deactivated invalid FCM token: " . substr($token, 0, 20) . "...");
+    }
     
-    /**
-     * Register FCM token for a driver
-     */
+
     public function registerFCMToken($driverId, $token, $deviceType = 'android') {
-        // First, deactivate existing tokens for this driver
         $deactivateStmt = $this->conn->prepare("
             UPDATE fcm_tokens SET is_active = 0 WHERE driver_id = ?
         ");
@@ -188,7 +232,7 @@ class NotificationService {
         $deactivateStmt->execute();
         $deactivateStmt->close();
         
-        // Insert new token
+
         $stmt = $this->conn->prepare("
             INSERT INTO fcm_tokens (driver_id, fcm_token, device_type, is_active) 
             VALUES (?, ?, ?, 1)
@@ -204,9 +248,7 @@ class NotificationService {
         return $result;
     }
     
-    /**
-     * Get notifications for a driver
-     */
+
     public function getDriverNotifications($driverId, $limit = 50, $offset = 0) {
         $stmt = $this->conn->prepare("
             SELECT 
@@ -236,9 +278,7 @@ class NotificationService {
         return $notifications;
     }
     
-    /**
-     * Mark notification as read
-     */
+
     public function markAsRead($notificationId, $driverId) {
         $stmt = $this->conn->prepare("
             UPDATE notifications 
@@ -252,9 +292,7 @@ class NotificationService {
         return $result;
     }
     
-    /**
-     * Get unread notification count
-     */
+
     public function getUnreadCount($driverId) {
         $stmt = $this->conn->prepare("
             SELECT COUNT(*) as unread_count 
@@ -269,23 +307,32 @@ class NotificationService {
         
         return $count;
     }
-    
-    /**
-     * Send trip assignment notification
-     */
+
+
     public function sendTripAssignedNotification($driverId, $tripData) {
         $title = "New Trip Assigned";
-        $body = "You have been assigned a new trip to {$tripData['destination']} on {$tripData['formatted_date']}";
+        $body = "Trip to {$tripData['destination']} on {$tripData['formatted_date']}";
+        
+        if (isset($tripData['container_no']) && !empty($tripData['container_no'])) {
+            $body .= " - Container: {$tripData['container_no']}";
+        }
         
         $data = [
             'type' => 'trip_assigned',
-            'trip_id' => $tripData['trip_id'],
-            'destination' => $tripData['destination'],
-            'client' => $tripData['client'],
-            'trip_date' => $tripData['trip_date']
+            'trip_id' => (string)$tripData['trip_id'],
+            'destination' => $tripData['destination'] ?? '',
+            'client' => $tripData['client'] ?? '',
+            'trip_date' => $tripData['trip_date'] ?? '',
+            'formatted_date' => $tripData['formatted_date'] ?? '',
+            'container_no' => $tripData['container_no'] ?? '',
+            'plate_no' => $tripData['plate_no'] ?? '',
+            'port' => $tripData['port'] ?? '',
+            'shipping_line' => $tripData['shipping_line'] ?? '',
+            'click_action' => 'TRIP_DETAILS',
+            'sound' => 'default'
         ];
         
-        return $this->createNotification(
+        $notificationId = $this->createNotification(
             $driverId, 
             $title, 
             $body, 
@@ -293,24 +340,37 @@ class NotificationService {
             $tripData['trip_id'], 
             $data
         );
+        
+        error_log("Trip assigned notification created with ID: $notificationId for driver: $driverId, trip: {$tripData['trip_id']}");
+        
+        return $notificationId !== false;
     }
-    
-    /**
-     * Send trip updated notification
-     */
+
     public function sendTripUpdatedNotification($driverId, $tripData) {
         $title = "Trip Updated";
         $body = "Your trip to {$tripData['destination']} has been updated";
         
+        if (isset($tripData['formatted_date'])) {
+            $body .= " - Scheduled for {$tripData['formatted_date']}";
+        }
+        
         $data = [
             'type' => 'trip_updated',
-            'trip_id' => $tripData['trip_id'],
-            'destination' => $tripData['destination'],
-            'client' => $tripData['client'],
-            'trip_date' => $tripData['trip_date']
+            'trip_id' => (string)$tripData['trip_id'],
+            'destination' => $tripData['destination'] ?? '',
+            'client' => $tripData['client'] ?? '',
+            'trip_date' => $tripData['trip_date'] ?? '',
+            'formatted_date' => $tripData['formatted_date'] ?? '',
+            'container_no' => $tripData['container_no'] ?? '',
+            'plate_no' => $tripData['plate_no'] ?? '',
+            'port' => $tripData['port'] ?? '',
+            'shipping_line' => $tripData['shipping_line'] ?? '',
+            'status' => $tripData['status'] ?? '',
+            'click_action' => 'TRIP_DETAILS',
+            'sound' => 'default'
         ];
         
-        return $this->createNotification(
+        $notificationId = $this->createNotification(
             $driverId, 
             $title, 
             $body, 
@@ -318,24 +378,33 @@ class NotificationService {
             $tripData['trip_id'], 
             $data
         );
+        
+        error_log("Trip updated notification created with ID: $notificationId for driver: $driverId, trip: {$tripData['trip_id']}");
+        
+        return $notificationId !== false;
     }
-    
-    /**
-     * Send trip cancelled notification
-     */
+
     public function sendTripCancelledNotification($driverId, $tripData) {
         $title = "Trip Cancelled";
         $body = "Your trip to {$tripData['destination']} has been cancelled";
         
+        if (isset($tripData['formatted_date'])) {
+            $body .= " (was scheduled for {$tripData['formatted_date']})";
+        }
+        
         $data = [
             'type' => 'trip_cancelled',
-            'trip_id' => $tripData['trip_id'],
-            'destination' => $tripData['destination'],
-            'client' => $tripData['client'],
-            'trip_date' => $tripData['trip_date']
+            'trip_id' => (string)$tripData['trip_id'],
+            'destination' => $tripData['destination'] ?? '',
+            'client' => $tripData['client'] ?? '',
+            'trip_date' => $tripData['trip_date'] ?? '',
+            'formatted_date' => $tripData['formatted_date'] ?? '',
+            'container_no' => $tripData['container_no'] ?? '',
+            'click_action' => 'TRIP_LIST',
+            'sound' => 'default'
         ];
         
-        return $this->createNotification(
+        $notificationId = $this->createNotification(
             $driverId, 
             $title, 
             $body, 
@@ -343,5 +412,51 @@ class NotificationService {
             $tripData['trip_id'], 
             $data
         );
+        
+        error_log("Trip cancelled notification created with ID: $notificationId for driver: $driverId, trip: {$tripData['trip_id']}");
+        
+        return $notificationId !== false;
+    }
+
+
+    public function sendTripStatusChangeNotification($driverId, $tripData, $oldStatus, $newStatus) {
+        $title = "Trip Status Updated";
+        $body = "Trip to {$tripData['destination']} status changed from {$oldStatus} to {$newStatus}";
+        
+        $data = [
+            'type' => 'trip_status_change',
+            'trip_id' => (string)$tripData['trip_id'],
+            'destination' => $tripData['destination'] ?? '',
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'click_action' => 'TRIP_DETAILS',
+            'sound' => 'default'
+        ];
+        
+        return $this->createNotification(
+            $driverId, 
+            $title, 
+            $body, 
+            'trip_status_change', 
+            $tripData['trip_id'], 
+            $data
+        );
+    }
+
+    public function sendTestNotification($driverId, $message = "Test notification from Mansar Trucking") {
+        $title = "Test Notification";
+        $body = $message;
+        
+        $data = [
+            'type' => 'test',
+            'timestamp' => date('Y-m-d H:i:s'),
+            'click_action' => 'MAIN_ACTIVITY'
+        ];
+        
+        $result = $this->createNotification($driverId, $title, $body, 'test', null, $data);
+        
+        error_log("Test notification sent to driver $driverId: " . ($result ? 'success' : 'failed'));
+        
+        return $result !== false;
     }
 }
