@@ -23,6 +23,33 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     </head>
+        <style>
+        @keyframes continuousPulse {
+            0% {
+                background-color: #d4edda; 
+            }
+            15% {
+                background-color: #f0fff4; 
+            }
+            30% {
+                background-color: #d4edda;
+            }
+            45% {
+                background-color: #f0fff4;
+            }
+            60% {
+                background-color: #d4edda;
+            }
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        .highlight-continuous-pulse {
+            animation: continuousPulse 10s ease-in-out forwards;
+        }
+    </style>
+
     <body>
         <?php
         require 'include/handlers/dbhandler.php';
@@ -1067,8 +1094,11 @@ let totalItems = 0;
 let filteredEvents = [];
 let currentDateFrom = '';
 let currentDateTo = '';
+let highlightTripId = null; 
+
 
       $(document).ready(function() {
+        $.ajaxSetup({ cache: false });
     rowsPerPage = parseInt($('#rowsPerPage').val());
     let now = new Date();
     let formattedNow = now.toISOString().slice(0, 16);
@@ -1179,7 +1209,8 @@ function renderTable() {
             perPage: rowsPerPage,
             dateFrom: dateFrom,
              dateTo: dateTo,
-                searchTerm: searchTerm
+                searchTerm: searchTerm,
+                _cacheBuster: new Date().getTime() 
         }),
         success: function(response) {
             if (response.success) {
@@ -1195,6 +1226,14 @@ function renderTable() {
                 totalPages = Math.ceil(totalItems / rowsPerPage);
                 updatePagination(totalItems);
                 updateTableInfo(totalItems, response.trips.length);
+                  if (highlightTripId) {
+                    const rowToHighlight = $(`tr[data-trip-id='${highlightTripId}']`);
+                    if (rowToHighlight.length) {
+                        rowToHighlight[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        rowToHighlight.addClass('highlight-continuous-pulse');
+                    }
+                     highlightTripId = null; 
+                }
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -1333,7 +1372,7 @@ function renderTripRows(trips, showDeleted) {
             `;
         }
         const row = `
-             <tr class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
+             <tr data-trip-id="${trip.trip_id}" class="${showDeleted || trip.is_deleted == 1 ? 'deleted-row' : ''}">
                 <td data-label="Plate Number">${highlightText(trip.plate_no || 'N/A', searchTerm)}</td>
                 <td data-label="Trip Date">${formatDateTime(trip.trip_date)}</td>
                 <td data-label="Driver">${highlightText(trip.driver || 'N/A', searchTerm)}</td>
@@ -2830,17 +2869,23 @@ $('#addScheduleForm').on('submit', function(e) {
         success: function(response) {
             console.log('Raw response:', response);
             if (response.success) {
+                $('#addScheduleModal').hide();
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
                     text: 'Trip added successfully!',
-                    timer: 2000,
-                    showConfirmButton: false,
-                    willClose: () => {
-                        $('#addScheduleModal').hide();
-                        location.reload();
-                    }
+                    timer: 1500,
+                    showConfirmButton: false
                 });
+                 highlightTripId = response.trip_id; 
+                setTimeout(() => {
+                    if ($('#calendarViewBtn').hasClass('active')) {
+                        $('#tableViewBtn').click();
+                    } else {
+                        currentPage = 1;
+                        renderTable();
+                    }
+                }, 300);
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -3048,6 +3093,8 @@ $('#editForm').on('submit', function(e) {
             }),
             success: function(response) {
                 if (response.success) {
+                    const editedTripId = $('#editEventId').val();
+                    $('#editModal').hide();
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
@@ -3055,16 +3102,21 @@ $('#editForm').on('submit', function(e) {
                         timer: 2000,
                         showConfirmButton: false,
                         timerProgressBar: true
-                    }).then(() => {
-                        $('#editModal').hide();
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({  
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.message || 'Failed to update trip'
-                    });
+                    }); 
+                      updateStats();
+                 if ($('#tableViewBtn').hasClass('active')) {
+            highlightTripId = editedTripId;
+            renderTable();
+        } else {
+
+            refreshCalendarEvents();
+        }
+    } else {
+        Swal.fire({  
+            icon: 'error',
+            title: 'Error',
+            text: response.message || 'Failed to update trip'
+        });
                 }
             }
         });
@@ -3077,7 +3129,6 @@ $('#editForm').on('submit', function(e) {
 
 
 function deleteTrip(tripId) {
-
     Swal.fire({
         title: 'Reason for Deletion',
         input: 'textarea',
@@ -3104,7 +3155,6 @@ function deleteTrip(tripId) {
                 confirmButtonText: 'Yes, delete it!'
             }).then((confirmResult) => {
                 if (confirmResult.isConfirmed) {
-                 
                     $.ajax({
                         url: 'include/handlers/trip_operations.php',
                         type: 'POST',
@@ -3116,14 +3166,26 @@ function deleteTrip(tripId) {
                         }),
                         success: function(response) {
                             if (response.success) {
+
+                                updateStats();
+
+                                if ($('#tableViewBtn').hasClass('active')) {
+
+                                    $(`tr[data-trip-id="${tripId}"]`).remove();
+                                    
+                                    setTimeout(() => {
+                                        renderTable();
+                                    }, 100);
+                                } else {
+                                    refreshCalendarEvents();
+                                }
+                                
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Deleted!',
                                     text: 'Trip has been marked as deleted.',
-                                    timer: 2000,
+                                    timer: 1500,
                                     showConfirmButton: false
-                                }).then(() => {
-                                    location.reload(); 
                                 });
                             } else {
                                 Swal.fire({
@@ -3134,7 +3196,11 @@ function deleteTrip(tripId) {
                             }
                         },
                         error: function() {
-                            Swal.fire('Error', 'An error occurred during deletion.', 'error');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Server error occurred during deletion'
+                            });
                         }
                     });
                 }
@@ -3558,7 +3624,7 @@ $('#editEventStatus').on('change', function() {
     }
 
     updateStats();
-    setInterval(updateStats, 300000);
+
     console.log("Filtering by:", currentStatusFilter, "Found:", filteredEvents.length, "events");
 
 
@@ -3635,7 +3701,6 @@ function cancelTrip(tripId) {
         confirmButtonText: 'Yes, cancel it!'
     }).then((result) => {
         if (result.isConfirmed) {
-
             $.ajax({
                 url: 'include/handlers/trip_operations.php',
                 type: 'POST',
@@ -3643,26 +3708,29 @@ function cancelTrip(tripId) {
                 data: JSON.stringify({
                     action: 'cancel_trip',
                     id: tripId
-
                 }),
                 success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Cancelled!',
-                            text: 'The trip has been successfully cancelled.',
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire('Error', response.message || 'Failed to cancel trip.', 'error');
-                    }
-                },
-                error: function() {
-                    Swal.fire('Error', 'An error occurred while cancelling the trip.', 'error');
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Cancelled!',
+                    text: 'The trip has been successfully cancelled.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                updateStats(); 
+                
+                if ($('#tableViewBtn').hasClass('active')) {
+                    highlightTripId = tripId;
+                    renderTable();
+                } else {
+                    refreshCalendarEvents();
                 }
+            } else {
+                Swal.fire('Error', response.message || 'Failed to cancel trip.', 'error');
+            }
+        }
             });
         }
     });
@@ -3671,9 +3739,102 @@ function cancelTrip(tripId) {
 $(document).on('click', '#eventModal .cancel-trip', function() {
     var tripId = $(this).data('id');
     if (tripId) {
+        $('#eventModal').hide(); 
         cancelTrip(tripId);
     }
 });
+
+$(document).on('click', '.dropdown-item.cancel-trip', function() {
+    var tripId = $(this).data('id');
+    if (tripId) {
+        cancelTrip(tripId);
+    }
+});
+
+function refreshCalendarEvents() {
+    $.ajax({
+        url: 'include/handlers/trip_operations.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            action: 'get_active_trips',
+            perPage: 9999, 
+            page: 1,
+            _cacheBuster: new Date().getTime()
+        }),
+        success: function(response) {
+            if (response.success) {
+
+                var newCalendarEvents = response.trips.map(function(trip) {
+                    return {
+                        id: trip.trip_id,
+                        title: trip.client + ' - ' + trip.destination,
+                        start: trip.trip_date,
+                        plateNo: trip.plate_no,
+                        driver: trip.driver,
+                        driver_id: trip.driver_id,
+                        helper: trip.helper,
+                        dispatcher: trip.dispatcher,
+                        containerNo: trip.container_no,
+                        port: trip.port,
+                        client: trip.client,
+                        destination: trip.destination,
+                        shippingLine: trip.shipping_line,
+                        consignee: trip.consignee,
+                        size: trip.fcl_status,
+                        cashAdvance: trip.cash_advance,
+                        additionalCashAdvance: trip.additional_cash_advance,
+                        diesel: trip.diesel,
+                        status: trip.status,
+                        modifiedby: trip.last_modified_by,
+                        modifiedat: trip.last_modified_at,
+                        truck_plate_no: trip.plate_no,
+                        truck_capacity: trip.truck_capacity,
+                        edit_reasons: trip.edit_reason,
+                        fcl_status: trip.fcl_status
+                    };
+                });
+                
+                 eventsData = response.trips.map(trip => {
+                     return {
+                        id: trip.trip_id,
+                        plateNo: trip.plate_no,
+                        date: trip.trip_date,
+                        driver: trip.driver,
+                        driver_id: trip.driver_id,
+                        helper: trip.helper,
+                        dispatcher: trip.dispatcher,
+                        containerNo: trip.container_no,
+                        client: trip.client,
+                        port: trip.port,
+                        destination: trip.destination,
+                        shippingLine: trip.shipping_line,
+                        consignee: trip.consignee,
+                        size: trip.fcl_status,
+                        cashAdvance: trip.cash_advance,
+                        additionalCashAdvance: trip.additional_cash_advance,
+                        diesel: trip.diesel,
+                        status: trip.status,
+                        modifiedby: trip.last_modified_by,
+                        modifiedat: trip.last_modified_at,
+                        truck_plate_no: trip.plate_no,
+                        truck_capacity: trip.truck_capacity,
+                        edit_reasons: trip.edit_reason,
+                        fcl_status: trip.fcl_status
+                    };
+                });
+
+
+
+                $('#calendar').fullCalendar('removeEvents');
+                $('#calendar').fullCalendar('addEventSource', newCalendarEvents);
+            }
+        },
+        error: function() {
+            Swal.fire('Error', 'Could not refresh calendar data.', 'error');
+        }
+    });
+}
     </script>
 
     <script src="include/js/logout-confirm.js"></script>

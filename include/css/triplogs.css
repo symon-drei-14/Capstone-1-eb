@@ -402,13 +402,12 @@
 .events-table th {
      background-color:  #e7e7e786;
     font-weight: bold;
-    padding: 8px 6px;
+    padding: 18px 6px;
     text-align: center;
      box-sizing: border-box;
     position: sticky;
     top: 0;
     z-index: 10;
-
     font-size: 14px;
     vertical-align: middle;
     white-space: wrap;
@@ -428,7 +427,7 @@
 }
 
 /* Specific Column Optimizations */
-.events-table th:nth-child(1), .events-table td:nth-child(1) { width: 6% ;   border-top-left-radius:15px ;}   /* Plate Number */
+.events-table th:nth-child(1), .events-table td:nth-child(1) { width: 6% ;  }   /* Plate Number */
 .events-table th:nth-child(2), .events-table td:nth-child(2) { width: 7%; }   /* Trip Date */
 .events-table th:nth-child(3), .events-table td:nth-child(3) { width: 6%; }   /* Driver */
 .events-table th:nth-child(4), .events-table td:nth-child(4) { width: 6%; }   /* Helper */
@@ -445,9 +444,17 @@
 .events-table th:nth-child(15), .events-table td:nth-child(15) { width: 5%; } /* Diesel */
 .events-table th:nth-child(16), .events-table td:nth-child(16) { width: 6%; } /* Status */
 .events-table th:nth-child(17), .events-table td:nth-child(17) { width: 8%; } /* Created At */
-.events-table th:nth-child(18), .events-table td:nth-child(18) { width: 6%; border-top-right-radius:15px } /* Action */
+.events-table th:nth-child(18), .events-table td:nth-child(18) { width: 6%;  } /* Action */
 .events-table td:nth-child(18){
     border-bottom: none !important;
+}
+
+.events-table th:nth-child(1){
+     border-top-left-radius:15px
+}
+.events-table th:nth-child(18)
+{
+border-top-right-radius:15px;
 }
 /* Right-align numeric columns */
 .events-table th:nth-child(11), .events-table td:nth-child(11),  /* Container Size */
@@ -1343,7 +1350,7 @@ width:140px;
         align-items: center;
         flex: 1;
         max-width: 300px;
-        left: 320;
+        left: 120;
     }
 
 
@@ -3432,3 +3439,30 @@ h3.title {
     overflow-y:hidden !important;
     overflow-x: hidden !important;
 }
+
+@keyframes continuousPulse {
+  0% {
+    background-color: #d4edda; /* Light success green */
+  }
+  15% {
+    background-color: #f0fff4; /* Very light green/honeydew */
+  }
+  30% {
+    background-color: #d4edda;
+  }
+  45% {
+    background-color: #f0fff4;
+  }
+  60% {
+    background-color: #d4edda;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+
+.highlight-continuous-pulse {
+  animation: continuousPulse 10s ease-in-out forwards;
+}
+
