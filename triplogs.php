@@ -3710,27 +3710,43 @@ function cancelTrip(tripId) {
                     id: tripId
                 }),
                 success: function(response) {
-            if (response.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Cancelled!',
-                    text: 'The trip has been successfully cancelled.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Cancelled!',
+                            text: 'The trip has been successfully cancelled.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
 
-                updateStats(); 
-                
-                if ($('#tableViewBtn').hasClass('active')) {
-                    highlightTripId = tripId;
-                    renderTable();
-                } else {
-                    refreshCalendarEvents();
+                        updateStats();
+                        
+                        // Update the status cell directly for real-time effect
+                        const $row = $(`tr[data-trip-id="${tripId}"]`);
+                        if ($row.length) {
+                            // Find and update the status cell
+                            const $statusCell = $row.find('td:contains("Pending"), td:contains("En Route"), td:contains("Completed")').filter(function() {
+                                return $(this).find('.status').length > 0;
+                            });
+                            
+                            if ($statusCell.length) {
+                                $statusCell.html('<span class="status cancelled">Cancelled</span>');
+                            }
+                            
+                            // Also update the eventsData array
+                            const eventIndex = eventsData.findIndex(e => e.id == tripId);
+                            if (eventIndex !== -1) {
+                                eventsData[eventIndex].status = 'Cancelled';
+                            }
+                        }
+                        
+                        if ($('#calendarViewBtn').hasClass('active')) {
+                            refreshCalendarEvents();
+                        }
+                    } else {
+                        Swal.fire('Error', response.message || 'Failed to cancel trip.', 'error');
+                    }
                 }
-            } else {
-                Swal.fire('Error', response.message || 'Failed to cancel trip.', 'error');
-            }
-        }
             });
         }
     });
