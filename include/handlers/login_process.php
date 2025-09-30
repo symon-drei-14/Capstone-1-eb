@@ -1,4 +1,5 @@
 <?php
+// Set secure session cookie parameters
 session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
@@ -8,6 +9,8 @@ session_set_cookie_params([
 ]);
 session_start();
 include 'dbhandler.php';
+
+date_default_timezone_set('Asia/Manila');
 
 header('Content-Type: application/json');
 $response = ['success' => false, 'message' => ''];
@@ -38,30 +41,32 @@ if ($result && $result->num_rows > 0) {
     $user = $result->fetch_assoc();
     $now = time();
 
-    // Verify the password first
-    if (password_verify($password, $user['password'])) {
-        // --- CORRECT PASSWORD LOGIC ---
-        
-        // Check if the account is currently in a cooldown period before allowing login
-        if ($user['failed_attempts'] >= 6 && $user['last_failed_attempt']) {
-            $cooldown_end = strtotime($user['last_failed_attempt']) + (5 * 60); // 5 minutes
-            if ($now < $cooldown_end) {
-                $timeLeft = $cooldown_end - $now;
-                $response['message'] = "Too many attempts. Please try again in " . ceil($timeLeft / 60) . " minute(s).";
-                echo json_encode($response);
-                exit();
-            }
-        } elseif ($user['failed_attempts'] >= 3 && $user['last_failed_attempt']) {
-            $cooldown_end = strtotime($user['last_failed_attempt']) + (3 * 60); // 3 minutes
-            if ($now < $cooldown_end) {
-                $timeLeft = $cooldown_end - $now;
-                $response['message'] = "Too many attempts. Please try again in " . ceil($timeLeft / 60) . " minute(s).";
-                echo json_encode($response);
-                exit();
-            }
+    // --- FIX: Check for cooldowns BEFORE verifying the password ---
+    if ($user['failed_attempts'] >= 6 && $user['last_failed_attempt']) {
+        $cooldown_end = strtotime($user['last_failed_attempt']) + (5 * 60); // 5-minute cooldown
+        if ($now < $cooldown_end) {
+            $timeLeft = ceil(($cooldown_end - $now) / 60);
+            $response['message'] = "Too many failed attempts. Please try again in {$timeLeft} minute(s).";
+            echo json_encode($response);
+            $stmt->close();
+            $conn->close();
+            exit();
         }
+    } elseif ($user['failed_attempts'] >= 3 && $user['last_failed_attempt']) {
+        $cooldown_end = strtotime($user['last_failed_attempt']) + (3 * 60); // 3-minute cooldown
+        if ($now < $cooldown_end) {
+            $timeLeft = ceil(($cooldown_end - $now) / 60);
+            $response['message'] = "Too many failed attempts. Please try again in {$timeLeft} minute(s).";
+            echo json_encode($response);
+            $stmt->close();
+            $conn->close();
+            exit();
+        }
+    }
 
-        // If not in cooldown or cooldown has passed, reset attempts and log in
+    // Now, verify the password
+    if (password_verify($password, $user['password'])) {
+        // On success, reset failed attempts and log in
         $resetStmt = $conn->prepare("UPDATE login_admin SET failed_attempts = 0, last_failed_attempt = NULL WHERE admin_id = ?");
         $resetStmt->bind_param("i", $user['admin_id']);
         $resetStmt->execute();
@@ -76,20 +81,17 @@ if ($result && $result->num_rows > 0) {
 
         $response['success'] = true;
         $response['message'] = 'Login successful';
-
     } else {
-        // --- INCORRECT PASSWORD LOGIC ---
-        
-        // Increment the failed attempts counter
+        // On failure, increment failed attempts
         $new_attempts = $user['failed_attempts'] + 1;
-        
+
         // Update the database with the new attempt count and timestamp
         $failStmt = $conn->prepare("UPDATE login_admin SET failed_attempts = ?, last_failed_attempt = NOW() WHERE admin_id = ?");
         $failStmt->bind_param("ii", $new_attempts, $user['admin_id']);
         $failStmt->execute();
         $failStmt->close();
 
-        // Now check if the new attempt count triggers a lockout
+        // Check if this new attempt triggers a lockout
         if ($new_attempts >= 9) {
             $lockStmt = $conn->prepare("UPDATE login_admin SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = 0, delete_reason = 'Failed Login Attempts', failed_attempts = 0, last_failed_attempt = NULL WHERE admin_id = ?");
             $lockStmt->bind_param("i", $user['admin_id']);
