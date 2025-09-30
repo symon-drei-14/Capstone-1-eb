@@ -322,75 +322,78 @@ checkAccess();
         }
 
         function renderAdminsTable(admins, tableBodyId) {
-            const tableBody = document.getElementById(tableBodyId);
-            tableBody.innerHTML = '';
-            const searchTerm = document.getElementById('adminSearch').value;
+    const tableBody = document.getElementById(tableBodyId);
+    tableBody.innerHTML = '';
+    const searchTerm = document.getElementById('adminSearch').value;
 
-            const highlightText = (text) => {
-                if (!searchTerm.trim() || !text) {
-                    return text;
-                }
-                const str = String(text);
-                const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                return str.replace(regex, '<span class="highlight">$1</span>');
-            };
-
-            admins.forEach(admin => {
-                const row = document.createElement('tr');
-                const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
-
-                if (tableBodyId === 'deletedAdminTableBody') {
-                    // Simplified template for the deleted admins table
-                    row.innerHTML = `
-                        <td data-label="Profile">
-                            ${admin.admin_pic ? 
-                                '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
-                                '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
-                            }
-                        </td>
-                        <td data-label="Username">${highlightText(admin.username)}</td>
-                        <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
-                        <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
-                        <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
-                        <td data-label="Actions" class="actions">
-                            <div class="dropdown">
-                                <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
-                                <div class="dropdown-content">
-                                    <button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id})"><i class="fas fa-trash-restore"></i>Restore</button>
-                                    <button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})"><i class="fa-solid fa-ban"></i>Full Delete</button>
-                                </div>
-                            </div>
-                        </td>`;
-                } else {
-                    // Original template for the active admins table
-                    row.innerHTML = `
-                     <td data-label="Admin ID">${highlightText(admin.admin_id)}</td>
-                        <td data-label="Profile">
-                            ${admin.admin_pic ? 
-                                '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
-                                '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
-                            }
-                        </td>
-                       
-                        <td data-label="Username">${highlightText(admin.username)}</td>
-                        <td data-label="Role">${highlightText(admin.role || 'Full Admin')}</td>
-                        <td data-label="Status">${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
-                        <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
-                        <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
-                        <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
-                        <td data-label="Actions" class="actions">
-                            <div class="dropdown">
-                                <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
-                                <div class="dropdown-content">
-                                    <button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})"><i class="fas fa-edit"></i>Edit</button>
-                                    <button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})"><i class="fas fa-trash-alt"></i>Delete</button>
-                                </div>
-                            </div>
-                        </td>`;
-                }
-                tableBody.appendChild(row);
-            });
+    const highlightText = (text) => {
+        if (!searchTerm.trim() || !text) {
+            return text;
         }
+        const str = String(text);
+        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return str.replace(regex, '<span class="highlight">$1</span>');
+    };
+
+    admins.forEach(admin => {
+        const row = document.createElement('tr');
+        const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
+
+        // Added this line to handle potential quotes in the reason
+        const deleteReason = (admin.delete_reason || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+
+        if (tableBodyId === 'deletedAdminTableBody') {
+            // Template for the deleted admins table
+            row.innerHTML = `
+                <td data-label="Profile">
+                    ${admin.admin_pic ? 
+                        '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
+                        '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
+                    }
+                </td>
+                <td data-label="Username">${highlightText(admin.username)}</td>
+                <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
+                <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
+                <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
+                <td data-label="Actions" class="actions">
+                    <div class="dropdown">
+                        <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
+                        <div class="dropdown-content">
+                            <button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id}, '${deleteReason}')"><i class="fas fa-trash-restore"></i>Restore</button>
+                            <button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})"><i class="fa-solid fa-ban"></i>Full Delete</button>
+                        </div>
+                    </div>
+                </td>`;
+        } else {
+            // Original template for the active admins table
+            row.innerHTML = `
+               <td data-label="Admin ID">${highlightText(admin.admin_id)}</td>
+                <td data-label="Profile">
+                    ${admin.admin_pic ? 
+                        '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
+                        '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
+                    }
+                </td>
+                
+                <td data-label="Username">${highlightText(admin.username)}</td>
+                <td data-label="Role">${highlightText(admin.role || 'Full Admin')}</td>
+                <td data-label="Status">${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
+                <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
+                <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
+                <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
+                <td data-label="Actions" class="actions">
+                    <div class="dropdown">
+                        <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
+                        <div class="dropdown-content">
+                            <button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})"><i class="fas fa-edit"></i>Edit</button>
+                            <button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})"><i class="fas fa-trash-alt"></i>Delete</button>
+                        </div>
+                    </div>
+                </td>`;
+        }
+        tableBody.appendChild(row);
+    });
+}
 
 
         $(document).on('click', '.dropdown-btn', function(e) {
@@ -511,35 +514,84 @@ checkAccess();
             .catch(error => console.error('Error:', error));
         }
 
-        function restoreAdmin(adminId) {
-            Swal.fire({
-                title: 'Restore Admin?',
-                text: "Are you sure you want to restore this admin?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, restore it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch('include/handlers/restore_admin.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ admin_id: adminId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Restored!', 'The admin has been restored successfully.', 'success');
-                            fetchAdminsPaginated(true); // Refresh deleted admins list
-                        } else {
-                            Swal.fire('Error!', data.message, 'error');
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
+        function restoreAdmin(adminId, reason = '') {
+    // This is the special flow for accounts locked due to failed logins
+    if (reason === 'Failed Login Attempts') {
+        Swal.fire({
+            title: 'Password Reset Required',
+            text: 'This account was locked. You must set a new password to restore it.',
+            icon: 'info',
+            html: `
+                <input type="password" id="swal-password" class="swal2-input" placeholder="New Password" autocomplete="new-password">
+                <input type="password" id="swal-confirm-password" class="swal2-input" placeholder="Confirm New Password" autocomplete="new-password">
+            `,
+            confirmButtonText: 'Restore & Set Password',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            preConfirm: () => {
+                const password = Swal.getPopup().querySelector('#swal-password').value;
+                const confirmPassword = Swal.getPopup().querySelector('#swal-confirm-password').value;
+                if (!password || !confirmPassword) {
+                    Swal.showValidationMessage(`Please enter and confirm the new password.`);
+                } else if (password !== confirmPassword) {
+                    Swal.showValidationMessage(`The passwords do not match.`);
                 }
-            });
-        }
+                return { password: password };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Now we send the request to the backend with the new password
+                fetch('include/handlers/restore_admin.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        admin_id: adminId,
+                        password: result.value.password // Include the new password
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Restored!', 'The admin account has been restored with a new password.', 'success');
+                        fetchAdminsPaginated(true); // Refresh the deleted list
+                    } else {
+                        Swal.fire('Error!', data.message, 'error');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    } else {
+        // This is the original restore flow for normally deleted accounts
+        Swal.fire({
+            title: 'Restore Admin?',
+            text: "Are you sure you want to restore this admin?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, restore it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('include/handlers/restore_admin.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_id: adminId }) // No password needed here
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Restored!', 'The admin has been restored successfully.', 'success');
+                        fetchAdminsPaginated(true); // Refresh the deleted list
+                    } else {
+                        Swal.fire('Error!', data.message, 'error');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    }
+}
 
         function fetchAdminsPaginated(isDeletedView = false) {
             const searchTerm = document.getElementById('adminSearch').value;
