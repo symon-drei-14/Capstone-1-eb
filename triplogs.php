@@ -549,6 +549,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <option value="Pending">Pending</option>
                     <option value="En Route">En Route</option>
                     <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
                 
                 </select>
                    </legend>
@@ -802,7 +803,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 </select>
 
                 <label for="addEventPlateNo">Plate No.:</label>
-                <input type="text" id="addEventPlateNo" name="eventPlateNo" required style="width: 100%;">
+                <input type="text" id="addEventPlateNo" name="eventPlateNo" required style="width: 100%;" disabled>
 
                 <label for="addEventDate">Date & Time:</label>
                 <input type="datetime-local" id="addEventDate" name="eventDate" required style="width: 100%;">
@@ -2649,74 +2650,92 @@ $(document).on('click', '.dropdown-item.edit', function() {
 });
 
 function populateEditModal(event) {
-        $('#editEventId').val(event.id);
-        $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
-        
-        var eventDate = event.date || event.trip_date;
-        if (eventDate) {
-            if (eventDate.includes('T')) {
-                eventDate = eventDate.substring(0, 16); 
-            }
+    $('#editEventId').val(event.id);
+    $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
+    
+    var eventDate = event.date || event.trip_date;
+    if (eventDate) {
+        if (eventDate.includes('T')) {
+            eventDate = eventDate.substring(0, 16); // Just get the YYYY-MM-DDTHH:MM part
         }
-        $('#editEventDate').val(eventDate);
+    }
+    $('#editEventDate').val(eventDate);
 
-         const currentSize = event.truck_capacity ? event.truck_capacity + 'ft' : event.size;
+    const currentSize = event.truck_capacity ? event.truck_capacity + 'ft' : event.size;
     populateDriverDropdowns(currentSize, event.driver);
 
-        // Populate all dropdowns first
-        
-        populateHelperDropdowns();
-        populateDispatcherDropdowns();
-        populateConsigneeDropdowns();
-        populateClientDropdowns();
-        populatePortDropdowns();
-        populateDestinationDropdowns();
-        populateShippingLineDropdowns();
+    // Get all the dropdowns ready
+    populateHelperDropdowns();
+    populateDispatcherDropdowns();
+    populateConsigneeDropdowns();
+    populateClientDropdowns();
+    populatePortDropdowns();
+    populateDestinationDropdowns();
+    populateShippingLineDropdowns();
 
-        // Set immediate values (non-dropdown fields)
-        $('#editEventContainerNo').val(event.containerNo);
-        $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
-        $('#editEventFCL').val(event.fcl_status || event.size);
-        $('#editEventCashAdvance').val(event.cashAdvance);
-        $('#editEventAdditionalCashAdvance').val(event.additionalCashAdvance);
-        $('#editEventDiesel').val(event.diesel);
-        $('#editEventStatus').val(event.status);
+    // Set other form fields
+    $('#editEventContainerNo').val(event.containerNo);
+    $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
+    $('#editEventFCL').val(event.fcl_status || event.size);
+    $('#editEventCashAdvance').val(event.cashAdvance);
+    $('#editEventAdditionalCashAdvance').val(event.additionalCashAdvance);
+    $('#editEventDiesel').val(event.diesel);
+    $('#editEventStatus').val(event.status);
 
-        // Show/hide additional cash field based on initial status
-        if (event.status === 'En Route') {
-            $('#editAdditionalCashContainer').show();
-        } else {
-            $('#editAdditionalCashContainer').hide();
-        }
+    // Show/hide additional cash field based on status
+    if (event.status === 'En Route') {
+        $('#editAdditionalCashContainer').show();
+    } else {
+        $('#editAdditionalCashContainer').hide();
+    }
 
-        // Set dropdown values after they're populated
-        setTimeout(() => {
-            $('#editEventDriver').val(event.driver);
-            $('#editEventHelper').val(event.helper);
-            $('#editEventDispatcher').val(event.dispatcher || '');
-            $('#editEventConsignee').val(event.consignee);
-            $('#editEventClient').val(event.client);
-            $('#editEventPort').val(event.port || '');
-            $('#editEventDestination').val(event.destination);
-            $('#editEventShippingLine').val(event.shippingLine);
-        }, 100);
+    // Set dropdown values after a short delay to ensure they're populated
+    setTimeout(() => {
+        $('#editEventDriver').val(event.driver);
+        $('#editEventHelper').val(event.helper);
+        $('#editEventDispatcher').val(event.dispatcher || '');
+        $('#editEventConsignee').val(event.consignee);
+        $('#editEventClient').val(event.client);
+        $('#editEventPort').val(event.port || '');
+        $('#editEventDestination').val(event.destination);
+        $('#editEventShippingLine').val(event.shippingLine);
+    }, 100);
 
-        // Show/hide buttons based on status
-        if (event.status === 'Completed') {
-            $('#viewExpensesBtn').show();
-        } else {
-            $('#viewExpensesBtn').hide();
-        }
+    // This part handles the form's state based on the trip status.
+    if (event.status === 'Cancelled') {
+        // A cancelled trip shouldn't be edited.
+        $('#editEventStatus option[value="Cancelled"]').show(); // Make sure the Cancelled option is visible
+        $('#editForm').find(':input:not(.close-btn, .cancel-btn)').prop('disabled', true); // Disable all fields
+        $('#editForm').find('.save-btn').hide(); // Hide the save button too
+    } else {
+        // Otherwise, make sure the form is active.
+        $('#editForm').find(':input').prop('disabled', false);
+        $('#editForm').find('.save-btn').show();
+        $('#editEventStatus option[value="Cancelled"]').hide(); // Hide the Cancelled option so it can't be chosen
 
-        if (event.driver_id && event.status !== 'Cancelled') {
-            $('#viewChecklistBtn').show();
-        } else {
-            $('#viewChecklistBtn').hide();
-        }
-        
-        $('#editModal').show();
+        // Re-apply the original logic to disable specific fields
+        $('#editEventDriver').prop('disabled', true);
+        $('#editEventSize').prop('disabled', true);
+    }
+
+    // Show/hide buttons based on status
+    if (event.status === 'Completed') {
+        $('#viewExpensesBtn').show();
+    } else {
+        $('#viewExpensesBtn').hide();
+    }
+
+    if (event.driver_id && event.status !== 'Cancelled') {
+        $('#viewChecklistBtn').show();
+    } else {
+        $('#viewChecklistBtn').hide();
+    }
+    
+    $('#editModal').show();
+
             $('#editEventDriver').prop('disabled', true);
     $('#editEventSize').prop('disabled', true);
+    $('#editEventPlateNo').prop('disabled', true);
     }
 
 $(document).on('click', '.dropdown-item.view-expenses', function() {
@@ -3128,7 +3147,7 @@ $('#editForm').on('submit', function(e) {
         });
 
 
-function deleteTrip(tripId) {
+function deleteTrip(tripId, rowElement) {
     Swal.fire({
         title: 'Reason for Deletion',
         input: 'textarea',
@@ -3166,20 +3185,6 @@ function deleteTrip(tripId) {
                         }),
                         success: function(response) {
                             if (response.success) {
-
-                                updateStats();
-
-                                if ($('#tableViewBtn').hasClass('active')) {
-
-                                    $(`tr[data-trip-id="${tripId}"]`).remove();
-                                    
-                                    setTimeout(() => {
-                                        renderTable();
-                                    }, 100);
-                                } else {
-                                    refreshCalendarEvents();
-                                }
-                                
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Deleted!',
@@ -3187,6 +3192,33 @@ function deleteTrip(tripId) {
                                     timer: 1500,
                                     showConfirmButton: false
                                 });
+
+                                // Check if this is the last item on the current page.
+                                const rowsOnPage = $('#eventTableBody tr').length;
+                                if (rowsOnPage === 1 && currentPage > 1) {
+                                    // If it is, we should go back a page.
+                                    currentPage--;
+                                }
+
+                                // We'll stick with your fadeOut effect for a smooth UI.
+                                if (rowElement) {
+                                    rowElement.fadeOut(500, function() {
+                                        // After the row fades, we call renderTable().
+                                        // This is the key part that fetches the new data,
+                                        // fills the gap, and updates the pagination count.
+                                        renderTable();
+                                    });
+                                } else {
+                                    // Just in case we delete from somewhere without a row reference
+                                    renderTable();
+                                }
+
+                                updateStats();
+
+                                if (!$('#tableViewBtn').hasClass('active')) {
+                                    refreshCalendarEvents();
+                                }
+
                             } else {
                                 Swal.fire({
                                     icon: 'error',
@@ -3212,7 +3244,9 @@ function deleteTrip(tripId) {
 
 $(document).on('click', '.dropdown-item.delete', function() {
     var eventId = $(this).data('id');
-    deleteTrip(eventId);
+    // We pass the closest table row 'tr' to the function
+    var rowElement = $(this).closest('tr');
+    deleteTrip(eventId, rowElement); 
 });
 
 
