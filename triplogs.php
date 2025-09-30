@@ -3142,12 +3142,10 @@ $('#editForm').on('submit', function(e) {
     });
 });
                 
-            // Initial render
             renderTable();
         });
 
-
-function deleteTrip(tripId, rowElement) {
+    function deleteTrip(tripId, rowElement) {
     Swal.fire({
         title: 'Reason for Deletion',
         input: 'textarea',
@@ -3157,7 +3155,7 @@ function deleteTrip(tripId, rowElement) {
         confirmButtonText: 'Delete',
         inputValidator: (value) => {
             if (!value) {
-                return 'You need to provide a reason!'
+                return 'You need to provide a reason!';
             }
         }
     }).then((reasonResult) => {
@@ -3173,73 +3171,96 @@ function deleteTrip(tripId, rowElement) {
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Yes, delete it!'
             }).then((confirmResult) => {
-                if (confirmResult.isConfirmed) {
-                    $.ajax({
-                        url: 'include/handlers/trip_operations.php',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify({
-                            action: 'delete',
-                            id: tripId,
-                            reason: deleteReason
-                        }),
-                        success: function(response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted!',
-                                    text: 'Trip has been marked as deleted.',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
+        if (confirmResult.isConfirmed) {
+            $.ajax({
+                url: 'include/handlers/trip_operations.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'delete',
+                    id: tripId,
+                    reason: deleteReason
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: 'Trip has been marked as deleted.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
 
-                                // Check if this is the last item on the current page.
-                                const rowsOnPage = $('#eventTableBody tr').length;
-                                if (rowsOnPage === 1 && currentPage > 1) {
-                                    // If it is, we should go back a page.
-                                    currentPage--;
-                                }
-
-                                // We'll stick with your fadeOut effect for a smooth UI.
-                                if (rowElement) {
-                                    rowElement.fadeOut(500, function() {
-                                        // After the row fades, we call renderTable().
-                                        // This is the key part that fetches the new data,
-                                        // fills the gap, and updates the pagination count.
-                                        renderTable();
-                                    });
-                                } else {
-                                    // Just in case we delete from somewhere without a row reference
-                                    renderTable();
-                                }
-
-                                updateStats();
-
-                                if (!$('#tableViewBtn').hasClass('active')) {
-                                    refreshCalendarEvents();
-                                }
-
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: response.message || 'Failed to delete trip'
-                                });
-                            }
-                        },
-                        error: function() {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Server error occurred during deletion'
-                            });
+                        const rowsOnPage = $('#eventTableBody tr').length;
+                        if (rowsOnPage === 1 && currentPage > 1) {
+                            currentPage--; 
                         }
+
+                        if (rowElement) {
+                            rowElement.fadeOut(500, function() {
+                                $(this).remove();
+                                totalItems--; 
+                                $.ajax({
+                                    url: 'include/handlers/trip_operations.php',
+                                    type: 'POST',
+                                    contentType: 'application/json',
+                                    data: JSON.stringify({
+                                        action: 'fetchNextRow',
+                                        page: currentPage,
+                                        perPage: rowsPerPage,
+                                        statusFilter: currentStatusFilter,
+                                        sortOrder: dateSortOrder,
+                                        dateFrom: $('#dateFrom').val(),
+                                        dateTo: $('#dateTo').val(),
+                                        searchTerm: $('#searchInput').val()
+                                    }),
+                                    success: function(nextRowResponse) {
+                                        if (nextRowResponse.success && nextRowResponse.rowHtml) {
+                                
+                                            $('#eventTableBody').append(nextRowResponse.rowHtml);
+                                            updateTableInfo(totalItems, $('#eventTableBody tr').length);
+                                        } else {
+                                        
+                                            renderTable(); 
+                                        }
+                                    },
+                                    error: function() {
+                                        renderTable(); 
+                                    }
+                                });
+                            });
+                        } else {
+                            renderTable(); 
+                        }
+
+                        updateStats();
+
+                        if (!$('#tableViewBtn').hasClass('active')) {
+                            refreshCalendarEvents();
+                        }
+
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to delete trip'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Server error occurred during deletion'
                     });
                 }
             });
         }
     });
 }
+});
+}
+
 
 
 $(document).on('click', '.dropdown-item.delete', function() {
