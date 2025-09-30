@@ -185,51 +185,64 @@ checkAccess();
         <span class="close" onclick="closeModal('adminModal')">&times;</span>
         <h2 id="modalTitle">Add Admin</h2>
         
-        <form id="adminForm">
-            <input type="hidden" id="adminId" name="adminId">
+       <form id="adminForm">
+    <input type="hidden" id="adminId" name="adminId">
 
-            <div class="form-group">
-                <label for="adminProfile">Profile Photo (Max 2MB)</label>
-                <input type="file" id="adminProfile" name="adminProfile" accept="image/*">
-                <div id="adminProfilePreview" style="margin-top: 10px;"></div>
-            </div>
-            
-            <div class="form-group">
-                <label for="username">Username *</label>
-                <input type="text" id="username" name="username" class="form-control" required>
-            </div>
+    <div class="form-group">
+        <label for="adminProfile">Profile Photo (Max 2MB)</label>
+        <input type="file" id="adminProfile" name="adminProfile" accept="image/*">
+        <div id="adminProfilePreview" style="margin-top: 10px;"></div>
+    </div>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="username">Username *</label>
+            <input type="text" id="username" name="username" class="form-control" required>
+        </div>
 
-            <div class="form-group">
-                <label for="role">Role</label>
-                <select id="role" name="role" class="form-control" required>
-                    <option value="Full Admin">Full Admin</option>
-                    <option value="Operations Manager">Operations Manager</option>
-                    <option value="Fleet Manager">Fleet Manager</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label for="role">Role</label>
+            <select id="role" name="role" class="form-control" required>
+                <option value="Full Admin">Full Admin</option>
+                <option value="Operations Manager">Operations Manager</option>
+                <option value="Fleet Manager">Fleet Manager</option>
+            </select>
+        </div>
+    </div>
 
-            <div class="form-group" id="oldPasswordGroup" style="display: none;">
-                <label for="oldPassword">Current Password</label>
-                <input type="password" id="oldPassword" name="oldPassword" class="form-control">
-                <small>Required only if you are setting a new password.</small>
-            </div>
+    <div class="form-group" id="oldPasswordGroup" style="display: none;">
+        <label for="oldPassword">Current Password</label>
+        <div class="password-wrapper">
+            <input type="password" id="oldPassword" name="oldPassword" class="form-control">
+            <i class="fa-regular fa-eye toggle-password"></i>
+        </div>
+        <small>Required only if you are setting a new password.</small>
+    </div>
 
-            <div class="form-group">
-                <label for="password" id="passwordLabel">Password *</label>
+    <div class="form-row">
+        <div class="form-group">
+            <label for="password" id="passwordLabel">Password *</label>
+            <div class="password-wrapper">
                 <input type="password" id="password" name="password" class="form-control">
-                <small id="passwordHelp" style="display: none;">Leave blank to keep current password.</small>
+                <i class="fa-regular fa-eye toggle-password"></i>
             </div>
+            <small id="passwordHelp" style="display: none;">Leave blank to keep current password.</small>
+        </div>
 
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password *</label>
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password *</label>
+            <div class="password-wrapper">
                 <input type="password" id="confirmPassword" name="confirmPassword" class="form-control">
+                <i class="fa-regular fa-eye toggle-password"></i>
             </div>
+        </div>
+    </div>
 
-            <div class="button-group">
-                <button type="button" class="save-btn" onclick="saveAdmin()">Save</button>
-                <button type="button" class="cancel-btn" onclick="closeModal('adminModal')">Cancel</button>
-            </div>
-        </form>
+    <div class="button-group">
+        <button type="button" class="save-btn" onclick="saveAdmin()">Save</button>
+        <button type="button" class="cancel-btn" onclick="closeModal('adminModal')">Cancel</button>
+    </div>
+</form>
     </div>
 </div>
 
@@ -793,6 +806,18 @@ checkAccess();
             document.getElementById('adminProfile').addEventListener('change', (e) => {
                  handleProfileImageChange(e, document.getElementById('adminProfilePreview'));
             });
+     
+
+    const passwordToggles = document.querySelectorAll('.toggle-password');
+    passwordToggles.forEach(toggle => {
+        toggle.addEventListener('click', function () {
+            const passwordInput = this.previousElementSibling;
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    });
 
             AdminLoading.init();
         });
