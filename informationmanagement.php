@@ -552,95 +552,97 @@ let showDeletedData = {
             hour12: true
         });
     }
-    
-   function renderTable(type) {
-    const tableBody = document.getElementById(`${type}-table-body`);
-    const pageInfo = document.getElementById(`${type}-page-info`);
-    const searchTerm = data[type].searchTerm.toLowerCase();
-    
-    // Filter items based on search term AND deleted status
-    let filteredItems = data[type].items.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(searchTerm);
+    function formatActionName(string) {
+       
+        return string.split('-').map(part => capitalizeFirstLetter(part)).join('');
+    }
+
+     function renderTable(type) {
+        const tableBody = document.getElementById(`${type}-table-body`);
+        const pageInfo = document.getElementById(`${type}-page-info`);
+        const searchTerm = data[type].searchTerm.toLowerCase();
         
-        // If showing deleted, include only deleted items
-        if (showDeletedData[type]) {
-            return matchesSearch && item.is_deleted == 1;
-        }
-        // Otherwise, include only non-deleted items
-        return matchesSearch && item.is_deleted == 0;
-    });
-    
-    // Calculate pagination
-    const totalPages = Math.ceil(filteredItems.length / data[type].rowsPerPage);
-    if (data[type].currentPage > totalPages && totalPages > 0) {
-        data[type].currentPage = totalPages;
-    } else if (totalPages === 0) {
-        data[type].currentPage = 1;
-    }
-    
-    const startIndex = (data[type].currentPage - 1) * data[type].rowsPerPage;
-    const endIndex = Math.min(startIndex + data[type].rowsPerPage, filteredItems.length);
-    const pageItems = filteredItems.slice(startIndex, endIndex);
-    
-    // Update table
-    tableBody.innerHTML = '';
-    
-    if (pageItems.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No ${type} found</td></tr>`;
-    } else {
-        pageItems.forEach(item => {
-            const tr = document.createElement('tr');
-            
-            let nameDisplay = item.name;
-            if (searchTerm) {
-                const regex = new RegExp(searchTerm, 'gi');
-                nameDisplay = item.name.replace(regex, match => `<span class="highlight">${match}</span>`);
+        let filteredItems = data[type].items.filter(item => {
+            const matchesSearch = item.name.toLowerCase().includes(searchTerm);
+            if (showDeletedData[type]) {
+                return matchesSearch && item.is_deleted == 1;
             }
-            
-            // MODIFICATION: Added data-label attributes to each <td>
-            tr.innerHTML = `
-                <td data-label="Name">${nameDisplay}</td>
-                <td data-label="Last Modified By">${item.last_modified_by || 'System'}</td>
-                <td data-label="Last Modified At">${formatDateTime(item.last_modified_at)}</td>
-                <td data-label="Actions" class="actions">
-                    <div class="dropdown">
-                        <button class="dropdown-btn" data-tooltip="Actions">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <div class="dropdown-content">
-                            ${item.is_deleted == 1 ? `
-                                <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                    <i class="fas fa-trash-restore"></i> Restore
-                                </button>
-                                <button class="dropdown-item view-reason" data-tooltip="View Reason" onclick="viewDeletionReason('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                    <i class="fas fa-info-circle"></i> View Reason
-                                </button>
-                                ${window.userRole === 'Full Admin' ? 
-                                    `<button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                        <i class="fa-solid fa-ban"></i> Permanent Delete
-                                    </button>` : ''}
-                            ` : `
-                                <button class="dropdown-item edit" data-tooltip="Edit" onclick="editItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteItem('${type}', ${item[`${type.slice(0, -1)}_id`]})">
-                                    <i class='fas fa-trash-alt'></i> Delete
-                                </button>
-                            `}
-                        </div>
-                    </div>
-                </td>
-            `;
-            tableBody.appendChild(tr);
+            return matchesSearch && item.is_deleted == 0;
         });
+        
+        const totalPages = Math.ceil(filteredItems.length / data[type].rowsPerPage);
+        if (data[type].currentPage > totalPages && totalPages > 0) {
+            data[type].currentPage = totalPages;
+        } else if (totalPages === 0) {
+            data[type].currentPage = 1;
+        }
+        
+        const startIndex = (data[type].currentPage - 1) * data[type].rowsPerPage;
+        const endIndex = Math.min(startIndex + data[type].rowsPerPage, filteredItems.length);
+        const pageItems = filteredItems.slice(startIndex, endIndex);
+        
+        tableBody.innerHTML = '';
+        
+        if (pageItems.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No ${type.replace('-', ' ')} found</td></tr>`;
+        } else {
+            pageItems.forEach(item => {
+                const tr = document.createElement('tr');
+                
+                let nameDisplay = item.name;
+                if (searchTerm) {
+                    const regex = new RegExp(searchTerm, 'gi');
+                    nameDisplay = item.name.replace(regex, match => `<span class="highlight">${match}</span>`);
+                }
+
+                // FIX: Properly create the ID key, handling hyphens by converting them to underscores.
+                // This changes 'shipping-line_id' to the correct 'shipping_line_id'.
+                const itemIdKey = `${type.replace('-', '_').slice(0, -1)}_id`;
+                
+                tr.innerHTML = `
+                    <td data-label="Name">${nameDisplay}</td>
+                    <td data-label="Last Modified By">${item.last_modified_by || 'System'}</td>
+                    <td data-label="Last Modified At">${formatDateTime(item.last_modified_at)}</td>
+                    <td data-label="Actions" class="actions">
+                        <div class="dropdown">
+                            <button class="dropdown-btn" data-tooltip="Actions">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="dropdown-content">
+                                ${item.is_deleted == 1 ? `
+                                    <button class="dropdown-item restore" data-tooltip="Restore" onclick="restoreItem('${type}', ${item[itemIdKey]})">
+                                        <i class="fas fa-trash-restore"></i> Restore
+                                    </button>
+                                    <button class="dropdown-item view-reason" data-tooltip="View Reason" onclick="viewDeletionReason('${type}', ${item[itemIdKey]})">
+                                        <i class="fas fa-info-circle"></i> View Reason
+                                    </button>
+                                    ${window.userRole === 'Full Admin' ? 
+                                        `<button class="dropdown-item full-delete" data-tooltip="Permanently Delete" onclick="fullDeleteItem('${type}', ${item[itemIdKey]})">
+                                            <i class="fa-solid fa-ban"></i> Permanent Delete
+                                        </button>` : ''}
+                                ` : `
+                                    <button class="dropdown-item edit" data-tooltip="Edit" onclick="editItem('${type}', ${item[itemIdKey]})">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="dropdown-item delete" data-tooltip="Delete" onclick="deleteItem('${type}', ${item[itemIdKey]})">
+                                        <i class='fas fa-trash-alt'></i> Delete
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+        
+        if (pageInfo) {
+            pageInfo.textContent = `Page ${data[type].currentPage} of ${totalPages || 1}`;
+        }
+        
+        setupDropdowns();
     }
-    
-    if (pageInfo) {
-        pageInfo.textContent = `Page ${data[type].currentPage} of ${totalPages || 1}`;
-    }
-    
-    setupDropdowns();
-}
+
     
  
     
@@ -721,16 +723,17 @@ function handleDropdownItemClick(e) {
         document.getElementById('itemType').value = type;
         
         if (id) {
-            // Edit mode
             document.getElementById('modalTitle').textContent = `Edit ${capitalizeFirstLetter(type.slice(0, -1))}`;
             document.getElementById('itemId').value = id;
             
-            const item = data[type].items.find(item => item[`${type.slice(0, -1)}_id`] == id);
+            // FIX: Use the correct ID key to find the item in the array.
+            const idKey = `${type.replace('-', '_').slice(0, -1)}_id`;
+            const item = data[type].items.find(item => item[idKey] == id);
+
             if (item) {
                 document.getElementById('itemName').value = item.name;
             }
         } else {
-            // Add mode
             document.getElementById('modalTitle').textContent = `Add ${capitalizeFirstLetter(type.slice(0, -1))}`;
             document.getElementById('itemId').value = '';
             document.getElementById('itemName').value = '';
@@ -749,52 +752,36 @@ function handleDropdownItemClick(e) {
         const name = document.getElementById('itemName').value;
         
         if (!name) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                text: 'Please enter a name'
-            });
+            Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please enter a name' });
             return;
         }
         
         const action = id ? 'update' : 'add';
         const formData = new FormData();
-        formData.append('action', `${action}${capitalizeFirstLetter(type.slice(0, -1))}`);
+
+        // FIX: Use our new helper to create the correct action name (e.g., 'addShippingLine').
+        const actionName = formatActionName(type.slice(0, -1));
+        formData.append('action', `${action}${actionName}`);
+
         formData.append('id', id);
         formData.append('name', name);
         
-        fetch('include/handlers/info_management_handler.php', {
-            method: 'POST',
-            body: formData
-        })
+        fetch('include/handlers/info_management_handler.php', { method: 'POST', body: formData })
         .then(response => response.json())
         .then(result => {
             if (result.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: result.message,
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
+                Swal.fire({ icon: 'success', title: 'Success', text: result.message, timer: 2000, showConfirmButton: false })
+                .then(() => {
                     closeModal('infoModal');
                     fetchData(type);
                 });
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: result.message
-                });
+                Swal.fire({ icon: 'error', title: 'Error', text: result.message });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred. Please try again.'
-            });
+            Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred. Please try again.' });
         });
     }
     
@@ -804,77 +791,59 @@ function handleDropdownItemClick(e) {
     
 
 function deleteItem(type, id) {
-
-    Swal.fire({
-        title: `Reason for Deleting ${capitalizeFirstLetter(type.slice(0, -1))}`,
-        input: 'textarea',
-        inputLabel: 'Please provide a reason for this action.',
-        inputPlaceholder: 'Type your reason here...',
-        showCancelButton: true,
-        confirmButtonText: 'Delete',
-        inputValidator: (value) => {
-            if (!value || value.trim() === '') {
-                return 'You need to provide a reason!'
-            }
-        }
-    }).then((reasonResult) => {
-
-        if (reasonResult.isConfirmed && reasonResult.value) {
-            const deleteReason = reasonResult.value;
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "This item will be marked as deleted and can be restored later.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((confirmResult) => {
-                if (confirmResult.isConfirmed) {
-            
-                    const formData = new FormData();
-                    formData.append('action', `softDelete${capitalizeFirstLetter(type.slice(0, -1))}`);
-                    formData.append('id', id);
-                    formData.append('reason', deleteReason);
-                    
-                    fetch('include/handlers/info_management_handler.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted!',
-                                text: result.message,
-                                timer: 2000,
-                                showConfirmButton: false
-                            }).then(() => {
-                                fetchData(type); 
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: result.message
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'An error occurred. Please try again.'
-                        });
-                    });
+        Swal.fire({
+            title: `Reason for Deleting ${capitalizeFirstLetter(type.slice(0, -1))}`,
+            input: 'textarea',
+            inputLabel: 'Please provide a reason for this action.',
+            inputPlaceholder: 'Type your reason here...',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            inputValidator: (value) => {
+                if (!value || value.trim() === '') {
+                    return 'You need to provide a reason!'
                 }
-            });
-        }
-    });
-}
+            }
+        }).then((reasonResult) => {
+            if (reasonResult.isConfirmed && reasonResult.value) {
+                const deleteReason = reasonResult.value;
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This item will be marked as deleted and can be restored later.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((confirmResult) => {
+                    if (confirmResult.isConfirmed) {
+                        const formData = new FormData();
+                        
+                        // FIX: Use our helper to create the correct action name for soft deleting.
+                        const actionName = formatActionName(type.slice(0, -1));
+                        formData.append('action', `softDelete${actionName}`);
+                        
+                        formData.append('id', id);
+                        formData.append('reason', deleteReason);
+                        
+                        fetch('include/handlers/info_management_handler.php', { method: 'POST', body: formData })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                Swal.fire({ icon: 'success', title: 'Deleted!', text: result.message, timer: 2000, showConfirmButton: false })
+                                .then(() => { fetchData(type); });
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred. Please try again.' });
+                        });
+                    }
+                });
+            }
+        });
+    }
     
     function performSoftDelete() {
         const id = document.getElementById('deleteItemId').value;
@@ -931,69 +900,56 @@ function deleteItem(type, id) {
     }
     
     function viewDeletionReason(type, id) {
-        const item = data[type].items.find(item => item[`${type.slice(0, -1)}_id`] == id);
+        // FIX: Use the correct ID key to find the item in the array.
+        const idKey = `${type.replace('-', '_').slice(0, -1)}_id`;
+        const item = data[type].items.find(item => item[idKey] == id);
+
         if (item) {
-            document.getElementById('deletionReasonText').textContent = 
-                item.delete_reason || 'No reason provided';
+            document.getElementById('deletionReasonText').textContent = item.delete_reason || 'No reason provided';
             document.getElementById('reasonModal').style.display = 'block';
         }
     }
     
-   function restoreItem(type, id) {
-    Swal.fire({
-        title: 'Restore Item',
-        html: '<strong>Are you sure you want to restore this item?</strong><br><br>This will make the item active again.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, restore it!',
-        cancelButtonText: 'Cancel',
-        backdrop: 'rgba(0,0,0,0.8)',
-        allowOutsideClick: false
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const formData = new FormData();
-            formData.append('action', `restore${capitalizeFirstLetter(type.slice(0, -1))}`);
-            formData.append('id', id);
-            
-            fetch('include/handlers/info_management_handler.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: result.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        fetchData(type);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: result.message
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred. Please try again.'
+    function restoreItem(type, id) {
+        Swal.fire({
+            title: 'Restore Item',
+            html: '<strong>Are you sure you want to restore this item?</strong><br><br>This will make the item active again.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, restore it!',
+            cancelButtonText: 'Cancel',
+            backdrop: 'rgba(0,0,0,0.8)',
+            allowOutsideClick: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const formData = new FormData();
+
+                // FIX: Use our helper to create the correct action name for restoring.
+                const actionName = formatActionName(type.slice(0, -1));
+                formData.append('action', `restore${actionName}`);
+                formData.append('id', id);
+                
+                fetch('include/handlers/info_management_handler.php', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({ icon: 'success', title: 'Success', text: result.message, timer: 2000, showConfirmButton: false })
+                        .then(() => { fetchData(type); });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred. Please try again.' });
                 });
-            });
-        }
-    });
-}
+            }
+        });
+    }
     
-    function fullDeleteItem(type, id) {
+   function fullDeleteItem(type, id) {
         Swal.fire({
             title: 'Permanent Deletion',
             html: '<strong>Are you sure you want to PERMANENTLY delete this item?</strong><br><br>This action cannot be undone!',
@@ -1008,40 +964,25 @@ function deleteItem(type, id) {
         }).then((result) => {
             if (result.isConfirmed) {
                 const formData = new FormData();
-                formData.append('action', `fullDelete${capitalizeFirstLetter(type.slice(0, -1))}`);
+                
+                // FIX: Use our helper to create the correct action name for permanent deletion.
+                const actionName = formatActionName(type.slice(0, -1));
+                formData.append('action', `fullDelete${actionName}`);
                 formData.append('id', id);
                 
-                fetch('include/handlers/info_management_handler.php', {
-                    method: 'POST',
-                    body: formData
-                })
+                fetch('include/handlers/info_management_handler.php', { method: 'POST', body: formData })
                 .then(response => response.json())
                 .then(result => {
                     if (result.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: result.message,
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            fetchData(type);
-                        });
+                        Swal.fire({ icon: 'success', title: 'Success', text: result.message, timer: 2000, showConfirmButton: false })
+                        .then(() => { fetchData(type); });
                     } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: result.message
-                        });
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.message });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An error occurred. Please try again.'
-                    });
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred. Please try again.' });
                 });
             }
         });
