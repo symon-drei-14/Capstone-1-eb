@@ -1367,7 +1367,7 @@ if (!empty($conflictingTrips)) {
     ]);
     break;
 
-        case 'full_delete':
+       case 'full_delete':
     // First check if the trip is in 'En Route' status
     $checkStatusStmt = $conn->prepare("SELECT status FROM trips WHERE trip_id = ?");
     $checkStatusStmt->bind_param("i", $data['id']);
@@ -1396,20 +1396,29 @@ if (!empty($conflictingTrips)) {
     $conn->begin_transaction();
     
     try {
-        // Delete trip expenses first (if any)
+        // !! NEW CODE !! Delete from driver_expenses
+        $deleteDriverExpenses = $conn->prepare("DELETE FROM driver_expenses WHERE trip_id = ?");
+        $deleteDriverExpenses->bind_param("i", $data['id']);
+        $deleteDriverExpenses->execute();
+        $deleteDriverExpenses->close();
+
+        // Delete trip expenses (if any)
         $deleteExpenses = $conn->prepare("DELETE FROM trip_expenses WHERE trip_id = ?");
         $deleteExpenses->bind_param("i", $data['id']);
         $deleteExpenses->execute();
+        $deleteExpenses->close();
         
-        // Delete audit logs (foreign key constraint)
+        // Delete audit logs
         $deleteAudit = $conn->prepare("DELETE FROM audit_logs_trips WHERE trip_id = ?");
         $deleteAudit->bind_param("i", $data['id']);
         $deleteAudit->execute();
-        
-        // Delete the trip
+        $deleteAudit->close();
+
+        // Delete the trip itself (LAST)
         $deleteTrip = $conn->prepare("DELETE FROM trips WHERE trip_id = ?");
         $deleteTrip->bind_param("i", $data['id']);
         $deleteTrip->execute();
+        $deleteTrip->close();
         
         $conn->commit();
         
