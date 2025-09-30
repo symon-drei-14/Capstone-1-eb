@@ -153,39 +153,53 @@
                     <input type="text" id="driverName" name="driverName" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="driverEmail">Email *</label>
-                    <input type="email" id="driverEmail" name="driverEmail" required>
-                </div>
+              
+    <div class="form-row">
+        <div class="form-group">
+            <label for="driverEmail">Email *</label>
+            <input type="email" id="driverEmail" name="driverEmail" required>
+        </div>
 
-                <div class="form-group">
-    <label for="driverContact">Contact Number *</label>
-    <input type="tel" id="driverContact" name="driverContact" required>
-</div>
+        <div class="form-group">
+            <label for="driverContact">Contact Number *</label>
+            <input type="tel" id="driverContact" name="driverContact" required>
+        </div>
+    </div>
+    
                 
-               <div class="form-group" id="oldPasswordGroup" style="display: none;">
+       <div class="form-group" id="oldPasswordGroup" style="display: none;">
     <label for="oldPassword">Current Password *</label>
-    <input type="password" id="oldPassword" name="oldPassword">
+    <div class="password-wrapper">
+        <input type="password" id="oldPassword" name="oldPassword">
+        <i class="fa-regular fa-eye toggle-password"></i>
+    </div>
 </div>
-
-<div class="form-group">
-    <label for="password">Password *</label>
-    <input type="password" id="password" name="password" required>
-    <small id="passwordHelp">Leave blank to keep current password</small>
+      <small id="passwordHelp">Leave blank to keep current password</small>
+<div class="form-row">
+    <div class="form-group">
+        <label for="password">Password *</label>
+        <div class="password-wrapper">
+            <input type="password" id="password" name="password" required>
+            <i class="fa-regular fa-eye toggle-password"></i>
+        </div>
+  
+    </div>
+    
+    <div class="form-group">
+        <label for="confirmPassword">Confirm Password *</label>
+        <div class="password-wrapper">
+            <input type="password" id="confirmPassword" name="confirmPassword" required>
+            <i class="fa-regular fa-eye toggle-password"></i>
+        </div>
+    </div>
 </div>
-
-<div class="form-group">
-    <label for="confirmPassword">Confirm Password *</label>
-    <input type="password" id="confirmPassword" name="confirmPassword" required>
-</div>
-                
-                <div class="form-group">
-    <label for="assignedTruck">Assigned Truck</label>
-    <select id="assignedTruck" name="assignedTruck">
-        <option value="">None</option>
-        </select>
-</div>
-
+                                        
+        <div class="form-group">
+            <label for="assignedTruck">Assigned Truck</label>
+            <select id="assignedTruck" name="assignedTruck">
+                <option value="">None</option>
+            </select>
+        </div>
                 <button type="submit" id="saveButton" class="btn-primary">
                     <i class="fas fa-save"></i> <span id="saveButtonText">Add Driver</span>
                 </button>
@@ -987,6 +1001,24 @@ function validatePassword() {
             }
         });
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const passwordToggles = document.querySelectorAll('.toggle-password');
+
+    passwordToggles.forEach(toggle => {
+        toggle.addEventListener('click', function () {
+
+            const passwordInput = this.previousElementSibling;
+
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            
+            passwordInput.setAttribute('type', type);
+            
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    });
+});
     </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
