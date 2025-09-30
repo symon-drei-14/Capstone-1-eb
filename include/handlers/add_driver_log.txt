@@ -187,3 +187,123 @@
 2025-09-26 15:44:38 - MySQL SQL prepared successfully
 2025-09-26 15:44:38 - MySQL insert successful
 2025-09-26 15:44:38 - Firebase save successful
+2025-09-30 18:02:51 - Add Driver Request received
+2025-09-30 18:02:51 - POST data received successfully
+2025-09-30 18:02:51 - Data validation passed
+2025-09-30 18:02:51 - MySQL connection successful
+2025-09-30 18:02:51 - Email check passed
+2025-09-30 18:02:51 - MySQL SQL prepared successfully
+2025-09-30 18:02:51 - MySQL insert successful
+2025-09-30 18:02:52 - Firebase save successful
+2025-09-30 18:03:50 - Add Driver Request received
+2025-09-30 18:03:50 - POST data received successfully
+2025-09-30 18:03:50 - Data validation passed
+2025-09-30 18:03:50 - MySQL connection successful
+2025-09-30 18:03:50 - Email check passed
+2025-09-30 18:03:50 - MySQL SQL prepared successfully
+2025-09-30 18:03:50 - MySQL insert successful
+2025-09-30 18:03:50 - Firebase save successful
+2025-09-30 18:04:44 - Add Driver Request received
+2025-09-30 18:04:44 - POST data received successfully
+2025-09-30 18:04:44 - Data validation passed
+2025-09-30 18:04:44 - MySQL connection successful
+2025-09-30 18:04:44 - Email check passed
+2025-09-30 18:04:44 - MySQL SQL prepared successfully
+2025-09-30 18:04:44 - MySQL insert successful
+2025-09-30 18:04:44 - Firebase save successful
+2025-09-30 18:05:19 - Add Driver Request received
+2025-09-30 18:05:19 - POST data received successfully
+2025-09-30 18:05:19 - Data validation passed
+2025-09-30 18:05:19 - MySQL connection successful
+2025-09-30 18:05:19 - Email check passed
+2025-09-30 18:05:19 - MySQL SQL prepared successfully
+2025-09-30 18:05:19 - MySQL insert successful
+2025-09-30 18:05:19 - Firebase save successful
+2025-09-30 18:06:05 - Add Driver Request received
+2025-09-30 18:06:05 - POST data received successfully
+2025-09-30 18:06:05 - Data validation passed
+2025-09-30 18:06:05 - MySQL connection successful
+2025-09-30 18:06:05 - Email check passed
+2025-09-30 18:06:05 - MySQL SQL prepared successfully
+2025-09-30 18:06:05 - MySQL insert successful
+2025-09-30 18:06:05 - Firebase save successful
+2025-09-30 18:06:45 - Add Driver Request received
+2025-09-30 18:06:45 - POST data received successfully
+2025-09-30 18:06:45 - Data validation passed
+2025-09-30 18:06:45 - MySQL connection successful
+2025-09-30 18:06:45 - Email check passed
+2025-09-30 18:06:45 - MySQL SQL prepared successfully
+2025-09-30 18:06:45 - MySQL insert successful
+2025-09-30 18:06:46 - Firebase save successful
+2025-09-30 18:07:14 - Add Driver Request received
+2025-09-30 18:07:14 - POST data received successfully
+2025-09-30 18:07:14 - Data validation passed
+2025-09-30 18:07:14 - MySQL connection successful
+2025-09-30 18:07:14 - Email check passed
+2025-09-30 18:07:14 - MySQL SQL prepared successfully
+2025-09-30 18:07:14 - MySQL insert successful
+2025-09-30 18:07:14 - Firebase save successful
+2025-09-30 18:07:50 - Add Driver Request received
+2025-09-30 18:07:50 - POST data received successfully
+2025-09-30 18:07:50 - Data validation passed
+2025-09-30 18:07:51 - MySQL connection successful
+2025-09-30 18:07:51 - Email check passed
+2025-09-30 18:07:51 - MySQL SQL prepared successfully
+2025-09-30 18:07:51 - MySQL insert successful
+2025-09-30 18:07:51 - Firebase save successful
+2025-09-30 18:08:19 - Add Driver Request received
+2025-09-30 18:08:19 - POST data received successfully
+2025-09-30 18:08:19 - Data validation passed
+2025-09-30 18:08:19 - MySQL connection successful
+2025-09-30 18:08:19 - Email check passed
+2025-09-30 18:08:19 - MySQL SQL prepared successfully
+2025-09-30 18:08:19 - MySQL insert successful
+2025-09-30 18:08:20 - Firebase save successful
+2025-09-30 18:08:49 - Add Driver Request received
+2025-09-30 18:08:49 - POST data received successfully
+2025-09-30 18:08:49 - Data validation passed
+2025-09-30 18:08:49 - MySQL connection successful
+2025-09-30 18:08:49 - Email check passed
+2025-09-30 18:08:49 - MySQL SQL prepared successfully
+2025-09-30 18:08:49 - MySQL insert successful
+2025-09-30 18:08:49 - Firebase save successful
+2025-09-30 18:09:22 - Add Driver Request received
+2025-09-30 18:09:22 - POST data received successfully
+2025-09-30 18:09:22 - Data validation passed
+2025-09-30 18:09:22 - MySQL connection successful
+2025-09-30 18:09:22 - Email check passed
+2025-09-30 18:09:22 - MySQL SQL prepared successfully
+2025-09-30 18:09:22 - MySQL insert successful
+2025-09-30 18:09:22 - Firebase save successful
+2025-09-30 18:09:55 - Add Driver Request received
+2025-09-30 18:09:55 - POST data received successfully
+2025-09-30 18:09:55 - Data validation passed
+2025-09-30 18:09:55 - MySQL connection successful
+2025-09-30 18:09:55 - Email check passed
+2025-09-30 18:09:55 - MySQL SQL prepared successfully
+2025-09-30 18:09:55 - MySQL insert successful
+2025-09-30 18:09:55 - Firebase save successful
+2025-09-30 18:10:33 - Add Driver Request received
+2025-09-30 18:10:33 - POST data received successfully
+2025-09-30 18:10:33 - Data validation passed
+2025-09-30 18:10:33 - MySQL connection successful
+2025-09-30 18:10:33 - Email check passed
+2025-09-30 18:10:33 - MySQL SQL prepared successfully
+2025-09-30 18:10:33 - MySQL insert successful
+2025-09-30 18:10:33 - Firebase save successful
+2025-09-30 18:11:08 - Add Driver Request received
+2025-09-30 18:11:08 - POST data received successfully
+2025-09-30 18:11:08 - Data validation passed
+2025-09-30 18:11:08 - MySQL connection successful
+2025-09-30 18:11:08 - Email check passed
+2025-09-30 18:11:08 - MySQL SQL prepared successfully
+2025-09-30 18:11:08 - MySQL insert successful
+2025-09-30 18:11:08 - Firebase save successful
+2025-09-30 18:11:39 - Add Driver Request received
+2025-09-30 18:11:39 - POST data received successfully
+2025-09-30 18:11:39 - Data validation passed
+2025-09-30 18:11:39 - MySQL connection successful
+2025-09-30 18:11:39 - Email check passed
+2025-09-30 18:11:39 - MySQL SQL prepared successfully
+2025-09-30 18:11:39 - MySQL insert successful
+2025-09-30 18:11:40 - Firebase save successful
