@@ -439,11 +439,7 @@ try {
         }
 
         
-        $removeFromQueueStmt = $conn->prepare("UPDATE drivers_table SET checked_in_at = NULL WHERE driver_id = ?");
-        $removeFromQueueStmt->bind_param("s", $driverId);
-        if (!$removeFromQueueStmt->execute()) {
-            throw new Exception("Failed to remove driver from queue: " . $removeFromQueueStmt->error);
-        }
+       
 
         if ($data['status'] === 'En Route') {
             $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
@@ -1651,13 +1647,13 @@ case 'get_trips_today':
     }
     break;
 
-    case 'get_next_driver':
+   case 'get_next_driver':
     $capacity = $data['capacity'] ?? '';
     if (empty($capacity)) {
         throw new Exception("Capacity is required to find the next driver.");
     }
 
-    // This query now finds the next available driver based on the new queuing rules
+    // This query now finds the next available driver based on the updated queuing rules
     $stmt = $conn->prepare("
         SELECT 
             d.driver_id,
@@ -1676,8 +1672,9 @@ case 'get_trips_today':
           -- Rule 4: Truck must be available for a trip
           AND t.is_deleted = 0
           AND t.status NOT IN ('In Repair', 'Overdue', 'Enroute')
-        -- Rule 5: Order by the check-in time to ensure First-Come, First-Served
-        ORDER BY d.checked_in_at ASC
+        -- Rule 5: Order by last assignment time (NULLs first), then by check-in time.
+        -- This creates a fair, circular queue.
+        ORDER BY d.last_assigned_at ASC, d.checked_in_at ASC
         LIMIT 1
     ");
     $stmt->bind_param("s", $capacity);
@@ -1741,7 +1738,8 @@ case 'get_trips_today':
               AND (d.penalty_until IS NULL OR d.penalty_until < NOW())
               AND t.is_deleted = 0
               AND t.status NOT IN ('In Repair', 'Overdue', 'Enroute')
-            ORDER BY d.checked_in_at ASC
+            -- Order by the last assignment time to find the next best fit in the queue.
+            ORDER BY d.last_assigned_at ASC, d.checked_in_at ASC
             LIMIT 1
         ");
         $nextDriverStmt->bind_param("si", $capacity, $originalDriverId);
