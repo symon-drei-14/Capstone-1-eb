@@ -1273,7 +1273,7 @@ AND (
     break;
 
     case 'getMaintenanceFrequency':
-    // This query counts completed maintenance tasks, grouping them by year and truck plate number.
+    
     $sql = "SELECT 
                 YEAR(m.date_mtnce) as maintenance_year, 
                 t.plate_no,
@@ -1281,8 +1281,7 @@ AND (
             FROM maintenance_table m
             JOIN truck_table t ON m.truck_id = t.truck_id
             LEFT JOIN (
-                -- This subquery finds the latest audit log entry for each maintenance task
-                -- to check if it's been soft-deleted.
+              
                 SELECT 
                     al1.maintenance_id,
                     al1.is_deleted
@@ -1293,7 +1292,7 @@ AND (
                     WHERE al2.maintenance_id = al1.maintenance_id
                 )
             ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id
-            -- We only want to count records that are marked as 'Completed'.
+            
             WHERE t.is_deleted = 0 AND (latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL) AND m.status = 'Completed'
             GROUP BY maintenance_year, t.plate_no
             ORDER BY maintenance_year ASC, t.plate_no ASC";
@@ -1308,7 +1307,7 @@ AND (
     $years = [];
     $trucks = [];
 
-    // First, let's gather all unique years and trucks from the data.
+    //gather all unique years and trucks from the data.
     while ($row = $result->fetch_assoc()) {
         $rawData[] = $row;
         if (!in_array($row['maintenance_year'], $years)) {
@@ -1319,17 +1318,16 @@ AND (
         }
     }
 
-    // Sorting them to keep the chart looking consistent.
+    // sorts
     sort($years, SORT_NUMERIC);
     sort($trucks, SORT_STRING);
 
-    // Now, we'll build the 'series' array that ApexCharts needs.
+    
     $series = [];
     foreach ($trucks as $truckPlate) {
         $dataPoints = [];
         foreach ($years as $year) {
-            $count = 0; // Default to zero if no maintenance was done.
-            // Find the matching count for this truck and year.
+            $count = 0; 
             foreach ($rawData as $data) {
                 if ($data['plate_no'] == $truckPlate && $data['maintenance_year'] == $year) {
                     $count = (int)$data['maintenance_count'];
@@ -1344,7 +1342,7 @@ AND (
         ];
     }
 
-    // Finally, send the data back in a clean JSON format.
+    
     echo json_encode([
         'success' => true,
         'series' => $series,
