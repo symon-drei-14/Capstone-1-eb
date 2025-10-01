@@ -23,6 +23,9 @@ try {
         case 'yearly_trends':
             getYearlyTrends($conn);
             break;
+        case 'get_completed_trip_counts':
+            getCompletedTripCounts($conn);
+        break;
         default:
             echo json_encode(['error' => 'Invalid action']);
     }
@@ -90,6 +93,43 @@ function getCostTrends($conn) {
         'labels' => $labels,
         'percentages' => $percentages,
         'total' => $total
+    ]);
+}
+
+function getCompletedTripCounts($conn) {
+    // Fetches the number of completed trips for the last 6 months to display on the dashboard chart.
+    $sql = "SELECT
+                DATE_FORMAT(trip_date, '%b ''%y') AS month_year,
+                COUNT(trip_id) AS trip_count
+            FROM trips
+            WHERE
+                status = 'Completed'
+                AND trip_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                AND NOT EXISTS (
+                    SELECT 1 FROM audit_logs_trips al2
+                    WHERE al2.trip_id = trips.trip_id AND al2.is_deleted = 1
+                )
+            GROUP BY
+                DATE_FORMAT(trip_date, '%Y-%m')
+            ORDER BY
+                DATE_FORMAT(trip_date, '%Y-%m') ASC";
+
+    $result = $conn->query($sql);
+
+    $labels = [];
+    $data = [];
+
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $labels[] = $row['month_year'];
+            $data[] = (int)$row['trip_count'];
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'labels' => $labels,
+        'data' => $data
     ]);
 }
 

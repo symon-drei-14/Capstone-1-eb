@@ -1740,44 +1740,74 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         initializeCostTrendsChart();
           initializeMaintenanceFrequencyChart();
+          initializeTripCountChart(); 
     }, 500);
 });
 
   
-    var options3 = {
-        series: [{
-            name: "Number of Trips",
-            data: [23, 45, 56, 67, 89, 23, 45]
-        }],
-        chart: {
-            type: 'area',
-            height: 350,
-            zoom: {
-                enabled: false
-            }
-        },
-        dataLabels: {
-            enabled: false
-        },
-        stroke: {
-            curve: 'straight'
-        },
-      
-       
-        labels: ['2020-01-01', '2020-02-01', '2020-03-01', '2020-04-01', '2020-05-01', '2020-06-01', '2020-07-01'],
-        xaxis: {
-            type: 'datetime',
-        },
-        yaxis: {
-            opposite: true
-        },
-        legend: {
-            horizontalAlign: 'left'
-        }
-    };
+   function initializeTripCountChart() {
+    // Grabs data from our analytics handler to show the trip trends.
+    fetch('include/handlers/analytics_handler.php?action=get_completed_trip_counts')
+        .then(response => response.json())
+        .then(apiData => {
+            if (apiData.success) {
+                var options = {
+                    series: [{
+                        name: "Completed Trips",
+                        data: apiData.data
+                    }],
+                    chart: {
+                        type: 'area',
+                        height: 350,
+                        zoom: {
+                            enabled: false
+                        },
+                        toolbar: {
+                            show: false // A cleaner look for the dashboard
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    stroke: {
+                        curve: 'smooth'
+                    },
+                    xaxis: {
+                        categories: apiData.labels,
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Number of Trips'
+                        }
+                    },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.7,
+                            opacityTo: 0.4,
+                            stops: [0, 90, 100]
+                        }
+                    },
+                    tooltip: {
+                        x: {
+                            format: 'MMM yyyy'
+                        },
+                    },
+                };
 
-    var tripnumber = new ApexCharts(document.querySelector("#tripnumber"), options3);
-    tripnumber.render();
+                var tripChart = new ApexCharts(document.querySelector("#tripnumber"), options);
+                tripChart.render();
+            } else {
+                console.error('Failed to load trip count data.');
+                document.querySelector("#tripnumber").innerHTML = '<p style="text-align:center; padding-top: 20px; color: #888;">Could not load trip data.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching trip count data:', error);
+            document.querySelector("#tripnumber").innerHTML = '<p style="text-align:center; padding-top: 20px; color: #888;">Error loading chart data.</p>';
+        });
+}
 
     var options4 = {
         series: [{
