@@ -1113,6 +1113,107 @@ try {
         }
         break;
 
+        case 'fetchNextRow':
+        $page = $data['page'] ?? 1;
+        $perPage = $data['perPage'] ?? 10;
+        $statusFilter = $data['statusFilter'] ?? 'all';
+        $sortOrder = $data['sortOrder'] ?? 'desc';
+        $dateFrom = $data['dateFrom'] ?? '';
+        $dateTo = $data['dateTo'] ?? '';
+        $searchTerm = $data['searchTerm'] ?? '';
+
+        // The offset calculates which row to grab to fill the last spot on the page
+        $offset = ($page * $perPage) - 1;
+
+        $isDeletedView = ($statusFilter === 'deleted');
+        $isTodayView = ($statusFilter === 'today');
+        
+        $baseQuery = "SELECT 
+            t.trip_id, t.driver_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
+            tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
+            disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
+            sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
+            al.modified_at as last_modified_at, al.edit_reason, al.delete_reason,
+            COALESCE(te.cash_advance, 0) as cash_advance,
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+            COALESCE(te.diesel, 0) as diesel
+          FROM trips t
+          LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+          LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+          LEFT JOIN helpers h ON t.helper_id = h.helper_id
+          LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+          LEFT JOIN clients c ON t.client_id = c.client_id
+          LEFT JOIN ports p ON t.port_id = p.port_id
+          LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+          LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+          LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+          LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id";
+        
+        $params = [];
+        $types = "";
+
+        // This complex logic ensures we query the correct set of trips (active, deleted, or today's)
+        if ($isDeletedView) {
+            $baseQuery .= " JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 1 WHERE 1=1";
+        } else {
+            $baseQuery .= " LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0 
+                           WHERE NOT EXISTS (SELECT 1 FROM audit_logs_trips al2 WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1)";
+        }
+
+        if (!$isDeletedView && $statusFilter !== 'all' && !$isTodayView) {
+            $baseQuery .= " AND t.status = ?";
+            $params[] = $statusFilter;
+            $types .= "s";
+        }
+
+        if ($isTodayView) {
+            $baseQuery .= " AND DATE(t.trip_date) = CURDATE()";
+        }
+        
+        if (!empty($searchTerm)) {
+            $baseQuery .= " AND (tr.plate_no LIKE ? OR d.name LIKE ? OR h.name LIKE ? OR disp.name LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR dest.name LIKE ? OR sl.name LIKE ? OR cons.name LIKE ? OR t.container_no LIKE ?)";
+            $searchParam = "%{$searchTerm}%";
+            for ($i = 0; $i < 10; $i++) {
+                $params[] = $searchParam;
+                $types .= "s";
+            }
+        }
+
+        if (!empty($dateFrom) && !empty($dateTo)) {
+            $baseQuery .= " AND DATE(t.trip_date) BETWEEN ? AND ?";
+            $params[] = $dateFrom;
+            $params[] = $dateTo;
+            $types .= "ss";
+        } elseif (!empty($dateFrom)) {
+            $baseQuery .= " AND DATE(t.trip_date) >= ?";
+            $params[] = $dateFrom;
+            $types .= "s";
+        } elseif (!empty($dateTo)) {
+            $baseQuery .= " AND DATE(t.trip_date) <= ?";
+            $params[] = $dateTo;
+            $types .= "s";
+        }
+
+        $baseQuery .= " ORDER BY t.trip_date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
+        $baseQuery .= " LIMIT 1 OFFSET ?";
+        $params[] = $offset;
+        $types .= "i";
+        
+        $stmt = $conn->prepare($baseQuery);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($trip = $result->fetch_assoc()) {
+            $rowHtml = renderTripRowHtml($trip, $isDeletedView, $searchTerm);
+            echo json_encode(['success' => true, 'rowHtml' => $rowHtml]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No more rows']);
+        }
+        break;
+
    
 
     case 'get_deleted_trips':
