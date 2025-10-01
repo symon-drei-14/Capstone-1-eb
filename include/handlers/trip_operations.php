@@ -21,100 +21,7 @@ $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 $action = $data['action'] ?? '';
 
-
-// New helper function to format dates
-function formatDateTimeForTable($datetimeString) {
-    if (empty($datetimeString)) return 'N/A';
-    try {
-        $date = new DateTime($datetimeString);
-        return '<span class="date">' . $date->format('M j, Y') . '</span><br> <span class="time">' . $date->format('h:i A') . '</span>';
-    } catch (Exception $e) {
-        return 'Invalid Date';
-    }
-}
-
-// New helper function to render a single row's HTML
-function renderTripRowHtml($trip, $showDeleted, $searchTerm) {
-    $highlight = function($text, $search) {
-        if (empty($search) || !isset($text)) return htmlspecialchars($text ?? '');
-        $text = htmlspecialchars($text);
-        $escapedSearch = preg_quote($search, '/');
-        if (empty($escapedSearch)) return $text;
-        return preg_replace('/(' . $escapedSearch . ')/i', '<span class="highlight">$1</span>', $text);
-    };
-
-    $statusCell = '';
-    $actionCell = '';
-
-    if ($showDeleted) {
-        $statusCell = '<td data-label="Status"><span class="status cancelled">Deleted</span></td>';
-        $actionCell = '
-           <td data-label="Actions" class="actions">
-                <div class="dropdown">
-                    <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
-                    <div class="dropdown-content">
-                        <button class="dropdown-item restore" data-id="' . $trip['trip_id'] . '"><i class="fas fa-trash-restore"></i> Restore</button>
-                        <button class="dropdown-item full-delete" data-id="' . $trip['trip_id'] . '"><i class="fa-solid fa-ban"></i> Permanent Delete</button>
-                    </div>
-                </div>
-            </td>';
-    } else {
-        $statusClass = strtolower(str_replace(' ', '', $trip['status'] ?? ''));
-        $statusCell = '<td data-label="Status"><span class="status ' . $statusClass . '">' . htmlspecialchars($trip['status'] ?? '') . '</span></td>';
-        
-        $historyButton = (!empty($trip['edit_reason']) && $trip['edit_reason'] !== 'null' && $trip['edit_reason'] !== '[]') ? 
-            '<button class="dropdown-item view-reasons" data-id="' . $trip['trip_id'] . '"><i class="fas fa-history"></i> View History</button>' : '';
-
-        $actionCell = '
-         <td data-label="Actions" class="actions">
-            <div class="dropdown">
-                <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
-                <div class="dropdown-content">
-                    <button class="dropdown-item edit" data-id="' . $trip['trip_id'] . '"><i class="fas fa-edit"></i> Edit</button>
-                    <button class="dropdown-item view-expenses" data-id="' . $trip['trip_id'] . '"><i class="fas fa-money-bill-wave"></i> View Expenses</button>
-                    <button class="dropdown-item view-checklist" data-id="' . $trip['trip_id'] . '" data-driver-id="' . ($trip['driver_id'] ?? '') . '"><i class="fas fa-clipboard-check"></i> Driver Checklist</button>
-                   <a href="trip_report.php?id=' . $trip['trip_id'] . '" target="_blank" class="dropdown-item Full-report"><i class="fas fa-file-alt"></i> Generate Report</a>'
-                    . $historyButton .
-                    '<button class="dropdown-item delete" data-id="' . $trip['trip_id'] . '"><i class="fas fa-trash-alt"></i> Delete</button>
-                     <button class="dropdown-item cancel-trip" onclick="cancelTrip(' . $trip['trip_id'] . ')"><i class="fas fa-ban"></i> Cancel Trip</button>
-                </div>
-            </div>
-        </td>';
-    }
-    
-    $formattedDate = formatDateTimeForTable($trip['trip_date']);
-    $lastModifiedDate = $trip['last_modified_at'] ?? $trip['created_at'];
-    $formattedModifiedDate = formatDateTimeForTable($lastModifiedDate);
-    $lastModifiedBy = !empty($trip['last_modified_by']) ? '<br> <strong>' . $highlight($trip['last_modified_by'], $searchTerm) . '</strong>' : '';
-    $clientPort = $highlight($trip['client'] ?? 'N/A', $searchTerm) . (!empty($trip['port']) ? ' - ' . $highlight($trip['port'], $searchTerm) : '');
-
-    $row = '
-        <tr data-trip-id="' . $trip['trip_id'] . '" class="' . ($showDeleted ? 'deleted-row' : '') . '">
-            <td data-label="Plate Number">' . $highlight($trip['plate_no'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Trip Date">' . $formattedDate . '</td>
-            <td data-label="Driver">' . $highlight($trip['driver'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Helper">' . $highlight($trip['helper'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Dispatcher">' . $highlight($trip['dispatcher'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Container No.">' . $highlight($trip['container_no'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Client - Port">' . $clientPort . '</td>
-            <td data-label="Destination">' . $highlight($trip['destination'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Shipping Line">' . $highlight($trip['shipping_line'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Consignee">' . $highlight($trip['consignee'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Container Size">' . $highlight(!empty($trip['truck_capacity']) ? $trip['truck_capacity'] . 'ft' : 'N/A', $searchTerm) . '</td>
-            <td data-label="FCL">' . $highlight($trip['fcl_status'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Cash Advance">₱' . number_format(floatval($trip['cash_advance'] ?? 0), 2) . '</td>
-            <td data-label="Additional Cash">₱' . number_format(floatval($trip['additional_cash_advance'] ?? 0), 2) . '</td>
-            <td data-label="Diesel">₱' . number_format(floatval($trip['diesel'] ?? 0), 2) . '</td>
-            ' . $statusCell . '
-            <td data-label="Last Modified">' . $formattedModifiedDate . $lastModifiedBy . '</td>
-            ' . $actionCell . '
-        </tr>';
-
-    return $row;
-}
-
 function getOrCreateClientId($conn, $clientName) {
-    // ... (rest of your existing functions: getOrCreateClientId, checkDriverAvailability, etc.)
     $stmt = $conn->prepare("SELECT client_id FROM clients WHERE name = ?");
     $stmt->bind_param("s", $clientName);
     $stmt->execute();
@@ -417,7 +324,6 @@ AND (
 try {
     switch ($action) {
       case 'add':
-    // ... (Your existing 'add' case remains the same)
     $conn->begin_transaction();
     
     try {
@@ -533,7 +439,11 @@ try {
         }
 
         
-       
+        $removeFromQueueStmt = $conn->prepare("UPDATE drivers_table SET checked_in_at = NULL WHERE driver_id = ?");
+        $removeFromQueueStmt->bind_param("s", $driverId);
+        if (!$removeFromQueueStmt->execute()) {
+            throw new Exception("Failed to remove driver from queue: " . $removeFromQueueStmt->error);
+        }
 
         if ($data['status'] === 'En Route') {
             $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
@@ -597,7 +507,6 @@ try {
     break;
 
      case 'edit':
-    // ... (Your existing 'edit' case remains the same)
     $conn->begin_transaction();
     
     try {
@@ -789,8 +698,40 @@ try {
     }
     break;
 
+    case 'send_test_notification':
+    $driverId = $data['driver_id'] ?? null;
+    $message = $data['message'] ?? 'Test notification from Mansar Trucking';
+    
+    if (!$driverId) {
+        throw new Exception("Driver ID is required");
+    }
+
+    $checkDriver = $conn->prepare("SELECT name FROM drivers_table WHERE driver_id = ?");
+    $checkDriver->bind_param("i", $driverId);
+    $checkDriver->execute();
+    $driverResult = $checkDriver->get_result();
+    
+    if ($driverResult->num_rows === 0) {
+        throw new Exception("Driver not found");
+    }
+    
+    $driverName = $driverResult->fetch_assoc()['name'];
+    $checkDriver->close();
+
+    $result = $notificationService->sendTestNotification($driverId, $message);
+    
+    if ($result) {
+        echo json_encode([
+            'success' => true, 
+            'message' => "Test notification sent successfully to {$driverName}",
+            'driver_name' => $driverName
+        ]);
+    } else {
+        throw new Exception("Failed to send test notification to {$driverName}");
+    }
+    break;
+
     case 'delete':
-    // ... (Your existing 'delete' case remains the same)
     $tripId = $data['id'] ?? 0;
     if ($tripId <= 0) {
         throw new Exception("Invalid Trip ID provided.");
@@ -843,8 +784,8 @@ try {
     }
     break;
 
+
     case 'get_active_trips':
-    // ... (Your existing 'get_active_trips' case remains the same)
             $statusFilter = $data['statusFilter'] ?? 'all';
             $sortOrder = $data['sortOrder'] ?? 'desc';
             $page = $data['page'] ?? 1;
@@ -888,7 +829,9 @@ try {
                 $types .= "s";
             }
             
-            $searchQuery = " AND (
+
+            if (!empty($searchTerm)) {
+                $searchQuery = " AND (
                     tr.plate_no LIKE ? OR
                     d.name LIKE ? OR
                     h.name LIKE ? OR
@@ -900,7 +843,6 @@ try {
                     cons.name LIKE ? OR
                     t.container_no LIKE ?
                 )";
-            if (!empty($searchTerm)) {
                 $query .= $searchQuery;
                 $searchParam = "%{$searchTerm}%";
                 for ($i = 0; $i < 10; $i++) { 
@@ -1012,212 +954,209 @@ try {
                 'currentPage' => $page
             ]);
             break;
+
+            case 'debug_notifications':
+    $driverId = $data['driver_id'] ?? null;
     
-    // START OF NEW CASE
-    case 'fetchNextRow':
-        $page = $data['page'] ?? 1;
-        $perPage = $data['perPage'] ?? 10;
-        $statusFilter = $data['statusFilter'] ?? 'all';
-        $sortOrder = $data['sortOrder'] ?? 'desc';
-        $dateFrom = $data['dateFrom'] ?? '';
-        $dateTo = $data['dateTo'] ?? '';
-        $searchTerm = $data['searchTerm'] ?? '';
-
-        $offset = ($page * $perPage) - 1;
-
-        $isDeletedView = ($statusFilter === 'deleted');
-        $isTodayView = ($statusFilter === 'today');
-        
-        $baseQuery = "SELECT 
-            t.trip_id, t.driver_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
-            tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
-            disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
-            sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
-            al.modified_at as last_modified_at, al.edit_reason, al.delete_reason,
-            COALESCE(te.cash_advance, 0) as cash_advance,
-            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-            COALESCE(te.diesel, 0) as diesel
-          FROM trips t
-          LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-          LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-          LEFT JOIN helpers h ON t.helper_id = h.helper_id
-          LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-          LEFT JOIN clients c ON t.client_id = c.client_id
-          LEFT JOIN ports p ON t.port_id = p.port_id
-          LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-          LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-          LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-          LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id";
-        
-        $params = [];
-        $types = "";
-
-        if ($isDeletedView) {
-            $baseQuery .= " JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 1 WHERE 1=1";
-        } else {
-            $baseQuery .= " LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0 
-                           WHERE NOT EXISTS (SELECT 1 FROM audit_logs_trips al2 WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1)";
-        }
-
-        if (!$isDeletedView && $statusFilter !== 'all' && !$isTodayView) {
-            $baseQuery .= " AND t.status = ?";
-            $params[] = $statusFilter;
-            $types .= "s";
-        }
-
-        if ($isTodayView) {
-            $baseQuery .= " AND DATE(t.trip_date) = CURDATE()";
-        }
-        
-        if (!empty($searchTerm)) {
-            $baseQuery .= " AND (tr.plate_no LIKE ? OR d.name LIKE ? OR h.name LIKE ? OR disp.name LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR dest.name LIKE ? OR sl.name LIKE ? OR cons.name LIKE ? OR t.container_no LIKE ?)";
-            $searchParam = "%{$searchTerm}%";
-            for ($i = 0; $i < 10; $i++) {
-                $params[] = $searchParam;
-                $types .= "s";
-            }
-        }
-
-        if (!empty($dateFrom) && !empty($dateTo)) {
-            $baseQuery .= " AND DATE(t.trip_date) BETWEEN ? AND ?";
-            $params[] = $dateFrom;
-            $params[] = $dateTo;
-            $types .= "ss";
-        } elseif (!empty($dateFrom)) {
-            $baseQuery .= " AND DATE(t.trip_date) >= ?";
-            $params[] = $dateFrom;
-            $types .= "s";
-        } elseif (!empty($dateTo)) {
-            $baseQuery .= " AND DATE(t.trip_date) <= ?";
-            $params[] = $dateTo;
-            $types .= "s";
-        }
-
-        $baseQuery .= " ORDER BY t.trip_date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
-        $baseQuery .= " LIMIT 1 OFFSET ?";
-        $params[] = $offset;
-        $types .= "i";
-        
-        $stmt = $conn->prepare($baseQuery);
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($trip = $result->fetch_assoc()) {
-            $rowHtml = renderTripRowHtml($trip, $isDeletedView, $searchTerm);
-            echo json_encode(['success' => true, 'rowHtml' => $rowHtml]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'No more rows']);
-        }
+    if (!$driverId) {
+        echo json_encode(['success' => false, 'message' => 'Driver ID required']);
         break;
+    }
 
-        case 'fetchNextRow':
-        $page = $data['page'] ?? 1;
-        $perPage = $data['perPage'] ?? 10;
-        $statusFilter = $data['statusFilter'] ?? 'all';
-        $sortOrder = $data['sortOrder'] ?? 'desc';
-        $dateFrom = $data['dateFrom'] ?? '';
-        $dateTo = $data['dateTo'] ?? '';
-        $searchTerm = $data['searchTerm'] ?? '';
+    $driverCheck = $conn->prepare("SELECT driver_id, name FROM drivers_table WHERE driver_id = ?");
+    $driverCheck->bind_param("s", $driverId);
+    $driverCheck->execute();
+    $driverResult = $driverCheck->get_result();
+    $driverExists = $driverResult->num_rows > 0;
+    $driverInfo = $driverExists ? $driverResult->fetch_assoc() : null;
+    $driverCheck->close();
 
-        // The offset calculates which row to grab to fill the last spot on the page
-        $offset = ($page * $perPage) - 1;
+    $tokenCheck = $conn->prepare("SELECT fcm_token, device_type, is_active, created_at FROM fcm_tokens WHERE driver_id = ?");
+    $tokenCheck->bind_param("s", $driverId);
+    $tokenCheck->execute();
+    $tokenResult = $tokenCheck->get_result();
+    $tokens = [];
+    while ($row = $tokenResult->fetch_assoc()) {
+        $tokens[] = $row;
+    }
+    $tokenCheck->close();
 
-        $isDeletedView = ($statusFilter === 'deleted');
-        $isTodayView = ($statusFilter === 'today');
-        
-        $baseQuery = "SELECT 
-            t.trip_id, t.driver_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
-            tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
-            disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
-            sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
-            al.modified_at as last_modified_at, al.edit_reason, al.delete_reason,
-            COALESCE(te.cash_advance, 0) as cash_advance,
-            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-            COALESCE(te.diesel, 0) as diesel
-          FROM trips t
-          LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-          LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-          LEFT JOIN helpers h ON t.helper_id = h.helper_id
-          LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-          LEFT JOIN clients c ON t.client_id = c.client_id
-          LEFT JOIN ports p ON t.port_id = p.port_id
-          LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-          LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-          LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-          LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id";
-        
-        $params = [];
-        $types = "";
+    $notifCheck = $conn->prepare("SELECT notification_id, title, body, type, is_read, created_at FROM notifications WHERE driver_id = ? ORDER BY created_at DESC LIMIT 10");
+    $notifCheck->bind_param("s", $driverId);
+    $notifCheck->execute();
+    $notifResult = $notifCheck->get_result();
+    $notifications = [];
+    while ($row = $notifResult->fetch_assoc()) {
+        $notifications[] = $row;
+    }
+    $notifCheck->close();
+    
+    echo json_encode([
+        'success' => true,
+        'debug_info' => [
+            'driver_id' => $driverId,
+            'driver_exists' => $driverExists,
+            'driver_info' => $driverInfo,
+            'fcm_tokens' => $tokens,
+            'notifications' => $notifications,
+            'token_count' => count($tokens),
+            'active_tokens' => array_filter($tokens, function($t) { return $t['is_active'] == 1; }),
+            'notification_count' => count($notifications)
+        ]
+    ]);
+    break;
 
-        // This complex logic ensures we query the correct set of trips (active, deleted, or today's)
-        if ($isDeletedView) {
-            $baseQuery .= " JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 1 WHERE 1=1";
-        } else {
-            $baseQuery .= " LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0 
-                           WHERE NOT EXISTS (SELECT 1 FROM audit_logs_trips al2 WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1)";
-        }
+case 'register_fcm_token':
+    $driverId = null;
+    $fcmToken = null;
+    $deviceType = 'android';
 
-        if (!$isDeletedView && $statusFilter !== 'all' && !$isTodayView) {
-            $baseQuery .= " AND t.status = ?";
-            $params[] = $statusFilter;
-            $types .= "s";
-        }
+    if (!empty($data)) {
+        $driverId = $data['driver_id'] ?? null;
+        $fcmToken = $data['fcm_token'] ?? null;
+        $deviceType = $data['device_type'] ?? 'android';
+    }
 
-        if ($isTodayView) {
-            $baseQuery .= " AND DATE(t.trip_date) = CURDATE()";
-        }
-        
-        if (!empty($searchTerm)) {
-            $baseQuery .= " AND (tr.plate_no LIKE ? OR d.name LIKE ? OR h.name LIKE ? OR disp.name LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR dest.name LIKE ? OR sl.name LIKE ? OR cons.name LIKE ? OR t.container_no LIKE ?)";
-            $searchParam = "%{$searchTerm}%";
-            for ($i = 0; $i < 10; $i++) {
-                $params[] = $searchParam;
-                $types .= "s";
-            }
-        }
+    if (empty($driverId) || empty($fcmToken)) {
+        $driverId = $_POST['driver_id'] ?? null;
+        $fcmToken = $_POST['fcm_token'] ?? null;
+        $deviceType = $_POST['device_type'] ?? 'android';
+    }
 
-        if (!empty($dateFrom) && !empty($dateTo)) {
-            $baseQuery .= " AND DATE(t.trip_date) BETWEEN ? AND ?";
-            $params[] = $dateFrom;
-            $params[] = $dateTo;
-            $types .= "ss";
-        } elseif (!empty($dateFrom)) {
-            $baseQuery .= " AND DATE(t.trip_date) >= ?";
-            $params[] = $dateFrom;
-            $types .= "s";
-        } elseif (!empty($dateTo)) {
-            $baseQuery .= " AND DATE(t.trip_date) <= ?";
-            $params[] = $dateTo;
-            $types .= "s";
-        }
-
-        $baseQuery .= " ORDER BY t.trip_date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
-        $baseQuery .= " LIMIT 1 OFFSET ?";
-        $params[] = $offset;
-        $types .= "i";
-        
-        $stmt = $conn->prepare($baseQuery);
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($trip = $result->fetch_assoc()) {
-            $rowHtml = renderTripRowHtml($trip, $isDeletedView, $searchTerm);
-            echo json_encode(['success' => true, 'rowHtml' => $rowHtml]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'No more rows']);
-        }
+    error_log("=== FCM Registration Debug ===");
+    error_log("Driver ID: " . ($driverId ?? 'null'));
+    error_log("FCM Token: " . ($fcmToken ? substr($fcmToken, 0, 50) . '...' : 'null'));
+    error_log("Device Type: " . $deviceType);
+    
+    if (empty($driverId) || empty($fcmToken)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Driver ID and FCM token are required',
+            'received_driver_id' => $driverId,
+            'received_token_length' => $fcmToken ? strlen($fcmToken) : 0
+        ]);
         break;
+    }
 
-   
+    $checkDriver = $conn->prepare("SELECT driver_id, name FROM drivers_table WHERE driver_id = ?");
+    $checkDriver->bind_param("s", $driverId);
+    $checkDriver->execute();
+    $driverResult = $checkDriver->get_result();
+    
+    if ($driverResult->num_rows === 0) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Driver not found with ID: ' . $driverId
+        ]);
+        break;
+    }
+    
+    $driverInfo = $driverResult->fetch_assoc();
+    $checkDriver->close();
+    
+    try {
+        $deactivateStmt = $conn->prepare("UPDATE fcm_tokens SET is_active = 0 WHERE driver_id = ?");
+        $deactivateStmt->bind_param("s", $driverId);
+        $deactivateResult = $deactivateStmt->execute();
+        error_log("Deactivate existing tokens result: " . ($deactivateResult ? 'success' : 'failed'));
+        $deactivateStmt->close();
+
+        $stmt = $conn->prepare("
+            INSERT INTO fcm_tokens (driver_id, fcm_token, device_type, is_active, created_at, updated_at) 
+            VALUES (?, ?, ?, 1, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE 
+                is_active = 1, 
+                device_type = VALUES(device_type),
+                updated_at = NOW()
+        ");
+        
+        $stmt->bind_param("sss", $driverId, $fcmToken, $deviceType);
+        $result = $stmt->execute();
+        
+        if ($result) {
+            error_log("FCM token registered successfully for driver: $driverId");
+            echo json_encode([
+                'success' => true,
+                'message' => 'FCM token registered successfully',
+                'driver_name' => $driverInfo['name'],
+                'driver_id' => $driverId,
+                'token_preview' => substr($fcmToken, 0, 20) . '...'
+            ]);
+        } else {
+            error_log("Failed to register FCM token: " . $stmt->error);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to register FCM token: ' . $stmt->error
+            ]);
+        }
+        
+        $stmt->close();
+        
+    } catch (Exception $e) {
+        error_log("Exception in FCM token registration: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
+    }
+    break;
+
+case 'get_notifications':
+    $driverId = $data['driver_id'] ?? $_POST['driver_id'] ?? '';
+    $limit = $data['limit'] ?? $_POST['limit'] ?? 50;
+    $offset = $data['offset'] ?? $_POST['offset'] ?? 0;
+    
+    if (!$driverId) {
+        echo json_encode(['success' => false, 'message' => 'Driver ID is required']);
+        break;
+    }
+    
+    $notifications = $notificationService->getDriverNotifications($driverId, $limit, $offset);
+    $unreadCount = $notificationService->getUnreadCount($driverId);
+    
+    echo json_encode([
+        'success' => true,
+        'notifications' => $notifications,
+        'unread_count' => $unreadCount,
+        'total_count' => count($notifications),
+        'driver_id' => $driverId
+    ]);
+    break;
+
+
+    case 'mark_notification_read':
+    $notificationId = $data['notification_id'] ?? null;
+    $driverId = $data['driver_id'] ?? null;
+    
+    if (!$notificationId || !$driverId) {
+        throw new Exception("Notification ID and Driver ID are required");
+    }
+    
+    $result = $notificationService->markAsRead($notificationId, $driverId);
+    
+    if ($result) {
+        echo json_encode(['success' => true, 'message' => 'Notification marked as read']);
+    } else {
+        throw new Exception("Failed to mark notification as read");
+    }
+    break;
+
+    case 'get_unread_count':
+    $driverId = $data['driver_id'] ?? null;
+    
+    if (!$driverId) {
+        throw new Exception("Driver ID is required");
+    }
+    
+    $unreadCount = $notificationService->getUnreadCount($driverId);
+    
+    echo json_encode([
+        'success' => true, 
+        'unread_count' => $unreadCount
+    ]);
+    break;
 
     case 'get_deleted_trips':
-    // ... (Your existing 'get_deleted_trips' case remains the same)
     $statusFilter = $data['statusFilter'] ?? 'all';
     $sortOrder = $data['sortOrder'] ?? 'desc';
     $page = $data['page'] ?? 1;
@@ -1359,7 +1298,6 @@ try {
     ]);
     break;
 
-    // ... (rest of your existing cases: restore, full_delete, get_ports, etc.)
        case 'restore':
     // First get the trip details before restoring
     $getTripDetails = $conn->prepare("
@@ -1713,13 +1651,13 @@ case 'get_trips_today':
     }
     break;
 
-  case 'get_next_driver':
+    case 'get_next_driver':
     $capacity = $data['capacity'] ?? '';
     if (empty($capacity)) {
         throw new Exception("Capacity is required to find the next driver.");
     }
 
-    // This query now finds the next available driver based on the updated queuing rules
+    // This query now finds the next available driver based on the new queuing rules
     $stmt = $conn->prepare("
         SELECT 
             d.driver_id,
@@ -1738,9 +1676,8 @@ case 'get_trips_today':
           -- Rule 4: Truck must be available for a trip
           AND t.is_deleted = 0
           AND t.status NOT IN ('In Repair', 'Overdue', 'Enroute')
-        -- Rule 5: Order by last assignment time (NULLs first), then by check-in time.
-        -- This creates a fair, circular queue.
-        ORDER BY d.last_assigned_at ASC, d.checked_in_at ASC
+        -- Rule 5: Order by the check-in time to ensure First-Come, First-Served
+        ORDER BY d.checked_in_at ASC
         LIMIT 1
     ");
     $stmt->bind_param("s", $capacity);
@@ -1793,24 +1730,23 @@ case 'get_trips_today':
         $penaltyStmt->execute();
 
         // Find the next available driver from the queue who meets all criteria
-          $nextDriverStmt = $conn->prepare("
-        SELECT d.driver_id, d.name, t.truck_id, t.plate_no
-        FROM drivers_table d
-        JOIN truck_table t ON d.assigned_truck_id = t.truck_id
-        WHERE t.capacity = ?
-          AND d.driver_id != ? -- Can't be the same driver
-          AND d.checked_in_at IS NOT NULL
-          AND d.checked_in_at >= TIMESTAMPADD(HOUR, -16, NOW())
-          AND (d.penalty_until IS NULL OR d.penalty_until < NOW())
-          AND t.is_deleted = 0
-          AND t.status NOT IN ('In Repair', 'Overdue', 'Enroute')
-        -- Find the next best driver by ordering by the last assignment time, creating a circular queue.
-        ORDER BY d.last_assigned_at ASC, d.checked_in_at ASC
-        LIMIT 1
-    ");
-    $nextDriverStmt->bind_param("si", $capacity, $originalDriverId);
-    $nextDriverStmt->execute();
-    $newDriver = $nextDriverStmt->get_result()->fetch_assoc();
+        $nextDriverStmt = $conn->prepare("
+            SELECT d.driver_id, d.name, t.truck_id, t.plate_no
+            FROM drivers_table d
+            JOIN truck_table t ON d.assigned_truck_id = t.truck_id
+            WHERE t.capacity = ?
+              AND d.driver_id != ? -- Can't be the same driver
+              AND d.checked_in_at IS NOT NULL
+              AND d.checked_in_at >= TIMESTAMPADD(HOUR, -16, NOW())
+              AND (d.penalty_until IS NULL OR d.penalty_until < NOW())
+              AND t.is_deleted = 0
+              AND t.status NOT IN ('In Repair', 'Overdue', 'Enroute')
+            ORDER BY d.checked_in_at ASC
+            LIMIT 1
+        ");
+        $nextDriverStmt->bind_param("si", $capacity, $originalDriverId);
+        $nextDriverStmt->execute();
+        $newDriver = $nextDriverStmt->get_result()->fetch_assoc();
 
         if ($newDriver) {
             // A replacement was found!
