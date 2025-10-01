@@ -457,7 +457,7 @@ let showDeletedData = {
         document.getElementById('current-time').textContent = now.toLocaleTimeString();
     }
     
-    function setupTabs() {
+   function setupTabs() {
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
         
@@ -465,15 +465,28 @@ let showDeletedData = {
             btn.addEventListener('click', () => {
                 const tabId = btn.getAttribute('data-tab');
                 
-                // Update active button
+                if (currentTab !== tabId) {
+                    Object.keys(showDeletedData).forEach(type => {
+                        showDeletedData[type] = false;
+                        const checkbox = document.getElementById(`showDeleted-${type}`);
+                        if (checkbox) {
+                            checkbox.checked = false;
+                        }
+                    });
+                }
+
+               
                 tabBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 
-                // Update active content
+                
                 tabContents.forEach(content => content.classList.remove('active'));
                 document.getElementById(`${tabId}-tab`).classList.add('active');
                 
                 currentTab = tabId;
+
+                
+                renderTable(currentTab);
             });
         });
     }
