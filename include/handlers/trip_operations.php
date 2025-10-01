@@ -273,6 +273,98 @@ function getOrCreatePortId($conn, $portName) {
     }
 }
 
+
+function formatDateTimeForTable($datetimeString) {
+    if (empty($datetimeString)) return 'N/A';
+    try {
+        $date = new DateTime($datetimeString);
+        return '<span class="date">' . $date->format('M j, Y') . '</span><br> <span class="time">' . $date->format('h:i A') . '</span>';
+    } catch (Exception $e) {
+        return 'Invalid Date';
+    }
+}
+
+// New helper function to render a single row's HTML
+function renderTripRowHtml($trip, $showDeleted, $searchTerm) {
+    $highlight = function($text, $search) {
+        if (empty($search) || !isset($text)) return htmlspecialchars($text ?? '');
+        $text = htmlspecialchars($text);
+        $escapedSearch = preg_quote($search, '/');
+        if (empty($escapedSearch)) return $text;
+        return preg_replace('/(' . $escapedSearch . ')/i', '<span class="highlight">$1</span>', $text);
+    };
+
+    $statusCell = '';
+    $actionCell = '';
+
+    if ($showDeleted) {
+        $statusCell = '<td data-label="Status"><span class="status cancelled">Deleted</span></td>';
+        $actionCell = '
+           <td data-label="Actions" class="actions">
+                <div class="dropdown">
+                    <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
+                    <div class="dropdown-content">
+                        <button class="dropdown-item restore" data-id="' . $trip['trip_id'] . '"><i class="fas fa-trash-restore"></i> Restore</button>
+                        <button class="dropdown-item full-delete" data-id="' . $trip['trip_id'] . '"><i class="fa-solid fa-ban"></i> Permanent Delete</button>
+                    </div>
+                </div>
+            </td>';
+    } else {
+        $statusClass = strtolower(str_replace(' ', '', $trip['status'] ?? ''));
+        $statusCell = '<td data-label="Status"><span class="status ' . $statusClass . '">' . htmlspecialchars($trip['status'] ?? '') . '</span></td>';
+        
+        $historyButton = (!empty($trip['edit_reason']) && $trip['edit_reason'] !== 'null' && $trip['edit_reason'] !== '[]') ? 
+            '<button class="dropdown-item view-reasons" data-id="' . $trip['trip_id'] . '"><i class="fas fa-history"></i> View History</button>' : '';
+
+        $actionCell = '
+         <td data-label="Actions" class="actions">
+            <div class="dropdown">
+                <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
+                <div class="dropdown-content">
+                    <button class="dropdown-item edit" data-id="' . $trip['trip_id'] . '"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="dropdown-item view-expenses" data-id="' . $trip['trip_id'] . '"><i class="fas fa-money-bill-wave"></i> View Expenses</button>
+                    <button class="dropdown-item view-checklist" data-id="' . $trip['trip_id'] . '" data-driver-id="' . ($trip['driver_id'] ?? '') . '"><i class="fas fa-clipboard-check"></i> Driver Checklist</button>
+                   <a href="trip_report.php?id=' . $trip['trip_id'] . '" target="_blank" class="dropdown-item Full-report"><i class="fas fa-file-alt"></i> Generate Report</a>'
+                    . $historyButton .
+                    '<button class="dropdown-item delete" data-id="' . $trip['trip_id'] . '"><i class="fas fa-trash-alt"></i> Delete</button>
+                     <button class="dropdown-item cancel-trip" onclick="cancelTrip(' . $trip['trip_id'] . ')"><i class="fas fa-ban"></i> Cancel Trip</button>
+                </div>
+            </div>
+        </td>';
+    }
+    
+    $formattedDate = formatDateTimeForTable($trip['trip_date']);
+    $lastModifiedDate = $trip['last_modified_at'] ?? $trip['created_at'];
+    $formattedModifiedDate = formatDateTimeForTable($lastModifiedDate);
+    $lastModifiedBy = !empty($trip['last_modified_by']) ? '<br> <strong>' . $highlight($trip['last_modified_by'], $searchTerm) . '</strong>' : '';
+    $clientPort = $highlight($trip['client'] ?? 'N/A', $searchTerm) . (!empty($trip['port']) ? ' - ' . $highlight($trip['port'], $searchTerm) : '');
+
+    $row = '
+        <tr data-trip-id="' . $trip['trip_id'] . '" class="' . ($showDeleted ? 'deleted-row' : '') . '">
+            <td data-label="Plate Number">' . $highlight($trip['plate_no'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Trip Date">' . $formattedDate . '</td>
+            <td data-label="Driver">' . $highlight($trip['driver'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Helper">' . $highlight($trip['helper'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Dispatcher">' . $highlight($trip['dispatcher'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Container No.">' . $highlight($trip['container_no'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Client - Port">' . $clientPort . '</td>
+            <td data-label="Destination">' . $highlight($trip['destination'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Shipping Line">' . $highlight($trip['shipping_line'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Consignee">' . $highlight($trip['consignee'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Container Size">' . $highlight(!empty($trip['truck_capacity']) ? $trip['truck_capacity'] . 'ft' : 'N/A', $searchTerm) . '</td>
+            <td data-label="FCL">' . $highlight($trip['fcl_status'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Cash Advance">₱' . number_format(floatval($trip['cash_advance'] ?? 0), 2) . '</td>
+            <td data-label="Additional Cash">₱' . number_format(floatval($trip['additional_cash_advance'] ?? 0), 2) . '</td>
+            <td data-label="Diesel">₱' . number_format(floatval($trip['diesel'] ?? 0), 2) . '</td>
+            ' . $statusCell . '
+            <td data-label="Last Modified">' . $formattedModifiedDate . $lastModifiedBy . '</td>
+            ' . $actionCell . '
+        </tr>';
+
+    return $row;
+}
+
+
 function deleteTripChecklist($conn, $tripId) {
     $stmt = $conn->prepare("DELETE FROM driver_checklist WHERE trip_id = ?");
     $stmt->bind_param("i", $tripId);
@@ -1001,6 +1093,109 @@ try {
         ]
     ]);
     break;
+
+
+case 'fetchNextRow':
+        $page = $data['page'] ?? 1;
+        $perPage = $data['perPage'] ?? 10;
+        $statusFilter = $data['statusFilter'] ?? 'all';
+        $sortOrder = $data['sortOrder'] ?? 'desc';
+        $dateFrom = $data['dateFrom'] ?? '';
+        $dateTo = $data['dateTo'] ?? '';
+        $searchTerm = $data['searchTerm'] ?? '';
+
+        $offset = ($page * $perPage) - 1;
+
+        $isDeletedView = ($statusFilter === 'deleted');
+        $isTodayView = ($statusFilter === 'today');
+        
+        $baseQuery = "SELECT 
+            t.trip_id, t.driver_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
+            tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
+            disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
+            sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
+            al.modified_at as last_modified_at, al.edit_reason, al.delete_reason,
+            COALESCE(te.cash_advance, 0) as cash_advance,
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+            COALESCE(te.diesel, 0) as diesel
+          FROM trips t
+          LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+          LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+          LEFT JOIN helpers h ON t.helper_id = h.helper_id
+          LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+          LEFT JOIN clients c ON t.client_id = c.client_id
+          LEFT JOIN ports p ON t.port_id = p.port_id
+          LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+          LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+          LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+          LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id";
+        
+        $params = [];
+        $types = "";
+
+        if ($isDeletedView) {
+            $baseQuery .= " JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 1 WHERE 1=1";
+        } else {
+            $baseQuery .= " LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0 
+                           WHERE NOT EXISTS (SELECT 1 FROM audit_logs_trips al2 WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1)";
+        }
+
+        if (!$isDeletedView && $statusFilter !== 'all' && !$isTodayView) {
+            $baseQuery .= " AND t.status = ?";
+            $params[] = $statusFilter;
+            $types .= "s";
+        }
+
+        if ($isTodayView) {
+            $baseQuery .= " AND DATE(t.trip_date) = CURDATE()";
+        }
+        
+        if (!empty($searchTerm)) {
+            $baseQuery .= " AND (tr.plate_no LIKE ? OR d.name LIKE ? OR h.name LIKE ? OR disp.name LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR dest.name LIKE ? OR sl.name LIKE ? OR cons.name LIKE ? OR t.container_no LIKE ?)";
+            $searchParam = "%{$searchTerm}%";
+            for ($i = 0; $i < 10; $i++) {
+                $params[] = $searchParam;
+                $types .= "s";
+            }
+        }
+
+        if (!empty($dateFrom) && !empty($dateTo)) {
+            $baseQuery .= " AND DATE(t.trip_date) BETWEEN ? AND ?";
+            $params[] = $dateFrom;
+            $params[] = $dateTo;
+            $types .= "ss";
+        } elseif (!empty($dateFrom)) {
+            $baseQuery .= " AND DATE(t.trip_date) >= ?";
+            $params[] = $dateFrom;
+            $types .= "s";
+        } elseif (!empty($dateTo)) {
+            $baseQuery .= " AND DATE(t.trip_date) <= ?";
+            $params[] = $dateTo;
+            $types .= "s";
+        }
+
+        $baseQuery .= " ORDER BY t.trip_date " . ($sortOrder === 'asc' ? 'ASC' : 'DESC');
+        $baseQuery .= " LIMIT 1 OFFSET ?";
+        $params[] = $offset;
+        $types .= "i";
+        
+        $stmt = $conn->prepare($baseQuery);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($trip = $result->fetch_assoc()) {
+            $rowHtml = renderTripRowHtml($trip, $isDeletedView, $searchTerm);
+            echo json_encode(['success' => true, 'rowHtml' => $rowHtml]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No more rows']);
+        }
+        break;
+
+
+
 
 case 'register_fcm_token':
     $driverId = null;

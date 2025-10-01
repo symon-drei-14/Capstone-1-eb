@@ -3157,7 +3157,7 @@ function deleteTrip(tripId, rowElement) {
         confirmButtonText: 'Delete',
         inputValidator: (value) => {
             if (!value) {
-                return 'You need to provide a reason!'
+                return 'You need to provide a reason!';
             }
         }
     }).then((reasonResult) => {
@@ -3193,23 +3193,43 @@ function deleteTrip(tripId, rowElement) {
                                     showConfirmButton: false
                                 });
 
-                                // Check if this is the last item on the current page.
                                 const rowsOnPage = $('#eventTableBody tr').length;
                                 if (rowsOnPage === 1 && currentPage > 1) {
-                                    // If it is, we should go back a page.
-                                    currentPage--;
+                                    currentPage--; // go back a page if last row was deleted
                                 }
 
-                                // We'll stick with your fadeOut effect for a smooth UI.
                                 if (rowElement) {
                                     rowElement.fadeOut(500, function() {
-                                        // After the row fades, we call renderTable().
-                                        // This is the key part that fetches the new data,
-                                        // fills the gap, and updates the pagination count.
-                                        renderTable();
+                                        $(this).remove();
+
+                                        // Fetch next row to keep row count constant
+                                        $.ajax({
+                                            url: 'include/handlers/trip_operations.php',
+                                            type: 'POST',
+                                            contentType: 'application/json',
+                                            data: JSON.stringify({
+                                                action: 'fetchNextRow',
+                                                page: currentPage,
+                                                perPage: rowsPerPage,
+                                                statusFilter: currentStatusFilter,
+                                                sortOrder: dateSortOrder,
+                                                dateFrom: $('#dateFrom').val(),
+                                                dateTo: $('#dateTo').val(),
+                                                searchTerm: $('#searchInput').val()
+                                            }),
+                                            success: function(nextRowResponse) {
+                                                if (nextRowResponse.success && nextRowResponse.rowHtml) {
+                                                    $('#eventTableBody').append(nextRowResponse.rowHtml);
+                                                } else {
+                                                    renderTable(); // fallback refresh if no more rows
+                                                }
+                                            },
+                                            error: function() {
+                                                renderTable(); // fallback
+                                            }
+                                        });
                                     });
                                 } else {
-                                    // Just in case we delete from somewhere without a row reference
                                     renderTable();
                                 }
 
@@ -3240,6 +3260,7 @@ function deleteTrip(tripId, rowElement) {
         }
     });
 }
+
 
 
 $(document).on('click', '.dropdown-item.delete', function() {
