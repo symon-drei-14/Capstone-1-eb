@@ -21,33 +21,7 @@ h3 {
     position: relative;
 }
 
-.sidebar {
-    position: fixed;
-    top: 1rem;
-    left: 0;
-    width: 300px; 
-    height: 100%;
-    background-color: #ffffff;
-    color: #161616 !important;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1300;
-    border-right: 2px solid #16161618;
-    transform: translateX(-100%); 
-    transition: transform 0.3s ease;
-}
 
-.sidebar.expanded {
-    transform: translateX(0);
-}
-
-.sidebar.expanded .sidebar-item a,
-.sidebar.expanded .sidebar-item span {
-    visibility: visible;
-    opacity: 1;
-}
 
 @media (max-width: 768px) {
     .sidebar {
@@ -82,6 +56,8 @@ h3 {
     bottom: 60px;
     display: flex;
     height: calc(100vh - 120px);
+    padding: 10px;
+    margin-bottom: 20px;
 }
 
 .drivers-sidebar {
@@ -156,7 +132,7 @@ h3 {
     max-height: 60px;
     top: 0;
     left: 0;
-    z-index: 1350;
+    z-index: 1400;
 }
 
 .logo-container {
@@ -205,7 +181,7 @@ h3 {
     position: fixed;
     bottom: 0;
     width: 100%;
-    z-index: 1100;
+    z-index: 100;
     height: 60px;
 }
 
@@ -577,21 +553,22 @@ body {
 }
 
 
-/* --- Header & Footer --- */
+
 .header2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px; /* Adjusted padding */
+    padding: 10px 20px;
     background-color: #B82132;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: fixed;
     width: 100%;
-    height: 60px; /* Explicit height */
+    height: 60px; 
     top: 0;
     left: 0;
     z-index: 1200;
     box-sizing: border-box;
+
 }
 
 .logo-container {
@@ -621,28 +598,7 @@ body {
     font-weight: bold;   
 }
 
-.site-footer {
-    background-color: #B82132;
-    color: white;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    z-index: 1100;
-    height: 60px;
-}
 
-.footer-bottom {
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px 0;
-    height: 100%;
-}
-.footer-bottom p {
-    margin: 0;
-    font-size: 16px;
-}
 
 
 /* --- Responsive Design --- */
