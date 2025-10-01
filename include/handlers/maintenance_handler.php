@@ -1271,6 +1271,86 @@ AND (
         echo json_encode(["success" => true, "lastDate" => null]);
     }
     break;
+
+    case 'getMaintenanceFrequency':
+    // This query counts completed maintenance tasks, grouping them by year and truck plate number.
+    $sql = "SELECT 
+                YEAR(m.date_mtnce) as maintenance_year, 
+                t.plate_no,
+                COUNT(m.maintenance_id) as maintenance_count
+            FROM maintenance_table m
+            JOIN truck_table t ON m.truck_id = t.truck_id
+            LEFT JOIN (
+                -- This subquery finds the latest audit log entry for each maintenance task
+                -- to check if it's been soft-deleted.
+                SELECT 
+                    al1.maintenance_id,
+                    al1.is_deleted
+                FROM audit_logs_maintenance al1
+                WHERE al1.modified_at = (
+                    SELECT MAX(al2.modified_at)
+                    FROM audit_logs_maintenance al2
+                    WHERE al2.maintenance_id = al1.maintenance_id
+                )
+            ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id
+            -- We only want to count records that are marked as 'Completed'.
+            WHERE t.is_deleted = 0 AND (latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL) AND m.status = 'Completed'
+            GROUP BY maintenance_year, t.plate_no
+            ORDER BY maintenance_year ASC, t.plate_no ASC";
+
+    $result = $conn->query($sql);
+    if (!$result) {
+        echo json_encode(['success' => false, 'message' => 'Database query failed: ' . $conn->error]);
+        exit;
+    }
+
+    $rawData = [];
+    $years = [];
+    $trucks = [];
+
+    // First, let's gather all unique years and trucks from the data.
+    while ($row = $result->fetch_assoc()) {
+        $rawData[] = $row;
+        if (!in_array($row['maintenance_year'], $years)) {
+            $years[] = $row['maintenance_year'];
+        }
+        if (!in_array($row['plate_no'], $trucks)) {
+            $trucks[] = $row['plate_no'];
+        }
+    }
+
+    // Sorting them to keep the chart looking consistent.
+    sort($years, SORT_NUMERIC);
+    sort($trucks, SORT_STRING);
+
+    // Now, we'll build the 'series' array that ApexCharts needs.
+    $series = [];
+    foreach ($trucks as $truckPlate) {
+        $dataPoints = [];
+        foreach ($years as $year) {
+            $count = 0; // Default to zero if no maintenance was done.
+            // Find the matching count for this truck and year.
+            foreach ($rawData as $data) {
+                if ($data['plate_no'] == $truckPlate && $data['maintenance_year'] == $year) {
+                    $count = (int)$data['maintenance_count'];
+                    break;
+                }
+            }
+            $dataPoints[] = $count;
+        }
+        $series[] = [
+            'name' => $truckPlate,
+            'data' => $dataPoints
+        ];
+    }
+
+    // Finally, send the data back in a clean JSON format.
+    echo json_encode([
+        'success' => true,
+        'series' => $series,
+        'categories' => $years
+    ]);
+    break;
             
         case 'getMaintenanceTypes':
             $sql = "SELECT maintenance_type_id, type_name FROM maintenance_types ORDER BY type_name";

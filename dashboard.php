@@ -1739,6 +1739,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Small delay to ensure ApexCharts is ready
     setTimeout(() => {
         initializeCostTrendsChart();
+          initializeMaintenanceFrequencyChart();
     }, 500);
 });
 
@@ -1844,80 +1845,81 @@ document.addEventListener('DOMContentLoaded', function() {
     var operational = new ApexCharts(document.querySelector("#operational"), options4);
     operational.render();
 
-    var options = {
-          series: [{
-          name: 'Truck 1',
-          data: [44, 55, 41, 37, 22, 43, 21]
-        }, {
-          name: 'Truck 2',
-          data: [53, 32, 33, 52, 13, 43, 32]
-        }, {
-          name: 'Truck 3',
-          data: [12, 17, 11, 9, 15, 11, 20]
-        }, {
-          name: 'Truck 4',
-          data: [9, 7, 5, 8, 6, 9, 4]
-        }, {
-          name: 'Truck 5',
-          data: [25, 12, 19, 32, 25, 24, 10]
-        }],
-          chart: {
-          type: 'bar',
-          height: 350,
-          stacked: true,
-        },
-        plotOptions: {
-          bar: {
-            horizontal: true,
-            dataLabels: {
-              total: {
-                enabled: true,
-                offsetX: 0,
-                style: {
-                  fontSize: '13px',
-                  fontWeight: 900
-                }
-              }
+   function initializeMaintenanceFrequencyChart() {
+    fetch('include/handlers/maintenance_handler.php?action=getMaintenanceFrequency')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // If we got the data, set up the chart options
+                var options = {
+                    series: data.series, // using dynamic series data from the server
+                    chart: {
+                        type: 'bar',
+                        height: 350,
+                        stacked: true,
+                    },
+                    plotOptions: {
+                        bar: {
+                            horizontal: true,
+                            dataLabels: {
+                                total: {
+                                    enabled: true,
+                                    offsetX: 0,
+                                    style: {
+                                        fontSize: '13px',
+                                        fontWeight: 900
+                                    }
+                                }
+                            }
+                        },
+                    },
+                    stroke: {
+                        width: 1,
+                        colors: ['#fff']
+                    },
+                    xaxis: {
+                        categories: data.categories, // using dynamic year categories from the server
+                        labels: {
+                            formatter: function (val) {
+                                return val;
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: undefined
+                        },
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function (val) {
+                                return val; // keeps the tooltip simple
+                            }
+                        }
+                    },
+                    fill: {
+                        opacity: 1
+                    },
+                    legend: {
+                        position: 'top',
+                        horizontalAlign: 'left',
+                        offsetX: 40
+                    }
+                };
+                
+                // create and render the chart
+                var maintenanceChart = new ApexCharts(document.querySelector("#maintenance"), options);
+                maintenanceChart.render();
+            } else {
+                console.error("Failed to load maintenance frequency data:", data.message);
+                document.querySelector("#maintenance").innerHTML = '<p style="text-align: center; color: red;">Could not load chart data.</p>';
             }
-          },
-        },
-        stroke: {
-          width: 1,
-          colors: ['#fff']
-        },
-    
-        xaxis: {
-          categories: [2019,2020, 2021, 2022, 2023, 2024, 2025],
-          labels: {
-            formatter: function (val) {
-              return val 
-            }
-          }
-        },
-        yaxis: {
-          title: {
-            text: undefined
-          },
-        },
-        tooltip: {
-          y: {
-            formatter: function (val) {
-              return val 
-            }
-          }
-        },
-        fill: {
-          opacity: 1
-        },
-        legend: {
-          position: 'top',
-          horizontalAlign: 'left',
-          offsetX: 40
-        }
-        };
-
-        var maintenance = new ApexCharts(document.querySelector("#maintenance"), options);
-        maintenance.render();
+        })
+        .catch(error => {
+            console.error('Error fetching maintenance frequency data:', error);
+            document.querySelector("#maintenance").innerHTML = '<p style="text-align: center; color: red;">Error fetching chart data.</p>';
+        });
+}
 
 
 </script>
