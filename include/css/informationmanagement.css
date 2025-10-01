@@ -70,33 +70,6 @@ body {
     z-index: 1300;
 }
 
-.sidebar {
-    position: fixed;
-    top: 1rem;
-    left: 0;
-    width: 300px; 
-    height: 100%;
-    background-color: #edf1ed;
-    color: #161616 !important;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1100;
-    border-right: 2px solid #16161627;
-    transform: translateX(-100%); 
-    transition: transform 0.3s ease;
-}
-
-.sidebar.expanded {
-    transform: translateX(0);
-}
-
-.sidebar.expanded .sidebar-item a,
-.sidebar.expanded .sidebar-item span {
-    visibility: visible;
-    opacity: 1;
-}
 
 .datetime-container {
     display: inline-flex;

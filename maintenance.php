@@ -46,46 +46,8 @@
     </div>
 </header>
 
-    <div class="sidebar">
-        <div class="sidebar-item">
-            <i class="icon2">🏠</i>
-            <a href="dashboard.php">Home</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🚗</i>
-            <a href="drivermanagement.php">Driver Management</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🚛</i>
-            <a href="fleetmanagement.php">Fleet Management</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">📋</i>
-            <a href="triplogs.php">Trip Management</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">📍</i>
-            <a href="tracking.php">Tracking</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🔧</i>
-            <a href="maintenance.php">Maintenance Scheduling</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">📈</i>
-            <a href="informationmanagement.php">Information Management</a>
-        </div>
-        <hr>
-        <div class="sidebar-item">
-            <i class="icon2">⚙️</i>
-            <a href="adminmanagement.php">Admin Management</a>
-        </div>
-        <div class="sidebar-item">
-            <i class="icon2">🚪</i>
-            <a href="include/handlers/logout.php" data-no-loading="true">Logout</a>
-        </div>
-    </div>
-
+ <?php require_once __DIR__ . '/include/sidebar.php'; ?>
+ 
         <h3><i class="fa-solid fa-wrench"></i>Preventive Maintenance Scheduling</h3>
         <div class="stats-container-wrapper">
      <div class="stats-cards">
