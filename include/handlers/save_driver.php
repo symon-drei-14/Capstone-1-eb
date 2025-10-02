@@ -188,9 +188,7 @@ function updateFirebaseDriver($driverId, $data) {
             if (!empty($data['email'])) {
                 $firebase_data['email'] = $data['email'];
             }
-            if (!empty($data['password'])) {
-                $firebase_data['password'] = $data['password'];
-            }
+            // The password field in Firebase is no longer needed, so we won't update it.
             if (isset($data['assigned_truck_id'])) {
                 $assigned_truck_id = $data['assigned_truck_id'] ?: null;
                 $firebase_data['assigned_truck_id'] = $assigned_truck_id ? intval($assigned_truck_id) : null;

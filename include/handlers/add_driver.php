@@ -178,13 +178,12 @@ try {
         FILE_APPEND);
 
     // Now save to Firebase
-    $firebase_url = "https://mansartrucking1-default-rtdb.asia-southeast1.firebasedatabase.app/drivers/" . $driver_id . ".json?auth=Xtnh1Zva11o8FyDEA75gzep6NUeNJLMZiCK6mXB7";
+     $firebase_url = "https://mansartrucking1-default-rtdb.asia-southeast1.firebasedatabase.app/drivers/" . $driver_id . ".json?auth=Xtnh1Zva11o8FyDEA75gzep6NUeNJLMZiCK6mXB7";
     
     $firebase_data = array(
         "driver_id" => $driver_id,
         "name" => $data['name'],
         "email" => $data['email'],
-        "password" => $data['password'], // Store plain password in Firebase as per your register.js logic
         "assigned_truck_id" => $assigned_truck_id ? intval($assigned_truck_id) : null,
         "created_at" => date('c'), // ISO 8601 format
         "last_login" => null,
