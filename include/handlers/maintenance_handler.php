@@ -110,57 +110,43 @@ function updateTruckStatusFromMaintenance($conn, $truckId) {
     }
 }
 
-function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all', $showDeleted = false, $startDate = null, $endDate = null) {
+function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all', $showDeleted = false, $startDate = null, $endDate = null, $sortBy = 'maintenance_id', $sortDir = 'DESC') {
     // First, update any pending records that are now overdue
     $updateOverdue = $conn->prepare("UPDATE maintenance_table m SET status = 'Overdue' 
                                     WHERE status = 'Pending'
-                                   AND date_mtnce < CURDATE()
-                                   AND NOT EXISTS (
-                                       SELECT 1 FROM audit_logs_maintenance al 
-                                       WHERE al.maintenance_id = m.maintenance_id 
-                                       AND al.is_deleted = 1
-                                       AND al.modified_at = (
-                                           SELECT MAX(al2.modified_at)
-                                           FROM audit_logs_maintenance al2
-                                           WHERE al2.maintenance_id = m.maintenance_id
-                                       )
-                                   )");
+                                AND date_mtnce < CURDATE()
+                                AND NOT EXISTS (
+                                    SELECT 1 FROM audit_logs_maintenance al 
+                                    WHERE al.maintenance_id = m.maintenance_id 
+                                    AND al.is_deleted = 1
+                                    AND al.modified_at = (
+                                        SELECT MAX(al2.modified_at)
+                                        FROM audit_logs_maintenance al2
+                                        WHERE al2.maintenance_id = m.maintenance_id
+                                    )
+                                )");
 
     if (!$updateOverdue) {
         error_log("Failed to prepare updateOverdue query: " . $conn->error);
         return [
-            "records" => [],
-            "totalPages" => 1,
-            "currentPage" => 1,
-            "totalRecords" => 0,
-            "error" => "SQL preparation error"
+            "records" => [], "totalPages" => 1, "currentPage" => 1, "totalRecords" => 0, "error" => "SQL preparation error"
         ];
     }
-    
     $updateOverdue->execute();
-    
-    // Then update truck statuses for any newly overdue maintenance
+
+    // Update truck statuses for any newly overdue maintenance
     $getOverdueTrucks = $conn->query("SELECT DISTINCT m.truck_id, t.plate_no 
                                     FROM maintenance_table m
                                     JOIN truck_table t ON m.truck_id = t.truck_id
                                     WHERE m.status = 'Overdue' 
                                     AND NOT EXISTS (
                                         SELECT 1 FROM audit_logs_maintenance al 
-                                        WHERE al.maintenance_id = m.maintenance_id 
-                                        AND al.is_deleted = 1
-                                        AND al.modified_at = (
-                                            SELECT MAX(al2.modified_at)
-                                            FROM audit_logs_maintenance al2
-                                            WHERE al2.maintenance_id = m.maintenance_id
-                                        )
-                                    )
-                                    AND t.is_deleted = 0");
-    
+                                        WHERE al.maintenance_id = m.maintenance_id AND al.is_deleted = 1
+                                        AND al.modified_at = (SELECT MAX(al2.modified_at) FROM audit_logs_maintenance al2 WHERE al2.maintenance_id = m.maintenance_id)
+                                    ) AND t.is_deleted = 0");
     if ($getOverdueTrucks) {
         while ($row = $getOverdueTrucks->fetch_assoc()) {
-            // Update truck status to Overdue
-            $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Overdue' 
-                                         WHERE truck_id = ?");
+            $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Overdue' WHERE truck_id = ?");
             if ($updateTruck) {
                 $updateTruck->bind_param("i", $row['truck_id']);
                 $updateTruck->execute();
@@ -169,37 +155,25 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     }
 
     $offset = ($page - 1) * $rowsPerPage;
-    
-    // FIXED: Use a subquery to get the latest audit log status for each maintenance record
-    $sql = "SELECT 
-            m.maintenance_id AS maintenanceId,
-            m.truck_id AS truckId,
-            t.plate_no AS licensePlate,
-            m.date_mtnce AS maintenanceDate,
-            m.remarks,
-            m.status,
-            s.name AS supplierName,
-            m.supplier_id AS supplierId,
-            mt.type_name AS maintenanceTypeName,
-            m.maintenance_type_id AS maintenanceTypeId,
-            m.cost,
-            latest_audit.is_deleted AS isDeleted,
-            latest_audit.delete_reason AS deleteReason,
-            latest_audit.modified_by AS lastUpdatedBy,
-            latest_audit.modified_at AS lastUpdatedAt,
-            latest_audit.edit_reason AS editReason
+
+    // A whitelist of columns that are allowed to be sorted. This prevents SQL injection.
+    $allowedSortColumns = [
+        'truck_id' => 'm.truck_id',
+        'date_mtnce' => 'm.date_mtnce',
+        'maintenance_id' => 'm.maintenance_id' // Default
+    ];
+
+    // Validate the sort parameters, defaulting to sorting by the newest record if they are invalid.
+    $sortColumn = $allowedSortColumns[$sortBy] ?? 'm.maintenance_id';
+    $sortDirection = (strtoupper($sortDir) === 'ASC') ? 'ASC' : 'DESC';
+
+    $sql = "SELECT m.maintenance_id AS maintenanceId, m.truck_id AS truckId, t.plate_no AS licensePlate, m.date_mtnce AS maintenanceDate, m.remarks, m.status, s.name AS supplierName, m.supplier_id AS supplierId, mt.type_name AS maintenanceTypeName, m.maintenance_type_id AS maintenanceTypeId, m.cost, latest_audit.is_deleted AS isDeleted, latest_audit.delete_reason AS deleteReason, latest_audit.modified_by AS lastUpdatedBy, latest_audit.modified_at AS lastUpdatedAt, latest_audit.edit_reason AS editReason
         FROM maintenance_table m
         LEFT JOIN truck_table t ON m.truck_id = t.truck_id
         LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
         LEFT JOIN suppliers s ON m.supplier_id = s.supplier_id
         LEFT JOIN (
-            SELECT 
-                al1.maintenance_id,
-                al1.modified_by,
-                al1.modified_at,
-                al1.edit_reason,
-                al1.is_deleted,
-                al1.delete_reason
+            SELECT al1.maintenance_id, al1.modified_by, al1.modified_at, al1.edit_reason, al1.is_deleted, al1.delete_reason
             FROM audit_logs_maintenance al1
             WHERE al1.modified_at = (
                 SELECT MAX(al2.modified_at)
@@ -207,131 +181,99 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
                 WHERE al2.maintenance_id = al1.maintenance_id
             )
         ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id";
-    
+
     $params = [];
     $types = '';
     $whereClauses = [];
-    
+
     if ($statusFilter !== 'all') {
         $whereClauses[] = "m.status = ?";
         $params[] = $statusFilter;
         $types .= "s";
     }
-    
     if ($startDate) {
         $whereClauses[] = "m.date_mtnce >= ?";
         $params[] = $startDate;
         $types .= "s";
     }
-    
     if ($endDate) {
         $whereClauses[] = "m.date_mtnce <= ?";
         $params[] = $endDate;
         $types .= "s";
     }
-    
-    // Handle deleted records filter - only show records that are currently deleted
     if ($showDeleted) {
         $whereClauses[] = "latest_audit.is_deleted = 1";
     } else {
-        // Show records that are not deleted (either never deleted or restored)
         $whereClauses[] = "(latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)";
     }
 
     if (!empty($whereClauses)) {
         $sql .= " WHERE " . implode(" AND ", $whereClauses);
     }
-    
-    $sql .= " ORDER BY m.maintenance_id DESC LIMIT ?, ?";
+
+    // Apply the dynamic sorting here. A secondary sort is added for consistency.
+    $sql .= " ORDER BY $sortColumn $sortDirection, m.maintenance_id DESC LIMIT ?, ?";
     $params[] = $offset;
     $params[] = $rowsPerPage;
     $types .= "ii";
-    
+
     $stmt = $conn->prepare($sql);
-    
     if (!$stmt) {
         error_log("Failed to prepare main query: " . $conn->error);
-        return [
-            "records" => [],
-            "totalPages" => 1,
-            "currentPage" => 1,
-            "totalRecords" => 0,
-            "error" => "SQL preparation error: " . $conn->error
-        ];
+        return ["records" => [], "totalPages" => 1, "currentPage" => 1, "totalRecords" => 0, "error" => "SQL preparation error: " . $conn->error];
     }
-    
     if (!empty($params)) {
         $stmt->bind_param($types, ...$params);
     }
-    
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     $records = [];
     while ($row = $result->fetch_assoc()) {
         $records[] = $row;
     }
-    
-    // Get total count for pagination with the same filter
+
     $countSql = "SELECT COUNT(*) as total FROM maintenance_table m
-                 LEFT JOIN (
-                    SELECT 
-                        al1.maintenance_id,
-                        al1.is_deleted
+                LEFT JOIN (
+                    SELECT al1.maintenance_id, al1.is_deleted
                     FROM audit_logs_maintenance al1
-                    WHERE al1.modified_at = (
-                        SELECT MAX(al2.modified_at)
-                        FROM audit_logs_maintenance al2
-                        WHERE al2.maintenance_id = al1.maintenance_id
-                    )
-                 ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id";
-    
+                    WHERE al1.modified_at = (SELECT MAX(al2.modified_at) FROM audit_logs_maintenance al2 WHERE al2.maintenance_id = al1.maintenance_id)
+                ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id";
+
     $countParams = [];
     $countTypes = '';
     $countWhereClauses = [];
-    
+
     if ($statusFilter !== 'all') {
         $countWhereClauses[] = "m.status = ?";
         $countParams[] = $statusFilter;
         $countTypes .= "s";
     }
-    
-    // Add date range filtering to count query
     if ($startDate) {
         $countWhereClauses[] = "m.date_mtnce >= ?";
         $countParams[] = $startDate;
         $countTypes .= "s";
     }
-    
     if ($endDate) {
         $countWhereClauses[] = "m.date_mtnce <= ?";
         $countParams[] = $endDate;
         $countTypes .= "s";
     }
-    
     if ($showDeleted) {
         $countWhereClauses[] = "latest_audit.is_deleted = 1";
     } else {
         $countWhereClauses[] = "(latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)";
     }
-    
+
     if (!empty($countWhereClauses)) {
         $countSql .= " WHERE " . implode(" AND ", $countWhereClauses);
     }
-    
+
     $countStmt = $conn->prepare($countSql);
-    
     if (!$countStmt) {
         error_log("Failed to prepare count query: " . $conn->error);
-        return [
-            "records" => $records,
-            "totalPages" => 1,
-            "currentPage" => $page,
-            "totalRecords" => count($records),
-            "error" => "Count query error: " . $conn->error
-        ];
+        return ["records" => $records, "totalPages" => 1, "currentPage" => $page, "totalRecords" => count($records), "error" => "Count query error: " . $conn->error];
     }
-    
     if (!empty($countParams)) {
         $countStmt->bind_param($countTypes, ...$countParams);
     }
@@ -339,13 +281,8 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
     $countResult = $countStmt->get_result();
     $totalRows = $countResult->fetch_assoc()['total'];
     $totalPages = ceil($totalRows / $rowsPerPage);
-    
-    return [
-        "records" => $records,
-        "totalPages" => $totalPages,
-        "currentPage" => $page,
-        "totalRecords" => $totalRows 
-    ];
+
+    return ["records" => $records, "totalPages" => $totalPages, "currentPage" => $page, "totalRecords" => $totalRows];
 }
 
 function getMaintenanceCounts($conn) {
@@ -522,17 +459,21 @@ $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 try {
     switch ($action) {
-        case 'getRecords':
-        $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-        $rowsPerPage = isset($_GET['limit']) ? intval($_GET['limit']) : 5;
-        $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
-        $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
-        $startDate = isset($_GET['startDate']) ? $_GET['startDate'] : null;
-        $endDate = isset($_GET['endDate']) ? $_GET['endDate'] : null;
-        
-        $data = getMaintenanceRecords($conn, $page, $rowsPerPage, $statusFilter, $showDeleted, $startDate, $endDate);
-        echo json_encode($data);
-        break;
+       case 'getRecords':
+    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+    $rowsPerPage = isset($_GET['limit']) ? intval($_GET['limit']) : 5;
+    $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
+    $showDeleted = isset($_GET['showDeleted']) ? filter_var($_GET['showDeleted'], FILTER_VALIDATE_BOOLEAN) : false;
+    $startDate = isset($_GET['startDate']) ? $_GET['startDate'] : null;
+    $endDate = isset($_GET['endDate']) ? $_GET['endDate'] : null;
+
+    // Read the new sorting parameters from the URL
+    $sortBy = isset($_GET['sortBy']) ? $_GET['sortBy'] : 'maintenance_id';
+    $sortDir = isset($_GET['sortDir']) ? $_GET['sortDir'] : 'DESC';
+
+    $data = getMaintenanceRecords($conn, $page, $rowsPerPage, $statusFilter, $showDeleted, $startDate, $endDate, $sortBy, $sortDir);
+    echo json_encode($data);
+    break;
 
         case 'getHistory':
             $truckId = isset($_GET['truckId']) ? intval($_GET['truckId']) : 0;

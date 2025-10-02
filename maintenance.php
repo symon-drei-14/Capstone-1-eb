@@ -408,7 +408,8 @@
             let currentTruckId = 0;
             let isEditing = false;
             let trucksList = [];
-            let sortTruckIdAsc = true; 
+            let currentSortColumn = 'maintenance_id';
+            let currentSortDirection = 'DESC';
             let rowsPerPage = 5;
             let searchTimeout;
             let startDateFilter = null;
@@ -749,24 +750,27 @@ function filterTableByStatus() {
 
     
 function loadMaintenanceData() {
+    // We'll build the URL step-by-step
     let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}&limit=${rowsPerPage}`;
-    
+
+    // Add the new sorting parameters to the request
+    url += `&sortBy=${encodeURIComponent(currentSortColumn)}&sortDir=${encodeURIComponent(currentSortDirection)}`;
+
     if (currentStatusFilter === 'deleted') {
         url += `&showDeleted=1`;
     } 
-    
     else if (currentStatusFilter !== 'all') {
         url += `&status=${encodeURIComponent(currentStatusFilter)}`;
     }
 
-      if (startDateFilter) {
+    if (startDateFilter) {
         url += `&startDate=${encodeURIComponent(startDateFilter)}`;
     }
     if (endDateFilter) {
         url += `&endDate=${encodeURIComponent(endDateFilter)}`;
     }
-      url += `&_=${new Date().getTime()}`;
-    
+    url += `&_=${new Date().getTime()}`;
+
     fetch(url)
         .then(response => {
             if (!response.ok) {
@@ -776,12 +780,13 @@ function loadMaintenanceData() {
         })
         .then(response => {
             maintenanceData = response.records || [];
-            
+
             renderTable(response.records || []);
             totalPages = response.totalPages || 1;
             currentPage = response.currentPage || 1;
             updatePagination();
             updateShowingInfo(response.totalRecords, response.records.length);
+            updateSortIcons(); // Update the sort icons after the data is loaded
         })
         .catch(error => {
             console.error("Error loading data:", error);
@@ -1979,47 +1984,50 @@ function saveMaintenanceRecord() {
                 document.getElementById("remindersModal").style.display = "none";
             }
 
-            let sortDateAsc = true; 
+            
 
-            function sortByDate() {
-                const tableBody = document.querySelector("#maintenanceTable tbody");
-                const rows = Array.from(tableBody.querySelectorAll("tr"));
-
-                const sortedRows = rows.sort((a, b) => {
-                    const dateA = new Date(a.children[2].textContent.trim());
-                    const dateB = new Date(b.children[2].textContent.trim());
-
-                    return sortDateAsc ? dateA - dateB : dateB - dateA;
-                });
-
-                sortDateAsc = !sortDateAsc;
-
-                const icon = document.getElementById("dateSortIcon");
-                icon.textContent = sortDateAsc ? '⬆' : '⬇';
-
-                tableBody.innerHTML = '';
-                sortedRows.forEach(row => tableBody.appendChild(row));
-            }
-
-            function sortByTruckId() {
-        const tableBody = document.querySelector("#maintenanceTable tbody");
-        const rows = Array.from(tableBody.querySelectorAll("tr"));
-
-        const sortedRows = rows.sort((a, b) => {
-            const truckIdA = parseInt(a.children[0].textContent.trim());
-            const truckIdB = parseInt(b.children[0].textContent.trim());
-
-            return sortTruckIdAsc ? truckIdA - truckIdB : truckIdB - truckIdA;
-        });
-
-        sortTruckIdAsc = !sortTruckIdAsc;
-
-        const icon = document.getElementById("truckIdSortIcon");
-        icon.textContent = sortTruckIdAsc ? '⬆' : '⬇';
-
-        tableBody.innerHTML = '';
-        sortedRows.forEach(row => tableBody.appendChild(row));
+           function sortByDate() {
+    const sortColumn = 'date_mtnce';
+    if (currentSortColumn === sortColumn) {
+        // Flip the direction if we're already sorting by date
+        currentSortDirection = currentSortDirection === 'ASC' ? 'DESC' : 'ASC';
+    } else {
+        // Switch to sorting by date
+        currentSortColumn = sortColumn;
+        currentSortDirection = 'ASC';
     }
+    currentPage = 1; // Always reset to page 1 on a new sort
+    loadMaintenanceData();
+}
+
+function updateSortIcons() {
+    // First, reset both icons to the default state
+    document.getElementById('truckIdSortIcon').textContent = '⬍';
+    document.getElementById('dateSortIcon').textContent = '⬍';
+
+    const icon = currentSortDirection === 'ASC' ? '⬆' : '⬇';
+
+    // Now, set the correct icon on the currently sorted column
+    if (currentSortColumn === 'truck_id') {
+        document.getElementById('truckIdSortIcon').textContent = icon;
+    } else if (currentSortColumn === 'date_mtnce') {
+        document.getElementById('dateSortIcon').textContent = icon;
+    }
+}
+
+           function sortByTruckId() {
+    const sortColumn = 'truck_id';
+    if (currentSortColumn === sortColumn) {
+        // If we're already sorting by truck ID, just flip the direction
+        currentSortDirection = currentSortDirection === 'ASC' ? 'DESC' : 'ASC';
+    } else {
+        // Otherwise, switch to this column and default to ascending
+        currentSortColumn = sortColumn;
+        currentSortDirection = 'ASC';
+    }
+    currentPage = 1; // Go back to the first page for the new sort
+    loadMaintenanceData();
+}
 
             function restoreMaintenance(id) {
     Swal.fire({
