@@ -1020,7 +1020,6 @@ case 'get_trip_statistics':
     $trip = $tripResult->fetch_assoc();
     $tripCheck->close();
     
-    // --- FIX STARTS HERE ---
     // Let's see if we need to bypass the standard time window check.
     $bypassTimeCheck = false;
 
@@ -1077,7 +1076,35 @@ case 'get_trip_statistics':
             break;
         }
     }
-    // --- FIX ENDS HERE ---
+
+    // --- SERVER-SIDE VALIDATION ---
+    // This is a safety net to ensure no invalid checklists are saved,
+    // mirroring the logic from your React Native code.
+    $hoursSlept = floatval($data['hours_sleep'] ?? 0);
+    $alcoholReading = floatval($data['alcohol_test'] ?? 0);
+    $isFit = boolval($data['fit_to_work'] ?? false);
+    $noFatigue = boolval($data['no_fatigue'] ?? false);
+    $noDrugs = boolval($data['no_drugs'] ?? false);
+    $noDistractions = boolval($data['no_distractions'] ?? false);
+    $noIllness = boolval($data['no_illness'] ?? false);
+
+    $hasEnoughSleep = $hoursSlept >= 6 && $hoursSlept <= 9;
+    $isSober = $alcoholReading === 0.0;
+    $passedAllChecks = $noFatigue && $noDrugs && $noDistractions && $noIllness;
+
+    // A driver fails if they are not fit, not sober, didn't pass all checks, or lack enough sleep.
+    $didFailChecklist = !$isFit || !$isSober || !$passedAllChecks || !$hasEnoughSleep;
+
+    if ($didFailChecklist) {
+        // If the checklist data is invalid, we reject the submission.
+        // The client-side is responsible for triggering the actual reassignment process.
+        echo json_encode([
+            'success' => false,
+            'message' => 'Checklist submission failed. The driver does not meet the fitness-to-work requirements (e.g., 6-9 hours of sleep, zero alcohol, fit to work).'
+        ]);
+        break; // Stop execution for this case.
+    }
+    // --- END OF VALIDATION ---
 
     // Check if a checklist for this trip already exists
     $checkStmt = $conn->prepare("SELECT id FROM driver_checklist WHERE trip_id = ?");
