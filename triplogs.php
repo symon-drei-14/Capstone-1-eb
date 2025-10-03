@@ -455,7 +455,8 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
            <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
                     <legend style="font-weight: bold;">Shipment Information</legend>
-                    
+                      <label for="editEventDate">Date & Time:</label>
+                <input type="datetime-local" id="editEventDate" name="editEventDate" required style="width: 100%;">
                 <label for="editEventSize">Container Size:</label>
                 <select id="editEventSize" name="eventSize" required style="width: 100%;">
                     <option value="">Select Size</option>
