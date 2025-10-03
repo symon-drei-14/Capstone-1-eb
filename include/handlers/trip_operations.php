@@ -1866,7 +1866,9 @@ case 'get_trips_today':
           AND (d.penalty_until IS NULL OR d.penalty_until < NOW())
           -- Rule 4: Truck must be available for a trip
           AND t.is_deleted = 0
-          AND t.status NOT IN ('In Repair', 'Overdue', 'Enroute')
+          -- A truck can be 'Enroute' and the driver still be available for a *future* trip.
+          -- The time conflict check will handle any overlaps.
+          AND t.status NOT IN ('In Repair', 'Overdue')
         -- Rule 5: Order by last assignment time (NULLs first), then by check-in time.
         -- This creates a fair, circular queue.
         ORDER BY d.last_assigned_at ASC, d.checked_in_at ASC

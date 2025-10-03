@@ -2630,6 +2630,11 @@ $(document).on('click', '.dropdown-item.edit', function() {
 });
 
 function populateEditModal(event) {
+    // Let's clear out any old reasons before we start.
+    $('#editForm input[name="editReason"]').prop('checked', false);
+    $('#otherReasonText').val('');
+    $('#otherReasonContainer').hide();
+
     $('#editEventId').val(event.id);
     $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
     
@@ -3091,33 +3096,62 @@ $('#editForm').on('submit', function(e) {
                 editReasons: editReasons
             }),
             success: function(response) {
-                if (response.success) {
-                    const editedTripId = $('#editEventId').val();
-                    $('#editModal').hide();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Trip has been updated successfully',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        timerProgressBar: true
-                    }); 
-                      updateStats();
-                 if ($('#tableViewBtn').hasClass('active')) {
+    if (response.success) {
+        const editedTripId = $('#editEventId').val();
+
+        // To keep things snappy, let's update our local trip data right away.
+        const eventIndex = eventsData.findIndex(e => e.id == editedTripId);
+        if (eventIndex !== -1) {
+            const updatedEvent = eventsData[eventIndex];
+            updatedEvent.date = $('#editEventDate').val();
+            updatedEvent.trip_date = $('#editEventDate').val();
+            updatedEvent.driver = $('#editEventDriver').val();
+            updatedEvent.helper = $('#editEventHelper').val();
+            updatedEvent.dispatcher = $('#editEventDispatcher').val();
+            updatedEvent.containerNo = $('#editEventContainerNo').val();
+            updatedEvent.client = $('#editEventClient').val();
+            updatedEvent.port = $('#editEventPort').val();
+            updatedEvent.destination = $('#editEventDestination').val();
+            updatedEvent.shippingLine = $('#editEventShippingLine').val();
+            updatedEvent.consignee = $('#editEventConsignee').val();
+            updatedEvent.fcl_status = $('#editEventFCL').val();
+            updatedEvent.cashAdvance = $('#editEventCashAdvance').val();
+            updatedEvent.additionalCashAdvance = $('#editEventAdditionalCashAdvance').val();
+            updatedEvent.diesel = $('#editEventDiesel').val();
+            updatedEvent.status = $('#editEventStatus').val();
+            
+            // The plate number and capacity are tied to the truck, which doesn't change here.
+            updatedEvent.plateNo = $('#editEventPlateNo').val();
+            updatedEvent.truck_plate_no = $('#editEventPlateNo').val();
+            updatedEvent.truck_capacity = $('#editEventSize').val().replace('ft', '');
+            updatedEvent.size = $('#editEventSize').val();
+        }
+
+        $('#editModal').hide();
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Trip has been updated successfully',
+            timer: 2000,
+            showConfirmButton: false,
+            timerProgressBar: true
+        });
+        updateStats();
+
+        if ($('#tableViewBtn').hasClass('active')) {
             highlightTripId = editedTripId;
             renderTable();
         } else {
-
             refreshCalendarEvents();
         }
     } else {
-        Swal.fire({  
+        Swal.fire({
             icon: 'error',
             title: 'Error',
             text: response.message || 'Failed to update trip'
         });
-                }
-            }
+    }
+}
         });
     });
 });
