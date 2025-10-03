@@ -27,7 +27,7 @@ function checkAccess($requiredRole = null) {
     if (!isset($_SESSION['last_activity']) || (time() - $_SESSION['last_activity'] > 1800)) {
         session_unset();
         session_destroy();
-        header("Location: ../login.php");
+        header("Location: login.php");
         exit();
     } //
     
@@ -35,7 +35,7 @@ function checkAccess($requiredRole = null) {
     
     // Redirect to login if not logged in
     if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-        header("Location: ../login.php");
+        header("Location: login.php");
         exit();
     } //
 
