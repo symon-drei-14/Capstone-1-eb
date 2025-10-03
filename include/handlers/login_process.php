@@ -31,7 +31,7 @@ if (empty($username) || empty($password)) {
 }
 
 // Prepare to fetch user data
-$sql = "SELECT admin_id, username, password, role, failed_attempts, last_failed_attempt FROM login_admin WHERE username = ? AND is_deleted = 0";
+$sql = "SELECT admin_id, username, password, role, admin_pic, failed_attempts, last_failed_attempt FROM login_admin WHERE username = ? AND is_deleted = 0";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $username);
 $stmt->execute();
@@ -76,6 +76,7 @@ if ($result && $result->num_rows > 0) {
         $_SESSION['admin_id'] = (int)$user['admin_id'];
         $_SESSION['username'] = htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8');
         $_SESSION['role'] = htmlspecialchars($user['role'], ENT_QUOTES, 'UTF-8');
+         $_SESSION['admin_pic'] = $user['admin_pic'];
         $_SESSION['logged_in'] = true;
         $_SESSION['last_activity'] = time();
 

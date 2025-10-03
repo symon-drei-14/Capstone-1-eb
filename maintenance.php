@@ -36,14 +36,23 @@
         <div id="current-time" class="time-display"></div>
     </div>
 
-    <div class="profile">
-        <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
-        <div class="profile-name">
-            <?php 
-                echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
-            ?>
-        </div>
+   <div class="profile">
+    <?php 
+    // Check if the admin picture is in the session and isn't empty
+    if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
+        // If it is, display the picture using the base64 data
+        echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
+    } else {
+        // Otherwise, just show the default placeholder icon
+        echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
+    }
+    ?>
+    <div class="profile-name">
+        <?php 
+            echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+        ?>
     </div>
+</div>
 </header>
 
  <?php require_once __DIR__ . '/include/sidebar.php'; ?>
