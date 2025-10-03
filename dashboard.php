@@ -145,6 +145,7 @@ $eventsDataJson = json_encode($eventsData);
 
 <body>
 <header class="header">
+    <div class="header-left">
     <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
         <i class="fa fa-bars"></i>
     </button>
@@ -152,7 +153,8 @@ $eventsDataJson = json_encode($eventsData);
 
         <img src="include/img/mansar2.png" alt="Company Name" class="company">
     </div>
-
+</div>
+  <div class="header-right">
     <div class="datetime-container">
         <div id="current-date" class="date-display"></div>
         <div id="current-time" class="time-display"></div>
@@ -174,6 +176,7 @@ $eventsDataJson = json_encode($eventsData);
             echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
         ?>
     </div>
+</div>
 </div>
 </header>
 

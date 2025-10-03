@@ -646,37 +646,6 @@ button[type="submit"]:hover {
 
      
 
-        .profile {
-    display: flex;
-    align-items: center;
-    position: relative;
-    right: 70px;
-    color: #FAF7F3;
-}
-        @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-                position: absolute;
-                z-index: 999;
-                background-color: #fff;
-                width: 250px;
-                height: 100%;
-                box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-            }
-
-            .sidebar.show {
-                display: block;
-            }
-        }
-
-        .toggle-sidebar-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: white;
-            z-index: 1300;
-        }
 
 
         .main-content3 {
@@ -929,40 +898,6 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     margin: 10;
 }
 
-
-
-
-
-
-
-    .datetime-container {
-        display: inline-flex;
-        flex-direction: row;
-        align-items: right;
-        justify-content: right;
-        margin-left: 45em;
-        gap: 20px;  
-    }
-    
-    .date-display {
-        font-size: 14px;
-        color: #DDDAD0;
-        font-weight:bold;   
-    }
-    
-    .time-display {
-        font-size: 14px;
-        color: #DDDAD0;
-          font-weight:bold;   
-    }
-    
-    .profile {
-    display: flex;
-    align-items: center;
-    position: relative;
-    right: 50px;
-    
-}
 
    .dashboard-header {
         display: flex;
@@ -1829,9 +1764,7 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     }
 }
 
-/* For Mobile Phones (e.g., <= 768px) */
-/* --- Cleaner Responsive Card View --- */
-/* For Mobile Phones (e.g., <= 768px) */
+
 @media (max-width: 768px) {
     h3 {
         margin-left: 10px;
@@ -1878,37 +1811,34 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
         background-color: #ffffff;
     }
 
-    /* 2. Improved Cell Styling (each row within the card) */
-    #maintenanceTable td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        text-align: right;
-        border-bottom: 1px solid #f0f0f0; /* Lighter separator line */
-        padding: 12px 5px; /* More vertical padding */
-    }
+
 
     #maintenanceTable tr td:last-child {
         border-bottom: none; /* Remove line from the last item */
     }
 
     /* 3. Improved Label Styling */
-    #maintenanceTable td:before {
+     #maintenanceTable td:before {
         content: attr(data-label);
-        font-weight: 600; 
+        font-weight: 600;
         text-align: left;
-        margin-right: 15px;
         color: #555;
-        flex-basis: 45%;
         font-size: 0.9em;
+        
+        /* --- KEY CHANGES --- */
+        margin-right: auto;  /* This pushes the data content to the far right */
+        padding-right: 15px; /* Adds space between the label and the data */
+        flex-shrink: 0;      /* Prevents the label from shrinking if data is long */
     }
     
 
-    #maintenanceTable td {
-        font-size: 1em;
-        color: #111;
-        font-weight: 500;
-        line-height: 3.5!important;
+      #maintenanceTable td {
+        display: flex;
+        align-items: center; /* Vertically align label and data */
+        text-align: right; /* Ensures data text itself is right-aligned */
+        border-bottom: 1px solid #f0f0f0;
+        padding: 12px 5px;
+        width: 100%;
     }
 
    
@@ -1921,10 +1851,13 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
         padding: 4px 10px;
     }
 
-    #maintenanceTable td[data-label="Actions"] {
+  #maintenanceTable td[data-label="Actions"] {
+        position: relative; /* This is the key fix for the dropdown */
         padding-top: 15px;
-        justify-content: center; 
+        justify-content: center;
+        overflow: visible; /* Ensure dropdown is not cut off */
     }
+
     
  
     .modal-content {
@@ -1942,6 +1875,40 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     .checkbox-grid {
         grid-template-columns: 1fr; 
     }
+    .dropdown-content {
+        /* Adjust positioning to better fit the mobile card layout */
+        right: 50%;
+        transform: translateX(50%);
+        top: 90%; /* Position it below the '...' button */
+    }
+     .search-container {
+        left: auto; /* Reset fixed positioning */
+        width: 100%;
+        margin-top: 10px;
+    }
+     #searchInput {
+        width: 100%;
+    }
+
+     #maintenanceModal.receipt-visible .modal-content {
+        transform: translateX(0); /* Prevent the main modal from sliding */
+        opacity: 0.3; /* Optionally fade it into the background */
+    }
+     #receiptModal {
+        width: 95%; /* Make receipt modal almost full-width */
+        height: auto;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%); /* Center it perfectly */
+    }
+
+    #receiptModal .modal-content {
+       top: auto;
+       transform: none;
+       max-height: 80vh;
+    }
+
+
 }
 
 #expenseReportSection {

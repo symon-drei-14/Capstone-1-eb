@@ -158,14 +158,16 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
         ?>
 
     <header class="header">
+          <div class="header-left">
         <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
             <i class="fa fa-bars"></i>
         </button>
         <div class="logo-container">
         
             <img src="include/img/mansar2.png" alt="Company Name" class="company">
+</div>
         </div>
-
+  <div class="header-right">
         <div class="datetime-container">
             <div id="current-date" class="date-display"></div>
             <div id="current-time" class="time-display"></div>
@@ -187,6 +189,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
             echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
         ?>
     </div>
+</div>
 </div>
     </header>
 

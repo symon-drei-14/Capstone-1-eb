@@ -19,21 +19,23 @@
     </head>
 
     <body>
-    <header class="header">
-        <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
-            <i class="fa fa-bars"></i>
-        </button>
-        <div class="logo-container">
-           
-            <img src="include/img/mansar2.png" alt="Company Name" class="company">
-        </div>
+<header class="header">
+    <div class="header-left">
+    <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+        <i class="fa fa-bars"></i>
+    </button>
+    <div class="logo-container">
 
-        <div class="datetime-container">
-            <div id="current-date" class="date-display"></div>
-            <div id="current-time" class="time-display"></div>
-        </div>
+        <img src="include/img/mansar2.png" alt="Company Name" class="company">
+    </div>
+</div>
+  <div class="header-right">
+    <div class="datetime-container">
+        <div id="current-date" class="date-display"></div>
+        <div id="current-time" class="time-display"></div>
+    </div>
 
-        <div class="profile">
+   <div class="profile">
     <?php 
    
     if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
@@ -50,7 +52,8 @@
         ?>
     </div>
 </div>
-    </header>
+</div>
+</header>
 <?php require_once __DIR__ . '/include/sidebar.php'; ?>
 <div id="sidebar-backdrop" class="backdrop"></div>
 <h3><i class="fa-solid fa-id-card"></i>Driver Management</h3>

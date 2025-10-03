@@ -145,30 +145,6 @@ tr:hover {
 
 
 
-/* lumang modal shits */
-/* .modal {
-    display: none; 
-    position: fixed; 
-    z-index: 11000; 
-    left: 0;
-    top: 0;
-    width: 100%; 
-    height: 100%;
-    overflow: auto;  
-    background-color: rgba(0, 0, 0, 0.5); 
-}
-
-.modal-content {
-    background-color: #fff;
-    margin: 1% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 50%;
-    max-width: 400px;
-    border-radius: 20px;
-    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-
-} */
 
 .modal {
     display: none; 
@@ -454,32 +430,7 @@ button[type="submit"]:hover {
             overflow-y: auto;
         }
         
-        .toggle-sidebar-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            margin-left: 1rem;
-            color: white;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-                position: absolute;
-                z-index: 999;
-                background-color: #fff;
-                width: 250px;
-                height: 100%;
-                box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-            }
-
-            .sidebar.show {
-                display: block;
-            }
-        }
-        
-        /* Toggle Button Styles */
+  
         
 
     
@@ -521,19 +472,6 @@ button[type="submit"]:hover {
 
 
 
-  
-    .profile-icon {
-        font-size: 30px;
-        color: #555;
-
-        border-radius: 50%;
-        padding: 5px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-    }
        th:nth-child(1), td:nth-child(1) {
     width: 4%; 
 }
@@ -579,39 +517,7 @@ th:nth-child(11), td:nth-child(11) {
     text-align: center;
 }
 
-    
-        .datetime-container {
-            display: inline-flex;
-            flex-direction: row;
-            align-items: right;
-            justify-content: right;
-            margin-left: 45em;
-            gap: 20px;  
-        }
-        
-        .date-display {
-            font-size: 14px;
-            color: #DDDAD0;
-            font-weight:bold;   
-        }
-        
-        .time-display {
-            font-size: 14px;
-            color: #DDDAD0;
-            font-weight:bold;   
-        }
-        
-    
-    
-        .profile {
-        display: flex;
-        align-items: center;
-        position: relative;
-        right: 50px;
-        
-    }
-
-
+  
 
 .company {
     margin-left:-90px;
