@@ -1888,8 +1888,10 @@ $('#dailyExpenseSummaryBtn').on('click', function() {
         $('#addEventDate').val('');
         $('#addEventDriver').val('').trigger('change');
         $('#addEventHelper').val('');
+         $('#addEventDispatcher').val('');
         $('#addEventContainerNo').val('');
         $('#addEventClient').val('');
+        $('#addEventPort').val('');
         $('#addEventDestination').val('');
         $('#addEventShippingLine').val('');
         $('#addEventConsignee').val('');
