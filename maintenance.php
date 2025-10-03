@@ -38,12 +38,12 @@
 
    <div class="profile">
     <?php 
-    // Check if the admin picture is in the session and isn't empty
+   
     if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
-        // If it is, display the picture using the base64 data
+       
         echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
     } else {
-        // Otherwise, just show the default placeholder icon
+       
         echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
     }
     ?>
