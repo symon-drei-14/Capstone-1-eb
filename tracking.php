@@ -31,13 +31,22 @@ checkAccess(); // No role needed—logic is handled internally
     </div>
 
     <div class="profile2">
-        <img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">
-        <div class="profile-name">
-            <?php 
-                echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
-            ?>
-        </div>
+    <?php 
+   
+    if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
+       
+        echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
+    } else {
+       
+        echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
+    }
+    ?>
+    <div class="profile-name">
+        <?php 
+            echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+        ?>
     </div>
+</div>
 </header>
     
 <?php require_once __DIR__ . '/include/sidebar.php'; ?>
