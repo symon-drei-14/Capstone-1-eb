@@ -53,6 +53,7 @@ checkAccess();
 </header>
     
  <?php require_once __DIR__ . '/include/sidebar.php'; ?>
+<div id="sidebar-backdrop" class="backdrop"></div>
 
  <h3><i class="fa-solid fa-truck"></i>Truck Management</h3>
  
@@ -1125,6 +1126,46 @@ function closeHistoryModal() {
     document.getElementById('historyModalContent').innerHTML = '';
 }
 
+   document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop'); 
+
+        const openSidebar = () => {
+            sidebar.classList.add('expanded');
+            backdrop.classList.add('show');
+        };
+
+
+        const closeSidebar = () => {
+            sidebar.classList.remove('expanded');
+            backdrop.classList.remove('show');
+        };
+
+
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation(); 
+            if (sidebar.classList.contains('expanded')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        backdrop.addEventListener('click', function () {
+            closeSidebar();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (
+                sidebar.classList.contains('expanded') &&
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)
+            ) {
+                closeSidebar();
+            }
+        });
+    });
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchTrucks();
@@ -1132,12 +1173,7 @@ function closeHistoryModal() {
 
                setupModalEventListeners();
 
-               const toggleBtn = document.getElementById('toggleSidebarBtn');
-const sidebar = document.querySelector('.sidebar');
 
-    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
-        document.querySelector('.sidebar').classList.toggle('expanded');
-    });
 
     document.addEventListener('click', function (e) {
     if (

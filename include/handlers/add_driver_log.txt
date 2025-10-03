@@ -315,3 +315,11 @@
 2025-10-02 16:17:21 - MySQL SQL prepared successfully
 2025-10-02 16:17:21 - MySQL insert successful
 2025-10-02 16:17:21 - Firebase save successful
+2025-10-02 16:23:36 - Add Driver Request received
+2025-10-02 16:23:36 - POST data received successfully
+2025-10-02 16:23:36 - Data validation passed
+2025-10-02 16:23:36 - MySQL connection successful
+2025-10-02 16:23:36 - Email check passed
+2025-10-02 16:23:36 - MySQL SQL prepared successfully
+2025-10-02 16:23:36 - MySQL insert successful
+2025-10-02 16:23:36 - Firebase save successful

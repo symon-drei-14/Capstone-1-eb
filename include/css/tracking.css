@@ -65,7 +65,7 @@ h3 {
     background: white;
     border-right: 1px solid #ddd;
     box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    z-index: 1000;
+    z-index: 1200;
     display: flex;
     flex-direction: column;
 }
@@ -135,11 +135,7 @@ h3 {
     z-index: 1400;
 }
 
-.logo-container {
-    display: flex;
-    align-content: left;
-    margin-left: 2.5em;
-}
+
 
 .profile2 {
     display: flex;
@@ -566,37 +562,11 @@ body {
     height: 60px; 
     top: 0;
     left: 0;
-    z-index: 1200;
+    z-index: 1500;
     box-sizing: border-box;
 
 }
 
-.logo-container {
-    display: flex;
-    align-items: center;
-}
-
-.company {
-    height: 90px;
-    margin-top:10px;
-}
-
-.profile2 {
-    display: flex;
-    align-items: center;
-    color: white;
-}
-
-.datetime-container {
-    display: inline-flex;
-    gap: 20px;
-}
-
-.date-display, .time-display {
-    font-size: 14px;
-    color: #DDDAD0;
-    font-weight: bold;   
-}
 
 
 

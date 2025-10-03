@@ -191,7 +191,8 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
     </header>
 
    <?php require_once __DIR__ . '/include/sidebar.php'; ?>
-    
+    <div id="sidebar-backdrop" class="backdrop"></div>
+
  <h3 class="title"><i class="fa-solid fa-calendar-days"></i>Trip Management</h3>
   <div class="stats-container-wrapper">
     <div class="stats-container" id="statsContainer">
@@ -451,6 +452,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
            <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
                     <legend style="font-weight: bold;">Shipment Information</legend>
+                    
                 <label for="editEventSize">Container Size:</label>
                 <select id="editEventSize" name="eventSize" required style="width: 100%;">
                     <option value="">Select Size</option>
@@ -463,8 +465,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 <label for="editEventPlateNo">Plate No.:</label>
                 <input type="text" id="editEventPlateNo" name="eventPlateNo" required style="width: 100%;">
 
-                <label for="editEventDate">Date & Time:</label>
-                <input type="datetime-local" id="editEventDate" name="editEventDate" required style="width: 100%;">
+             
 
                 <label for="editEventDriver">Driver:</label>
                 <select id="editEventDriver" name="eventDriver" required style="width: 100%;">
@@ -764,7 +765,11 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
               <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
                     <legend style="font-weight: bold;">Shipment Information</legend>
+
+                      <label for="addEventDate">Date & Time:</label>
+                <input type="datetime-local" id="addEventDate" name="eventDate" required style="width: 100%;">
                 <label for="addEventSize">Shipment Size:</label>
+
                 <select id="addEventSize" name="eventSize" required style="width: 100%;">
                     <option value="">Select Size</option>
                     <option value="20ft">20ft</option>
@@ -772,17 +777,17 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <option value="40ft HC">40ft HC</option>
                     <option value="45ft">45ft</option>
                 </select>
-
-                <label for="addEventPlateNo">Plate No.:</label>
-                <input type="text" id="addEventPlateNo" name="eventPlateNo" required style="width: 100%;" disabled>
-
-                <label for="addEventDate">Date & Time:</label>
-                <input type="datetime-local" id="addEventDate" name="eventDate" required style="width: 100%;">
-
                 <label for="addEventDriver">Driver:</label>
                 <select id="addEventDriver" name="eventDriver" required style="width: 100%;">
                     <option value="">Select Driver</option>
                 </select>
+
+                <label for="addEventPlateNo">Plate No.:</label>
+                <input type="text" id="addEventPlateNo" name="eventPlateNo" required style="width: 100%;" disabled>
+
+              
+
+                
 
                 <label for="addEventHelper">Helper:</label>
                 <select id="addEventHelper" name="eventHelper" required style="width: 100%;">
@@ -3248,22 +3253,47 @@ $('#eventModalDeleteBtn').off('click').on('click', function() {
     deleteTrip(eventId);
 });
 
-const toggleBtn = document.getElementById('toggleSidebarBtn');
-const sidebar = document.querySelector('.sidebar');
+   document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop'); 
 
-    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
-        document.querySelector('.sidebar').classList.toggle('expanded');
+        const openSidebar = () => {
+            sidebar.classList.add('expanded');
+            backdrop.classList.add('show');
+        };
+
+
+        const closeSidebar = () => {
+            sidebar.classList.remove('expanded');
+            backdrop.classList.remove('show');
+        };
+
+
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation(); 
+            if (sidebar.classList.contains('expanded')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        backdrop.addEventListener('click', function () {
+            closeSidebar();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (
+                sidebar.classList.contains('expanded') &&
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)
+            ) {
+                closeSidebar();
+            }
+        });
     });
 
-    document.addEventListener('click', function (e) {
-    if (
-        sidebar.classList.contains('expanded') &&
-        !sidebar.contains(e.target) && 
-        !toggleBtn.contains(e.target) 
-    ) {
-        sidebar.classList.remove('expanded');
-    }
-});
 
        $('#otherReasonText').on('input', function() {
 if ($(this).val().trim() !== '') {

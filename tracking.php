@@ -50,6 +50,7 @@ checkAccess(); // No role needed—logic is handled internally
 </header>
     
 <?php require_once __DIR__ . '/include/sidebar.php'; ?>
+<div id="sidebar-backdrop" class="backdrop"></div>
 
 <div class="tracking-container">
     <div class="drivers-sidebar">
@@ -81,9 +82,47 @@ checkAccess(); // No role needed—logic is handled internally
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
-    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
-        document.querySelector('.sidebar').classList.toggle('expanded');
+     document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop'); 
+
+        const openSidebar = () => {
+            sidebar.classList.add('expanded');
+            backdrop.classList.add('show');
+        };
+
+
+        const closeSidebar = () => {
+            sidebar.classList.remove('expanded');
+            backdrop.classList.remove('show');
+        };
+
+
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation(); 
+            if (sidebar.classList.contains('expanded')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        backdrop.addEventListener('click', function () {
+            closeSidebar();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (
+                sidebar.classList.contains('expanded') &&
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)
+            ) {
+                closeSidebar();
+            }
+        });
     });
+
 
     document.addEventListener('DOMContentLoaded', function() {
     const currentPage = window.location.pathname.split('/').pop();

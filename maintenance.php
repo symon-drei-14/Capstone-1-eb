@@ -57,7 +57,7 @@
 </header>
 
  <?php require_once __DIR__ . '/include/sidebar.php'; ?>
- 
+ <div id="sidebar-backdrop" class="backdrop"></div>
         <h3><i class="fa-solid fa-wrench"></i>Preventive Maintenance Scheduling</h3>
         <div class="stats-container-wrapper">
      <div class="stats-cards">
@@ -2124,22 +2124,47 @@ function updateSortIcons() {
     }
         </script>
         <script>
-const toggleBtn = document.getElementById('toggleSidebarBtn');
-const sidebar = document.querySelector('.sidebar');
+   document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop'); 
 
-    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
-        document.querySelector('.sidebar').classList.toggle('expanded');
+        const openSidebar = () => {
+            sidebar.classList.add('expanded');
+            backdrop.classList.add('show');
+        };
+
+
+        const closeSidebar = () => {
+            sidebar.classList.remove('expanded');
+            backdrop.classList.remove('show');
+        };
+
+
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation(); 
+            if (sidebar.classList.contains('expanded')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        backdrop.addEventListener('click', function () {
+            closeSidebar();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (
+                sidebar.classList.contains('expanded') &&
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)
+            ) {
+                closeSidebar();
+            }
+        });
     });
 
-    document.addEventListener('click', function (e) {
-    if (
-        sidebar.classList.contains('expanded') &&
-        !sidebar.contains(e.target) && 
-        !toggleBtn.contains(e.target) 
-    ) {
-        sidebar.classList.remove('expanded');
-    }
-});
 
         document.addEventListener('DOMContentLoaded', function() {
     // Get current page filename

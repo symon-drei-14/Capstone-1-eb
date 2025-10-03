@@ -28,7 +28,7 @@
     max-height: 40px;
     top: 0;
     left: 0;
-    z-index: 1200;
+    z-index: 1500;
 
 }
 .logo-container {
@@ -263,7 +263,7 @@
     box-sizing: border-box;
     overflow-x: hidden;
     overflow-y: auto;
-    z-index: 1100;
+    z-index: 1300;
     border-right: 2px solid #1616160d;
     transform: translateX(-100%); 
     transition: transform 0.3s ease;
@@ -338,3 +338,20 @@
         }
 
 
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.244); 
+    z-index: 1250 !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.backdrop.show {
+    opacity: 1;
+    visibility: visible;
+}
