@@ -35,22 +35,16 @@ try {
 }
 
 function getCostTrends($conn) {
-    // Get cost breakdown by expense type for the current year
-    // Using CASE to standardize expense types to match your mobile categories
+    // Get cost breakdown by expense type for the current year from completed trips.
     $sql = "SELECT 
-                CASE 
-                    WHEN LOWER(expense_type) IN ('gas', 'fuel', 'gasoline') THEN 'Gas'
-                    WHEN LOWER(expense_type) IN ('toll gate', 'toll', 'tollgate') THEN 'Toll Gate'
-                    WHEN LOWER(expense_type) IN ('maintenance', 'repair', 'service') THEN 'Maintenance'
-                    WHEN LOWER(expense_type) IN ('food', 'meal', 'snack') THEN 'Food'
-                    WHEN LOWER(expense_type) IN ('parking', 'park') THEN 'Parking'
-                    ELSE 'Other'
-                END as expense_category,
-                SUM(amount) as total_amount,
-                COUNT(*) as count
-            FROM expenses 
-            WHERE YEAR(created_at) = YEAR(CURDATE())
-            GROUP BY expense_category
+                et.name as expense_category,
+                SUM(de.amount) as total_amount
+            FROM driver_expenses de
+            JOIN expense_types et ON de.expense_type_id = et.type_id
+            JOIN trips t ON de.trip_id = t.trip_id
+            WHERE t.status = 'Completed'
+              AND YEAR(t.trip_date) = YEAR(CURDATE())
+            GROUP BY et.name
             ORDER BY total_amount DESC";
     
     $result = $conn->query($sql);
@@ -68,7 +62,7 @@ function getCostTrends($conn) {
         }
     }
     
-    // If no data found, return empty but successful response
+    // If we didn't find any data, we should let the front-end know.
     if (empty($data)) {
         echo json_encode([
             'success' => true,
@@ -76,12 +70,12 @@ function getCostTrends($conn) {
             'labels' => [],
             'percentages' => [],
             'total' => 0,
-            'message' => 'No expense data found for current year'
+            'message' => 'No expense data found for the current year'
         ]);
         return;
     }
     
-    // Calculate percentages for legend
+    // Calculate percentages for the chart's legend
     $percentages = [];
     foreach($data as $amount) {
         $percentages[] = $total > 0 ? round(($amount / $total) * 100, 1) : 0;
@@ -134,27 +128,22 @@ function getCompletedTripCounts($conn) {
 }
 
 function getMonthlyTrends($conn) {
-    // Get monthly cost trends for the current year
+    // Get monthly cost trends for the current year from completed trips
     $sql = "SELECT 
-                MONTH(created_at) as month,
-                MONTHNAME(created_at) as month_name,
-                CASE 
-                    WHEN LOWER(expense_type) IN ('gas', 'fuel', 'gasoline') THEN 'Gas'
-                    WHEN LOWER(expense_type) IN ('toll gate', 'toll', 'tollgate') THEN 'Toll Gate'
-                    WHEN LOWER(expense_type) IN ('maintenance', 'repair', 'service') THEN 'Maintenance'
-                    WHEN LOWER(expense_type) IN ('food', 'meal', 'snack') THEN 'Food'
-                    WHEN LOWER(expense_type) IN ('parking', 'park') THEN 'Parking'
-                    ELSE 'Other'
-                END as expense_category,
-                SUM(amount) as total_amount
-            FROM expenses 
-            WHERE YEAR(created_at) = YEAR(CURDATE())
-            GROUP BY MONTH(created_at), expense_category
-            ORDER BY MONTH(created_at), expense_category";
+                MONTHNAME(t.trip_date) as month_name,
+                et.name as expense_category,
+                SUM(de.amount) as total_amount
+            FROM driver_expenses de
+            JOIN expense_types et ON de.expense_type_id = et.type_id
+            JOIN trips t ON de.trip_id = t.trip_id
+            WHERE t.status = 'Completed'
+              AND YEAR(t.trip_date) = YEAR(CURDATE())
+            GROUP BY MONTH(t.trip_date), et.name
+            ORDER BY MONTH(t.trip_date), et.name";
     
     $result = $conn->query($sql);
     
-    // Organize data by month and expense type
+    // This part organizes the data by month, then by expense type, which is what the chart expects.
     $monthlyData = [];
     $expenseTypes = [];
     
@@ -184,26 +173,22 @@ function getMonthlyTrends($conn) {
 }
 
 function getYearlyTrends($conn) {
-    // Get yearly cost trends for the last 5 years
+    // Get yearly cost trends for the last 5 years from completed trips
     $sql = "SELECT 
-                YEAR(created_at) as year,
-                CASE 
-                    WHEN LOWER(expense_type) IN ('gas', 'fuel', 'gasoline') THEN 'Gas'
-                    WHEN LOWER(expense_type) IN ('toll gate', 'toll', 'tollgate') THEN 'Toll Gate'
-                    WHEN LOWER(expense_type) IN ('maintenance', 'repair', 'service') THEN 'Maintenance'
-                    WHEN LOWER(expense_type) IN ('food', 'meal', 'snack') THEN 'Food'
-                    WHEN LOWER(expense_type) IN ('parking', 'park') THEN 'Parking'
-                    ELSE 'Other'
-                END as expense_category,
-                SUM(amount) as total_amount
-            FROM expenses 
-            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 5 YEAR)
-            GROUP BY YEAR(created_at), expense_category
-            ORDER BY YEAR(created_at), expense_category";
+                YEAR(t.trip_date) as year,
+                et.name as expense_category,
+                SUM(de.amount) as total_amount
+            FROM driver_expenses de
+            JOIN expense_types et ON de.expense_type_id = et.type_id
+            JOIN trips t ON de.trip_id = t.trip_id
+            WHERE t.status = 'Completed'
+              AND t.trip_date >= DATE_SUB(CURDATE(), INTERVAL 5 YEAR)
+            GROUP BY YEAR(t.trip_date), et.name
+            ORDER BY YEAR(t.trip_date), et.name";
     
     $result = $conn->query($sql);
     
-    // Organize data by year and expense type
+    // Organizes the data by year, which is perfect for the yearly chart view.
     $yearlyData = [];
     $expenseTypes = [];
     
