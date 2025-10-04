@@ -1,11 +1,13 @@
 <?php
 // This file centralizes your PHPMailer configuration.
 
+// First, load the secure credentials.
+// The require_once will fail loudly if the file is missing, which is good.
+require_once __DIR__ . '/credentials.php';
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// We are now loading the PHPMailer files manually from the libs directory.
-// The path is relative to this file's location (include/handlers/).
 require_once __DIR__ . '/../../libs/PHPMailer/Exception.php';
 require_once __DIR__ . '/../../libs/PHPMailer/PHPMailer.php';
 require_once __DIR__ . '/../../libs/PHPMailer/SMTP.php';
@@ -15,23 +17,24 @@ function getMailer() {
     $mail = new PHPMailer(true);
 
     try {
-       
-       
+        // --- SERVER SETTINGS ---
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';       
+        $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'manstartrucking@gmail.com'; 
-        $mail->Password   = 'huhf gvih zlgx icea ';     
+        
+        // --- SECURE CREDENTIALS ---
+        // We now use the constants from the ignored credentials.php file.
+        $mail->Username   = SMTP_USERNAME;
+        $mail->Password   = SMTP_PASSWORD; 
+        
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;                      
+        $mail->Port       = 587;
 
         // --- SENDER ---
-        $mail->setFrom('manstartrucking@gmail.com', 'Mansar Logistics Admin');
+        $mail->setFrom(SMTP_USERNAME, 'Mansar Logistics Admin');
 
         return $mail;
     } catch (Exception $e) {
-        // This is a configuration error. We can't send an email about it,
-        // so we log it and return null for the calling script to handle.
         error_log("PHPMailer configuration error: {$mail->ErrorInfo}");
         return null;
     }
