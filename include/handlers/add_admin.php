@@ -47,20 +47,27 @@ if (empty($data)) {
     $data = json_decode(file_get_contents("php://input"), true);
 }
 
-if (!isset($data['username']) || !isset($data['password']) || !isset($data['role']) || 
-    empty($data['username']) || empty($data['password']) || empty($data['role'])) {
-    echo json_encode(["success" => false, "message" => "Username, password and role are required"]);
+// Updated validation to include admin_email
+if (!isset($data['username']) || !isset($data['password']) || !isset($data['role']) || !isset($data['admin_email']) || 
+    empty($data['username']) || empty($data['password']) || empty($data['role']) || empty($data['admin_email'])) {
+    echo json_encode(["success" => false, "message" => "Username, password, role, and email are required"]);
+    exit;
+}
+
+// Added email format validation
+if (!filter_var($data['admin_email'], FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(["success" => false, "message" => "Invalid email format."]);
     exit;
 }
 
 
-$checkStmt = $conn->prepare("SELECT admin_id FROM login_admin WHERE username = ?");
-$checkStmt->bind_param("s", $data['username']);
+$checkStmt = $conn->prepare("SELECT admin_id FROM login_admin WHERE username = ? OR admin_email = ?");
+$checkStmt->bind_param("ss", $data['username'], $data['admin_email']);
 $checkStmt->execute();
 $checkResult = $checkStmt->get_result();
 
 if ($checkResult->num_rows > 0) {
-    echo json_encode(["success" => false, "message" => "Username already exists"]);
+    echo json_encode(["success" => false, "message" => "Username or email already exists"]);
     $checkStmt->close();
     $conn->close();
     exit;
@@ -71,8 +78,9 @@ $checkStmt->close();
 $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
 
-$stmt = $conn->prepare("INSERT INTO login_admin (username, password, role, admin_pic) VALUES (?, ?, ?, ?)");
-$stmt->bind_param("ssss", $data['username'], $hashedPassword, $data['role'], $adminPic);
+// Updated INSERT statement to include admin_email
+$stmt = $conn->prepare("INSERT INTO login_admin (username, password, role, admin_email, admin_pic) VALUES (?, ?, ?, ?, ?)");
+$stmt->bind_param("sssss", $data['username'], $hashedPassword, $data['role'], $data['admin_email'], $adminPic);
 
 if ($stmt->execute()) {
     echo json_encode(["success" => true]);

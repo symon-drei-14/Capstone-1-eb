@@ -1,6 +1,7 @@
 <?php
 header("Content-Type: application/json");
 require 'dbhandler.php';
+require 'phpmailer_config.php'; // Required for sending OTP emails
 
 session_start();
 
@@ -9,7 +10,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     echo json_encode(["success" => false, "message" => "Unauthorized access"]);
     exit;
 }
-
 
 $adminPic = null;
 if (!empty($_FILES['adminProfile']['name'])) {
@@ -29,8 +29,7 @@ if (!empty($_FILES['adminProfile']['name'])) {
         exit;
     }
 
-
-    if ($_FILES['adminProfile']['size'] > 2 * 1024 * 1024) {
+    if ($_FILES['adminProfile']['size'] > 2 * 1024 * 1024) { // 2MB limit
         echo json_encode(["success" => false, "message" => "File is too large. Maximum size is 2MB."]);
         exit;
     }
@@ -53,80 +52,140 @@ if (empty($data)) {
     $data = json_decode(file_get_contents("php://input"), true);
 }
 
-if (!isset($data['admin_id']) || !isset($data['username']) || empty($data['username']) || !isset($data['role']) || empty($data['role'])) {
+if (!isset($data['admin_id']) || !isset($data['username']) || empty($data['username']) || !isset($data['role']) || empty($data['role']) || !isset($data['admin_email']) || empty($data['admin_email'])) {
     http_response_code(400);
-    echo json_encode(["success" => false, "message" => "Admin ID, username, and role are required"]);
+    echo json_encode(["success" => false, "message" => "Admin ID, username, role, and email are required"]);
     exit;
 }
 
-try {
-    // Check if username already exists for another admin
-    $checkStmt = $conn->prepare("SELECT admin_id FROM login_admin WHERE username = ? AND admin_id != ?");
-    $checkStmt->bind_param("si", $data['username'], $data['admin_id']);
-    $checkStmt->execute();
-    $checkResult = $checkStmt->get_result();
+if (!filter_var($data['admin_email'], FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(["success" => false, "message" => "Invalid email format"]);
+    exit;
+}
 
-    if ($checkResult->num_rows > 0) {
-        throw new Exception("Username already exists");
+$adminId = $data['admin_id'];
+
+try {
+    // Check if username or email already exists for another admin
+    $checkStmt = $conn->prepare("SELECT admin_id FROM login_admin WHERE (username = ? OR admin_email = ?) AND admin_id != ?");
+    $checkStmt->bind_param("ssi", $data['username'], $data['admin_email'], $adminId);
+    $checkStmt->execute();
+    if ($checkStmt->get_result()->num_rows > 0) {
+        throw new Exception("Username or email already taken by another admin.");
     }
     $checkStmt->close();
 
-    $query = "UPDATE login_admin SET username = ?, role = ?";
-    $types = "ss";
-    $params = [$data['username'], $data['role']];
-
-
+    // Check if a password change is requested
     if (!empty($data['password'])) {
+        
+        // Step 1: Verify the current password
         if (empty($data['old_password'])) {
             throw new Exception("Current password is required to set a new one.");
         }
-
         $passStmt = $conn->prepare("SELECT password FROM login_admin WHERE admin_id = ?");
-        $passStmt->bind_param("i", $data['admin_id']);
+        $passStmt->bind_param("i", $adminId);
         $passStmt->execute();
         $passResult = $passStmt->get_result();
-
-        if ($passResult->num_rows === 0) {
-            throw new Exception("Admin not found.");
-        }
-        
         $currentHash = $passResult->fetch_assoc()['password'];
         $passStmt->close();
-        
-
         if (!password_verify($data['old_password'], $currentHash)) {
             throw new Exception("Incorrect current password.");
         }
 
+        // Step 2: Handle OTP verification
+        if (isset($data['otp'])) {
+            // This is the second step: verifying the submitted OTP
+            if (!isset($_SESSION['otp_data']) || $_SESSION['otp_data']['admin_id'] != $adminId) {
+                throw new Exception("OTP process not initiated or session expired.");
+            }
+            if ($_SESSION['otp_data']['otp'] != $data['otp']) {
+                throw new Exception("The OTP you entered is incorrect.");
+            }
+            if (time() > $_SESSION['otp_data']['expiry']) {
+                unset($_SESSION['otp_data']);
+                throw new Exception("OTP has expired. Please try changing your password again.");
+            }
 
-        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-        $query .= ", password = ?";
-        $types .= "s";
-        $params[] = $hashedPassword;
-    }
+            // OTP is valid, so we update everything including the password
+            $hashedPassword = $_SESSION['otp_data']['new_password'];
+            unset($_SESSION['otp_data']);
 
+            $query = "UPDATE login_admin SET username = ?, role = ?, admin_email = ?, password = ?";
+            $types = "ssss";
+            $params = [$data['username'], $data['role'], $data['admin_email'], $hashedPassword];
 
-    if ($adminPic !== null) {
-        $query .= ", admin_pic = ?";
-        $types .= "s";
-        $params[] = $adminPic;
-    }
+            if ($adminPic !== null) {
+                $query .= ", admin_pic = ?";
+                $types .= "s";
+                $params[] = $adminPic;
+            }
+            $query .= " WHERE admin_id = ?";
+            $types .= "i";
+            $params[] = $adminId;
 
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param($types, ...$params);
+            if ($stmt->execute()) {
+                echo json_encode(["success" => true, "message" => "Admin updated successfully."]);
+            } else {
+                throw new Exception("Database update failed.");
+            }
+            $stmt->close();
+            
+        } else {
+            // This is the first step: generating and sending the OTP
+            $otp = rand(100000, 999999);
+            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
-    $query .= " WHERE admin_id = ?";
-    $types .= "i";
-    $params[] = $data['admin_id'];
+            $_SESSION['otp_data'] = [
+                'otp' => $otp,
+                'expiry' => time() + 300, // OTP is valid for 5 minutes
+                'admin_id' => $adminId,
+                'new_password' => $hashedPassword
+            ];
 
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param($types, ...$params);
-
-    if ($stmt->execute()) {
-        echo json_encode(["success" => true]);
+            $mail = getMailer();
+            if ($mail) {
+                try {
+                    $mail->addAddress($data['admin_email'], $data['username']);
+                    $mail->isHTML(true);
+                    $mail->Subject = 'Your Password Change Verification Code';
+                    $mail->Body    = "Hello {$data['username']},<br><br>Your verification code to change your password is: <b>{$otp}</b><br>This code will expire in 5 minutes.<br><br>If you did not request this change, you can safely ignore this email.<br><br>Thank you.";
+                    $mail->send();
+                    echo json_encode(["success" => true, "otp_required" => true]);
+                } catch (Exception $e) {
+                    throw new Exception("Failed to send OTP email. Mailer Error: {$mail->ErrorInfo}");
+                }
+            } else {
+                throw new Exception("Mail server is not configured correctly.");
+            }
+        }
     } else {
-        throw new Exception("Database update failed: " . $stmt->error);
+        // This handles updates without a password change
+        $query = "UPDATE login_admin SET username = ?, role = ?, admin_email = ?";
+        $types = "sss";
+        $params = [$data['username'], $data['role'], $data['admin_email']];
+        
+        if ($adminPic !== null) {
+            $query .= ", admin_pic = ?";
+            $types .= "s";
+            $params[] = $adminPic;
+        }
+
+        $query .= " WHERE admin_id = ?";
+        $types .= "i";
+        $params[] = $adminId;
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param($types, ...$params);
+
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true]);
+        } else {
+            throw new Exception("Database update failed: " . $stmt->error);
+        }
+        $stmt->close();
     }
-    
-    $stmt->close();
 } catch (Exception $e) {
     http_response_code(400);
     echo json_encode(["success" => false, "message" => $e->getMessage()]);

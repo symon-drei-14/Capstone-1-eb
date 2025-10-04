@@ -17,9 +17,10 @@ $types = '';
 
 if (!empty($search)) {
     $searchTerm = "%" . $search . "%";
-    $whereClause .= " AND (a.username LIKE ? OR a.role LIKE ? OR b.username LIKE ? OR a.delete_reason LIKE ?)";
-    array_push($params, $searchTerm, $searchTerm, $searchTerm, $searchTerm);
-    $types .= 'ssss';
+    // Add admin_email to what's being searched
+    $whereClause .= " AND (a.username LIKE ? OR a.role LIKE ? OR a.admin_email LIKE ? OR b.username LIKE ? OR a.delete_reason LIKE ?)";
+    array_push($params, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+    $types .= 'sssss'; // Now 5 string parameters
 }
 
 $countQuery = "SELECT COUNT(*) as total " . $baseQuery . $whereClause;
@@ -37,6 +38,7 @@ $query = "SELECT
             a.admin_id, 
             a.username, 
             a.role,
+            a.admin_email,
             a.admin_pic,
             a.is_deleted,
             a.deleted_at,

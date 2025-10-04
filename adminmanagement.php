@@ -103,6 +103,7 @@ checkAccess();
                                    
                                     <th>Username</th>
                                     <th>Role</th>
+                                    <th>Email</th>
                                     <th>Status</th>
                                     <th class="deleted-only">Deleted By</th>
                                     <th class="deleted-only">Deleted At</th>
@@ -183,6 +184,11 @@ checkAccess();
             </select>
         </div>
     </div>
+
+<div class="form-group">
+            <label for="adminEmail">Email *</label>
+            <input type="email" id="adminEmail" name="adminEmail" class="form-control" required placeholder="admin@example.com">
+        </div>
 
     <div class="form-group" id="oldPasswordGroup" style="display: none;">
         <label for="oldPassword">Current Password</label>
@@ -280,6 +286,7 @@ checkAccess();
                         document.getElementById('adminId').value = admin.admin_id;
                         document.getElementById('username').value = admin.username;
                         document.getElementById('role').value = admin.role || 'Full Admin';
+                         document.getElementById('adminEmail').value = admin.admin_email || '';
                         const profilePreview = document.getElementById('adminProfilePreview');
                         if (admin.admin_pic) {
                             profilePreview.innerHTML = `
@@ -309,78 +316,79 @@ checkAccess();
         }
 
         function renderAdminsTable(admins, tableBodyId) {
-    const tableBody = document.getElementById(tableBodyId);
-    tableBody.innerHTML = '';
-    const searchTerm = document.getElementById('adminSearch').value;
+        const tableBody = document.getElementById(tableBodyId);
+        tableBody.innerHTML = '';
+        const searchTerm = document.getElementById('adminSearch').value;
 
-    const highlightText = (text) => {
-        if (!searchTerm.trim() || !text) {
-            return text;
-        }
-        const str = String(text);
-        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-        return str.replace(regex, '<span class="highlight">$1</span>');
-    };
+        const highlightText = (text) => {
+            if (!searchTerm.trim() || !text) {
+                return text;
+            }
+            const str = String(text);
+            const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return str.replace(regex, '<span class="highlight">$1</span>');
+        };
 
-    admins.forEach(admin => {
-        const row = document.createElement('tr');
-        const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
+        admins.forEach(admin => {
+            const row = document.createElement('tr');
+            const deletedAt = admin.deleted_at ? new Date(admin.deleted_at).toLocaleString() : '';
+            const deleteReason = (admin.delete_reason || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
 
-        // Added this line to handle potential quotes in the reason
-        const deleteReason = (admin.delete_reason || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
-
-        if (tableBodyId === 'deletedAdminTableBody') {
-            // Template for the deleted admins table
-            row.innerHTML = `
-                <td data-label="Profile">
-                    ${admin.admin_pic ? 
-                        '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
-                        '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
-                    }
-                </td>
-                <td data-label="Username">${highlightText(admin.username)}</td>
-                <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
-                <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
-                <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
-                <td data-label="Actions" class="actions">
-                    <div class="dropdown">
-                        <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
-                        <div class="dropdown-content">
-                            <button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id}, '${deleteReason}')"><i class="fas fa-trash-restore"></i>Restore</button>
-                            <button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})"><i class="fa-solid fa-ban"></i>Full Delete</button>
+            if (tableBodyId === 'deletedAdminTableBody') {
+                // This template for deleted admins was already correct.
+                row.innerHTML = `
+                    <td data-label="Profile">
+                        ${admin.admin_pic ? 
+                            '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
+                            '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
+                        }
+                    </td>
+                    <td data-label="Username">${highlightText(admin.username)}</td>
+                    <td data-label="Email">${highlightText(admin.admin_email || '')}</td>
+                    <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
+                    <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
+                    <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
+                    <td data-label="Actions" class="actions">
+                        <div class="dropdown">
+                            <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
+                            <div class="dropdown-content">
+                                <button class="dropdown-item restore" onclick="restoreAdmin(${admin.admin_id}, '${deleteReason}')"><i class="fas fa-trash-restore"></i>Restore</button>
+                                <button class="dropdown-item full-delete" onclick="fullDeleteAdmin(${admin.admin_id})"><i class="fa-solid fa-ban"></i>Full Delete</button>
+                            </div>
                         </div>
-                    </div>
-                </td>`;
-        } else {
-            // Original template for the active admins table
-            row.innerHTML = `
-               <td data-label="Admin ID">${highlightText(admin.admin_id)}</td>
-                <td data-label="Profile">
-                    ${admin.admin_pic ? 
-                        '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
-                        '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
-                    }
-                </td>
-                
-                <td data-label="Username">${highlightText(admin.username)}</td>
-                <td data-label="Role">${highlightText(admin.role || 'Full Admin')}</td>
-                <td data-label="Status">${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
-                <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
-                <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
-                <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
-                <td data-label="Actions" class="actions">
-                    <div class="dropdown">
-                        <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
-                        <div class="dropdown-content">
-                            <button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})"><i class="fas fa-edit"></i>Edit</button>
-                            <button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})"><i class="fas fa-trash-alt"></i>Delete</button>
+                    </td>`;
+            } else {
+                // THE FIX IS IN THIS SECTION: Added the email table cell.
+                row.innerHTML = `
+                   <td data-label="Admin ID">${highlightText(admin.admin_id)}</td>
+                    <td data-label="Profile">
+                        ${admin.admin_pic ? 
+                            '<img src="data:image/jpeg;base64,' + admin.admin_pic + '" class="admin-photo">' : 
+                            '<i class="fa-solid fa-circle-user admin-profile-icon"></i>'
+                        }
+                    </td>
+                    <td data-label="Username">${highlightText(admin.username)}</td>
+                    <!-- THIS IS THE CORRECTED LINE -->
+                    <td data-label="Role">${highlightText(admin.role || 'Full Admin')}</td>
+                    <td data-label="Email">${highlightText(admin.admin_email || '')}</td>
+                    
+                    <td data-label="Status">${highlightText(admin.is_deleted ? 'Deleted' : 'Active')}</td>
+                    <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
+                    <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
+                    <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
+                    <td data-label="Actions" class="actions">
+                        <div class="dropdown">
+                            <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
+                            <div class="dropdown-content">
+                                <button class="dropdown-item edit" onclick="openAdminModal(${admin.admin_id})"><i class="fas fa-edit"></i>Edit</button>
+                                <button class="dropdown-item delete" onclick="confirmDeleteAdmin(${admin.admin_id})"><i class="fas fa-trash-alt"></i>Delete</button>
+                            </div>
                         </div>
-                    </div>
-                </td>`;
-        }
-        tableBody.appendChild(row);
-    });
-}
+                    </td>`;
+            }
+            tableBody.appendChild(row);
+        });
+    }
 
 
         $(document).on('click', '.dropdown-btn', function(e) {
@@ -437,69 +445,118 @@ checkAccess();
             .catch(error => console.error('Error:', error));
         }
 
-        function saveAdmin() {
-            const adminId = document.getElementById('adminId').value;
-            const username = document.getElementById('username').value;
-            const role = document.getElementById('role').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const oldPassword = document.getElementById('oldPassword').value;
-            const profileInput = document.getElementById('adminProfile');
-            
-            if (!username || !role) {
-                Swal.fire('Validation Error', 'Username and role are required.', 'warning');
-                return;
-            }
+       function saveAdmin() {
+        const adminId = document.getElementById('adminId').value;
+        const username = document.getElementById('username').value;
+        const role = document.getElementById('role').value;
+        const adminEmail = document.getElementById('adminEmail').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const oldPassword = document.getElementById('oldPassword').value;
+        const profileInput = document.getElementById('adminProfile');
+        
+        // --- Frontend Validation ---
+        if (!username || !role || !adminEmail) {
+            Swal.fire('Validation Error', 'Username, role, and email are required.', 'warning');
+            return;
+        }
+        if (password !== confirmPassword) {
+            Swal.fire('Validation Error', 'New passwords do not match.', 'warning');
+            return;
+        }
+        if (adminId && password && !oldPassword) {
+            Swal.fire('Validation Error', 'To set a new password, you must enter the current password.', 'warning');
+            return;
+        }
+        if (!adminId && !password) {
+            Swal.fire('Validation Error', 'Password is required for new admins.', 'warning');
+            return;
+        }
 
-            if (password !== confirmPassword) {
-                Swal.fire('Validation Error', 'New passwords do not match.', 'warning');
-                return;
-            }
-            
-            if (adminId && password && !oldPassword) {
-                Swal.fire('Validation Error', 'To set a new password, you must enter the current password.', 'warning');
-                return;
-            }
-            
-            if (!adminId && !password) {
-                Swal.fire('Validation Error', 'Password is required for new admins.', 'warning');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('admin_id', adminId);
-            formData.append('username', username);
-            formData.append('role', role);
-            formData.append('password', password);
-            formData.append('old_password', oldPassword);
-            
-            if (profileInput.files.length > 0) {
-                formData.append('adminProfile', profileInput.files[0]);
-            }
-            
-            const url = adminId ? 'include/handlers/update_admin.php' : 'include/handlers/add_admin.php';
-            
-            fetch(url, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+        // --- Prepare Form Data ---
+        const formData = new FormData();
+        formData.append('admin_id', adminId);
+        formData.append('username', username);
+        formData.append('role', role);
+        formData.append('admin_email', adminEmail);
+        formData.append('password', password);
+        formData.append('old_password', oldPassword);
+        if (profileInput.files.length > 0) {
+            formData.append('adminProfile', profileInput.files[0]);
+        }
+        
+        const url = adminId ? 'include/handlers/update_admin.php' : 'include/handlers/add_admin.php';
+        
+        // --- API Call ---
+        fetch(url, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.otp_required) {
+                    // OTP flow triggered for password change
+                    Swal.fire({
+                        title: 'Enter Verification Code',
+                        text: `A code has been sent to ${adminEmail}. Please check the inbox.`,
+                        input: 'text',
+                        inputAttributes: {
+                            maxlength: 6,
+                            autocapitalize: 'off',
+                            autocorrect: 'off'
+                        },
+                        inputPlaceholder: 'Enter 6-digit OTP',
+                        showCancelButton: true,
+                        confirmButtonText: 'Verify & Save',
+                        allowOutsideClick: false,
+                        inputValidator: (value) => {
+                            if (!value || !/^\d{6}$/.test(value)) {
+                                return 'Please enter a valid 6-digit OTP!'
+                            }
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Add OTP to the form data and re-submit to the update handler
+                            formData.append('otp', result.value);
+                            fetch('include/handlers/update_admin.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(res => res.json())
+                            .then(otpData => {
+                                if (otpData.success) {
+                                    Swal.fire('Success!', 'Admin has been updated successfully.', 'success').then(() => {
+                                        closeModal('adminModal');
+                                        fetchAdminsPaginated(false);
+                                    });
+                                } else {
+                                    Swal.fire('Error!', otpData.message, 'error');
+                                }
+                            }).catch(error => Swal.fire('Request Failed', 'Could not verify OTP.', 'error'));
+                        }
+                    });
+                } else {
+                    // Regular success (add new admin or update without password change)
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
                         text: `Admin has been ${adminId ? 'updated' : 'added'} successfully.`,
                     }).then(() => {
                         closeModal('adminModal');
-                        fetchAdminsPaginated(false); // Refresh active admins
+                        fetchAdminsPaginated(false);
                     });
-                } else {
-                    Swal.fire('Error!', data.message, 'error');
                 }
-            })
-            .catch(error => console.error('Error:', error));
-        }
+            } else {
+                // Handle initial error from server
+                Swal.fire('Error!', data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Request Failed', 'An error occurred while saving the admin.', 'error');
+        });
+    }
 
         function restoreAdmin(adminId, reason = '') {
     // This is the special flow for accounts locked due to failed logins
