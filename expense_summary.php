@@ -47,13 +47,15 @@ if (!empty($tripIds)) {
     $placeholders = implode(',', array_fill(0, count($tripIds), '?'));
     $types = str_repeat('i', count($tripIds));
     
+    // We're changing this to a LEFT JOIN to make sure we get all expenses,
+    // even if an expense type was somehow deleted. COALESCE helps show a default name.
     $expensesSql = "
         SELECT 
             de.trip_id,
-            et.name as expense_type,
+            COALESCE(et.name, 'Unknown Type') as expense_type,
             de.amount
         FROM driver_expenses de
-        INNER JOIN expense_types et ON de.expense_type_id = et.type_id
+        LEFT JOIN expense_types et ON de.expense_type_id = et.type_id
         WHERE de.trip_id IN ($placeholders)
         ORDER BY de.trip_id, et.name
     ";
@@ -85,7 +87,11 @@ foreach ($driverExpenses as $expense) {
     $totalDriverExpenses += $expense['amount'];
 }
 
-$grandTotal = $totalCashAdvance + $totalAdditionalCash + $totalDiesel + $totalDriverExpenses;
+
+$grandTotal = $totalCashAdvance + $totalAdditionalCash + $totalDiesel;
+
+
+$remainingBalance = ($totalCashAdvance + $totalAdditionalCash) - $totalDriverExpenses;
 
 function formatDateTimeForReport($datetimeString) {
     if (!$datetimeString) return 'N/A';
@@ -118,33 +124,37 @@ function formatDateTimeForReport($datetimeString) {
         </div>
 
         <div class="report-content">
-            <div class="info-section">
-                <h2 class="section-title"><i class="fas fa-coins"></i> Total Summary for the Day</h2>
-                <table class="summary-table">
-                    <tr>
-                        <td>Total Cash Advance:</td>
-                        <td>₱<?php echo number_format($totalCashAdvance, 2); ?></td>
-                    </tr>
-                    <tr>
-                        <td>Total Additional Cash:</td>
-                        <td>₱<?php echo number_format($totalAdditionalCash, 2); ?></td>
-                    </tr>
-                    <tr>
-                        <td>Total Diesel Expenses:</td>
-                        <td>₱<?php echo number_format($totalDiesel, 2); ?></td>
-                    </tr>
-                     <tr>
-                        <td>Total Driver-Submitted Expenses:</td>
-                        <td>₱<?php echo number_format($totalDriverExpenses, 2); ?></td>
-                    </tr>
-                    <tr class="grand-total">
-                        <td>GRAND TOTAL:</td>
-                        <td>₱<?php echo number_format($grandTotal, 2); ?></td>
-                    </tr>
-                </table>
-            </div>
+          <div class="info-section">
+    <h2 class="section-title"><i class="fas fa-coins"></i> Total Summary for the Day</h2>
+    <table class="summary-table">
+        <tr>
+            <td>Total Cash Advance:</td>
+            <td>₱<?php echo number_format($totalCashAdvance, 2); ?></td>
+        </tr>
+        <tr>
+            <td>Total Additional Cash:</td>
+            <td>₱<?php echo number_format($totalAdditionalCash, 2); ?></td>
+        </tr>
+        <tr>
+            <td>Total Diesel Expenses:</td>
+            <td>₱<?php echo number_format($totalDiesel, 2); ?></td>
+        </tr>
+         <tr>
+            <td>Total Driver-Submitted Expenses:</td>
+            <td>₱<?php echo number_format($totalDriverExpenses, 2); ?></td>
+        </tr>
+        <tr class="remaining-balance">
+            <td>Remaining Balance (Cash on Hand):</td>
+            <td>₱<?php echo number_format($remainingBalance, 2); ?></td>
+        </tr>
+        <tr class="grand-total">
+            <td>GRAND TOTAL DISBURSED:</td>
+            <td>₱<?php echo number_format($grandTotal, 2); ?></td>
+        </tr>
+    </table>
+</div>
 
-           <div class="info-section">
+         <div class="info-section">
     <h2 class="section-title"><i class="fas fa-list-ul"></i> Detailed Breakdown per Trip</h2>
     <?php if (empty($trips)): ?>
         <p style="text-align:center; color: #6c757d; margin-top: 20px;">No trips with expenses were found for this date.</p>
@@ -155,11 +165,14 @@ function formatDateTimeForReport($datetimeString) {
                 return $exp['trip_id'] == $tripId;
             });
 
-            // Calculate total for this specific trip
-            $tripTotal = $trip['cash_advance'] + $trip['additional_cash_advance'] + $trip['diesel'];
+            // Calculate totals for this specific trip
+            $tripDriverExpensesTotal = 0;
             foreach ($tripDriverExpenses as $expense) {
-                $tripTotal += $expense['amount'];
+                $tripDriverExpensesTotal += $expense['amount'];
             }
+            $tripCashGiven = $trip['cash_advance'] + $trip['additional_cash_advance'];
+            $tripRemainingBalance = $tripCashGiven - $tripDriverExpensesTotal;
+            $tripTotal = $tripCashGiven + $trip['diesel'];
         ?>
             <div class="trip-card">
                 <div class="trip-card-header">
@@ -203,8 +216,12 @@ function formatDateTimeForReport($datetimeString) {
                         <?php endif; ?>
                     </tbody>
                     <tfoot>
-                        <tr>
-                            <th>Total for this Trip</th>
+                        <tr class="trip-balance">
+                            <th>Remaining Balance</th>
+                            <th class="amount">₱<?php echo number_format($tripRemainingBalance, 2); ?></th>
+                        </tr>
+                        <tr class="trip-total">
+                            <th>Total Disbursed for Trip</th>
                             <th class="amount">₱<?php echo number_format($tripTotal, 2); ?></th>
                         </tr>
                     </tfoot>
