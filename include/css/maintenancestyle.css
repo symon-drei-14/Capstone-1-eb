@@ -137,27 +137,65 @@ tr:hover {
     height: 100%;
     overflow: hidden; 
     background-color: rgba(0, 0, 0, 0.4);
+     animation: fadeIn 0.3s ease; 
 }
 
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal.closing {
+    animation: fadeOut 0.3s ease forwards; 
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.modal-content h3{
+  margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+    padding-top: 20px;
+}
 .modal-header {
+       padding: 10px 25px;
+    border-bottom: 1px solid #eaeaea;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: #f9f9f9;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    top:0;
+    position: sticky;
+    z-index:10;
 }
 
 .close {
-    color: #aaa;
-    font-size: 28px;
+       color: #888;
+    font-size: 26px; 
     font-weight: bold;
     cursor: pointer;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%; 
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+    transition: ease 0.3s;
 }
 
 .close:hover,
 .close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
+       background-color: #e7e7e7; 
+    color: rgb(236, 59, 59);
+    transform: scale(1.1);   
 }
 
 .modal-body {
@@ -596,7 +634,7 @@ button[type="submit"]:hover {
     }
 
     .remarks-modal-content {
-        padding: 10px;
+        padding: 20px;
         background: white;
         border-radius: 5px;
     }
@@ -618,16 +656,16 @@ button[type="submit"]:hover {
         background-color: #9f1515ff;
         color: white;
         border: none;
-        padding: 5px 10px;
+        padding: 8px 20px;
         border-radius: 4px;
         cursor: pointer;
         margin-top: 15px;
+        transition: ease 0.3s;
     }
 
     .modal-content {
         background-color: #fefefe;
         margin: 2% auto;
-        padding: 20px;
         border: 1px solid #888;
         width: 80%; 
         max-width:800px;
@@ -639,9 +677,12 @@ button[type="submit"]:hover {
 
     }
 
-
+#maintenanceForm{
+    padding: 20px;
+}
     .remarks-modal-content button:hover {
-        background-color: #45a049;
+        background-color: #c43535;
+        transform: translateY(-3px);
     }
 
      
@@ -2132,5 +2173,22 @@ mark {
     transform: scale(1);
 }
 
+.add_sched,
+.reminder_btn,
+.clear-date-filter,
+.submitbtn,
+.cancelbtn,
+.modal-footer button {
+    transition: all 0.3s ease-in-out;
+}
 
+.add_sched:hover,
+.reminder_btn:hover,
+.clear-date-filter:hover,
+.submitbtn:hover,
+.cancelbtn:hover,
+.modal-footer button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
         

@@ -202,8 +202,11 @@
         <!-- Add/Edit Maintenance Modal -->
        <div id="maintenanceModal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h2 id="modalTitle">Add Maintenance Schedule</h2>
+        <div class="modal-header">
+            <h3 id="modalTitle">Add Maintenance Schedule</h3>
+        <span class="close" onclick="closeModal('maintenanceModal')">&times;</span>
+        
+        </div>
         <form id="maintenanceForm">
             <input type="hidden" id="maintenanceId" name="maintenanceId">
             
@@ -352,7 +355,7 @@
             </div>
             
             <div class="form-actions">
-                <button type="button" class="cancelbtn" onclick="closeModal()">Cancel</button>
+                 <button type="button" class="cancelbtn" onclick="closeModal('maintenanceModal')">Cancel</button>
                 <button type="button" class="submitbtn" onclick="saveMaintenanceRecord()">Submit</button>
             </div>
         </form>
@@ -370,7 +373,7 @@
             <div class="modal-content">
         <div class="modal-header">
             <h3>Maintenance History</h3>
-            <span class="close" onclick="closeHistoryModal()">&times;</span>
+            <span class="close" onclick="closeModal('historyModal')">&times;</span>
             </div>
                 <div class="history-list" id="historyList"></div>
  
@@ -387,7 +390,7 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2><i class="fas fa-bell"></i> Maintenance Reminders</h2>
-            <span class="close" onclick="closeRemindersModal()">&times;</span>
+            <span class="close" onclick="closeModal('remindersModal')">&times;</span>
         </div>
         <div class="reminders-list" id="remindersList">
         </div>
@@ -1358,20 +1361,34 @@ function populateMaintenancePurposes(remarks) {
             document.getElementById('remarksModal').style.display = 'block';
         }
     }     
-        function closeModal() {
-        document.getElementById("maintenanceModal").style.display = "none";
-        // Always enable the status dropdown when closing the modal
-        document.getElementById("status").disabled = false;
-        // Hide edit reasons section when closing
-        document.querySelector('.edit-reasons-section').style.display = 'none';
-         document.querySelectorAll('input[name="maintenancePurpose"]').forEach(checkbox => {
-        checkbox.checked = false;
-    });
-    document.getElementById('otherPurposeText').value = '';
-    document.querySelector('.other-purpose').style.display = 'none';
-     document.getElementById('expenseList').innerHTML = '';
-    clearExpenseForm();
-    }
+    function closeModal(modalId) {
+    const modalToClose = document.getElementById(modalId);
+    if (!modalToClose) return;
+
+    modalToClose.classList.add('closing');
+
+    setTimeout(() => {
+        modalToClose.style.display = 'none';
+        modalToClose.classList.remove('closing');
+
+        if (modalId === 'receiptModal') {
+            document.getElementById('maintenanceModal').classList.remove('receipt-visible');
+            document.getElementById('receiptImageViewer').src = ''; 
+        }
+
+        if (modalId === 'maintenanceModal') {
+            document.getElementById("status").disabled = false;
+            document.querySelector('.edit-reasons-section').style.display = 'none';
+            document.querySelectorAll('input[name="maintenancePurpose"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            document.getElementById('otherPurposeText').value = '';
+            document.querySelector('.other-purpose').style.display = 'none';
+            document.getElementById('expenseList').innerHTML = '';
+            clearExpenseForm();
+        }
+    }, 300); 
+}
 
     function loadExpenses(maintenanceId) {
     const expenseListDiv = document.getElementById('expenseList');
@@ -1570,9 +1587,7 @@ function viewReceipt(base64String) {
 
 
 function closeReceiptModal() {
-    document.getElementById('receiptModal').style.display = 'none';
-    document.getElementById('receiptImageViewer').src = '';
-    document.getElementById('maintenanceModal').classList.remove('receipt-visible');
+ closeModal('receiptModal');
 }
             
 function saveMaintenanceRecord() {
@@ -1707,7 +1722,7 @@ function saveMaintenanceRecord() {
                 timer: 2000,
                 showConfirmButton: false
             }).then(() => {
-                closeModal();
+                closeModal('maintenanceModal');
                 loadMaintenanceData();
                 updateStatsCards();
                 updateRemindersBadge();
@@ -1911,7 +1926,7 @@ function saveMaintenanceRecord() {
 }
             
             function closeHistoryModal() {
-                document.getElementById("historyModal").style.display = "none";
+                closeModal('historyModal');
             }
             
             function openRemindersModal() {
@@ -1993,7 +2008,7 @@ function saveMaintenanceRecord() {
 }
             
             function closeRemindersModal() {
-                document.getElementById("remindersModal").style.display = "none";
+                closeModal('remindersModal');
             }
 
             
@@ -2641,25 +2656,16 @@ function highlightMatches(text, term) {
 
 
 window.addEventListener('click', function(event) {
+
     if (event.target.classList.contains('modal')) {
-
-        if (document.getElementById('maintenanceModal').classList.contains('receipt-visible')) {
-
-            closeReceiptModal();
-        } else {
-
-            closeModal();
-            closeHistoryModal();
-            closeRemindersModal();
-            
-            const remarksModal = document.getElementById('remarksModal');
-            if (remarksModal) {
-                remarksModal.style.display = 'none';
-            }
+        if (document.getElementById('receiptModal').style.display === 'block' && event.target.id !== 'receiptModal') {
+             closeModal('receiptModal');
+        } 
+        else if (event.target.id) {
+             closeModal(event.target.id);
         }
     }
 });
-
 function updateRemindersBadge() {
     const badge = document.getElementById('reminders-badge');
     if (!badge) return; 

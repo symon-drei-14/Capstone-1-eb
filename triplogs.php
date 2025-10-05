@@ -446,9 +446,11 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
      <!-- Edit Modal -->
      <div id="editModal" class="modal">
     <div class="modal-content" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: scroll; overflow-x:hidden;">
+        <div class="modal-header2">
         <span class="close">&times;</span>
-        <h3 style="margin-top: 0;">Edit Trip</h3>
-        <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
+        <h2 style="margin-top: 20;">Edit Trip</h2>
+        </div>
+        <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden; padding:20px;">
             <input type="hidden" id="editEventId" name="eventId">
             
             <!-- Column 1 -->
@@ -761,10 +763,12 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 
 <div id="addScheduleModal" class="modal">
     <!-- etong css gamit ng add modal -->
-    <div class="modal-content" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; overflow-x:hidden;">
+    <div class="modal-content" style="width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; overflow-x:hidden;">
+        <div class="modal-header2">
         <span class="close">&times;</span>
-        <h2 style="margin-top: 0;">Add Schedule</h2>
-        <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden;">
+        <h2 style="margin-top:20;">Add Schedule</h2>
+    </div>
+        <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden; padding:20px;">
             <!-- Column 1 -->
               <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
@@ -903,7 +907,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 </div>
 
             <!-- Form buttons -->
-               <div class="buttons" style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
+               <div class="buttons" style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee ; ">
                 <button type="button" class="close-btn cancel-btn" style="padding: 5px 10px;">Cancel</button>
                 <button type="submit" class="save-btn" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px;">Save Schedule</button>
             </div>
@@ -912,7 +916,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 </div>
 
     <div id="checklistModal" class="modal">
-    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding:20px">
         <span class="close">&times;</span>
         <h3 style="margin-top: 0;">Driver Checklist</h3>
         <div id="checklistContent">
@@ -1013,9 +1017,11 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
         </div>
 
     <div id="editReasonsModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 600px; padding:20px; overflow:hidden;">
+            <div class="modal-header2">
             <span class="close">&times;</span>
             <h3>Edit Remarks</h3>
+            </div>
             <div id="editReasonsContent">
             
             </div>
@@ -1027,7 +1033,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 
         
        <div id="expenseSummaryModal" class="modal">
-    <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-content" style="max-width: 400px; padding:20px;">
         <span class="close">&times;</span>
         <h3 style="margin-top: 0;">Generate Daily Expense Summary</h3>
         <form id="expenseSummaryForm">
@@ -1902,34 +1908,25 @@ $('#dailyExpenseSummaryBtn').on('click', function() {
         $('#addEventDiesel').val('');
         $('#addEventStatus').val('Pending');
     }
-            // Close modal handlers
-       $('.close:not(.receipt-close), .close-btn.cancel-btn').on('click', function() {
-        $('.modal').hide();
-        
-        // Re-enable fields when closing the edit modal
-        $('#editEventDriver').prop('disabled', false);
-        $('#editEventSize').prop('disabled', false);
 
-        if ($(this).closest('#addScheduleModal').length) {
-            resetAddScheduleForm();
-        }
-    });
+$(document).on('click', '.close, .close-btn.cancel-btn', function() {
+
+    const modalId = $(this).closest('.modal').attr('id');
+    if (modalId) {
+        closeModal(modalId);
+    }
+});
 
     // Also reset when clicking outside the modal
    $(window).on('click', function(event) {
-        // Check if the click target is a modal background
         if ($(event.target).hasClass('modal')) {
             
-            // Hide only the specific modal that was clicked on its background
-            $(event.target).hide();
-
-            // Re-enable fields if the edit modal was closed by clicking the background
+              closeModal(event.target.id);
             if ($(event.target).is('#editModal')) {
                  $('#editEventDriver').prop('disabled', false);
                  $('#editEventSize').prop('disabled', false);
             }
     
-            // If it was the add schedule modal that was closed, reset its form
             if ($(event.target).is('#addScheduleModal')) {
                 resetAddScheduleForm();
             }
@@ -3400,8 +3397,35 @@ function formatCurrency(amount) {
         }
     }
 
-    function closeModal() {
-    $('.modal').hide();
+   function closeModal(modalId) {
+    let modalToClose = null;
+
+    if (modalId) {
+        modalToClose = document.getElementById(modalId);
+    } else if (event && event.target) {
+
+        modalToClose = event.target.closest('.modal');
+    }
+    if (!modalToClose) return; 
+
+    modalToClose.classList.add('closing');
+    setTimeout(() => {
+
+        modalToClose.style.display = 'none';
+        modalToClose.classList.remove('closing');
+
+        if (modalToClose.id === 'addScheduleModal') {
+            resetAddScheduleForm();
+        }
+        if (modalToClose.id === 'editModal') {
+            $('#editEventDriver').prop('disabled', false);
+            $('#editEventSize').prop('disabled', false);
+        }
+        if (modalToClose.id === 'receiptModal') {
+            $('#expensesModal .expensemodal-content').removeClass('shifted');
+        }
+
+    }, 300); 
 }
 
 $(document).on('click', '.dropdown-item.full-delete', function(e) {

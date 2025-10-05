@@ -157,72 +157,74 @@ checkAccess();
 
     <div id="adminModal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal('adminModal')">&times;</span>
-        <h2 id="modalTitle">Add Admin</h2>
-        
-       <form id="adminForm">
-    <input type="hidden" id="adminId" name="adminId">
-
-    <div class="form-group">
-        <label for="adminProfile">Profile Photo (Max 2MB)</label>
-        <input type="file" id="adminProfile" name="adminProfile" accept="image/*">
-        <div id="adminProfilePreview" style="margin-top: 10px;"></div>
-    </div>
-    
-    <div class="form-row">
-        <div class="form-group">
-            <label for="username">Username *</label>
-            <input type="text" id="username" name="username" class="form-control" required>
+        <div class="modal-header">
+            <h2 id="modalTitle">Add Admin</h2>
+            <span class="close" onclick="closeModal('adminModal')">&times;</span>
         </div>
 
-        <div class="form-group">
-            <label for="role">Role</label>
-            <select id="role" name="role" class="form-control" required>
-                <option value="Full Admin">Full Admin</option>
-                <option value="Operations Manager">Operations Manager</option>
-                <option value="Fleet Manager">Fleet Manager</option>
-            </select>
-        </div>
-    </div>
+        <form id="adminForm">
+            <input type="hidden" id="adminId" name="adminId">
 
-<div class="form-group">
-            <label for="adminEmail">Email *</label>
-            <input type="email" id="adminEmail" name="adminEmail" class="form-control" required placeholder="admin@example.com">
-        </div>
-
-    <div class="form-group" id="oldPasswordGroup" style="display: none;">
-        <label for="oldPassword">Current Password</label>
-        <div class="password-wrapper">
-            <input type="password" id="oldPassword" name="oldPassword" class="form-control">
-            <i class="fa-regular fa-eye toggle-password"></i>
-        </div>
-        <small>Required only if you are setting a new password.</small>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label for="password" id="passwordLabel">Password *</label>
-            <div class="password-wrapper">
-                <input type="password" id="password" name="password" class="form-control">
-                <i class="fa-regular fa-eye toggle-password"></i>
+            <div class="form-group">
+                <label for="adminProfile">Profile Photo (Max 2MB)</label>
+                <input type="file" id="adminProfile" name="adminProfile" accept="image/*">
+                <div id="adminProfilePreview" style="margin-top: 10px;"></div>
             </div>
-            <small id="passwordHelp" style="display: none;">Leave blank to keep current password.</small>
-        </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">Username *</label>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role" class="form-control" required>
+                        <option value="Full Admin">Full Admin</option>
+                        <option value="Operations Manager">Operations Manager</option>
+                        <option value="Fleet Manager">Fleet Manager</option>
+                    </select>
+                </div>
+            </div>
 
-        <div class="form-group">
-            <label for="confirmPassword">Confirm Password *</label>
-            <div class="password-wrapper">
-                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control">
-                <i class="fa-regular fa-eye toggle-password"></i>
+            <div class="form-group">
+                <label for="adminEmail">Email *</label>
+                <input type="email" id="adminEmail" name="adminEmail" class="form-control" required placeholder="admin@example.com">
+            </div>
+
+            <div class="form-group" id="oldPasswordGroup" style="display: none;">
+                <label for="oldPassword">Current Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="oldPassword" name="oldPassword" class="form-control">
+                    <i class="fa-regular fa-eye toggle-password"></i>
+                </div>
+                <small>Required only if you are setting a new password.</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password" id="passwordLabel">Password *</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" class="form-control">
+                        <i class="fa-regular fa-eye toggle-password"></i>
+                    </div>
+                    <small id="passwordHelp" style="display: none;">Leave blank to keep current password.</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password *</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control">
+                        <i class="fa-regular fa-eye toggle-password"></i>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="modal-footer">
+            <div class="button-group">
+                <button type="button" class="cancel-btn" onclick="closeModal('adminModal')">Cancel</button>
+                <button type="button" class="save-btn" onclick="saveAdmin()">Save</button>
             </div>
         </div>
-    </div>
-
-    <div class="button-group">
-        <button type="button" class="save-btn" onclick="saveAdmin()">Save</button>
-        <button type="button" class="cancel-btn" onclick="closeModal('adminModal')">Cancel</button>
-    </div>
-</form>
     </div>
 </div>
 
@@ -240,10 +242,24 @@ checkAccess();
         function openModal(modalId) {
             document.getElementById(modalId).style.display = "block";
         }
-
+        
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = "none";
+            const modalToClose = document.getElementById(modalId);
+            if (!modalToClose) return;
+
+            modalToClose.classList.add('closing');
+
+            setTimeout(() => {
+                modalToClose.style.display = 'none';
+                modalToClose.classList.remove('closing');
+            }, 300); 
         }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal(event.target.id);
+            }
+        };
 
          function openAdminModal(adminId = null) {
             document.getElementById('adminForm').reset();

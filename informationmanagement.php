@@ -362,19 +362,27 @@ checkAccess(); // No role needed—logic is handled internally
 <!-- Modal for Add/Edit -->
 <div id="infoModal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal('infoModal')">&times;</span>
-        <h2 id="modalTitle">Add Item</h2>
-        <input type="hidden" id="itemId">
-        <input type="hidden" id="itemType">
-        
-        <div class="form-group">
-            <label for="itemName">Name</label>
-            <input type="text" id="itemName" class="form-control" required>
+
+        <div class="modal-header">
+            <h2 id="modalTitle">Add Item</h2>
+            <span class="close" onclick="closeModal('infoModal')">&times;</span>
+        </div>
+
+        <div class="modal-body">
+            <input type="hidden" id="itemId">
+            <input type="hidden" id="itemType">
+            <div class="form-group">
+                <label for="itemName">Name</label>
+                <input type="text" id="itemName" class="form-control" required>
+            </div>
         </div>
         
-        <div class="button-group">
-            <button type="button" class="save-btn" onclick="saveItem()">Save</button>
-            <button type="button" class="cancel-btn" onclick="closeModal('infoModal')">Cancel</button>
+        <div class="modal-footer">
+            <div class="button-group">
+                <button type="button" class="save-btn" onclick="saveItem()">Save</button>
+                <button type="button" class="cancel-btn" onclick="closeModal('infoModal')">Cancel</button>
+         
+            </div>
         </div>
     </div>
 </div>
@@ -400,17 +408,25 @@ checkAccess(); // No role needed—logic is handled internally
 <!-- Reason View Modal -->
 <div id="reasonModal" class="modal">
     <div class="modal-content" style="width: 40%;">
-        <span class="close" onclick="closeModal('reasonModal')">&times;</span>
-        <h2>Deletion Reason</h2>
-        <div class="form-group">
-            <p id="deletionReasonText" style="padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></p>
+        
+        <div class="modal-header">
+            <h2>Deletion Reason</h2>
+            <span class="close" onclick="closeModal('reasonModal')">&times;</span>
         </div>
-        <div class="button-group">
-            <button type="button" class="cancel-btn" onclick="closeModal('reasonModal')">Close</button>
+
+        <div class="modal-body">
+            <div class="form-group">
+                <p id="deletionReasonText" style="padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></p>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <div class="button-group">
+                <button type="button" class="cancel-btn" onclick="closeModal('reasonModal')">Close</button>
+            </div>
         </div>
     </div>
 </div>
-
 <script>
     // Global variables
     let currentTab = 'dispatchers';
@@ -731,9 +747,23 @@ function handleDropdownItemClick(e) {
         document.getElementById('infoModal').style.display = 'block';
     }
     
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
+   function closeModal(modalId) {
+        const modalToClose = document.getElementById(modalId);
+        if (!modalToClose) return;
+
+        modalToClose.classList.add('closing');
+
+        setTimeout(() => {
+            modalToClose.style.display = 'none';
+            modalToClose.classList.remove('closing'); 
+        }, 300); 
     }
+
+window.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+        closeModal(event.target.id);
+    }
+});
     
     function saveItem() {
         const type = document.getElementById('itemType').value;

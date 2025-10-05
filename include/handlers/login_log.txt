@@ -1437,3 +1437,38 @@
 2025-10-03 17:21:12 - Data validation passed
 2025-10-03 17:21:12 - Database connection successful
 2025-10-03 17:21:12 - Login successful for: driver11@gmail.com
+2025-10-03 18:26:21 - Login request received
+{"email":"driver11@gmail.com","password":"12345678"}
+
+2025-10-03 18:26:21 - JSON parsed successfully
+2025-10-03 18:26:21 - Data validation passed
+2025-10-03 18:26:21 - Database connection successful
+2025-10-03 18:26:21 - Login successful for: driver11@gmail.com
+2025-10-03 18:40:25 - Login request received
+{"email":"marvin@gmail.com","password":"12345678"}
+
+2025-10-03 18:40:25 - JSON parsed successfully
+2025-10-03 18:40:25 - Data validation passed
+2025-10-03 18:40:25 - Database connection successful
+2025-10-03 18:40:25 - Login successful for: marvin@gmail.com
+2025-10-03 18:49:09 - Login request received
+{"email":"Symons@gmail.com","password":"12345678"}
+
+2025-10-03 18:49:09 - JSON parsed successfully
+2025-10-03 18:49:09 - Data validation passed
+2025-10-03 18:49:09 - Database connection successful
+2025-10-03 18:49:09 - Incorrect password for: Symons@gmail.com
+2025-10-03 18:49:16 - Login request received
+{"email":"Symons@gmail.com","password":"asdasd"}
+
+2025-10-03 18:49:16 - JSON parsed successfully
+2025-10-03 18:49:16 - Data validation passed
+2025-10-03 18:49:16 - Database connection successful
+2025-10-03 18:49:16 - Login successful for: Symons@gmail.com
+2025-10-03 19:23:44 - Login request received
+{"email":"symons@gmail.com","password":"asdasd"}
+
+2025-10-03 19:23:44 - JSON parsed successfully
+2025-10-03 19:23:44 - Data validation passed
+2025-10-03 19:23:44 - Database connection successful
+2025-10-03 19:23:44 - Login successful for: symons@gmail.com

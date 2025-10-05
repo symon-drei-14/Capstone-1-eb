@@ -40,7 +40,7 @@
     #editModal .modal-content {
         max-height: 80vh; /* Limit height to 80% of viewport */
         overflow-y: auto; /* Enable vertical scrolling */
-        padding: 20px;
+     
         width: 90%;
         max-width: 600px;
         position: relative;
@@ -798,20 +798,90 @@ font-size: 13px;
         background-color: rgba(0, 0, 0, 0.5);
         align-items: center;
         justify-content: center;
-
+        animation: fadeIn 0.3s ease;   
     }
 
-
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal.closing {
+    animation: fadeOut 0.3s ease forwards; 
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
     .modal-content {
-        left: 450;
-        top: 15;
+
         background-color: #fff;
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 30px;
+         margin: 2% auto;
+ 
         position: relative;
         overflow: scroll;
     }
+
+     .modal-header2 {
+    padding: 1px 25px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f9f9f9;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+     
+ 
+}
+.modal-header2 h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 2px solid #a93129;
+    width:100%;
+    margin: 15px 0 0 0;
+    padding-bottom: 10px;
+}
+
+.modal-footer {
+    padding: 15px 25px;
+    border-top: 1px solid #eaeaea;
+    background-color: #f9f9f9;
+    display: flex;
+    justify-content: flex-end; 
+    border-bottom-left-radius: 20px; 
+    border-bottom-right-radius: 20px;
+}
+
+
+#addScheduleModal .close {
+    color: #888;
+    font-size: 26px; 
+    font-weight: bold;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%; 
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+    transition: ease 0.3s;
+}
+
+
+#addScheduleModal .close:hover {
+    background-color: #e7e7e7; 
+    color: rgb(236, 59, 59);
+    transform: scale(1.1);      
+}
+
 
         .modal-content h2 {
         margin-bottom: 20px;
@@ -887,7 +957,7 @@ font-size: 13px;
     }
 
     .cancel-btn:hover {
-        background-color: #d32f2f;
+        background-color: #ae3838;
     }
 
     .save-btn{
@@ -964,10 +1034,7 @@ font-size: 13px;
             cursor: pointer;
         }
         
-        .cancel-btn:hover {
-            background-color:rgb(104, 20, 14);
-        
-        }
+      
         
         
     .event-details-container {
@@ -1742,6 +1809,7 @@ h3.title {
 .buttons{
     display:flex; 
     justify-content: space-between; 
+    
 }
 
 #viewChecklistBtn{
@@ -1804,14 +1872,13 @@ h3.title {
 
          /* Event Modal Improvements */
 #eventModal {
-    display: none;
+ display: none;
         position: fixed;
         z-index: 11000;
-        left: -150px;
-        top: 0PX;
-        bottom: 0;
-        width: 200%;
-        
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
         align-items: center;
         justify-content: center;
@@ -1830,6 +1897,7 @@ h3.title {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     overflow-x: hidden;
     overflow-y: hidden;
+   
 
 }
 
@@ -3002,7 +3070,7 @@ h3.title {
 #receiptModal{
     position: flex;
     top: 0;
-    left: 10;
+    left: 500px;
     color: #f1f1f1;
     font-size: 40px;
     font-weight: bold;
@@ -3012,7 +3080,7 @@ h3.title {
 #receiptModal .close {
     position: absolute;
     top: 35px;
-    right: 25px;
+    right: 525px;
     color: #f1f1f1;
      background: rgba(15, 23, 42, 0.6);
     border-radius: 30px;
@@ -3360,3 +3428,30 @@ h3.title {
   animation: continuousPulse 10s ease-in-out forwards;
 }
 
+.addbtn,
+.btn-primary,
+.cancel-btn,
+.save-btn,
+.Generate-btn,
+.restore-btn,
+.expense-close-btn,
+#addScheduleBtnTable,
+#dailyExpenseSummaryBtn,
+.toggle-btn {
+    transition: all 0.2s ease-in-out;
+}
+
+/* 2. Apply the upward movement and a shadow on hover */
+.addbtn:hover,
+.btn-primary:hover,
+.cancel-btn:hover,
+.save-btn:hover,
+.Generate-btn:hover,
+.restore-btn:hover,
+.expense-close-btn:hover,
+#addScheduleBtnTable:hover,
+#dailyExpenseSummaryBtn:hover,
+.toggle-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}

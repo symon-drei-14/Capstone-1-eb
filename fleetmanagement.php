@@ -116,7 +116,7 @@ checkAccess();
                 <div class="status-filter">
                 <div class="button-row">
                     <button class="add_trip" onclick="openTruckModal()"> <i class="fa-solid fa-plus"></i> Add truck</button>
-                      <!-- <button class="print_btn" type="button"><i class="fas fa-print"></i> Print</button> -->
+                
                 </div>
 
 
@@ -188,17 +188,27 @@ checkAccess();
         
         </div>
         <div class="modal-footer">
-            <button>Close</button>
+            <button class="history">Close</button>
         </div>
     </div>
 </div>
 
-    <div id="truckModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('truckModal')">&times;</span>
+  <div id="truckModal" class="modal">
+    <div class="modal-content">
+        <div class="modalheader">
             <h2 id="modalTitle">Add Truck</h2>
+            <span class="close" onclick="closeModal('truckModal')">&times;</span>
+        </div>
+        
+        <div class="truckform">
             <input type="hidden" id="truckIdHidden">
 
+            <div class="form-group">
+                <label for="truckPhoto">Truck Photo (Max 2MB)</label>
+                <input type="file" id="truckPhoto" class="custom-file-btn" name="truckPhoto" accept="image/*" onchange="previewTruckPhoto(this)">
+                <small>Supported formats: JPG, PNG, GIF</small>
+            </div>
+            
             <div id="truckPhotoPreview" class="truck-photo-preview"></div>
 
             <div class="form-group">
@@ -208,37 +218,36 @@ checkAccess();
                        title="2-3 letters followed by 3-4 numbers"
                        class="form-control" required>
             </div>
-            <div class="form-group">
-                <label for="capacity">Capacity</label>
-                <select id="capacity" name="capacity" class="form-control" required>
-                    <option value="20">20</option>
-                    <option value="40">40</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status" class="form-control" required>
-                    <option value="In Terminal">In Terminal</option>
-                    <option value="Enroute">Enroute</option>
-                    <option value="In Repair">In Repair</option>
-                    <option value="Overdue">Overdue</option>
-                    
-                </select>
-            </div>
 
-        <div class="form-group">
-            <label for="truckPhoto">Truck Photo (Max 2MB)</label>
-            <input type="file" id="truckPhoto" class="custom-file-btn" name="truckPhoto" accept="image/*" onchange="previewTruckPhoto(this)">
-            <small>Supported formats: JPG, PNG, GIF</small>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="capacity">Capacity</label>
+                    <select id="capacity" name="capacity" class="form-control" required>
+                        <option value="20">20</option>
+                        <option value="40">40</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status" class="form-control" required>
+                        <option value="In Terminal">In Terminal</option>
+                        <option value="Enroute">Enroute</option>
+                        <option value="In Repair">In Repair</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
-            <div class="button-group">
+        <div class="modal-footer">
+             <div class="button-group">
                 <button type="button" class="save-btn" onclick="validateAndSaveTruck()">Save</button>
                 <button type="button" class="cancel-btn" onclick="closeModal('truckModal')">Cancel</button>
             </div>
         </div>
     </div>
-
+</div>
     <!-- <div id="deleteModal" class="modal">
     <div class="modal-content" style="width: 40%;">
         <span class="close" onclick="closeModal('deleteModal')">&times;</span>
@@ -338,9 +347,17 @@ function fetchTrucks() {
         }
 
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = "none";
-            resetForm();
-        }
+        const modal = document.getElementById(modalId);
+        if (!modal) return; 
+        modal.classList.add('closing');
+        setTimeout(() => {
+            modal.style.display = "none";
+            modal.classList.remove('closing'); 
+            if (modalId === 'truckModal') {
+                resetForm();
+            }
+        }, 300); 
+            }
 
       function openTruckModal(editMode = false, truckId = null) {
     isEditMode = editMode;
@@ -758,7 +775,12 @@ function renderTrucksTable() {
     }
 }
    document.addEventListener('DOMContentLoaded', function() {
-            // Close dropdowns when clicking outside
+            window.addEventListener('click', (event) => {
+
+            if (event.target.classList.contains('modal')) {
+                closeModal(event.target.id);
+            }
+             });
             document.addEventListener('click', function(e) {
                 if (!e.target.closest('.dropdown')) {
                     closeAllDropdowns();

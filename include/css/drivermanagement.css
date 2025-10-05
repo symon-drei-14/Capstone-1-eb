@@ -153,29 +153,101 @@ tr:hover {
     left: 0;
     top: 0;
     width: 100%; 
-    height: 100vh; /* Use viewport height instead of 100% */
-    overflow: hidden; /* Prevent any overflow on modal container */
+    height: 100vh; 
+    overflow: hidden;
     background-color: rgba(0, 0, 0, 0.5);
-    padding: 0; /* Remove padding that can cause overflow */
+    padding: 0; 
+     animation: fadeIn 0.3s ease;
 }
-
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal.closing {
+    animation: fadeOut 0.3s ease forwards; 
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
 .modal-content {
     background-color: #fff;
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Center the modal */
+    transform: translate(-50%, -50%);
     width: 90%;
     max-width: 500px;
-    max-height: 85vh; /* Limit to 85% of viewport height */
+    max-height: 85vh;
     border: 1px solid #888;
     border-radius: 20px;
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-    overflow-y: auto; /* Allow internal scrolling */
-    overflow-x: hidden; /* Prevent horizontal scrolling */
-    padding: 20px;
-    box-sizing: border-box; /* Include padding in width calculation */
+    overflow-y: auto; 
+    overflow-x: hidden; 
+    box-sizing: border-box; 
 }
+
+.modalheader{
+      padding: 15px 25px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f9f9f9;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+     position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.modalheader h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 2px solid #a93129;
+    width:100%;
+    margin: 15px 0 0 0;
+    padding-bottom: 10px;
+}
+
+#driverModal .close {
+    color: #888;
+    font-size: 26px; 
+    font-weight: bold;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%; 
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+    transition: ease 0.3s;
+}
+
+
+#driverModal .close:hover {
+    background-color: #e7e7e7; 
+    color: rgb(236, 59, 59);
+    transform: scale(1.1);      
+}
+
+#driverForm {
+    width: 100%;
+    padding: 20px;
+    margin-bottom: 10px;
+
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+
+
 
 .swal2-container {
     z-index: 12000 !important;
@@ -223,12 +295,19 @@ form button {
     color: white;
     border: none;
     cursor: pointer;
+
+    justify-content: flex-end;
 }
 
 form button:hover {
     background-color: #45a049;
 }
 
+.button-group{
+     display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+}
 .cancelbtn {
     background-color: #d02b2b; /* Red */
     color: white;
@@ -237,16 +316,12 @@ form button:hover {
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
+    transition: ease 0.3s;
 }
 
 .cancelbtn:hover {
     background-color: #a22222; /* Darker Red */
-    color: white;
-    padding: 12px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
+    transform: translateY(-5px);
 }
 
 
@@ -267,6 +342,14 @@ th {
     border-bottom: 5px double #d3d1d15c;
     z-index: 1;
 }
+
+td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #dddddd; 
+
+}
+
 
 tr:nth-child(even) {
     background-color: #f0eeee9a; /* Light gray for even rows */
@@ -345,10 +428,13 @@ button[type="submit"] {
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
+    transition: ease 0.3s;
 }
 
 button[type="submit"]:hover {
-    background-color: #28652b; 
+    background-color: #3b863e; 
+    transform: translateY(-5px);
+    
 }
 
 .status-active {
@@ -786,14 +872,16 @@ h3 {
 .addbtn{
     background-color: #3b9358ff; 
     color:white;
-    padding:8px 12px;
+    padding:12px 18px;
     border:none;
     border-radius:5px;
     transition: background-color 0.3s ;
     cursor:pointer;
+    transition: ease 0.3s;
 }
 .addbtn:hover{
-    background-color: rgb(24, 62, 37); 
+    background-color: rgb(47, 119, 72); 
+    transform:translateY(-5px);
 
 }
 

@@ -107,9 +107,11 @@
 
     <div id="driverModal" class="modal">
         <div class="modal-content">
+            <div class="modalheader">
+                <h2 id="modalTitle">Add Driver</h2>
             <span class="close" onclick="closeModal()">×</span>
-            <h2 id="modalTitle">Add Driver</h2>
-
+            
+            </div>
     
 
             <form id="driverForm">
@@ -175,12 +177,14 @@
                 <option value="">None</option>
             </select>
         </div>
+        <div class= "button-group">
                 <button type="submit" id="saveButton" class="btn-primary">
                     <i class="fas fa-save"></i> <span id="saveButtonText">Add Driver</span>
                 </button>
                 <button type="button" class="cancelbtn" onclick="closeModal()">
                     <i class="fas fa-times"></i> Cancel
                 </button>
+</div>
             </form>
         </div>
     </div>
@@ -441,7 +445,11 @@ function formatDateWithTime(dateString) {
 });
 
         function closeModal() {
-            document.getElementById("driverModal").style.display = "none";
+    driverModal.classList.add('closing');
+    setTimeout(() => {
+        driverModal.style.display = 'none';
+        driverModal.classList.remove('closing'); 
+    }, 300); 
         }
 
    function editDriver(driverId) {

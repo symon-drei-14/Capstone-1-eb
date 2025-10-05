@@ -2,7 +2,7 @@
     <?php
     // The navigation items for the sidebar
     $navItems = [
-        ['href' => 'dashboard.php', 'icon' => '🏠', 'text' => 'Home'],
+        ['href' => 'dashboard.php', 'icon' => '🏠', 'text' => 'Dashboard'],
         ['href' => 'drivermanagement.php', 'icon' => '🚗', 'text' => 'Driver Management'],
         ['href' => 'fleetmanagement.php', 'icon' => '🚛', 'text' => 'Fleet Management'],
         ['href' => 'triplogs.php', 'icon' => '📋', 'text' => 'Trip Management'],

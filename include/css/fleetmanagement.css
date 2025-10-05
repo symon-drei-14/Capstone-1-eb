@@ -107,7 +107,6 @@ td{
      transform: scale(1.1);
 }
 
-/* Modal styles */
 .modal {
     display: none;
     position: fixed;
@@ -117,63 +116,150 @@ td{
     width: 100%;
     height: 1200%;
     background-color: rgba(0, 0, 0, 0.5);
-    overflow: hidden ;
+    overflow-x: hidden ;
+    animation: fadeIn 0.3s ease;   
+}
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-#truckModal{
-    top: -100px;
+.modal.closing {
+    animation: fadeOut 0.3s ease forwards; 
 }
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 .modal-content {
     background-color: #fff;
     margin: 30px auto;
-    padding: 20px 30px;
     width: 50%;
     max-width: 500px;
     border-radius: 0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     position: relative;
-    overflow-x: auto; /* Add this line to contain horizontal overflow */
-    overflow-y: auto; /* Ensure vertical scrolling works properly */
-    max-height: 80vh; /* Limit height to prevent overflowing viewport */
+    overflow-x: auto; 
+    overflow-y: auto; 
+    max-height: 80vh; 
+}
+  .modal-content {
+            background-color: #fefefe;
+            border: 1px solid #888;
+            width: 50%;
+            border-radius:20px;
+        }
+
+    .modalheader {
+          padding: 15px 25px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f9f9f9;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+     position: sticky;
+    top: 0;
+    z-index: 20;         
+ 
+}
+.modalheader h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 2px solid #a93129;
+    width:100%;
+    margin: 15px 0 0 0;
+    padding-bottom: 10px;
 }
 
-/* Make sure form elements don't expand beyond the modal */
+#truckModal .close {
+    color: #888;
+    font-size: 26px; 
+    font-weight: bold;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%; 
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+    transition: ease 0.3s;
+}
+
+
+#truckModal .close:hover {
+    background-color: #e7e7e7; 
+    color: rgb(236, 59, 59);
+    transform: scale(1.1);      
+}
+.form-row {
+    display: flex;
+    gap: 20px; /* Adjust the space between the fields */
+    margin-bottom: 25px; /* Spacing below the row */
+    
+}
+      .form-row .form-group {
+    flex: 1;
+    margin-bottom: 0; /* Remove individual margin as the row now handles it */
+}
+
+.form-group {
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    
+}
+
+.truckform{
+    padding:20px
+}
+
+.form-group label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+}
+
+.form-group input[type="file"] {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+    width: 100%;
+    text-align: center;
+    
+}
+.form-group input[type="file"]:hover {
+    border-color: #ed3d3a; 
+}
+
+.form-group small {
+    font-size: 14px;
+    color: #666;
+}
+
 .form-control {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
 }
 
-/* Prevent date inputs from overflowing */
 input[type="datetime-local"] {
     width: 100%;
     min-width: 0;
 }
 
-.close {
-    position: absolute;
-    right: 20px;
-    top: 10px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #aaa;
-}
 
-.close:hover {
-    color: #333;
-}
 
-h2 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
 
 label {
     display: block;
@@ -203,8 +289,7 @@ select.form-control {
 
 .button-group {
     display: flex;
-    justify-content: flex-start;
-    margin-top: 20px;
+    justify-content: flex-end;
     gap: 10px;
 }
 
@@ -215,9 +300,10 @@ select.form-control {
     cursor: pointer;
     font-size: 14px;
     font-weight: normal;
+    transition: ease 0.3s;
 }
 
-.save-btn {
+.modal-footer .save-btn {
     background-color: #4CAF50;
     color: white;
 }
@@ -227,12 +313,14 @@ select.form-control {
     color: white;
 }
 
-.save-btn:hover {
+.modal-footer .save-btn:hover {
     background-color: #45a049;
+    transform: translateY(-5px);
 }
 
 .cancel-btn:hover {
     background-color: #c04b42;
+     transform: translateY(-5px);
 }
 
 
@@ -346,14 +434,7 @@ select.form-control {
         
      
         
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 50%;
-            border-radius:20px;
-        }
+      
         .status-filter {
     margin-bottom: 10px;
     padding-bottom:10px;
@@ -806,11 +887,13 @@ th[onclick]:hover {
 .modal-footer {
     padding: 15px 25px;
     border-top: 1px solid #eaeaea;
-    text-align: right;
     background-color: #f9f9f9;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
+    display: flex;
+    justify-content: flex-end; 
+    border-bottom-left-radius: 20px;  
+    border-bottom-right-radius: 20px; 
 }
+
 
 .modal-footer button {
     background-color: #B82132;
@@ -822,10 +905,12 @@ th[onclick]:hover {
     font-size: 0.95rem;
     font-weight: 500;
     transition: background-color 0.2s;
+    transition: ease 0.3s;
 }
 
 .modal-footer button:hover {
     background-color: #9a1a28;
+    transform: scaleY(-5px);
 }
 
 .status-completed {
@@ -1088,39 +1173,7 @@ th[onclick]:hover {
 }
 
 
-      
-.form-group {
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    
-}
 
-.form-group label {
-    font-weight: 600;
-    font-size: 14px;
-    color: #333;
-}
-
-.form-group input[type="file"] {
-    padding: 6px 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: border-color 0.3s ease;
-    width: 100%;
-    text-align: center;
-    
-}
-.form-group input[type="file"]:hover {
-    border-color: #ed3d3a; 
-}
-
-.form-group small {
-    font-size: 14px;
-    color: #666;
-}
 
 .swal2-container {
   z-index: 999999 !important;
