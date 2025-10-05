@@ -342,7 +342,7 @@ function fetchTrucks() {
             resetForm();
         }
 
-     function openTruckModal(editMode = false, truckId = null) {
+      function openTruckModal(editMode = false, truckId = null) {
     isEditMode = editMode;
     
     // Reset photo preview and file input
@@ -361,7 +361,8 @@ function fetchTrucks() {
             const preview = document.getElementById('truckPhotoPreview');
             if (truck.truck_pic) {
                 const img = document.createElement('img');
-                img.src = 'data:image/jpeg;base64,' + truck.truck_pic;
+                // We're now using the full data URI from the database, which is more reliable
+                img.src = 'data:' + truck.truck_pic;
                 img.className = 'truck-preview-image';
                 preview.appendChild(img);
                 
@@ -701,7 +702,8 @@ function renderTrucksTable() {
             <td data-label="Truck Photo">
                 <div class='truck-image-container'>
                     ${truck.truck_pic ? 
-                        '<img src="data:image/jpeg;base64,' + truck.truck_pic + '" alt="Truck ' + truck.plate_no + '" class="truck-image" title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">' :
+                        // The src now directly uses the truck_pic which contains the full data URI, handling any image type.
+                        '<img src="data:' + truck.truck_pic + '" alt="Truck ' + truck.plate_no + '" class="truck-image" title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">' :
                         '<img src="include/img/truck' + (truck.capacity == 20 ? '1' : '2') + '.png" alt="Truck ' + truck.plate_no + '" class="truck-image" title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">'
                     }
                 </div>

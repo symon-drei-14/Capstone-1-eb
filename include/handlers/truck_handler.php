@@ -210,7 +210,7 @@ try {
     echo json_encode(['success' => true, 'trucks' => $trucks]);
     break;
 
-      case 'addTruck':
+         case 'addTruck':
     if (!validatePlateNumber($data['plate_no'])) {
         throw new Exception("Invalid plate number format. Use format like ABC123 or ABC-1234");
     }
@@ -218,20 +218,21 @@ try {
     // Handle photo upload
     $truckPic = null;
     if (!empty($_FILES['truck_photo']['name']) && $_FILES['truck_photo']['error'] == UPLOAD_ERR_OK) {
-        // Validate file type
+        // Let's check the file type to be safe
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
         $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($fileInfo, $_FILES['truck_photo']['tmp_name']);
         finfo_close($fileInfo);
         
         if (in_array($mimeType, $allowedTypes)) {
-            // Check file size (max 2MB)
+            // File size check (max 2MB)
             if ($_FILES['truck_photo']['size'] > 2 * 1024 * 1024) {
                 throw new Exception("Image file is too large. Maximum size is 2MB.");
             }
             
-            // Read and encode the image
-            $truckPic = base64_encode(file_get_contents($_FILES['truck_photo']['tmp_name']));
+            // Read the image and create a full data URI. This is better for handling different image types.
+            $imageContent = file_get_contents($_FILES['truck_photo']['tmp_name']);
+            $truckPic = $mimeType . ';base64,' . base64_encode($imageContent);
         } else {
             throw new Exception("Invalid file type. Only JPG, PNG and GIF are allowed.");
         }
@@ -261,8 +262,9 @@ try {
         throw new Exception("Invalid status value");
     }
 
+    // We'll build the query parts dynamically, which is cleaner.
     $photoUpdate = "";
-    $types = "ssssi";
+    $types = "ssss"; // Start with types for plate_no, capacity, status, and last_modified_by
     $params = [
         $data['plate_no'], 
         $data['capacity'], 
@@ -270,6 +272,7 @@ try {
         $currentUser,
     ];
 
+    // Check if a new photo was uploaded
     if (!empty($_FILES['truck_photo']['name']) && $_FILES['truck_photo']['error'] == UPLOAD_ERR_OK) {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
         $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -280,16 +283,20 @@ try {
             if ($_FILES['truck_photo']['size'] > 2 * 1024 * 1024) {
                 throw new Exception("Image file is too large. Maximum size is 2MB.");
             }
-            $truckPic = base64_encode(file_get_contents($_FILES['truck_photo']['tmp_name']));
-            $photoUpdate = ", truck_pic = ?";
-            $params[] = $truckPic;
-            $types .= "s";
+            $imageContent = file_get_contents($_FILES['truck_photo']['tmp_name']);
+            $truckPic = $mimeType . ';base64,' . base64_encode($imageContent);
+
+            $photoUpdate = ", truck_pic = ?"; // Add the photo to our SQL query
+            $params[] = $truckPic;             // And to our parameters
+            $types .= "s";                     // And its type
         } else {
             throw new Exception("Invalid file type. Only JPG, PNG and GIF are allowed.");
         }
     }
 
+    // The truck_id for the WHERE clause always goes last.
     $params[] = $data['truck_id'];
+    $types .= "i";
 
     $stmt = $conn->prepare("UPDATE truck_table 
                              SET plate_no=?, capacity=?, status=?, 
