@@ -900,33 +900,28 @@ function fullDeleteTruck(truckId) {
 }
 
 function viewMaintenanceHistory(truckId) {
-    
-    fetch(`include/handlers/truck_handler.php?action=getHistory&truckId=${truckId}`)
+    fetch(`include/handlers/maintenance_handler.php?action=getHistory&truckId=${truckId}`)
         .then(response => response.json())
         .then(data => {
             console.log('API Response:', data);
 
             let historyRecords = [];
-            // Check if the history data is in the expected 'history' property
             if (data.success && data.history) {
                 historyRecords = data.history;
-            } else if (Array.isArray(data)) {
-                // Fallback for older API response format, just in case
-                historyRecords = data;
+            } else if (Array.isArray(data.history)) { 
+                historyRecords = data.history;
             }
             
             if (historyRecords.length > 0) {
                 let historyHTML = '<ul class="history-list">';
                 
                 historyRecords.forEach(item => {
-                    // Determine status class based on status text
                     let statusClass = 'status-pending';
                     if (item.status.toLowerCase().includes('complete')) statusClass = 'status-completed';
                     if (item.status.toLowerCase().includes('progress')) statusClass = 'status-in-progress';
                     if (item.status.toLowerCase().includes('pending')) statusClass = 'status-pending';
                     if (item.status.toLowerCase().includes('overdue')) statusClass = 'status-overdue';
                     
-                    // Use the correct field names from your SQL query
                     const maintenanceDate = item.date_mtnce || item.last_modified_at;
                     const maintenanceType = item.maintenance_type_name || 'N/A';
                     const supplierName = item.supplier_name || 'N/A';
