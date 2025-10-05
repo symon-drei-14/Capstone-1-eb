@@ -66,7 +66,19 @@ if (!filter_var($data['admin_email'], FILTER_VALIDATE_EMAIL)) {
 $adminId = $data['admin_id'];
 
 try {
-    // Check if username or email already exists for another admin
+    // Fetch current admin data to get the current email for verification
+    $fetchStmt = $conn->prepare("SELECT password, admin_email FROM login_admin WHERE admin_id = ?");
+    $fetchStmt->bind_param("i", $adminId);
+    $fetchStmt->execute();
+    $adminData = $fetchStmt->get_result()->fetch_assoc();
+    if (!$adminData) {
+        throw new Exception("Admin not found.");
+    }
+    $currentHash = $adminData['password'];
+    $currentEmail = $adminData['admin_email'];
+    $fetchStmt->close();
+
+    // Check if the new username or new email already exists for another admin
     $checkStmt = $conn->prepare("SELECT admin_id FROM login_admin WHERE (username = ? OR admin_email = ?) AND admin_id != ?");
     $checkStmt->bind_param("ssi", $data['username'], $data['admin_email'], $adminId);
     $checkStmt->execute();
@@ -75,26 +87,15 @@ try {
     }
     $checkStmt->close();
 
-    // Check if a password change is requested
-    if (!empty($data['password'])) {
-        
-        // Step 1: Verify the current password
-        if (empty($data['old_password'])) {
-            throw new Exception("Current password is required to set a new one.");
-        }
-        $passStmt = $conn->prepare("SELECT password FROM login_admin WHERE admin_id = ?");
-        $passStmt->bind_param("i", $adminId);
-        $passStmt->execute();
-        $passResult = $passStmt->get_result();
-        $currentHash = $passResult->fetch_assoc()['password'];
-        $passStmt->close();
-        if (!password_verify($data['old_password'], $currentHash)) {
-            throw new Exception("Incorrect current password.");
-        }
+    // Determine what is being changed
+    $isPasswordChanging = !empty($data['password']);
+    $isEmailChanging = ($data['admin_email'] !== $currentEmail);
 
-        // Step 2: Handle OTP verification
+    // If password or email is being changed, we need OTP verification.
+    if ($isPasswordChanging || $isEmailChanging) {
+        
+        // This is the second step: Verifying the submitted OTP
         if (isset($data['otp'])) {
-            // This is the second step: verifying the submitted OTP
             if (!isset($_SESSION['otp_data']) || $_SESSION['otp_data']['admin_id'] != $adminId) {
                 throw new Exception("OTP process not initiated or session expired.");
             }
@@ -103,17 +104,24 @@ try {
             }
             if (time() > $_SESSION['otp_data']['expiry']) {
                 unset($_SESSION['otp_data']);
-                throw new Exception("OTP has expired. Please try changing your password again.");
+                throw new Exception("OTP has expired. Please try again.");
             }
 
-            // OTP is valid, so we update everything including the password
-            $hashedPassword = $_SESSION['otp_data']['new_password'];
-            unset($_SESSION['otp_data']);
+            // OTP is valid. Get the pending changes from the session.
+            $newPasswordHash = $_SESSION['otp_data']['new_password'] ?? null;
+            $newEmail = $_SESSION['otp_data']['new_email'] ?? $currentEmail;
+            unset($_SESSION['otp_data']); // Clean up session
 
-            $query = "UPDATE login_admin SET username = ?, role = ?, admin_email = ?, password = ?";
-            $types = "ssss";
-            $params = [$data['username'], $data['role'], $data['admin_email'], $hashedPassword];
+            // Build the final update query
+            $query = "UPDATE login_admin SET username = ?, role = ?, admin_email = ?";
+            $types = "sss";
+            $params = [$data['username'], $data['role'], $newEmail];
 
+            if ($newPasswordHash) {
+                $query .= ", password = ?";
+                $types .= "s";
+                $params[] = $newPasswordHash;
+            }
             if ($adminPic !== null) {
                 $query .= ", admin_pic = ?";
                 $types .= "s";
@@ -131,40 +139,68 @@ try {
                 throw new Exception("Database update failed.");
             }
             $stmt->close();
-            
-        } else {
-            // This is the first step: generating and sending the OTP
-            $otp = rand(100000, 999999);
-            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
-            $_SESSION['otp_data'] = [
+        } else {
+            // This is the first step: Generating and sending the OTP
+            if ($isPasswordChanging) {
+                if (empty($data['old_password'])) {
+                    throw new Exception("Current password is required to set a new one.");
+                }
+                if (!password_verify($data['old_password'], $currentHash)) {
+                    throw new Exception("Incorrect current password.");
+                }
+            }
+
+            $otp = rand(100000, 999999);
+            
+            // Store all pending changes in the session with the OTP
+            $sessionData = [
                 'otp' => $otp,
-                'expiry' => time() + 300, // OTP is valid for 5 minutes
+                'expiry' => time() + 300, // OTP valid for 5 minutes
                 'admin_id' => $adminId,
-                'new_password' => $hashedPassword
             ];
+            if ($isPasswordChanging) {
+                $sessionData['new_password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            }
+            if ($isEmailChanging) {
+                $sessionData['new_email'] = $data['admin_email'];
+            }
+            $_SESSION['otp_data'] = $sessionData;
 
             $mail = getMailer();
-            if ($mail) {
-                try {
-                    $mail->addAddress($data['admin_email'], $data['username']);
-                    $mail->isHTML(true);
-                    $mail->Subject = 'Your Password Change Verification Code';
-                    $mail->Body    = "Hello {$data['username']},<br><br>Your verification code to change your password is: <b>{$otp}</b><br>This code will expire in 5 minutes.<br><br>If you did not request this change, you can safely ignore this email.<br><br>Thank you.";
-                    $mail->send();
-                    echo json_encode(["success" => true, "otp_required" => true]);
-                } catch (Exception $e) {
-                    throw new Exception("Failed to send OTP email. Mailer Error: {$mail->ErrorInfo}");
-                }
-            } else {
+            if (!$mail) {
                 throw new Exception("Mail server is not configured correctly.");
+            }
+
+            // Let's create a clear email explaining what's happening
+            $subject = 'Your Admin Account Security Verification';
+            $body = "Hello {$data['username']},<br><br>A request was made to update your account details. ";
+            $body .= "Please use the following verification code to confirm the changes:<br><br><b>{$otp}</b><br><br>";
+            if ($isEmailChanging) {
+                $body .= "This change will set your new login email to: <b>{$data['admin_email']}</b>.<br>";
+            }
+            if ($isPasswordChanging) {
+                $body .= "Your password will also be reset.<br>";
+            }
+            $body .= "<br>This code will expire in 5 minutes.<br><br>If you did not request this, you can safely ignore this email.<br><br>Thank you.";
+
+            try {
+                // Send the email to the OLD (currently verified) email address
+                $mail->addAddress($currentEmail, $data['username']);
+                $mail->isHTML(true);
+                $mail->Subject = $subject;
+                $mail->Body    = $body;
+                $mail->send();
+                echo json_encode(["success" => true, "otp_required" => true]);
+            } catch (Exception $e) {
+                throw new Exception("Failed to send OTP email. Mailer Error: {$mail->ErrorInfo}");
             }
         }
     } else {
-        // This handles updates without a password change
-        $query = "UPDATE login_admin SET username = ?, role = ?, admin_email = ?";
-        $types = "sss";
-        $params = [$data['username'], $data['role'], $data['admin_email']];
+        // This handles updates without a password or email change (e.g., just username, role, profile pic).
+        $query = "UPDATE login_admin SET username = ?, role = ?";
+        $types = "ss";
+        $params = [$data['username'], $data['role']];
         
         if ($adminPic !== null) {
             $query .= ", admin_pic = ?";

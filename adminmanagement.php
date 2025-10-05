@@ -245,7 +245,7 @@ checkAccess();
             document.getElementById(modalId).style.display = "none";
         }
 
-        function openAdminModal(adminId = null) {
+         function openAdminModal(adminId = null) {
             document.getElementById('adminForm').reset();
             const modalTitle = document.getElementById('modalTitle');
             const passwordHelp = document.getElementById('passwordHelp');
@@ -257,6 +257,7 @@ checkAccess();
             profilePreview.innerHTML = '';
 
             if (adminId) {
+             
                 modalTitle.textContent = 'Edit Admin';
                 passwordHelp.style.display = 'block';
                 oldPasswordGroup.style.display = 'block';
@@ -265,6 +266,7 @@ checkAccess();
                 passwordLabel.textContent = "New Password";
                 fetchAdminDetails(adminId);
             } else {
+                
                 modalTitle.textContent = 'Add Admin';
                 passwordHelp.style.display = 'none';
                 oldPasswordGroup.style.display = 'none';
@@ -273,6 +275,9 @@ checkAccess();
                 passwordLabel.textContent = "Password *";
                 profilePreview.innerHTML = '<p>Upload a profile picture </p>';
                 document.getElementById('adminProfile').value = '';
+                
+               
+                document.getElementById('adminId').value = ''; 
             }
             openModal('adminModal');
         }
@@ -496,10 +501,11 @@ checkAccess();
         .then(data => {
             if (data.success) {
                 if (data.otp_required) {
-                    // OTP flow triggered for password change
+                    // OTP flow triggered for password or email change
                     Swal.fire({
                         title: 'Enter Verification Code',
-                        text: `A code has been sent to ${adminEmail}. Please check the inbox.`,
+                        // THIS IS THE CORRECTED LINE:
+                        text: `A code has been sent to the email address on file to verify this change. Please check the inbox.`,
                         input: 'text',
                         inputAttributes: {
                             maxlength: 6,
@@ -537,7 +543,7 @@ checkAccess();
                         }
                     });
                 } else {
-                    // Regular success (add new admin or update without password change)
+                    // Regular success (add new admin or update without password/email change)
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
