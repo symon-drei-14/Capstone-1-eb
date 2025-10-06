@@ -624,7 +624,10 @@ function updateMap(drivers) {
         const popupContent = `
             <div style="width: 270px; padding: 15px; font-family: Arial, sans-serif;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
-                    <h6 style="margin: 0; font-size: 16px; font-weight: bold;">${driverName}</h6>
+                    <h6 style="margin: 0; font-size: 16px; font-weight: bold;">
+                        ${driverName}
+                        ${tripId ? `<small style="font-weight: normal; color: #6c757d; font-size: 11px; margin-left: 5px;">(Trip: ${tripId})</small>` : ''}
+                    </h6>
                     <div style="display: flex; align-items: center;">
                         <div style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; margin-right: 6px; box-shadow: 0 0 0 2px ${statusColor}33;"></div>
                         <span style="background: ${statusColor}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">
@@ -655,7 +658,6 @@ function updateMap(drivers) {
                         <div>
                             <strong>Destination:</strong><br>
                             <span style="font-size: 12px; line-height: 1.3;">${destination}</span>
-                            ${tripId ? `<br><small style="color: #6c757d; font-size: 10px;">Trip: ${tripId}</small>` : ''}
                         </div>
                     </div>` : `
                     <div style="margin: 4px 0; display: flex; align-items: center;">
