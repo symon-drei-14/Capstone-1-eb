@@ -377,7 +377,7 @@ async function getActiveTrip(driverId, driverName) {
                 trip_id: trip.trip_id,
                 destination: trip.destination || 'Unknown Destination',
                 origin: trip.client || 'Unknown Origin',
-                port_name: trip.port_name || 'Unknown Port', // New field for the port
+                port_name: trip.port_name || 'Unknown Port', 
                 status: trip.status || 'En Route'
             };
         }
@@ -473,7 +473,7 @@ async function enhanceDriversWithDestinations(drivers) {
                 assigned_trip_id: activeTripData?.trip_id || driverData.assigned_trip_id || null,
                 destination: activeTripData?.destination || driverData.destination || null,
                 origin: activeTripData?.origin || driverData.origin || null,
-                port_name: activeTripData?.port_name || driverData.port_name || null, // Added this line
+                port_name: activeTripData?.port_name || driverData.port_name || null, 
                 trip_status: activeTripData?.status || null,
                 plate_no: plateNumber || driverData.plate_no || null
             }];
