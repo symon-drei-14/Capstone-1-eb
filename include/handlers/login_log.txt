@@ -1472,3 +1472,16 @@
 2025-10-03 19:23:44 - Data validation passed
 2025-10-03 19:23:44 - Database connection successful
 2025-10-03 19:23:44 - Login successful for: symons@gmail.com
+2025-10-06 07:24:03 - Login request received
+{"email":"driver11@gmail.com","password":"12345678"}
+
+2025-10-06 07:24:03 - JSON parsed successfully
+2025-10-06 07:24:03 - Data validation passed
+2025-10-06 07:24:07 - ERROR: No connection could be made because the target machine actively refused it
+2025-10-06 07:24:18 - Login request received
+{"email":"driver11@gmail.com","password":"12345678"}
+
+2025-10-06 07:24:18 - JSON parsed successfully
+2025-10-06 07:24:18 - Data validation passed
+2025-10-06 07:24:18 - Database connection successful
+2025-10-06 07:24:18 - Login successful for: driver11@gmail.com
