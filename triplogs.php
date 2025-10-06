@@ -461,7 +461,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 <input type="datetime-local" id="editEventDate" name="editEventDate" required style="width: 100%;">
                 <label for="editEventSize">Container Size:</label>
                 <select id="editEventSize" name="eventSize" required style="width: 100%;">
-                    <option value="">Select Size</option>
+                    <option value="" >Select Size</option>
                     <option value="20ft">20ft</option>
                     <option value="40ft">40ft</option>
                     <option value="40ft HC">40ft HC</option>
@@ -475,17 +475,17 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 
                 <label for="editEventDriver">Driver:</label>
                 <select id="editEventDriver" name="eventDriver" required style="width: 100%;">
-                    <option value="">Select Driver</option>
+                    <option value=""  disabled selected>Select Driver</option>
                 </select>
 
                 <label for="editEventHelper">Helper:</label>
                 <select id="editEventHelper" name="eventHelper" required style="width: 100%;">
-                    <option value="">Select Helper</option>
+                    <option value="" disabled selected>Select Helper</option>
                 </select>
 
                 <label for="editEventFCL">FCL Status:</label>
             <select id="editEventFCL" name="eventFCL" required style="width: 100%;">
-                <option value="">Select FCL Status</option>
+                <option value="" disabled selected>Select FCL Status</option>
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
             </select>
@@ -497,7 +497,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <legend style="font-weight: bold;">Dispatcher & Container Information</legend>
                 <label for="editEventDispatcher">Dispatcher:</label>
                 <select id="editEventDispatcher" name="eventDispatcher" required style="width: 100%;">
-                    <option value="">Select Dispatcher</option>
+                    <option value=""  disabled selected>Select Dispatcher</option>
                 </select>
 
                 <label for="editEventContainerNo">Container No.:</label>
@@ -508,18 +508,18 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <legend style="font-weight: bold;">Client & Destination</legend>
                 <label for="editEventClient">Client:</label>
                 <select id="editEventClient" name="eventClient" required style="width: 100%;">
-                    <option value="">Select Client</option>
+                    <option value=""  disabled selected >Select Client</option>
                 </select>
 
 
                 <label for="editEventPort">Port:</label>
-<select id="editEventPort" name="eventPort" required style="width: 100%;">
-    <option value="">Select Port</option>
-</select>
+                <select id="editEventPort" name="eventPort" required style="width: 100%;">
+                    <option value=""  disabled selected>Select Port</option>
+                </select>
 
                 <label for="editEventDestination">Destination:</label>
                 <select id="editEventDestination" name="eventDestination" required style="width: 100%;">
-                    <option value="">Select Destination</option>
+                    <option value=""  disabled selected>Select Destination</option>
                 </select>
              
                 <label for="editEventStatus">Status:</label>
@@ -540,12 +540,12 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <legend style="font-weight: bold;">Shipping Information</legend>
                 <label for="editEventShippingLine">Shipping Line:</label>
                 <select id="editEventShippingLine" name="eventShippingLine" required style="width: 100%;">
-                    <option value="">Select Shipping Line</option>
+                    <option value=""  disabled selected>Select Shipping Line</option>
                 </select>
    
                 <label for="editEventConsignee">Consignee:</label>
                 <select id="editEventConsignee" name="eventConsignee" required style="width: 100%;">
-                    <option value="">Select Consignee</option>
+                    <option value=""  disabled selected>Select Consignee</option>
                 </select>
                  </legend>
                 </fieldset>
@@ -779,7 +779,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 <label for="addEventSize">Shipment Size:</label>
 
                 <select id="addEventSize" name="eventSize" required style="width: 100%;">
-                    <option value="">Select Size</option>
+                    <option value=""  disabled selected>Select Size</option>
                     <option value="20ft">20ft</option>
                     <option value="40ft">40ft</option>
                     <option value="40ft HC">40ft HC</option>
@@ -804,7 +804,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 
                 <label for="addEventFCL">FCL Status:</label>
                 <select id="addEventFCL" name="eventFCL" required style="width: 100%;">
-            <option value="">Select FCL Status</option>
+            <option value="" disabled selected>Select FCL Status</option>
             <option value="Yes">Yes</option>
             <option value="No">No</option>
                 </select>
@@ -829,7 +829,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <legend style="font-weight: bold;">Client & Destination</legend>
 <label for="addEventClient">Client:</label>
                 <select id="addEventClient" name="eventClient" required style="width: 100%;">
-                    <option value="">Select Client</option>
+                    <option value="" disabled selected >Select Client</option>
                     <option value="Maersk">Maersk</option>
                     <option value="MSC">MSC</option>
                     <option value="COSCO">COSCO</option>
@@ -839,15 +839,15 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 </select>
 
 
-<label for="addEventPort">Port:</label>
-<select id="addEventPort" name="eventPort" required style="width: 100%;">
-    <option value="">Select Port</option>
-</select>
+                <label for="addEventPort">Port:</label>
+                <select id="addEventPort" name="eventPort" required style="width: 100%;">
+                    <option value="" disabled selected>Select Port</option>
+                </select>
 
 
                 <label for="addEventDestination">Destination:</label>
                 <select id="addEventDestination" name="eventDestination" required style="width: 100%;">
-                    <option value="">Select Destination</option>
+                    <option value="" disabled selected>Select Destination</option>
                     <option value="Manila Port">Manila Port</option>
                     <option value="Batangas Port">Batangas Port</option>
                     <option value="Subic Port">Subic Port</option>
@@ -873,7 +873,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <legend style="font-weight: bold;">Shipping Information</legend>
                     <label for="addEventShippingLine">Shipping Line:</label>
                     <select id="addEventShippingLine" name="eventShippingLine" required style="width: 100%;">
-                        <option value="">Select Shipping Line</option>
+                        <option value="" disabled selected>Select Shipping Line</option>
                         <option value="Maersk Line">Maersk Line</option>
                         <option value="Mediterranean Shipping Co.">Mediterranean Shipping Co.</option>
                         <option value="COSCO Shipping">COSCO Shipping</option>
@@ -1403,7 +1403,7 @@ $(document).on('click', function(e) {
 
 
 function populateDropdowns(action, responseKey, targetSelectors, defaultText) {
-    if ($('#editEventHelper option').length <= 1 || $('#addEventHelper option').length <= 1) {
+     if ($('#editEventHelper option').length <= 1 || $('#addEventHelper option').length <= 1) {
     $.ajax({
         url: 'include/handlers/trip_operations.php',
         type: 'POST',
@@ -1411,7 +1411,7 @@ function populateDropdowns(action, responseKey, targetSelectors, defaultText) {
         data: JSON.stringify({ action: action }),
         success: function(response) {
             if (response.success && response[responseKey]) {
-                var options = `<option value="">${defaultText}</option>`;
+                var options = `<option value="" disabled selected>${defaultText}</option>`;
                 response[responseKey].forEach(function(item) {
                     options += `<option value="${item.name}">${item.name}</option>`;
                 });
@@ -1589,7 +1589,7 @@ $('#dailyExpenseSummaryBtn').on('click', function() {
                     )
                     .map(truck => truck.truck_id.toString());
 
-                var driverOptions = '<option value="">Select Driver</option>';
+                var driverOptions = '<option value="" disabled selected>Select Driver</option>';
                 var unavailableDriverOptions = '<optgroup label="Unavailable Drivers">';
                 let unavailableCount = 0;
                 const now = new Date();
@@ -3357,7 +3357,7 @@ function formatCurrency(amount) {
         data: JSON.stringify({ action: 'get_ports' }),
         success: function(response) {
             if (response.success && response.ports) {
-                var options = '<option value="">Select Port</option>';
+                var options = '<option value="" disabled selected>Select Port</option>';
                 response.ports.forEach(function(port) {
                     options += `<option value="${port.name}">${port.name}</option>`;
                 });
