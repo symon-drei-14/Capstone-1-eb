@@ -614,10 +614,6 @@ function updateMap(drivers) {
         const portName = driverData.port_name;
         const destination = driverData.destination;
         const tripId = driverData.assigned_trip_id;
-
-        const lastUpdated = driverData.location.last_updated ? 
-            new Date(parseInt(driverData.location.last_updated)).toLocaleString() : 
-            'Unknown';
             
         const timeSinceUpdate = getTimeSinceLastUpdate(driverData.location.last_updated);
 
@@ -666,12 +662,6 @@ function updateMap(drivers) {
                     <div style="margin: 4px 0; display: flex; align-items: center;">
                         <span><strong>Last Update:</strong> ${timeSinceUpdate}</span>
                     </div>
-                    <div style="margin: 4px 0; display: flex; align-items: center;">
-                        <span style="font-size: 11px; color: #6c757d;">${position[0].toFixed(6)}, ${position[1].toFixed(6)}</span>
-                    </div>
-                </div>
-                <div style="font-size: 10px; color: #999; text-align: center; margin-top: 8px; border-top: 1px solid #eee; padding-top: 5px;">
-                    Full update: ${lastUpdated}
                 </div>
             </div>
         `;
