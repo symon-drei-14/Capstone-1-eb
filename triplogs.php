@@ -444,17 +444,16 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
         </div>
 
      <!-- Edit Modal -->
-     <div id="editModal" class="modal">
+    <div id="editModal" class="modal">
     <div class="modal-content" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: scroll; overflow-x:hidden;">
         <div class="modal-header2">
         <span class="close">&times;</span>
-        <h2 style="margin-top: 20;">Edit Trip</h2>
+        <h2 style="margin-top: 20;">Edit Trip <span id="editModalTripId" style="color: #6c757d; font-weight: normal;"></span></h2>
         </div>
         <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden; padding:20px;">
             <input type="hidden" id="editEventId" name="eventId">
             
-            <!-- Column 1 -->
-           <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
                     <legend style="font-weight: bold;">Shipment Information</legend>
                       <label for="editEventDate">Date & Time:</label>
@@ -491,8 +490,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
             </select>
             </div>
 
-            <!-- Column 2 -->
-           <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
                     <legend style="font-weight: bold;">Dispatcher & Container Information</legend>
                 <label for="editEventDispatcher">Dispatcher:</label>
@@ -534,8 +532,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 </fieldset>
             </div>
 
-            <!-- Full width fields -->
-                <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
                     <legend style="font-weight: bold;">Shipping Information</legend>
                 <label for="editEventShippingLine">Shipping Line:</label>
@@ -551,8 +548,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 </fieldset>
             </div>
 
-            <!-- Expense Fields Section -->
-      <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
     <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
         <legend style="font-weight: bold;">Financial Information</legend>
         <div>
@@ -573,7 +569,6 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
     </fieldset>
 </div>
 
-            <!-- Edit Reasons Section -->
             <div class="edit-reasons-section" style="grid-column: span 2; margin-top: 15px; padding: 15px; border-radius: 5px; border: 1px solid #ddd; width: 95%;">
                 <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">Reason for Edit</h4>
                 <p style="margin-top: 0; margin-bottom: 10px; color: #666;">Select all that apply:</p>
@@ -621,7 +616,6 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 </div>
             </div>
 
-            <!-- Form buttons -->
             <div class="buttons" style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
              
                 <button type="button" class="close-btn cancel-btn" style="padding: 8px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
@@ -2633,6 +2627,10 @@ function populateEditModal(event) {
     $('#editForm input[name="editReason"]').prop('checked', false);
     $('#otherReasonText').val('');
     $('#otherReasonContainer').hide();
+
+    // This is the new part for the modal title
+    const tripIdFormatted = `#${String(event.id).padStart(4, '0')}`;
+    $('#editModalTripId').text(tripIdFormatted);
 
     $('#editEventId').val(event.id);
     $('#editEventPlateNo').val(event.truck_plate_no || event.plateNo);
