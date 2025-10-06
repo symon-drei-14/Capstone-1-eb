@@ -377,6 +377,7 @@ async function getActiveTrip(driverId, driverName) {
                 trip_id: trip.trip_id,
                 destination: trip.destination || 'Unknown Destination',
                 origin: trip.client || 'Unknown Origin',
+                port_name: trip.port_name || 'Unknown Port', // New field for the port
                 status: trip.status || 'En Route'
             };
         }
@@ -472,6 +473,7 @@ async function enhanceDriversWithDestinations(drivers) {
                 assigned_trip_id: activeTripData?.trip_id || driverData.assigned_trip_id || null,
                 destination: activeTripData?.destination || driverData.destination || null,
                 origin: activeTripData?.origin || driverData.origin || null,
+                port_name: activeTripData?.port_name || driverData.port_name || null, // Added this line
                 trip_status: activeTripData?.status || null,
                 plate_no: plateNumber || driverData.plate_no || null
             }];
@@ -606,6 +608,10 @@ function updateMap(drivers) {
         const statusColor = getStatusColor(driverStatus);
         const statusText = getStatusDisplayText(driverStatus);
         let truckLicense = driverData.plate_no || driverData.assigned_truck_id || 'N/A';
+        
+        // Get all the data points we need
+        const origin = driverData.origin;
+        const portName = driverData.port_name;
         const destination = driverData.destination;
         const tripId = driverData.assigned_trip_id;
 
@@ -630,6 +636,20 @@ function updateMap(drivers) {
                     <div style="margin: 4px 0; display: flex; align-items: center;">
                         <span><strong>Truck License:</strong> ${truckLicense}</span>
                     </div>
+                    ${origin ? `
+                    <div style="margin: 4px 0; display: flex; align-items: flex-start;">
+                        <div>
+                            <strong>Client:</strong><br>
+                            <span style="font-size: 12px; line-height: 1.3;">${origin}</span>
+                        </div>
+                    </div>` : ''}
+                    ${portName ? `
+                    <div style="margin: 4px 0; display: flex; align-items: flex-start;">
+                        <div>
+                            <strong>Port:</strong><br>
+                            <span style="font-size: 12px; line-height: 1.3;">${portName}</span>
+                        </div>
+                    </div>` : ''}
                     ${destination ? `
                     <div style="margin: 4px 0; display: flex; align-items: flex-start;">
                         <div>
@@ -639,7 +659,7 @@ function updateMap(drivers) {
                         </div>
                     </div>` : `
                     <div style="margin: 4px 0; display: flex; align-items: center;">
-                        <span style="color: #6c757d;"><em>No active destination</em></span>
+                        <span style="color: #6c757d;"><em>No active trip</em></span>
                     </div>`}
                     <div style="margin: 4px 0; display: flex; align-items: center;">
                         <span><strong>Last Update:</strong> ${timeSinceUpdate}</span>

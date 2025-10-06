@@ -513,7 +513,7 @@ try {
     echo json_encode(['success' => true, 'trips' => $trips]);
     break;
 
-        case 'get_driver_current_trip':
+       case 'get_driver_current_trip':
     $driverId = $data['driver_id'] ?? null;
     $driverName = $data['driver_name'] ?? null;
     
@@ -544,6 +544,7 @@ try {
             dest.name as destination,
             sl.name as shipping_line,
             cons.name as consignee,
+            p.name as port_name, -- Added this line to get the port name
             COALESCE(te.cash_advance, 0) as cash_advance,
             COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
             COALESCE(te.diesel, 0) as diesel,
@@ -561,6 +562,7 @@ try {
         LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
         LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
         LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+        LEFT JOIN ports p ON t.port_id = p.port_id -- Added this join for the ports table
         WHERE $whereClause 
         AND t.status IN ('En Route', 'Pending')
         AND NOT EXISTS (
