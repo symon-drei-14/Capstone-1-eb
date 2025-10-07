@@ -59,7 +59,8 @@ try {
             $userRole = $_SESSION['role'] ?? '';
             $canBypassOldPassword = in_array($userRole, ['Full Admin', 'Operations Manager']);
             
-            if (!$isFullAdmin) {
+            // FIX: The variable was incorrect here.
+            if (!$canBypassOldPassword) {
                 if (empty($data['oldPassword'])) {
                     echo json_encode(["success" => false, "message" => "Current password is required to set a new one."]);
                     exit;

@@ -190,6 +190,7 @@
     </div>
 
     <script>
+        const userRole = "<?php echo $_SESSION['role'] ?? 'User'; ?>";
         let currentDriverId = null;
         let driversData = [];
        let currentPage = 1;
@@ -949,23 +950,26 @@ function validatePassword() {
     const confirmPassword = document.getElementById('confirmPassword').value;
     const mode = document.getElementById('modalMode').value;
     const oldPassword = document.getElementById('oldPassword').value;
+
+    // Check if the current user has a role that can bypass the old password requirement.
+    const canBypass = ['Full Admin', 'Operations Manager'].includes(userRole);
     
-    // For edit mode, if password is being changed, old password is required
-    if (mode === 'edit' && password && !oldPassword) {
+    // In edit mode, if a new password is set, the old password is required UNLESS the user is an authorized admin.
+    if (mode === 'edit' && password && !oldPassword && !canBypass) {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Current password is required to set a new password'
+            text: 'Current password is required to set a new password.'
         });
         return false;
     }
     
-    // Check if passwords match
+    // Check if new passwords match.
     if (password !== confirmPassword) {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Passwords do not match'
+            text: 'Passwords do not match.'
         });
         return false;
     }
