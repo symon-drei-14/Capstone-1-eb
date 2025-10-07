@@ -143,7 +143,7 @@ try {
     // Hash password for MySQL
      $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
 
-    // Insert into MySQL (now includes driver_pic and last_modified_by)
+   
     $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, contact_no, password, assigned_truck_id, driver_pic, created_at, last_modified_by)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)";
              
@@ -158,16 +158,16 @@ try {
         FILE_APPEND);
     
     $stmt->bind_param(
-        "sssssssss", // Added an 's' for the username
+        "sssssssss", 
         $driver_id,
         $firebase_uid,
         $data['name'],
         $data['email'],
         $data['contact_no'],
         $hashed_password,
-        $assigned_truck_id, // Use the validated variable
+        $assigned_truck_id, 
         $driverPic,
-        $_SESSION['username'] // Add the admin's username here
+        $_SESSION['username'] 
     );
 
     if (!$stmt->execute()) {
