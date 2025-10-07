@@ -74,32 +74,33 @@ require 'include/handlers/dbhandler.php';
 
 // Fetch trip data
 $sql = "SELECT 
-          t.trip_id,
-          t.container_no as container_no,
-          t.trip_date as date,
-          t.status,
-    
-          tr.plate_no as plate_no,
-          tr.capacity as size,
-          tr.truck_pic,
-          d.name as driver,
-          d.driver_id,
-          h.name as helper,
-          disp.name as dispatcher,
-          c.name as client,
-          dest.name as destination,
-          sl.name as shipping_line,
-          cons.name as consignee,
-          al.modified_by as last_modified_by,
-          al.modified_at as last_modified_at,
-          al.edit_reason as edit_reasons,
-          COALESCE(te.cash_advance, 0) as cash_adv
+            t.trip_id,
+            t.container_no as container_no,
+            t.trip_date as date,
+            t.status,
+            tr.plate_no as plate_no,
+            tr.capacity as size,
+            tr.truck_pic,
+            d.name as driver,
+            d.driver_id,
+            h.name as helper,
+            disp.name as dispatcher,
+            c.name as client,
+            p.name as port,  /* ADD THIS LINE */
+            dest.name as destination,
+            sl.name as shipping_line,
+            cons.name as consignee,
+            al.modified_by as last_modified_by,
+            al.modified_at as last_modified_at,
+            al.edit_reason as edit_reasons,
+            COALESCE(te.cash_advance, 0) as cash_adv
         FROM trips t
         LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
         LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
         LEFT JOIN helpers h ON t.helper_id = h.helper_id
         LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
         LEFT JOIN clients c ON t.client_id = c.client_id
+        LEFT JOIN ports p ON t.port_id = p.port_id /* ADD THIS LINE */
         LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
         LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
         LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
@@ -109,6 +110,7 @@ $sql = "SELECT
             SELECT 1 FROM audit_logs_trips al2 
             WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
         )";
+
 $result = $conn->query($sql);
 $eventsData = [];
 
@@ -124,6 +126,7 @@ if ($result->num_rows > 0) {
             'dispatcher' => $row['dispatcher'],
             'containerNo' => $row['container_no'],
             'client' => $row['client'],
+            'port' => $row['port'],
             'destination' => $row['destination'],
             'shippingLine' => $row['shipping_line'],
             'consignee' => $row['consignee'],
@@ -240,7 +243,10 @@ $eventsDataJson = json_encode($eventsData);
 
 <div class="card-large">
     <div class="shipments-container">
-        <h4 class="shipment-title">Ongoing Trips <span class="otw-trips"><?php echo htmlspecialchars($ongoingCount); ?> </span></h4>
+        <div class="card-header">
+            <i class="fas fa-route header-icon"></i>
+            <h4 class="shipment-title">Ongoing Trips <span class="otw-trips"><?php echo htmlspecialchars($ongoingCount); ?> </span></h4>
+        </div>
     <?php
 
     $enrouteTrips = array_filter($eventsData, function($trip) {
@@ -385,7 +391,10 @@ $eventsDataJson = json_encode($eventsData);
 <div class="dashboard-section">
   
     <div class="card-large">
+        <div class="card-header">
+            <i class="fa-solid fa-screwdriver-wrench header-icon"></i>
         <h3>Maintenance Status</h3>
+    </div>
         <div class="maintenance-container">
             <div class="maintenance-header">
                 <span class="header-vehicle">License Plate</span>
@@ -467,33 +476,44 @@ $eventsDataJson = json_encode($eventsData);
         //           </div>';
         // }
         ?>
-  <div class="card1">
+<div class="card1">
+    <div class="card-header">
+        <i class="fas fa-chart-bar header-icon"></i>
         <h3>Maintenance Frequency</h3>
-        <div id="maintenance"></div>
     </div>
+    <div id="maintenance"></div>
 </div>
     
 </div>
 <section class="analytics-section">
-  <div class="card3">
-        <h3>Cost Trends</h3>
-        <div id="costtrendchart"></div>
-    </div>
 
-     <div class="card2">
-        <h3>Number of Trips</h3>
-        <div id="tripnumber"></div>
+<div class="card3">
+    <div class="card-header">
+        <i class="fas fa-dollar-sign header-icon"></i>
+        <h3>Cost Trends</h3>
     </div>
+    <div id="costtrendchart"></div>
+</div>
+    <div class="card2">
+    <div class="card-header">
+        <i class="fas fa-truck-loading header-icon"></i>
+        <h3>Number of Trips</h3>
+    </div>
+    <div id="tripnumber"></div>
+</div>
    
             
 </section>
 
 
 <section class="calendar-section">
-    <div class="card-large">
-        <h3>Event Calendar</h3>
+     <div class="card-header-calendar">
+        
+   
 
         <div class="calendar-legend">
+            <i class="fas fa-calendar-alt header-icon"></i>
+        <h3>Event Calendar</h3>
             <div class="legend-item">
                 <span class="legend-color pending"></span>
                 <span class="legend-label">Pending</span>
@@ -511,7 +531,7 @@ $eventsDataJson = json_encode($eventsData);
                 <span class="legend-label">Cancelled</span>
             </div>
         </div>
-
+ </div>
         <div id="calendar"></div>
     </div>
 </section>
@@ -534,6 +554,7 @@ $eventsDataJson = json_encode($eventsData);
             dispatcher: event.dispatcher,
             containerNo: event.containerNo,
             client: event.client,
+            port: event.port,
             destination: event.destination,
             shippingLine: event.shippingLine,
             consignee: event.consignee,
@@ -573,39 +594,44 @@ $eventsDataJson = json_encode($eventsData);
             $('.fc-day').removeClass('fc-day-selected');
             clickedDay.addClass('fc-day-selected');
         },
-        eventClick: function(calEvent, jsEvent, view) {
+    eventClick: function(calEvent, jsEvent, view) {
+    var dateObj = new Date(calEvent.start);
+    var formattedDate = dateObj.toLocaleString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
+    var modifiedDate = calEvent.modifiedat ? new Date(calEvent.modifiedat).toLocaleString() : 'N/A';
 
-            var dateObj = new Date(calEvent.start);
-            var formattedDate = dateObj.toLocaleString();
+    $('#modal-container-no').text(calEvent.containerNo || 'N/A');
 
+    $('#modal-status').text(calEvent.status || 'N/A')
+        .removeClass()
+        .addClass('status ' + (calEvent.status ? calEvent.status.toLowerCase().replace(/\s+/g, '-') : ''));
+        $('#modal-origin').text(calEvent.port || 'N/A'); 
+    $('#modal-client-name').text(calEvent.client || 'N/A');
+    $('#modal-destination').text(calEvent.destination || 'N/A');
+    
+    $('#modal-plate-no').text(calEvent.plateNo || 'N/A');
+    $('#modal-date').text(formattedDate);
+    $('#modal-size').text(calEvent.size || 'N/A');
+    $('#modal-cash-advance').text('₱ ' + (parseFloat(calEvent.cashAdvance) || 0).toLocaleString());
+    
+    $('#modal-driver').text(calEvent.driver || 'N/A');
+    $('#modal-helper').text(calEvent.helper || 'N/A');
+    $('#modal-dispatcher').text(calEvent.dispatcher || 'N/A');
+    
+    $('#modal-shipping-line').text(calEvent.shippingLine || 'N/A');
+    $('#modal-consignee').text(calEvent.consignee || 'N/A');
 
-            var modifiedDate = calEvent.modifiedat ? new Date(calEvent.modifiedat).toLocaleString() : 'N/A';
+    $('#modal-modified-by').text(calEvent.modifiedby || 'System');
+    $('#modal-modified-at').text(modifiedDate);
 
+    var trackingUrl = `tracking.php?trip_id=${calEvent.id}`;
+    $('#track-delivery-btn').attr('href', trackingUrl);
+    
+    $('#tripDetailsModal').show();
 
-            $('#td-plate').text(calEvent.plateNo || 'N/A');
-            $('#td-date').text(formattedDate);
-            $('#td-driver').text(calEvent.driver || 'N/A');
-            $('#td-helper').text(calEvent.helper || 'N/A');
-            $('#td-dispatcher').text(calEvent.dispatcher || 'N/A');
-            $('#td-container').text(calEvent.containerNo || 'N/A');
-            $('#td-client').text(calEvent.client || 'N/A');
-            $('#td-destination').text(calEvent.destination || 'N/A');
-            $('#td-shipping').text(calEvent.shippingLine || 'N/A');
-            $('#td-consignee').text(calEvent.consignee || 'N/A');
-            $('#td-size').text(calEvent.size || 'N/A');
-            $('#td-cashadvance').text(calEvent.cashAdvance || 'N/A');
-            $('#td-status').text(calEvent.status || 'N/A')
-                          .removeClass()
-                          .addClass('status ' + (calEvent.status ? calEvent.status.toLowerCase().replace(/\s+/g, '') : ''));
-            $('#td-modifiedby').text(calEvent.modifiedby || 'System');
-            $('#td-modifiedat').text(modifiedDate);
-
-
-            $('#tripDetailsModal').show();
-
-
-            return false;
-        }
+    return false;
+}
     });
 });
 
@@ -782,33 +808,49 @@ function fetchTripDetails(tripId) {
     });
 
 
-
- $('.shipment-card').on('click', function() {
-     const tripId = $(this).data('trip-id');
+$('.shipment-card').on('click', function() {
+    const tripId = $(this).data('trip-id');
 
     fetchTripDetails(tripId).then(function(response) {
         if (response.success) {
-            var trip = response.trip;
+            var trip = response.trip; 
+
             var dateObj = new Date(trip.date);
-            var modifiedDateObj = new Date(trip.last_modified_at);
+            var formattedDate = dateObj.toLocaleString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            var modifiedDate = trip.last_modified_at ? new Date(trip.last_modified_at).toLocaleString() : 'N/A';
 
-            $('#td-plate').text(trip.plate_no || 'N/A');
-            $('#td-date').text(dateObj.toLocaleString());
-            $('#td-driver').text(trip.driver || 'N/A');
-            $('#td-helper').text(trip.helper || 'N/A');
-            $('#td-dispatcher').text(trip.dispatcher || 'N/A');
-            $('#td-container').text(trip.container_no || 'N/A');
-            $('#td-client').text(trip.client || 'N/A');
-            $('#td-destination').text(trip.destination || 'N/A');
-            $('#td-shipping').text(trip.shippine_line || 'N/A');
-            $('#td-consignee').text(trip.consignee || 'N/A');
-            $('#td-size').text(trip.size || 'N/A');
-            $('#td-cashadvance').text(trip.cash_adv || 'N/A');
-            $('#td-status').text(trip.status || 'N/A').removeClass().addClass('status ' + (trip.status ? trip.status.toLowerCase().replace(/\s+/g, '') : ''));
-            $('#td-modifiedby').text(trip.last_modified_by || 'System');
-            $('#td-modifiedat').text(modifiedDateObj.toLocaleString());
+            $('#modal-container-no').text(trip.container_no || 'N/A');
 
+
+            $('#modal-status').text(trip.status || 'N/A')
+                .removeClass()
+                .addClass('status ' + (trip.status ? trip.status.toLowerCase().replace(/\s+/g, '-') : ''));
+            $('#modal-client').text(trip.client || 'N/A');
+            $('#modal-destination').text(trip.destination || 'N/A');
+
+            $('#modal-plate-no').text(trip.plate_no || 'N/A');
+            $('#modal-date').text(formattedDate);
+            $('#modal-size').text(trip.size || 'N/A');
+            $('#modal-cash-advance').text('₱ ' + (parseFloat(trip.cash_adv) || 0).toLocaleString());
+
+            $('#modal-driver').text(trip.driver || 'N/A');
+            $('#modal-helper').text(trip.helper || 'N/A');
+            $('#modal-dispatcher').text(trip.dispatcher || 'N/A');
+
+            $('#modal-shipping-line').text(trip.shipping_line || 'N/A'); 
+            $('#modal-consignee').text(trip.consignee || 'N/A');
+
+            $('#modal-modified-by').text(trip.last_modified_by || 'System');
+            $('#modal-modified-at').text(modifiedDate);
+
+            var trackingUrl = `tracking.php?trip_id=${trip.trip_id}`;
+            $('#track-delivery-btn').attr('href', trackingUrl);
+
+            // Show the modal
             $('#tripDetailsModal').show();
+
         } else {
             alert('Error loading trip details: ' + response.message);
         }
@@ -897,93 +939,156 @@ document.addEventListener('DOMContentLoaded', function() {
 </footer>
 
 <div id="tripDetailsModal" class="modal">
-    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-x: none;">
-        <span class="close">&times;</span>
-        <h3>Trip Details</h3>
+    <div class="modal-content redesigned">
         
-        <div class="trip-details-grid">
-            <div class="details-section">
-                <h4 class="section-title">Vehicle Information</h4>
-                <div class="detail-row">
-                    <span class="detail-label">Plate No: </span>
-                    <span class="detail-value" id="td-plate"></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Container No: </span>
-                    <span class="detail-value" id="td-container"></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Size: </span>
-                    <span class="detail-value" id="td-size"></span>
+        <div class="modal-header">
+            <div class="header-content">
+                <i class="fas fa-box-open header-icon"></i>
+                <div>
+                    <h3 class="modal-title">Trip Details</h3>
+                    <span class="modal-subtitle" id="modal-container-no"></span>
                 </div>
             </div>
+            <div class="modal-header-status">
+
+                <span class="summary-value"><span id="modal-status" class="status in-transit">En Route</span></span>
+            </div>
+
+            <span class="close">&times;</span>
+        </div>
+
+        <div class="modal-body">
             
-            <div class="details-section">
-                <h4 class="section-title">Trip Information</h4>
-                <div class="detail-row">
-                    <span class="detail-label">Date: </span>
-                    <span class="detail-value" id="td-date"></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Status: </span>
-                    <span class="detail-value"><span id="td-status" class="status"></span></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Destination: </span>
-                    <span class="detail-value" id="td-destination"></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Cash Advance: </span>
-                    <span class="detail-value" id="td-cashadvance"></span>
-                </div>
-            </div>
-            
-            <div class="details-section">
-                <h4 class="section-title">Personnel</h4>
-                <div class="detail-row">
-                    <span class="detail-label">Driver:  </span>
-                    <span class="detail-value" id="td-driver"></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Helper: </span>
-                    <span class="detail-value" id="td-helper"></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Dispatcher: </span>
-                    <span class="detail-value" id="td-dispatcher"></span>
-                </div>
-            </div>
-            
-            <div class="details-section">
-                <h4 class="section-title">Client Information</h4>
-                <div class="detail-row">
-                    <span class="detail-label">Client: </span>
-                    <span class="detail-value" id="td-client"></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Shipping Line: </span>
-                    <span class="detail-value" id="td-shipping"></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Consignee: </span>
-                    <span class="detail-value" id="td-consignee"></span>
-                </div>
-            </div>
-            
-            <div class="details-section system-info">
-                <h4 class="section-title">System Information</h4>
-                <div class="detail-row">
-                    <span class="detail-label">Last Modified By: </span>
-                    <span class="detail-value" id="td-modifiedby"></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Last Modified At: </span>
-                    <span class="detail-value" id="td-modifiedat"></span>
-                </div>
-            </div>
+         <div class="trip-summary-section">
+    <div class="summary-item route-box">
+        <div class="route-point">
+            <span class="summary-label">Origin (Port)</span>
+            <span class="summary-value" id="modal-origin"></span>
+        </div>
+        <div class="route-line-modal"></div>
+        <div class="route-point destination">
+            <span class="summary-label">Destination</span>
+            <span class="summary-value" id="modal-destination"></span>
         </div>
     </div>
 </div>
+
+
+            <div class="trip-details-grid-revised">
+                <div class="details-section">
+                    <h4 class="section-title">Logistics Details</h4>
+                    <div class="detail-item">
+                        <i class="fas fa-truck detail-icon"></i>
+                        <div class="detail-text">
+                            <span class="detail-label">Plate No</span>
+                            <span class="detail-value" id="modal-plate-no"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <i class="fas fa-calendar-alt detail-icon"></i>
+                        <div class="detail-text">
+                            <span class="detail-label">Date & Time</span>
+                            <span class="detail-value" id="modal-date"></span>
+                        </div>
+                    </div>
+                     <div class="detail-item">
+                        <i class="fas fa-weight-hanging detail-icon"></i>
+                        <div class="detail-text">
+                            <span class="detail-label">Size</span>
+                            <span class="detail-value" id="modal-size"></span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-money-bill-wave detail-icon"></i>
+                        <div class="detail-text">
+                            <span class="detail-label">Cash Advance</span>
+                            <span class="detail-value" id="modal-cash-advance"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h4 class="section-title">Personnel</h4>
+                    <div class="detail-item">
+                        <i class="fas fa-user-tie detail-icon"></i>
+                        <div class="detail-text">
+                            <span class="detail-label">Driver</span>
+                            <span class="detail-value" id="modal-driver"></span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-user-cog detail-icon"></i>
+                        <div class="detail-text">
+                            <span class="detail-label">Helper</span>
+                            <span class="detail-value" id="modal-helper"></span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-headset detail-icon"></i>
+                        <div class="detail-text">
+                            <span class="detail-label">Dispatcher</span>
+                            <span class="detail-value" id="modal-dispatcher"></span>
+                        </div>
+                    </div>
+                </div>
+
+              <div class="details-section full-width">
+    <h4 class="section-title">Client & Shipping Details</h4>
+    <div class="detail-item-row">
+        <div class="detail-item">
+            <i class="fas fa-user-tie detail-icon"></i> <div class="detail-text">
+                <span class="detail-label">Client</span>
+                <span class="detail-value" id="modal-client-name"></span>
+            </div>
+        </div>
+
+        <div class="detail-item">
+            <i class="fas fa-building detail-icon"></i>
+            <div class="detail-text">
+                <span class="detail-label">Shipping Line</span>
+                <span class="detail-value" id="modal-shipping-line"></span>
+            </div>
+        </div>
+
+        <div class="detail-item">
+            <i class="fas fa-dolly detail-icon"></i>
+            <div class="detail-text">
+                <span class="detail-label">Consignee</span>
+                <span class="detail-value" id="modal-consignee"></span>
+            </div>
+        </div>
+    </div> 
+</div>
+
+                 <div class="details-section system-info full-width">
+                     <h4 class="section-title">System Information</h4>
+                     <div class="detail-item-row">
+                         <div class="detail-item">
+                             <i class="fas fa-user-edit detail-icon"></i>
+                             <div class="detail-text">
+                                 <span class="detail-label">Last Modified By</span>
+                                 <span class="detail-value" id="modal-modified-by"></span>
+                             </div>
+                         </div>
+                         <div class="detail-item">
+                             <i class="fas fa-clock detail-icon"></i>
+                             <div class="detail-text">
+                                 <span class="detail-label">Last Modified At</span>
+                                 <span class="detail-value" id="modal-modified-at"></span>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+    
+         <div class="modal-footer">
+            <a href="#" id="track-delivery-btn" class="btn btn-track" target="_blank">
+                <i class="fas fa-map-marker-alt"></i> Track Delivery
+            </a>
+        </div>
+
+    </div> </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="include/js/logout-confirm.js"></script>
 
