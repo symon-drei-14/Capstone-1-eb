@@ -55,23 +55,32 @@ try {
     } else {
         // For edit mode, validate old password if new password is provided
         if (!empty($data['password'])) {
-            // Verify old password
-            $checkPassword = "SELECT password FROM drivers_table WHERE driver_id = ?";
-            $stmtCheck = $conn->prepare($checkPassword);
-            $stmtCheck->bind_param("s", $data['driverId']);
-            $stmtCheck->execute();
-            $resultCheck = $stmtCheck->get_result();
+            // A 'Full Admin' can change a driver's password without knowing the old one.
+            $userRole = $_SESSION['role'] ?? '';
+            $canBypassOldPassword = in_array($userRole, ['Full Admin', 'Operations Manager']);
             
-            if ($resultCheck && $resultCheck->num_rows > 0) {
-                $driverData = $resultCheck->fetch_assoc();
-                
-                // Check if old password matches
-                if (!password_verify($data['oldPassword'], $driverData['password'])) {
-                    echo json_encode(["success" => false, "message" => "Current password is incorrect"]);
+            if (!$isFullAdmin) {
+                if (empty($data['oldPassword'])) {
+                    echo json_encode(["success" => false, "message" => "Current password is required to set a new one."]);
                     exit;
                 }
+                
+                // Verify old password if not a Full Admin
+                $checkPassword = "SELECT password FROM drivers_table WHERE driver_id = ?";
+                $stmtCheck = $conn->prepare($checkPassword);
+                $stmtCheck->bind_param("s", $data['driverId']);
+                $stmtCheck->execute();
+                $resultCheck = $stmtCheck->get_result();
+                
+                if ($resultCheck && $resultCheck->num_rows > 0) {
+                    $driverData = $resultCheck->fetch_assoc();
+                    if (!password_verify($data['oldPassword'], $driverData['password'])) {
+                        echo json_encode(["success" => false, "message" => "Current password is incorrect"]);
+                        exit;
+                    }
+                }
+                $stmtCheck->close();
             }
-            $stmtCheck->close();
         }
         
         $driver_id_to_update = $data['driverId'];

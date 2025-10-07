@@ -1506,3 +1506,10 @@
 2025-10-07 16:39:16 - Data validation passed
 2025-10-07 16:39:16 - Database connection successful
 2025-10-07 16:39:16 - Login successful for: driver11@gmail.com
+2025-10-07 16:58:59 - Login request received
+{"email":"symonandreialcedo2003@gmail.com","password":"123456789"}
+
+2025-10-07 16:58:59 - JSON parsed successfully
+2025-10-07 16:58:59 - Data validation passed
+2025-10-07 16:58:59 - Database connection successful
+2025-10-07 16:58:59 - Login successful for: symonandreialcedo2003@gmail.com
