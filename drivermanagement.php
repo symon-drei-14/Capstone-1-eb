@@ -86,7 +86,7 @@
                                 <th>Assigned Truck</th>
                                 <th>Total Completed Trips</th>
                                 <th>Completed Trips This Month</th>
-                                <th>Created At</th>
+                                <th>Created / Modified</th>
                                 <th>Last Login</th>
                                 <th>Actions</th>
                             </tr>
@@ -289,7 +289,7 @@ function fetchTripCounts() {
     });
 }
 
-       function renderTable() {
+     function renderTable() {
     // Clear existing highlights
     document.querySelectorAll('.highlight').forEach(el => {
         el.outerHTML = el.innerHTML;
@@ -307,6 +307,12 @@ function fetchTripCounts() {
         pageData.forEach(function(driver) {
             let formattedLastLogin = formatTime(driver.last_login);
             
+            // Format the creation/modification info
+            let creationInfo = formatDateWithTime(driver.created_at);
+            if (driver.last_modified_by) {
+                creationInfo += `<br><small style="color: #555;">Modified by: <strong>${driver.last_modified_by}</strong></small>`;
+            }
+            
        var row = "<tr>" +
                 "<td data-label='Profile'>" + (driver.driver_pic ? '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : '<i class="fa-solid fa-circle-user profile-icon"></i>') + "</td>" +
                 "<td data-label='ID'>" + driver.driver_id + "</td>" +
@@ -316,7 +322,7 @@ function fetchTripCounts() {
                 "<td data-label='Assigned Truck'>" + (driver.assigned_truck_id || 'None') + "</td>" +
                 "<td data-label='Total Trips'>" + (driver.total_completed || 0) + "</td>" +
                 "<td data-label='Monthly Trips'>" + (driver.monthly_completed || 0) + "</td>" +
-                "<td data-label='Created At'>" + formatDateWithTime(driver.created_at) + "</td>" +
+                "<td data-label='Created / Modified'>" + creationInfo + "</td>" +
                 "<td data-label='Last Login'>" + formattedLastLogin + "</td>" +
                 "<td data-label='Actions' class='actions'>" +
                     "<div class='dropdown'>" +
@@ -675,7 +681,7 @@ function formatDateWithTime(dateString) {
     }
 });
 
-        function searchDrivers() {
+         function searchDrivers() {
     const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
     
     // Reset to first page when searching
@@ -697,6 +703,7 @@ function formatDateWithTime(dateString) {
         String(driver.contact_no || '').toLowerCase().includes(searchTerm) || 
         String(driver.assigned_truck_id || 'None').toLowerCase().includes(searchTerm) ||
         String(driver.created_at).toLowerCase().includes(searchTerm) ||
+        String(driver.last_modified_by || '').toLowerCase().includes(searchTerm) || 
         String(formatTime(driver.last_login)).toLowerCase().includes(searchTerm)
     );
 });
@@ -704,7 +711,7 @@ function formatDateWithTime(dateString) {
     renderFilteredDrivers(filteredDrivers, searchTerm);
 }
 
-        function renderFilteredDrivers(filteredDrivers, searchTerm) {
+       function renderFilteredDrivers(filteredDrivers, searchTerm) {
     $('#driverTableBody').empty();
     
     if (filteredDrivers.length > 0) {
@@ -718,6 +725,12 @@ function formatDateWithTime(dateString) {
                 return str.replace(regex, '<span class="highlight">$1</span>');
             };
             
+            // Format creation/modification info
+            let creationInfo = formatDateWithTime(driver.created_at);
+            if (driver.last_modified_by) {
+                creationInfo += `<br><small style="color: #555;">Modified by: <strong>${driver.last_modified_by}</strong></small>`;
+            }
+
                var row = "<tr>" +
                 "<td data-label='Profile'>" + (driver.driver_pic ? '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : '<i class="fa-solid fa-circle-user profile-icon"></i>') + "</td>" +
                 "<td data-label='ID'>" + highlightText(driver.driver_id) + "</td>" +
@@ -727,7 +740,7 @@ function formatDateWithTime(dateString) {
                 "<td data-label='Assigned Truck'>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
                 "<td data-label='Total Trips'>" + highlightText(driver.total_completed || 0) + "</td>" +
                 "<td data-label='Monthly Trips'>" + highlightText(driver.monthly_completed || 0) + "</td>" +
-                "<td data-label='Created At'>" + highlightText(formatDateWithTime(driver.created_at)) + "</td>" +
+                "<td data-label='Created / Modified'>" + highlightText(creationInfo) + "</td>" +
                 "<td data-label='Last Login'>" + highlightText(formattedLastLogin) + "</td>" +
                 "<td data-label='Actions' class='actions'>" +
                     "<div class='dropdown'>" +

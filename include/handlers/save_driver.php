@@ -109,6 +109,7 @@ try {
         }
         
         // Updating an existing driver
+        // Updating an existing driver
         $updateFields = [];
         $params = [];
         $types = "";
@@ -147,6 +148,13 @@ try {
         if ($driverPic !== null) {
             $updateFields[] = "driver_pic = ?";
             $params[] = $driverPic;
+            $types .= "s";
+        }
+
+        // Keep track of who made the change
+        if (isset($_SESSION['username'])) {
+            $updateFields[] = "last_modified_by = ?";
+            $params[] = $_SESSION['username'];
             $types .= "s";
         }
         

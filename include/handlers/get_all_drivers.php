@@ -11,7 +11,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
 try {
     // Prepare and execute the query to get all drivers
-   $stmt = $conn->prepare("SELECT driver_id, name, email, contact_no, assigned_truck_id, driver_pic, created_at, last_login FROM drivers_table");
+   $stmt = $conn->prepare("SELECT driver_id, name, email, contact_no, assigned_truck_id, driver_pic, created_at, last_login, last_modified_by FROM drivers_table");
     $stmt->execute();
     $result = $stmt->get_result();
 
