@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 require_once 'dbhandler.php';
+require_once 'phpmailer_config.php'; // For sending emails
 
 $host = "localhost";
 $db_name = "capstonedb";
@@ -225,6 +226,32 @@ try {
     file_put_contents('add_driver_log.txt',
         date('Y-m-d H:i:s') . " - Firebase save successful\n",
         FILE_APPEND);
+
+    // Time to send that welcome email!
+    try {
+        $mail = getMailer();
+        if ($mail) {
+            $mail->addAddress($data['email'], $data['name']);
+            $mail->isHTML(true);
+            $mail->Subject = 'Welcome to Mansar Logistics!';
+            $mail->Body    = "Hello {$data['name']},<br><br>Welcome aboard! We are excited to have you as part of the Mansar Logistics team.<br><br>Your account has been successfully created. You can now log in to the driver's mobile application.<br><br>Best regards,<br>The Mansar Logistics Team";
+            
+            $mail->send();
+            file_put_contents('add_driver_log.txt',
+                date('Y-m-d H:i:s') . " - Welcome email sent successfully to " . $data['email'] . "\n",
+                FILE_APPEND);
+        } else {
+             file_put_contents('add_driver_log.txt',
+                date('Y-m-d H:i:s') . " - Failed to get mailer instance.\n",
+                FILE_APPEND);
+        }
+    } catch (Exception $mail_e) {
+        // We won't stop the process if the email fails, just log it.
+        // The driver was added successfully, so we still send a success response.
+        file_put_contents('add_driver_log.txt',
+            date('Y-m-d H:i:s') . " - ERROR sending welcome email: " . $mail_e->getMessage() . "\n",
+            FILE_APPEND);
+    }
 
     http_response_code(201);
     echo json_encode([
