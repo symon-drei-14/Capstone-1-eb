@@ -1513,3 +1513,9 @@
 2025-10-07 16:58:59 - Data validation passed
 2025-10-07 16:58:59 - Database connection successful
 2025-10-07 16:58:59 - Login successful for: symonandreialcedo2003@gmail.com
+2025-10-07 17:37:08 - Login request received
+{"email":"altusacc.401@gmail.com","password":"123456789"}
+
+2025-10-07 17:37:40 - Login request received
+{"email":"altusacc.401@gmail.com","otp":"813044"}
+
