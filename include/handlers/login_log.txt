@@ -1499,3 +1499,10 @@
 2025-10-06 10:54:08 - Data validation passed
 2025-10-06 10:54:08 - Database connection successful
 2025-10-06 10:54:08 - Login successful for: alcedo@gmail.com
+2025-10-07 16:39:16 - Login request received
+{"email":"driver11@gmail.com","password":"12345678"}
+
+2025-10-07 16:39:16 - JSON parsed successfully
+2025-10-07 16:39:16 - Data validation passed
+2025-10-07 16:39:16 - Database connection successful
+2025-10-07 16:39:16 - Login successful for: driver11@gmail.com
