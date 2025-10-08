@@ -1311,3 +1311,62 @@ td:first-child {
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
+
+.otp-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+.otp-input {
+    width: 40px;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5rem;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+}
+.otp-input:focus {
+    border-color: #3085d6;
+    box-shadow: 0 0 0 3px rgba(48, 133, 214, 0.25);
+}
+.otp-input::-webkit-outer-spin-button,
+.otp-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.otp-input[type=number] {
+    -moz-appearance: textfield;
+}
+
+    @keyframes swal2-shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+.swal2-popup.swal2-shake {
+    animation: swal2-shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+.otp-input.is-invalid {
+    border-color: #d33;
+}
+.otp-input.is-invalid:focus {
+    border-color: #d33;
+    box-shadow: 0 0 0 3px rgba(211, 51, 51, 0.25);
+}
+    .otp-error {
+    color: #d33;
+    font-weight: 600;
+    margin-bottom: 15px;
+    margin-top: -5px; 
+    min-height: 1.25em; 
+    text-align: center;
+    transition: all 0.2s ease-in-out;
+    opacity: 0; 
+}
+.otp-error.show {
+    opacity: 1; 
+}
