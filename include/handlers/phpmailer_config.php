@@ -1,8 +1,4 @@
 <?php
-// This file centralizes your PHPMailer configuration.
-
-// First, load the secure credentials.
-// The require_once will fail loudly if the file is missing, which is good.
 require_once __DIR__ . '/credentials.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -23,7 +19,7 @@ function getMailer() {
         $mail->SMTPAuth   = true;
         
         // --- SECURE CREDENTIALS ---
-        // We now use the constants from the ignored credentials.php file.
+      
         $mail->Username   = SMTP_USERNAME;
         $mail->Password   = SMTP_PASSWORD; 
         
