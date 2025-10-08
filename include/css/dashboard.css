@@ -1498,8 +1498,12 @@ tr:last-child td:last-child {
     height: 100vh; 
     background-color: rgba(0,0,0,0.5); 
     overflow-y: auto; 
+    animation: fadeIn 0.3s ease;
 }
-
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 .modal-content.redesigned {
     max-width: 800px;
     margin: 5px auto;
@@ -1836,4 +1840,36 @@ tr:last-child td:last-child {
     margin-left: -5px; 
     z-index: 1;
     position: relative;
+}
+
+.shipment-header-single {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.shipment-header-single .truck-image {
+  flex-shrink: 0;
+}
+
+.details-single {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.details-single .info-label {
+  color: #6c757d;
+  font-size: 0.9em;
+  margin-right: 8px;
+}
+
+.details-single .plate-number {
+  font-weight: bold;
+  color: #333;
 }

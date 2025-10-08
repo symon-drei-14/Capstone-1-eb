@@ -84,15 +84,14 @@ try {
             if (!$tripId) {
                 throw new Exception("Trip ID is required");
             }
-            
-            // Get trip details using trips table
+
+        
             $stmt = $conn->prepare("
                 SELECT 
                     t.trip_id,
                     t.container_no,
                     t.trip_date as date,
                     t.status,
-                
                     tr.plate_no, 
                     tr.capacity as size,
                     d.name as driver,
@@ -100,6 +99,7 @@ try {
                     h.name as helper,
                     disp.name as dispatcher,
                     c.name as client,
+                    p.name as port, 
                     dest.name as destination,
                     sl.name as shipping_line,
                     cons.name as consignee,
@@ -115,6 +115,7 @@ try {
                 LEFT JOIN helpers h ON t.helper_id = h.helper_id
                 LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
                 LEFT JOIN clients c ON t.client_id = c.client_id
+                LEFT JOIN ports p ON t.port_id = p.port_id 
                 LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
                 LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
                 LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
@@ -129,14 +130,13 @@ try {
             $stmt->bind_param("i", $tripId);
             $stmt->execute();
             $result = $stmt->get_result();
-            
+
             if ($result->num_rows === 0) {
                 throw new Exception("Trip not found");
             }
-            
+
             $trip = $result->fetch_assoc();
-            
-            // Format the response to match the expected structure
+
             $formattedTrip = [
                 'trip_id' => $trip['trip_id'],
                 'plate_no' => $trip['plate_no'],
@@ -146,8 +146,9 @@ try {
                 'dispatcher' => $trip['dispatcher'],
                 'container_no' => $trip['container_no'],
                 'client' => $trip['client'],
+                'port' => $trip['port'], 
                 'destination' => $trip['destination'],
-                'shippine_line' => $trip['shipping_line'],
+                'shipping_line' => $trip['shipping_line'],
                 'consignee' => $trip['consignee'],
                 'size' => $trip['size'],
                 'cash_adv' => $trip['cash_adv'],
@@ -158,7 +159,7 @@ try {
                 'additional_cash_advance' => $trip['additional_cash_advance'],
                 'diesel' => $trip['diesel']
             ];
-            
+
             echo json_encode(['success' => true, 'trip' => $formattedTrip]);
             break;
 

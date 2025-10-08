@@ -86,7 +86,7 @@ $sql = "SELECT
             h.name as helper,
             disp.name as dispatcher,
             c.name as client,
-            p.name as port,  /* ADD THIS LINE */
+            p.name as port, /* ADD THIS LINE */
             dest.name as destination,
             sl.name as shipping_line,
             cons.name as consignee,
@@ -167,10 +167,10 @@ $eventsDataJson = json_encode($eventsData);
     <?php 
    
     if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
-       
+        
         echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
     } else {
-       
+        
         echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
     }
     ?>
@@ -269,115 +269,115 @@ $eventsDataJson = json_encode($eventsData);
 
         foreach ($chunkedTrips as $tripRow): ?>
         <div class="shipment-row <?php echo $specialLayoutClass; ?>">
-            <?php foreach ($tripRow as $trip):
-                    $departureDate = date('d-m-y g:ia', strtotime($trip['date']));
-                    $statusClass = strtolower(str_replace(' ', '-', $trip['status']));
-                ?>
-                <div class="shipment-card" data-trip-id="<?php echo htmlspecialchars($trip['id']); ?>">
-                    <div class="shipment-header">
-                      <?php if (!empty($trip['truck_pic'])): ?>
-            <img src="data:image/jpeg;base64,<?php echo $trip['truck_pic']; ?>" 
-                 alt="Truck <?php echo htmlspecialchars($trip['plateNo']); ?>" 
-                 class="truck-image">
-        <?php else: ?>
-            <img src="include/img/truck2.png" alt="Truck" class="truck-image">
-        <?php endif; ?>
-                        <div class="header-details">
-                            <div class="plate-column">
-                                <span class="info-label">Container Number</span>
-                                <span class="plate-number"><?php echo htmlspecialchars($trip['containerNo']); ?></span>
-                            </div>
-                            <div class="status-column">
-                                <span class="status <?php echo $statusClass; ?>"><?php echo htmlspecialchars($trip['status']); ?></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <?php if ($tripCount === 1): ?>
-                        <div class="horizontal-route-container">
-                            <div class="horizontal-top-section">
-                                <div class="info-section departure">
-                                    <span class="info-label">Departure</span>
-                                    <span class="info-value"><?php echo $departureDate; ?></span>
-                                </div>
-                                <div class="info-section destination">
-                                    <span class="info-label">Destination</span>
-                                    <span class="info-value"><?php echo htmlspecialchars($trip['destination']); ?></span>
-                                </div>
-                            </div>
-
-                            <div class="horizontal-route-line">
-                                <div class="horizontal-pointer"></div>
-                                <div class="line"></div>
-                                <div class="horizontal-pin"></div>
-                            </div>
-
-                            <div class="horizontal-bottom-section">
-                                <div class="info-section-client">
-                                    <span class="info-label">Client</span>
-                                    <span class="info-value"><?php echo htmlspecialchars($trip['client']); ?></span>
-                                    </div>
-                                <div class="info-section-platenum">
-                                    <span class="info-label">Plate Number</span>
-                                    <span class="info-value"><?php echo htmlspecialchars($trip['plateNo']); ?></span>
-                                    </div>
-                                <div class="info-section-driver">
-                                    <span class="info-label">Driver</span>
-                                    <span class="info-value"><?php echo htmlspecialchars($trip['driver']); ?></span>
-                                    </div>
-                                <div class="info-section-helper">
-                                    <span class="info-label">Helper</span>
-                                    <span class="info-value"><?php echo htmlspecialchars($trip['helper']); ?></span>
-                                </div>
-
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="route-container">
-                            <div class="vertical-route">
-                                <div class="pointer"></div>
-                                <div class="route-line"></div>
-                                <div class="pin"></div>
-                            </div>
-
-                            <div class="route-section">
-                                <div class="info-section departure">
-                                    <span class="info-label">Departure</span>
-                                    <span class="info-value"><?php echo $departureDate; ?></span>
-                                </div>
-                                <div class="info-section destination">
-                                    <span class="info-label">Destination</span>
-                                    <span class="info-value"><?php echo htmlspecialchars($trip['destination']); ?></span>
-                                </div>
-                            </div>
-
-                            <div class="client-section">
-                                <div class="info-section client">
-                                    <span class="info-label">Client</span>
-                                    <span class="info-value"><?php echo htmlspecialchars($trip['client']); ?></span>
-                            </div>
-                            <div class="info-section platenum">
-                                    <span class="info-label">Plate Number</span>
-                                    <span class="info-value"><?php echo htmlspecialchars($trip['plateNo']); ?></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="divider"></div>
-
-                        <div class="info-grid">
-                            <div class="info-section">
-                                <span class="info-label">Driver</span>
-                                <span class="info-value"><?php echo htmlspecialchars($trip['driver']); ?></span>
-                            </div>
-                            <div class="info-section">
-                                <span class="info-label">Helper</span>
-                                <span class="info-value"><?php echo htmlspecialchars($trip['helper']); ?></span>
-                            </div>
-                        </div>
-                    <?php endif; ?>
+         <?php foreach ($tripRow as $trip):
+    $departureDate = date('d-m-y g:ia', strtotime($trip['date']));
+    $statusClass = strtolower(str_replace(' ', '-', $trip['status']));
+?>
+    <div class="shipment-card" data-trip-id="<?php echo htmlspecialchars($trip['id']); ?>">
+        
+        <?php if ($tripCount === 1): ?>
+            <div class="shipment-header-single">
+                <img src="include/img/truck2.png" alt="Truck <?php echo htmlspecialchars($trip['plateNo']); ?>" class="truck-image">
+                <div class="details-single">
+                    <span class="container-info">
+                        <span class="info-label">Container No:</span>
+                        <span class="plate-number"><?php echo htmlspecialchars($trip['containerNo']); ?></span>
+                    </span>
+                    <span class="status <?php echo $statusClass; ?>"><?php echo htmlspecialchars($trip['status']); ?></span>
                 </div>
-                <?php endforeach; ?>
+            </div>
+
+            <div class="horizontal-route-container">
+                <div class="horizontal-top-section">
+                    <div class="info-section departure">
+                        <span class="info-label">Departure</span>
+                        <span class="info-value"><?php echo $departureDate; ?></span>
+                    </div>
+                    <div class="info-section destination">
+                        <span class="info-label">Destination</span>
+                        <span class="info-value"><?php echo htmlspecialchars($trip['destination']); ?></span>
+                    </div>
+                </div>
+                <div class="horizontal-route-line">
+                    <div class="horizontal-pointer"></div>
+                    <div class="line"></div>
+                    <div class="horizontal-pin"></div>
+                </div>
+                <div class="horizontal-bottom-section">
+                    <div class="info-section-client">
+                        <span class="info-label">Client</span>
+                        <span class="info-value"><?php echo htmlspecialchars($trip['client']); ?></span>
+                    </div>
+                    <div class="info-section-platenum">
+                        <span class="info-label">Plate Number</span>
+                        <span class="info-value"><?php echo htmlspecialchars($trip['plateNo']); ?></span>
+                    </div>
+                    <div class="info-section-driver">
+                        <span class="info-label">Driver</span>
+                        <span class="info-value"><?php echo htmlspecialchars($trip['driver']); ?></span>
+                    </div>
+                    <div class="info-section-helper">
+                        <span class="info-label">Helper</span>
+                        <span class="info-value"><?php echo htmlspecialchars($trip['helper']); ?></span>
+                    </div>
+                </div>
+            </div>
+
+        <?php else: ?>
+            <div class="shipment-header">
+                <img src="include/img/truck2.png" alt="Truck <?php echo htmlspecialchars($trip['plateNo']); ?>" class="truck-image">
+                <div class="header-details">
+                    <div class="plate-column">
+                        <span class="info-label">Container Number</span>
+                        <span class="plate-number"><?php echo htmlspecialchars($trip['containerNo']); ?></span>
+                    </div>
+                    <div class="status-column">
+                        <span class="status <?php echo $statusClass; ?>"><?php echo htmlspecialchars($trip['status']); ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="route-container">
+                <div class="vertical-route">
+                    <div class="pointer"></div>
+                    <div class="route-line"></div>
+                    <div class="pin"></div>
+                </div>
+                <div class="route-section">
+                    <div class="info-section departure">
+                        <span class="info-label">Departure</span>
+                        <span class="info-value"><?php echo $departureDate; ?></span>
+                    </div>
+                    <div class="info-section destination">
+                        <span class="info-label">Destination</span>
+                        <span class="info-value"><?php echo htmlspecialchars($trip['destination']); ?></span>
+                    </div>
+                </div>
+                <div class="client-section">
+                    <div class="info-section client">
+                        <span class="info-label">Client</span>
+                        <span class="info-value"><?php echo htmlspecialchars($trip['client']); ?></span>
+                    </div>
+                    <div class="info-section platenum">
+                        <span class="info-label">Plate Number</span>
+                        <span class="info-value"><?php echo htmlspecialchars($trip['plateNo']); ?></span>
+                    </div>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="info-grid">
+                <div class="info-section">
+                    <span class="info-label">Driver</span>
+                    <span class="info-value"><?php echo htmlspecialchars($trip['driver']); ?></span>
+                </div>
+                <div class="info-section">
+                    <span class="info-label">Helper</span>
+                    <span class="info-value"><?php echo htmlspecialchars($trip['helper']); ?></span>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+<?php endforeach; ?>
             </div>
         <?php endforeach;
     else: ?>
@@ -389,7 +389,7 @@ $eventsDataJson = json_encode($eventsData);
 </div>
     </div>
 <div class="dashboard-section">
-  
+ 
     <div class="card-large">
         <div class="card-header">
             <i class="fa-solid fa-screwdriver-wrench header-icon"></i>
@@ -420,15 +420,15 @@ $eventsDataJson = json_encode($eventsData);
 
     if ($daysDifference == 0) {
         $dateString = 'Today';
-               }elseif ($daysDifference == 1) {
-                $dateString = 'Tomorrow';
-               } elseif ($daysDifference > 1 && $daysDifference <= 7) {
-                $dateString = 'In ' . $daysDifference . ' days';
-               } elseif ($daysDifference < 0) {
-               $dateString = abs($daysDifference) . ' days overdue';
-               } else {
-              $dateString = $dueDate;
-             }
+            }elseif ($daysDifference == 1) {
+             $dateString = 'Tomorrow';
+            } elseif ($daysDifference > 1 && $daysDifference <= 7) {
+             $dateString = 'In ' . $daysDifference . ' days';
+            } elseif ($daysDifference < 0) {
+           $dateString = abs($daysDifference) . ' days overdue';
+            } else {
+           $dateString = $dueDate;
+          }
             ?>
         <div class="maintenance-item">
          <div class="maintenance-details">
@@ -441,7 +441,7 @@ $eventsDataJson = json_encode($eventsData);
              </span>
              </div>
              <div class="maintenance-progress">
-                <div class="progress-bar <?php echo $barClass; ?>"></div>
+                 <div class="progress-bar <?php echo $barClass; ?>"></div>
              </div>
             </div>
             <?php endforeach; ?>
@@ -464,16 +464,16 @@ $eventsDataJson = json_encode($eventsData);
 
         //     foreach ($drivingDrivers as $driver) {
         //         echo '<div class="performance">
-        //                 <i class="fa fa-user icon-bg"></i>
-        //                 <p>' . htmlspecialchars($driver['driver']) . ' - Destination: ' . htmlspecialchars($driver['destination']) . '</p>
-        //               </div>';
+        //                     <i class="fa fa-user icon-bg"></i>
+        //                     <p>' . htmlspecialchars($driver['driver']) . ' - Destination: ' . htmlspecialchars($driver['destination']) . '</p>
+        //                 </div>';
         //     }
         // } else {
 
         //     echo '<div class="performance">
-        //             <i class="fa fa-info-circle icon-bg"></i>
-        //             <p>No active drivers currently on duty</p>
-        //           </div>';
+        //                 <i class="fa fa-info-circle icon-bg"></i>
+        //                 <p>No active drivers currently on duty</p>
+        //             </div>';
         // }
         ?>
 <div class="card1">
@@ -501,7 +501,7 @@ $eventsDataJson = json_encode($eventsData);
     </div>
     <div id="tripnumber"></div>
 </div>
-   
+    
             
 </section>
 
@@ -540,7 +540,7 @@ $eventsDataJson = json_encode($eventsData);
 <script>
 
 
-     var calendarEvents = <?php echo $eventsDataJson; ?>;
+      var calendarEvents = <?php echo $eventsDataJson; ?>;
 
 
     var formattedEvents = calendarEvents.map(function(event) {
@@ -638,51 +638,51 @@ $eventsDataJson = json_encode($eventsData);
 </script>
 
 <script>
-       document.addEventListener('DOMContentLoaded', function () {
-        const toggleBtn = document.getElementById('toggleSidebarBtn');
-        const sidebar = document.querySelector('.sidebar');
-        const backdrop = document.getElementById('sidebar-backdrop'); 
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleSidebarBtn');
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop'); 
 
-        const openSidebar = () => {
-            sidebar.classList.add('expanded');
-            backdrop.classList.add('show');
-        };
-
-
-        const closeSidebar = () => {
-            sidebar.classList.remove('expanded');
-            backdrop.classList.remove('show');
-        };
+            const openSidebar = () => {
+                sidebar.classList.add('expanded');
+                backdrop.classList.add('show');
+            };
 
 
-        toggleBtn.addEventListener('click', function (e) {
-            e.stopPropagation(); 
-            if (sidebar.classList.contains('expanded')) {
+            const closeSidebar = () => {
+                sidebar.classList.remove('expanded');
+                backdrop.classList.remove('show');
+            };
+
+
+            toggleBtn.addEventListener('click', function (e) {
+                e.stopPropagation(); 
+                if (sidebar.classList.contains('expanded')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+
+            backdrop.addEventListener('click', function () {
                 closeSidebar();
-            } else {
-                openSidebar();
-            }
-        });
+            });
 
-        backdrop.addEventListener('click', function () {
-            closeSidebar();
+            document.addEventListener('click', function (e) {
+                if (
+                    sidebar.classList.contains('expanded') &&
+                    !sidebar.contains(e.target) && 
+                    !toggleBtn.contains(e.target)
+                ) {
+                    closeSidebar();
+                }
+            });
         });
-
-        document.addEventListener('click', function (e) {
-            if (
-                sidebar.classList.contains('expanded') &&
-                !sidebar.contains(e.target) && 
-                !toggleBtn.contains(e.target)
-            ) {
-                closeSidebar();
-            }
-        });
-    });
 
 </script>
 
 <script>
-     function updateDateTime() {
+      function updateDateTime() {
         const now = new Date();
 
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -827,7 +827,8 @@ $('.shipment-card').on('click', function() {
             $('#modal-status').text(trip.status || 'N/A')
                 .removeClass()
                 .addClass('status ' + (trip.status ? trip.status.toLowerCase().replace(/\s+/g, '-') : ''));
-            $('#modal-client').text(trip.client || 'N/A');
+             $('#modal-origin').text(trip.port || 'N/A'); 
+            $('#modal-client-name').text(trip.client || 'N/A');
             $('#modal-destination').text(trip.destination || 'N/A');
 
             $('#modal-plate-no').text(trip.plate_no || 'N/A');
@@ -959,7 +960,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="modal-body">
             
-         <div class="trip-summary-section">
+           <div class="trip-summary-section">
     <div class="summary-item route-box">
         <div class="route-point">
             <span class="summary-label">Origin (Port)</span>
@@ -1062,31 +1063,31 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
                  <div class="details-section system-info full-width">
-                     <h4 class="section-title">System Information</h4>
-                     <div class="detail-item-row">
-                         <div class="detail-item">
-                             <i class="fas fa-user-edit detail-icon"></i>
-                             <div class="detail-text">
-                                 <span class="detail-label">Last Modified By</span>
-                                 <span class="detail-value" id="modal-modified-by"></span>
-                             </div>
-                         </div>
-                         <div class="detail-item">
-                             <i class="fas fa-clock detail-icon"></i>
-                             <div class="detail-text">
-                                 <span class="detail-label">Last Modified At</span>
-                                 <span class="detail-value" id="modal-modified-at"></span>
-                             </div>
-                         </div>
-                    </div>
-                </div>
+                      <h4 class="section-title">System Information</h4>
+                      <div class="detail-item-row">
+                           <div class="detail-item">
+                               <i class="fas fa-user-edit detail-icon"></i>
+                               <div class="detail-text">
+                                   <span class="detail-label">Last Modified By</span>
+                                   <span class="detail-value" id="modal-modified-by"></span>
+                               </div>
+                           </div>
+                           <div class="detail-item">
+                               <i class="fas fa-clock detail-icon"></i>
+                               <div class="detail-text">
+                                   <span class="detail-label">Last Modified At</span>
+                                   <span class="detail-value" id="modal-modified-at"></span>
+                               </div>
+                           </div>
+                     </div>
+                 </div>
             </div>
     
-         <div class="modal-footer">
-            <a href="#" id="track-delivery-btn" class="btn btn-track" target="_blank">
-                <i class="fas fa-map-marker-alt"></i> Track Delivery
-            </a>
-        </div>
+           <div class="modal-footer">
+                <a href="#" id="track-delivery-btn" class="btn btn-track" target="_blank">
+                    <i class="fas fa-map-marker-alt"></i> Track Delivery
+                </a>
+            </div>
 
     </div> </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1590,7 +1591,7 @@ function renderMonthlyChart(data) {
     
     // Prepare data for line chart
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                   'July', 'August', 'September', 'October', 'November', 'December'];
+                    'July', 'August', 'September', 'October', 'November', 'December'];
     
     const series = [];
     const colors = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0'];
