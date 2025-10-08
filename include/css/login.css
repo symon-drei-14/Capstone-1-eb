@@ -408,4 +408,37 @@
             color: #94a3b8;
         }
 
+
+.otp-input-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.otp-input {
+    width: 45px;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    color: #333;
+    transition: all 0.2s ease-in-out;
+
+}
+
+.otp-input::-webkit-outer-spin-button,
+.otp-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.otp-input:focus {
+    outline: none;
+    border-color: #b51a1a;
+    box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.25);
+}
+
         

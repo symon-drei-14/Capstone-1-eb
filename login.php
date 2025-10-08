@@ -58,11 +58,15 @@
                 </div>
                 
 
-                <div class="form-group" id="otpGroup" style="display: none;">
+               <div class="form-group" id="otpGroup" style="display: none;">
     <label for="otp">Verification Code</label>
-    <div class="input-with-icon">
-        <i class="fas fa-shield-alt"></i>
-        <input type="text" id="otp" name="otp" placeholder="Enter 6-digit code" maxlength="6">
+    <div class="otp-input-container">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
     </div>
 </div>
                 
@@ -77,128 +81,155 @@
         </div>
     </div>
 
-   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const loginForm = document.getElementById('loginForm');
-        const loginButton = document.getElementById('loginButton');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-        
-        const usernameGroup = document.querySelector('label[for="username"]').parentElement;
-        const passwordGroup = document.querySelector('label[for="password"]').parentElement;
-        const otpGroup = document.getElementById('otpGroup');
-        const otpInput = document.getElementById('otp');
-        
-        const passwordToggle = document.getElementById('passwordToggle');
-        const passwordInput = document.getElementById('password');
-        
-        let isOtpStage = false; // A simple state to track if we're waiting for OTP
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const loginButton = document.getElementById('loginButton');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+    
+    const usernameGroup = document.querySelector('label[for="username"]').parentElement;
+    const passwordGroup = document.querySelector('label[for="password"]').parentElement;
+    const otpGroup = document.getElementById('otpGroup');
+    
+    const passwordToggle = document.getElementById('passwordToggle');
+    const passwordInput = document.getElementById('password');
+    
+    const otpInputs = document.querySelectorAll('.otp-input');
+    
+    let isOtpStage = false;
 
-        // Toggle password visibility
-        passwordToggle.addEventListener('click', function() {
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                passwordToggle.innerHTML = '<i class="far fa-eye-slash"></i>';
-            } else {
-                passwordInput.type = 'password';
-                passwordToggle.innerHTML = '<i class="far fa-eye"></i>';
-            }
-        });
-        
-        // Form submission
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Reset messages
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            
-            loginButton.innerHTML = 'Verifying... <i class="fas fa-spinner fa-spin"></i>';
-            loginButton.disabled = true;
 
-            const formData = new FormData();
-            
-            if (isOtpStage) {
-                // --- SUBMITTING OTP ---
-                if (!otpInput.value) {
-                    showError('Please enter the verification code.');
-                    resetButton();
-                    return;
-                }
-                formData.append('action', 'verify_otp');
-                formData.append('otp', otpInput.value);
-            } else {
-                // --- SUBMITTING USERNAME/PASSWORD ---
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-
-                if (!username || !password) {
-                    showError('Please enter both username and password.');
-                    resetButton();
-                    return;
-                }
-                formData.append('action', 'login');
-                formData.append('username', username);
-                formData.append('password', password);
-            }
-
-            // Send request to server
-            fetch('include/handlers/login_process.php', {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin' 
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (data.otp_required) {
-                        // Transition to OTP stage
-                        showSuccess(data.message || 'OTP sent successfully.');
-                        isOtpStage = true;
-                        usernameGroup.style.display = 'none';
-                        passwordGroup.style.display = 'none';
-                        otpGroup.style.display = 'block';
-                        loginButton.innerHTML = 'Verify Code <i class="fas fa-check"></i>';
-                        loginButton.disabled = false;
-                        otpInput.focus();
-                    } else {
-                        // Login is fully successful
-                        showSuccess('Login successful! Redirecting...');
-                        setTimeout(() => {
-                            window.location.href = 'dashboard.php';
-                        }, 1000);
-                    }
-                } else {
-                    showError(data.message || 'An unknown error occurred.');
-                    resetButton();
-                }
-            })
-            .catch(error => {
-                showError('A network error occurred. Please try again.');
-                console.error('Error:', error);
-                resetButton();
-            });
-        });
-
-        function resetButton() {
-            if (isOtpStage) {
-                 loginButton.innerHTML = 'Verify Code <i class="fas fa-check"></i>';
-            } else {
-                 loginButton.innerHTML = 'Sign In <i class="fas fa-arrow-right"></i>';
-            }
-            loginButton.disabled = false;
-        }
-        
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-        }
-        
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
+    passwordToggle.addEventListener('click', function() {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            passwordToggle.innerHTML = '<i class="far fa-eye-slash"></i>';
+        } else {
+            passwordInput.type = 'password';
+            passwordToggle.innerHTML = '<i class="far fa-eye"></i>';
         }
     });
+
+    otpInputs.forEach((input, index) => {
+        input.addEventListener('input', () => {
+            if (input.value.length === 1 && index < otpInputs.length - 1) {
+                otpInputs[index + 1].focus();
+            }
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                otpInputs[index - 1].focus();
+            }
+        });
+
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasteData = e.clipboardData.getData('text').trim().slice(0, 6);
+            pasteData.split('').forEach((char, i) => {
+                if (otpInputs[index + i]) {
+                    otpInputs[index + i].value = char;
+                }
+            });
+             // Focus on the last pasted character's input or the final input
+             const lastInputIndex = Math.min(index + pasteData.length, otpInputs.length) - 1;
+             otpInputs[lastInputIndex].focus();
+        });
+    });
+    
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Reset messages and set button to loading state
+        errorMessage.style.display = 'none';
+        successMessage.style.display = 'none';
+        loginButton.innerHTML = 'Verifying... <i class="fas fa-spinner fa-spin"></i>';
+        loginButton.disabled = true;
+
+        const formData = new FormData();
+        
+        if (isOtpStage) {
+            // --- Stage 2: SUBMITTING OTP ---
+            const otpValue = Array.from(otpInputs).map(input => input.value).join('');
+
+            if (otpValue.length < 6) {
+                showError('Please enter the complete 6-digit code.');
+                resetButton();
+                return;
+            }
+            formData.append('action', 'verify_otp');
+            formData.append('otp', otpValue);
+
+        } else {
+            // --- Stage 1: SUBMITTING USERNAME/PASSWORD ---
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showError('Please enter both username and password.');
+                resetButton();
+                return;
+            }
+            formData.append('action', 'login');
+            formData.append('username', username);
+            formData.append('password', password);
+        }
+
+        // Send request to the server
+        fetch('include/handlers/login_process.php', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin' 
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.otp_required) {
+                    // Transition to OTP stage
+                    showSuccess(data.message || 'OTP sent successfully.');
+                    isOtpStage = true;
+                    usernameGroup.style.display = 'none';
+                    passwordGroup.style.display = 'none';
+                    otpGroup.style.display = 'block';
+                    resetButton(); // Resets button text to "Verify Code"
+                    otpInputs[0].focus(); 
+                } else {
+                    // Login is fully successful
+                    showSuccess('Login successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.php';
+                    }, 1000);
+                }
+            } else {
+                showError(data.message || 'An unknown error occurred.');
+                resetButton();
+            }
+        })
+        .catch(error => {
+            showError('A network error occurred. Please try again.');
+            console.error('Error:', error);
+            resetButton();
+        });
+    });
+    function resetButton() {
+        if (isOtpStage) {
+             loginButton.innerHTML = 'Verify Code <i class="fas fa-check"></i>';
+        } else {
+             loginButton.innerHTML = 'Sign In <i class="fas fa-arrow-right"></i>';
+        }
+        loginButton.disabled = false;
+    }
+    
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+    }
+    
+    function showSuccess(message) {
+        successMessage.textContent = message;
+        successMessage.style.display = 'block';
+    }
+});
 </script>
 
 </body>
