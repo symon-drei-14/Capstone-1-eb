@@ -1942,8 +1942,9 @@ case 'get_trips_today':
         ";
         
         $newDriver = null;
+        $fallbackDetails = null;
 
-        // --- PHASE 1: Try to find a direct replacement (20ft -> 20ft, 40ft -> 40ft, etc.) ---
+        // --- PHASE 1: Try to find a direct replacement (Same Capacity) ---
         $capacityFilter1 = "t.capacity = ?";
         $query1 = sprintf($findNextDriverQuery, $capacityFilter1);
         $stmt1 = $conn->prepare($query1);
@@ -1953,33 +1954,51 @@ case 'get_trips_today':
         $newDriver = $result1->fetch_assoc();
         $stmt1->close();
         
-        $fallbackTo40ft = false;
+        // --- PHASE 2: Fallback Logic ---
+        if (!$newDriver) {
+            $capacityFilter = null;
+            $fallbackCapacity = null;
 
-        // --- PHASE 2: Check for 20ft to 40ft fallback (Only if original capacity was 20ft and no replacement was found) ---
-        // This is the core logic to meet the request: if 20ft failed and no replacement, check 40ft.
-        if (!$newDriver && $capacity == '20') {
-            $capacityFilter2 = "t.capacity = '40'";
-            $query2 = sprintf($findNextDriverQuery, $capacityFilter2);
-            $stmt2 = $conn->prepare($query2);
-            // Note: When capacity is hardcoded in the query string, we only bind the driver ID.
-            $stmt2->bind_param("i", $originalDriverId); 
-            $stmt2->execute();
-            $result2 = $stmt2->get_result();
-            $newDriver = $result2->fetch_assoc();
-            $stmt2->close();
+            // Scenario A: 20ft trip falls back to 40ft capacity (original request)
+            if ($capacity == '20') {
+                $capacityFilter = "t.capacity = '40'";
+                $fallbackCapacity = '40';
+            }
+            // Scenario B: 40ft trip falls back to 20ft capacity (new request fix)
+            // Note: This only applies if a 40ft truck can somehow be substituted for a 20ft container,
+            // but usually a 40ft container *needs* a 40ft truck. Assuming the business rule means
+            // a 40ft driver/truck can take the cargo if a smaller option is available/needed
+            // or maybe the container size was actually smaller than the assigned truck's capacity.
+            // Since the user explicitly asked for this: we implement the fallback.
+            else if ($capacity == '40') {
+                $capacityFilter = "t.capacity = '20'";
+                $fallbackCapacity = '20';
+            }
             
-            if ($newDriver) {
-                $fallbackTo40ft = true; // Flag that we successfully used a 40ft driver as a replacement
+            // Execute fallback search if a rule was matched
+            if ($capacityFilter) {
+                $query2 = sprintf($findNextDriverQuery, $capacityFilter);
+                $stmt2 = $conn->prepare($query2);
+                $stmt2->bind_param("i", $originalDriverId); 
+                $stmt2->execute();
+                $result2 = $stmt2->get_result();
+                $newDriver = $result2->fetch_assoc();
+                $stmt2->close();
+                
+                if ($newDriver) {
+                    $fallbackDetails = $fallbackCapacity; // Store which capacity was used for logging
+                }
             }
         }
 
         // --- PHASE 3: Reassign or Cancel ---
         if ($newDriver) {
-            // A replacement was found (either same capacity or 40ft fallback)!
+            // A replacement was found!
             $newDriverId = $newDriver['driver_id'];
             $newDriverName = $newDriver['name'];
             $newTruckId = $newDriver['truck_id'];
             $newTruckPlate = $newDriver['plate_no'];
+            $newTruckCapacity = $newDriver['capacity'];
 
             // Reassign the trip to the new driver and their corresponding truck
             $reassignStmt = $conn->prepare("UPDATE trips SET driver_id = ?, truck_id = ? WHERE trip_id = ?");
@@ -1990,8 +2009,8 @@ case 'get_trips_today':
             // Log the reassignment reason
             $reasonDetail = ($reason === 'failed_checklist') ? "failed checklist" : "missed deadline";
             
-            if ($fallbackTo40ft) {
-                 $reasonText = "Trip reassigned to 40ft driver {$newDriverName} ({$newTruckPlate}) because no 20ft driver was available after original driver {$reasonDetail}. Original driver penalized.";
+            if ($fallbackDetails) {
+                 $reasonText = "Trip reassigned to {$newTruckCapacity}ft driver {$newDriverName} ({$newTruckPlate}) because no {$capacity}ft driver was available after original driver {$reasonDetail}. Original driver penalized.";
             } else {
                  $reasonText = "Trip reassigned to {$newDriverName} ({$newTruckPlate}) after original driver {$reasonDetail}. Original driver penalized.";
             }
@@ -2012,18 +2031,15 @@ case 'get_trips_today':
             $updateLastAssignedStmt->execute();
             $updateLastAssignedStmt->close();
             
-            // Send notifications (optional but good practice to notify both)
-            // You might want to implement notification logic here, similar to the `edit` case.
-
             $conn->commit();
             echo json_encode([
                 'success' => true, 
-                'message' => "Trip (ID: {$tripId}) successfully reassigned to {$newDriverName} with {$newDriver['capacity']}ft truck.",
+                'message' => "Trip (ID: {$tripId}) successfully reassigned to {$newDriverName} with {$newTruckCapacity}ft truck.",
                 'new_driver_id' => $newDriverId
             ]);
 
         } else {
-            // No replacement found (neither same capacity nor 40ft fallback)
+            // No replacement found
             $cancelStmt = $conn->prepare("UPDATE trips SET status = 'Cancelled' WHERE trip_id = ?");
             $cancelStmt->bind_param("i", $tripId);
             $cancelStmt->execute();
@@ -2060,6 +2076,7 @@ case 'get_trips_today':
         throw $e;
     }
     break;
+
 
 case 'cancel_trip':
 
