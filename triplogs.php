@@ -332,7 +332,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                             <i class="fas fa-file-alt"></i> Generate Report
                         </a>
                         <button class="dropdown-item view-reasons" id="eventModalHistoryBtn">
-                            <i class="fas fa-history"></i> View Edit History
+                            <i class="fas fa-history"></i> Edit History
                         </button>
                         <button class="dropdown-item delete" id="eventModalDeleteBtn">
                             <i class="fas fa-trash-alt"></i> Delete Trip
@@ -909,12 +909,16 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
     </div>
 </div>
 
-    <div id="checklistModal" class="modal">
-    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding:20px">
-        <span class="close">&times;</span>
-        <h3 style="margin-top: 0;">Driver Checklist</h3>
+  <div id="checklistModal" class="modal">
+    <div class="modal-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+        
+        <div class="modal-header">
+            <h3><i class="fas fa-clipboard-check"></i> Driver Checklist</h3>
+            <span class="close">&times;</span>
+        </div>
+
         <div id="checklistContent">
-            <table class="events-table" style="width: 100%; margin-top: 15px;">
+            <table class="events-table" style="width: 100%;">
                 <thead>
                     <tr>
                         <th>Question</th>
@@ -924,7 +928,11 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                 <tbody id="checklistTableBody"></tbody>
             </table>
         </div>
-        <button type="button" class="close-btn cancel-btn" style="margin-top: 20px;">Close</button>
+        
+        <div class="modal-footer">
+             <button type="button" class="close-btn cancel-btn">Close</button>
+        </div>
+
     </div>
 </div>
         
@@ -2114,7 +2122,8 @@ eventClick: function(event, jsEvent, view) {
     $('#eventModal').data('eventId', event.id);
     
     // Update the edit button click handler
-    $('#eventModalEditBtn').off('click').on('click', function() {
+    $('#eventModalEditBtn').off('click').on('click', function(e) {
+         e.stopPropagation();
         var eventId = $('#eventModal').data('eventId');
         
         // Find the event data from the original eventsData array instead of the calendar event
@@ -2266,7 +2275,8 @@ eventClick: function(event, jsEvent, view) {
     });
     
 
-$(document).on('click', '#eventModal .icon-btn.view-expenses', function() {
+$('#eventModal .view-expenses').off('click').on('click', function(e){
+    e.stopPropagation();
     var tripId = $(this).attr('data-id');
 
     // Find the trip data from eventsData
@@ -2361,7 +2371,8 @@ $(document).on('click', '#eventModal .icon-btn.view-expenses', function() {
 });
 
 
-$(document).on('click', '#eventModal .icon-btn.view-checklist', function() {
+$('#eventModal .view-checklist').off('click').on('click', function(e) {
+     e.stopPropagation();
     var tripId = $(this).attr('data-id');
     var driverId = $(this).attr('data-driver-id');
     
@@ -2911,7 +2922,7 @@ $('#addScheduleForm').on('submit', function(e) {
     });
 });
 
-  $(document).on('click', '.dropdown-item.view-reasons', function() {
+  $(document).on('click', '#eventsTable .dropdown-item.view-reasons', function() {
     var eventId = $(this).data('id');
     var event = eventsData.find(function(e) { return e.id == eventId; });
     

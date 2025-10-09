@@ -4,7 +4,7 @@
 {
     background-color: rgb(34, 170, 34);
     color:white;
-    padding: 8px 15px;
+    padding: 12px 15px;
     border:none;
     border-radius:8px;
     margin-bottom:5px;
@@ -18,7 +18,7 @@
 #dailyExpenseSummaryBtn {
     background-color: #17a2b8; /* A nice teal color */
     color: white;
-    padding: 8px 15px;
+    padding:12px 15px;
     border: none;
     border-radius: 8px;
     margin-bottom: 5px;
@@ -719,7 +719,7 @@ font-size: 13px;
         border: none !important;
         border-radius: 4px !important;
         padding: 2px 4px !important;
-        margin: 1px 0 !important;
+        margin: 3px 0 !important;
         font-size: 0.87em !important;
         line-height: 2;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
@@ -727,7 +727,7 @@ font-size: 13px;
            transition: transform 0.3s ease;
     }
     .fc-event:hover{
-      transform:scale(1.02);
+      transform:translateY(-5px);
       cursor: pointer;
     }   
     .fc-event .fc-content {
@@ -752,7 +752,7 @@ font-size: 13px;
 
         
         .fc-day:hover {
-            background-color: #d5d5d834  ;
+            background-color: rgba(230, 230, 230, 0.186)  ;
             color: white ;
           
         }
@@ -3142,25 +3142,26 @@ h3.title {
     color: white;
 }
 
-.event-modal-actions .icon-btn.generate-report {
-       background: none;
+.event-modal-actions .dropdown-item.generate-report {
+     width: 100%;
+    text-align: left;
+    padding: 10px 15px;
     border: none;
-    padding: 4px;
+    background: none;
     cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    width: 18px;
-    height: 16px;
     display: flex;
     align-items: center;
-    justify-content: center;
-
-    color: #007bff;
+    gap: 8px;
+    transition: background-color 0.2s;
+    font-size:14px;
+    line-height :1.5;
+    letter-spacing:0.9;
+    text-decoration: none;
+     color: rgba(86, 86, 86, 1);
 }
 
-.event-modal-actions .icon-btn.generate-report:hover {
-    background-color: #007bff;
+.event-modal-actions .dropdown-item.generate-report:hover {
+    background-color: #398eea;
     color: white;
 }
 
@@ -3455,3 +3456,99 @@ h3.title {
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
+
+
+    #checklistModal .modal-content {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        padding: 0; 
+        overflow: hidden; 
+    }
+
+    #checklistModal .modal-header {
+        background-color: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #checklistModal .modal-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: #343a40;
+        font-weight: 500;
+    }
+
+    #checklistModal .modal-header h3 i {
+        margin-right: 10px;
+        color: #e5e5e5;
+    }
+
+    #checklistModal .close {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #ffffff !important;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        cursor: pointer;
+    }
+
+    #checklistModal .close:hover {
+        color: #ffffff;
+        opacity: 1;
+    }
+
+    #checklistModal #checklistContent {
+        padding: 20px;
+        background-color: #fff;
+    }
+
+    #checklistModal .events-table {
+        border-collapse: collapse;
+        border: 1px solid #e9ecef;
+    }
+
+    #checklistModal .events-table th,
+    #checklistModal .events-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e9ecef;
+        text-align: center;
+    }
+
+    #checklistModal .events-table thead th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        border-bottom-width: 2px;
+    }
+
+    #checklistModal .events-table tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    #checklistModal .events-table tbody tr:hover {
+        background-color: #f1f3f5;
+    }
+   
+    #checklistModal .modal-footer {
+        padding: 15px 20px;
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        text-align: right;
+    }
+
+    #checklistModal .modal-footer .cancel-btn {
+        background-color: #6c757d;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    #checklistModal .modal-footer .cancel-btn:hover {
+        background-color: #5a6268;
+    }
