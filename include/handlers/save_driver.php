@@ -2,12 +2,33 @@
 header("Content-Type: application/json");
 session_start();
 require_once 'dbhandler.php';
+require_once 'phpmailer_config.php'; // Needed for mandatory security emails
 
-// Check if user is logged in
+// Define a sample number for the security alert
+$sampleContactNumber = '+1-800-555-0199'; 
+
+// Check if user is logged in and is an admin
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     echo json_encode(["success" => false, "message" => "Unauthorized access"]);
     exit;
 }
+$actingAdminId = $_SESSION['admin_id'] ?? null;
+$actingAdminUsername = $_SESSION['username'] ?? 'Unknown Admin';
+
+// Helper function to log security action
+function logDriverSecurityAction($conn, $driverId, $action, $details) {
+    try {
+        // Use the new driver_security_log table
+        $logStmt = $conn->prepare("INSERT INTO driver_security_log (driver_id, action, details) VALUES (?, ?, ?)");
+        $logStmt->bind_param("sss", $driverId, $action, $details);
+        $logStmt->execute();
+        $logStmt->close();
+    } catch (Exception $e) {
+        // Log to error log if failed to insert into DB
+        error_log("Failed to log driver security action for ID {$driverId}: {$e->getMessage()}");
+    }
+}
+
 
 // Handle file upload
 $driverPic = null;
@@ -38,55 +59,37 @@ if (!isset($data['name']) || !isset($data['email']) || !isset($data['contact_no'
 
 try {
     if ($data['mode'] === 'add') {
-        // This block is retained for logical consistency but is handled by add_driver.php
-        $stmt = $conn->prepare("INSERT INTO drivers_table (name, email, contact_no, password, assigned_truck_id, driver_pic, created_at)
-                                VALUES (?, ?, ?, ?, ?, ?, NOW())");
-        
-        $assignedTruck = !empty($data['assigned_truck_id']) ? $data['assigned_truck_id'] : null;
-        $password = !empty($data['password']) ? password_hash($data['password'], PASSWORD_DEFAULT) : null;
-        
-        $stmt->bind_param("ssssss", $data['name'], $data['email'], $data['contact_no'], $password, $assignedTruck, $driverPic);
-        
-        if ($stmt->execute()) {
-            echo json_encode(["success" => true, "message" => "Driver added successfully"]);
-        } else {
-            echo json_encode(["success" => false, "message" => "Error adding driver: " . $stmt->error]);
-        }
+        // Since 'add_driver.php' handles this, we can skip this logic block for simplicity, 
+        // assuming the client-side code targets add_driver.php correctly.
+        // If this block is somehow reached, it should ideally throw an error or redirect.
+        throw new Exception("Use add_driver.php endpoint for adding new drivers.");
+
     } else {
-        // For edit mode, validate old password if new password is provided
-        if (!empty($data['password'])) {
-            // A 'Full Admin' can change a driver's password without knowing the old one.
-            $userRole = $_SESSION['role'] ?? '';
-            $canBypassOldPassword = in_array($userRole, ['Full Admin', 'Operations Manager']);
-            
-            // FIX: The variable was incorrect here.
-            if (!$canBypassOldPassword) {
-                if (empty($data['oldPassword'])) {
-                    echo json_encode(["success" => false, "message" => "Current password is required to set a new one."]);
-                    exit;
-                }
-                
-                // Verify old password if not a Full Admin
-                $checkPassword = "SELECT password FROM drivers_table WHERE driver_id = ?";
-                $stmtCheck = $conn->prepare($checkPassword);
-                $stmtCheck->bind_param("s", $data['driverId']);
-                $stmtCheck->execute();
-                $resultCheck = $stmtCheck->get_result();
-                
-                if ($resultCheck && $resultCheck->num_rows > 0) {
-                    $driverData = $resultCheck->fetch_assoc();
-                    if (!password_verify($data['oldPassword'], $driverData['password'])) {
-                        echo json_encode(["success" => false, "message" => "Current password is incorrect"]);
-                        exit;
-                    }
-                }
-                $stmtCheck->close();
-            }
-        }
+        // --- EDIT MODE LOGIC ---
         
         $driver_id_to_update = $data['driverId'];
-        $assigned_truck_id = $data['assigned_truck_id'] ?: null;
+        $logDetails = [];
+        $messageType = 'simple_update'; // Default
+        $isPasswordChanging = !empty($data['password']);
+        $isEmailChanging = false; // Determined after fetching current data
 
+        // 1. Fetch current driver data (to check for email change)
+        $fetchStmt = $conn->prepare("SELECT email, password, name FROM drivers_table WHERE driver_id = ?");
+        $fetchStmt->bind_param("s", $driver_id_to_update);
+        $fetchStmt->execute();
+        $driverData = $fetchStmt->get_result()->fetch_assoc();
+        $fetchStmt->close();
+
+        if (!$driverData) {
+            throw new Exception("Driver not found.");
+        }
+        $currentEmail = $driverData['email'];
+        $currentDriverName = $driverData['name'];
+        $isEmailChanging = (strtolower($data['email']) !== strtolower($currentEmail));
+
+
+        // 2. Truck Assignment Check
+        $assigned_truck_id = $data['assigned_truck_id'] ?: null;
         if ($assigned_truck_id !== null) {
             // Check if the truck is already assigned to a DIFFERENT driver
             $check_truck = "SELECT driver_id FROM drivers_table WHERE assigned_truck_id = ?";
@@ -102,49 +105,117 @@ try {
                 $row = $result_truck->fetch_assoc();
                 // If the truck is assigned, check if it's to someone other than the current driver
                 if ($row['driver_id'] != $driver_id_to_update) {
-                     throw new Exception("This truck is already assigned to another driver.");
+                     throw new Exception("This truck is already assigned to another driver (ID: {$row['driver_id']}).");
                 }
             }
             $stmt_truck->close();
         }
+
         
-        // Updating an existing driver
-        // Updating an existing driver
+        // 3. Build Update Query and handle security fields
+
         $updateFields = [];
         $params = [];
         $types = "";
         
-        // Build the update query dynamically based on which fields are provided
-        if (!empty($data['name'])) {
-            $updateFields[] = "name = ?";
-            $params[] = $data['name'];
-            $types .= "s";
-        }
+        // Always include name and contact_no
+        $updateFields[] = "name = ?";
+        $params[] = $data['name'];
+        $types .= "s";
         
-        if (!empty($data['email'])) {
-            $updateFields[] = "email = ?";
-            $params[] = $data['email'];
-            $types .= "s";
-        }
-        
-        if (!empty($data['contact_no'])) {
-            $updateFields[] = "contact_no = ?";
-            $params[] = $data['contact_no'];
-            $types .= "s";
-        }
-        
-        if (!empty($data['password'])) {
+        $updateFields[] = "contact_no = ?";
+        $params[] = $data['contact_no'];
+        $types .= "s";
+
+        // Handle Password Change
+        if ($isPasswordChanging) {
+            // REMOVED: Validation for 'oldPassword' is no longer required for admins.
+            // REMOVED: OTP check is no longer required.
+            
             $updateFields[] = "password = ?";
             $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
             $types .= "s";
+
+            // Prepare Security Notification Email (Password)
+            $mail = getMailer();
+            if ($mail) {
+                $subject = 'SECURITY ALERT: Driver Password Change Notification';
+                $body = "Hello {$currentDriverName},<br><br>
+                         The password for your Driver account (**{$currentDriverName}**) was just changed by an administrator (**{$actingAdminUsername}**).<br><br>
+                         <strong style='color: #dc3545;'>This change is now active.</strong><br><br>
+                         If this change was authorized, you can safely ignore this email.<br><br>
+                         <h3 style='color: #dc3545;'>Security Concern:</h3>
+                         If you did **NOT** authorize this change, please contact security immediately at: **{$sampleContactNumber}**.
+                         <br><br>Thank you.";
+                
+                try {
+                    $mail->clearAllRecipients();
+                    $mail->addAddress($currentEmail); // Send to the driver's registered email
+                    $mail->isHTML(true);
+                    $mail->Subject = $subject;
+                    $mail->Body    = $body;
+                    $mail->send();
+                } catch (Exception $e) {
+                     error_log("WARNING: Failed to send password change notification to driver ID {$driver_id_to_update}. Mailer Error: {$e->getMessage()}");
+                }
+            }
+            $logDetails[] = "Password changed by Admin '{$actingAdminUsername}' (ID: {$actingAdminId}). Alert sent to {$currentEmail}.";
+            $messageType = 'password_notified';
         }
         
-        if (isset($data['assigned_truck_id'])) {
-            $updateFields[] = "assigned_truck_id = ?";
-            $params[] = $assigned_truck_id; // Use the validated variable
+        // Handle Email Change
+        if ($isEmailChanging) {
+            $newEmail = $data['email'];
+            $updateFields[] = "email = ?";
+            $params[] = $newEmail;
+            $types .= "s";
+            
+            // Prepare Security Notification Email (Email) - sent to OLD email
+            $mail = getMailer();
+            if ($mail) {
+                 $subject = 'SECURITY ALERT: Driver Email Change Notification (Crucial)';
+                 $body = "Hello {$currentDriverName},<br><br>
+                         The Email for your driver account (**{$currentDriverName}**) was just changed from **{$currentEmail}** to **{$newEmail}** by an administrator (**{$actingAdminUsername}**).<br><br>
+                         <strong style='color: #dc3545;'>This change is now active.</strong><br><br>
+                         If this change was authorized, you can safely ignore this email.<br><br>
+                         <h3 style='color: #dc3545;'>Security Concern:</h3>
+                         If you did **NOT** authorize this change, please contact security immediately at: **{$sampleContactNumber}**.
+                         <br><br>This alert was sent to your OLD email address ({$currentEmail}).
+                         <br><br>Thank you.";
+                
+                try {
+                    $mail->clearAllRecipients();
+                    $mail->addAddress($currentEmail); // Send to the driver's OLD registered email
+                    $mail->isHTML(true);
+                    $mail->Subject = $subject;
+                    $mail->Body    = $body;
+                    $mail->send();
+                } catch (Exception $e) {
+                     error_log("WARNING: Failed to send email change notification to OLD email {$currentEmail} for driver ID {$driver_id_to_update}. Mailer Error: {$e->getMessage()}");
+                }
+            }
+            $logDetails[] = "Email changed from '{$currentEmail}' to '{$newEmail}' by Admin '{$actingAdminUsername}' (ID: {$actingAdminId}). Alert sent to old email.";
+            
+            // Update message type flag
+            if ($messageType === 'password_notified') {
+                 $messageType = 'password_and_email_notified';
+            } else {
+                 $messageType = 'email_notified';
+            }
+        } else {
+            // If email didn't change, we still ensure the current email is in the params for non-security updates
+            $updateFields[] = "email = ?";
+            $params[] = $currentEmail;
             $types .= "s";
         }
+
+
+        // Handle Truck Assignment
+        $updateFields[] = "assigned_truck_id = ?";
+        $params[] = $assigned_truck_id; 
+        $types .= "s";
         
+        // Handle Profile Picture
         if ($driverPic !== null) {
             $updateFields[] = "driver_pic = ?";
             $params[] = $driverPic;
@@ -152,28 +223,46 @@ try {
         }
 
         // Keep track of who made the change
-        if (isset($_SESSION['username'])) {
-            $updateFields[] = "last_modified_by = ?";
-            $params[] = $_SESSION['username'];
-            $types .= "s";
-        }
+        $updateFields[] = "last_modified_by = ?";
+        $params[] = $_SESSION['username'];
+        $types .= "s";
         
         if (empty($updateFields)) {
-            echo json_encode(["success" => true, "message" => "No fields were changed."]);
+            echo json_encode(["success" => true, "message" => "No core fields were changed."]);
             exit;
         }
         
+        // 4. Execute the Update
         $query = "UPDATE drivers_table SET " . implode(", ", $updateFields) . " WHERE driver_id = ?";
-        $params[] = $data['driverId'];
+        $params[] = $driver_id_to_update;
         $types .= "s";
         
         $stmt = $conn->prepare($query);
         
+        // Check for bind_param issues before executing
+        if (!$stmt) {
+             throw new Exception("Prepare failed: (" . $conn->errno . ") " . $conn->error);
+        }
+
         $stmt->bind_param($types, ...$params);
         
         if ($stmt->execute()) {
-            updateFirebaseDriver($data['driverId'], $data);
-            echo json_encode(["success" => true, "message" => "Driver updated successfully"]);
+            
+            // Log security event if needed
+            if (!empty($logDetails)) {
+                $logAction = "DRIVER_UPDATED_PROFILE";
+                if ($isPasswordChanging) $logAction = "ADMIN_UPDATED_DRIVER_PASSWORD_ALERT";
+                if ($isEmailChanging) $logAction = "ADMIN_UPDATED_DRIVER_EMAIL_ALERT";
+                if ($isPasswordChanging && $isEmailChanging) $logAction = "ADMIN_UPDATED_DRIVER_SECURE_FIELDS_ALERT";
+
+                logDriverSecurityAction($conn, $driver_id_to_update, $logAction, implode(' | ', $logDetails));
+            }
+
+            // Update Firebase (using the external function)
+            updateFirebaseDriver($driver_id_to_update, $data);
+            
+            // Send the final success response with the message_type flag
+            echo json_encode(["success" => true, "message" => "Driver updated successfully", "message_type" => $messageType]);
         } else {
             echo json_encode(["success" => false, "message" => "Error updating driver: " . $stmt->error]);
         }
@@ -185,6 +274,7 @@ try {
 }
 
 function updateFirebaseDriver($driverId, $data) {
+    // [The existing updateFirebaseDriver function content remains unchanged]
     try {
         $firebase_url = "https://mansartrucking1-default-rtdb.asia-southeast1.firebasedatabase.app/drivers/" . $driverId . ".json?auth=Xtnh1Zva11o8FyDEA75gzep6NUeNJLMZiCK6mXB7";
         
@@ -203,7 +293,8 @@ function updateFirebaseDriver($driverId, $data) {
             if (!empty($data['name'])) {
                 $firebase_data['name'] = $data['name'];
             }
-            if (!empty($data['email'])) {
+            // IMPORTANT: We use the *new* email here for Firebase
+            if (isset($data['email'])) { 
                 $firebase_data['email'] = $data['email'];
             }
             // The password field in Firebase is no longer needed, so we won't update it.
@@ -232,4 +323,3 @@ function updateFirebaseDriver($driverId, $data) {
 }
 
 $conn->close();
-?>

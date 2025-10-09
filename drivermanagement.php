@@ -143,14 +143,8 @@
         </div>
     </div>
     
-                
-       <div class="form-group" id="oldPasswordGroup" style="display: none;">
-    <label for="oldPassword">Current Password *</label>
-    <div class="password-wrapper">
-        <input type="password" id="oldPassword" name="oldPassword">
-        <i class="fa-regular fa-eye toggle-password"></i>
-    </div>
-</div>
+    <!-- REMOVED: The 'Current Password' field (id="oldPasswordGroup") and its contents are removed as per security requirements. -->
+    
       <small id="passwordHelp">Leave blank to keep current password</small>
 <div class="form-row">
     <div class="form-group">
@@ -220,7 +214,7 @@ let totalPages = 0;
     document.getElementById("saveButtonText").textContent = "Add Driver";
     document.getElementById("passwordHelp").style.display = "none";
     document.getElementById("password").required = true;
-    document.getElementById("oldPasswordGroup").style.display = "none";
+    // document.getElementById("oldPasswordGroup").style.display = "none"; // REMOVED: HTML is now removed
     document.getElementById("password").required = true;
     document.getElementById("confirmPassword").required = true;
     
@@ -230,8 +224,7 @@ let totalPages = 0;
     document.getElementById("driverEmail").value = "";
     document.getElementById("driverContact").value = "";
     
-    // Explicitly clear all password fields
-    document.getElementById("oldPassword").value = "";
+    // Explicitly clear all password fields (removed oldPassword)
     document.getElementById("password").value = "";
     document.getElementById("confirmPassword").value = "";
     
@@ -473,7 +466,7 @@ function formatDateWithTime(dateString) {
                 document.getElementById("saveButtonText").textContent = "Save Changes";
                 document.getElementById("passwordHelp").style.display = "block";
                 
-                document.getElementById("oldPasswordGroup").style.display = "block";
+                // REMOVED: Hiding the oldPasswordGroup field as it's now removed from HTML.
                 document.getElementById("password").required = false;
                 document.getElementById("confirmPassword").required = false;
                 
@@ -483,7 +476,6 @@ function formatDateWithTime(dateString) {
                 document.getElementById("driverEmail").value = driver.email;
                 
                 // Clear password fields every time
-                document.getElementById("oldPassword").value = '';
                 document.getElementById("password").value = '';
                 document.getElementById("confirmPassword").value = '';
                 
@@ -589,14 +581,13 @@ function formatDateWithTime(dateString) {
     formData.append("name", document.getElementById("driverName").value);
     formData.append("email", document.getElementById("driverEmail").value);
     formData.append("password", document.getElementById("password").value);
-    formData.append("confirmPassword", document.getElementById("confirmPassword").value); // Add this
+    formData.append("confirmPassword", document.getElementById("confirmPassword").value); 
     formData.append("assigned_truck_id", document.getElementById("assignedTruck").value);
     formData.append("contact_no", document.getElementById("driverContact").value);
     formData.append("mode", mode);
     
-    // Add old password for edit mode
+    // Add old password for edit mode (REMOVED: Old password is no longer sent)
     if (mode === 'edit') {
-        formData.append("oldPassword", document.getElementById("oldPassword").value); // Add this
         formData.append("driverId", document.getElementById("driverId").value);
     }
     
@@ -654,10 +645,20 @@ function formatDateWithTime(dateString) {
             contentType: false,
             success: function(data) {
                 if (data.success) {
+                    let successMessage = 'Driver updated successfully!';
+                    
+                    if (data.message_type === 'password_notified') {
+                        successMessage = "Password updated! A security notification has been sent to the driver's email.";
+                    } else if (data.message_type === 'email_notified') {
+                        successMessage = "Email updated! A security notification has been sent to the driver's *old* email address.";
+                    } else if (data.message_type === 'password_and_email_notified') {
+                        successMessage = "Password and Email updated! Security notifications have been sent to the respective email addresses.";
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
-                        text: 'Driver updated successfully!'
+                        text: successMessage
                     });
                     fetchDrivers();
                     closeModal();
@@ -962,20 +963,11 @@ function validatePassword() {
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const mode = document.getElementById('modalMode').value;
-    const oldPassword = document.getElementById('oldPassword').value;
+    // const oldPassword = document.getElementById('oldPassword').value; // REMOVED: Field is gone
 
-    // Check if the current user has a role that can bypass the old password requirement.
-    const canBypass = ['Full Admin', 'Operations Manager'].includes(userRole);
+    // NOTE: The role bypass logic is now solely handled on the backend (save_driver.php)
     
-    // In edit mode, if a new password is set, the old password is required UNLESS the user is an authorized admin.
-    if (mode === 'edit' && password && !oldPassword && !canBypass) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Current password is required to set a new password.'
-        });
-        return false;
-    }
+    // In edit mode, if a new password is set, the old password validation is removed entirely.
     
     // Check if new passwords match.
     if (password !== confirmPassword) {

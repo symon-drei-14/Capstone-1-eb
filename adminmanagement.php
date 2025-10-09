@@ -192,14 +192,7 @@ checkAccess();
                  <input type="email" id="adminEmail" name="adminEmail" class="form-control" required placeholder="admin@example.com">
              </div>
 
-             <div class="form-group" id="oldPasswordGroup" style="display: none;">
-                 <label for="oldPassword">Current Password</label>
-                 <div class="password-wrapper">
-                     <input type="password" id="oldPassword" name="oldPassword" class="form-control">
-                     <i class="fa-regular fa-eye toggle-password"></i>
-                 </div>
-                 <small>Required only if you are setting a new password.</small>
-             </div>
+             <!-- The 'Current Password' field (id="oldPasswordGroup") has been removed per security requirements, as it is no longer needed for admin-to-admin changes. -->
 
              <div class="form-row">
                  <div class="form-group">
@@ -266,7 +259,6 @@ checkAccess();
              document.getElementById('adminForm').reset();
              const modalTitle = document.getElementById('modalTitle');
              const passwordHelp = document.getElementById('passwordHelp');
-             const oldPasswordGroup = document.getElementById('oldPasswordGroup');
              const passwordInput = document.getElementById('password');
              const confirmPasswordInput = document.getElementById('confirmPassword');
              const passwordLabel = document.getElementById('passwordLabel');
@@ -277,7 +269,7 @@ checkAccess();
             
                  modalTitle.textContent = 'Edit Admin';
                  passwordHelp.style.display = 'block';
-                 oldPasswordGroup.style.display = 'block';
+                 // Removed oldPasswordGroup manipulation since the field is gone
                  passwordInput.required = false;
                  confirmPasswordInput.required = false;
                  passwordLabel.textContent = "New Password";
@@ -286,7 +278,6 @@ checkAccess();
                  
                  modalTitle.textContent = 'Add Admin';
                  passwordHelp.style.display = 'none';
-                 oldPasswordGroup.style.display = 'none';
                  passwordInput.required = true;
                  confirmPasswordInput.required = true;
                  passwordLabel.textContent = "Password *";
@@ -471,7 +462,7 @@ checkAccess();
         const adminEmail = document.getElementById('adminEmail').value;
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
-        const oldPassword = document.getElementById('oldPassword').value;
+        // const oldPassword = document.getElementById('oldPassword').value; // REMOVED: No longer needed for admin-to-admin changes
         const profileInput = document.getElementById('adminProfile');
 
 
@@ -483,17 +474,16 @@ checkAccess();
             Swal.fire('Validation Error', 'New passwords do not match.', 'warning');
             return;
         }
-        if (adminId && password && !oldPassword) {
-            Swal.fire('Validation Error', 'To set a new password, you must enter the current password.', 'warning');
-            return;
-        }
+        // REMOVED VALIDATION: The check for 'Current Password' is no longer required.
+        
         if (!adminId && !password) {
             Swal.fire('Validation Error', 'Password is required for new admins.', 'warning');
             return;
         }
+        
         const saveButton = document.querySelector('#adminModal .save-btn');
         saveButton.disabled = true;
-        saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
         const formData = new FormData();
         formData.append('admin_id', adminId);
@@ -501,7 +491,8 @@ checkAccess();
         formData.append('role', role);
         formData.append('admin_email', adminEmail);
         formData.append('password', password);
-        formData.append('old_password', oldPassword);
+        // formData.append('old_password', oldPassword); // REMOVED: Not sent to backend anymore
+        
         if (profileInput.files.length > 0) {
             formData.append('adminProfile', profileInput.files[0]);
         }
@@ -515,27 +506,32 @@ checkAccess();
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    if (data.otp_required) {
-                        promptForOtp(formData);
-                    } else {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: `Admin has been ${adminId ? 'updated' : 'added'} successfully.`,
-                        }).then(() => {
-                            closeModal('adminModal');
-                            fetchAdminsPaginated(false);
-                            const saveButton = document.querySelector('#adminModal .save-btn');
-                            saveButton.disabled = false;
-                            saveButton.innerHTML = 'Save';
-                        });
+                    // OTP flow removed. Now we check for the server's notification flag (message_type).
+                    let successMessage = `Admin has been ${adminId ? 'updated' : 'added'} successfully.`;
+                    
+                    if (data.message_type === 'password_notified') {
+                        successMessage = "Password updated! A security notification has been sent to the admin's email.";
+                    } else if (data.message_type === 'email_notified') {
+                        successMessage = "Email updated! A security notification has been sent to the admin's *old* email address.";
+                    } else if (data.message_type === 'password_and_email_notified') {
+                        successMessage = "Password and Email updated! Security notifications have been sent to the respective email addresses.";
                     }
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: successMessage,
+                    }).then(() => {
+                        closeModal('adminModal');
+                        fetchAdminsPaginated(false);
+                    });
                 } else {
                     Swal.fire('Error!', data.message, 'error');
-                    const saveButton = document.querySelector('#adminModal .save-btn');
-                    saveButton.disabled = false;
-                    saveButton.innerHTML = 'Save';
                 }
+                const saveButton = document.querySelector('#adminModal .save-btn');
+                saveButton.disabled = false;
+                saveButton.innerHTML = 'Save';
+
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -546,86 +542,7 @@ checkAccess();
             });
     }
 
-   function promptForOtp(formData, errorMessage = '') {
-        Swal.fire({
-            title: 'Enter Verification Code',
-            html: `
-                <p>A code has been sent to the email on file to verify this change. Please check the inbox.</p>
-                <div id="otp-error-message" class="otp-error ${errorMessage ? 'show' : ''}">${errorMessage}</div>
-                <div id="otp-container" class="otp-container">
-                    <input type="number" class="otp-input" maxlength="1" />
-                    <input type="number" class="otp-input" maxlength="1" />
-                    <input type="number" class="otp-input" maxlength="1" />
-                    <input type="number" class="otp-input" maxlength="1" />
-                    <input type="number" class="otp-input" maxlength="1" />
-                    <input type="number" class="otp-input" maxlength="1" />
-                </div>
-            `,
-            showCancelButton: true,
-            confirmButtonText: 'Verify & Save',
-            allowOutsideClick: false,
-            didOpen: () => {
-                const otpInputs = Swal.getHtmlContainer().querySelectorAll('.otp-input');
-                const errorMessageEl = document.getElementById('otp-error-message');
-                otpInputs[0].focus();
-
-                otpInputs.forEach((input) => {
-                    input.addEventListener('keydown', (e) => {
-                        errorMessageEl.classList.remove('show');
-                        otpInputs.forEach(i => i.classList.remove('is-invalid'));
-                        if (e.key === 'Backspace' && input.value.length === 0 && input.previousElementSibling) {
-                            input.previousElementSibling.focus();
-                        }
-                    });
-                    input.addEventListener('input', () => {
-                        if (input.value && input.nextElementSibling) {
-                            input.nextElementSibling.focus();
-                        }
-                    });
-                });
-            },
-            preConfirm: () => {
-                const otpInputs = Swal.getHtmlContainer().querySelectorAll('.otp-input');
-                const otp = Array.from(otpInputs).map(input => input.value).join('');
-                if (!/^\d{6}$/.test(otp)) {
-                    document.getElementById('otp-error-message').textContent = 'Please enter a valid 6-digit OTP!';
-                    document.getElementById('otp-error-message').classList.add('show');
-                    Swal.getPopup().classList.add('swal2-shake');
-                    setTimeout(() => Swal.getPopup().classList.remove('swal2-shake'), 500);
-                    otpInputs.forEach(input => input.classList.add('is-invalid'));
-                    return false;
-                }
-                return otp;
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Verifying...', text: 'Please wait.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                
-                formData.set('otp', result.value);
-
-                fetch('include/handlers/update_admin.php', { method: 'POST', body: formData })
-                    .then(res => res.json())
-                    .then(otpData => {
-                        if (otpData.success) {
-                            Swal.fire('Success!', 'Admin has been updated successfully.', 'success').then(() => {
-                                closeModal('adminModal');
-                                fetchAdminsPaginated(false);
-                                const saveButton = document.querySelector('#adminModal .save-btn');
-                                saveButton.disabled = false;
-                                saveButton.innerHTML = 'Save';
-                            });
-                        } else {
-                            promptForOtp(formData, otpData.message);
-                        }
-                    })
-                    .catch(error => Swal.fire('Request Failed', 'Could not verify OTP.', 'error'));
-            } else {
-                const saveButton = document.querySelector('#adminModal .save-btn');
-                saveButton.disabled = false;
-                saveButton.innerHTML = 'Save';
-            }
-        });
-    }
+   // The previous promptForOtp function is entirely removed as OTP is no longer used.
 
         function restoreAdmin(adminId, reason = '') {
      if (reason === 'Failed Login Attempts') {

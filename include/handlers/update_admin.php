@@ -1,13 +1,23 @@
 <?php
 header("Content-Type: application/json");
 require 'dbhandler.php';
-require 'phpmailer_config.php'; // Required for sending OTP emails
+require 'phpmailer_config.php'; 
+
+
 
 session_start();
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     http_response_code(401);
     echo json_encode(["success" => false, "message" => "Unauthorized access"]);
+    exit;
+}
+
+// Get the ID of the admin performing the change
+$actingAdminId = $_SESSION['admin_id'] ?? null;
+if (!$actingAdminId) {
+    http_response_code(401);
+    echo json_encode(["success" => false, "message" => "Admin session not properly initialized."]);
     exit;
 }
 
@@ -52,6 +62,8 @@ if (empty($data)) {
     $data = json_decode(file_get_contents("php://input"), true);
 }
 
+// --- Start of Main Logic Update ---
+
 if (!isset($data['admin_id']) || !isset($data['username']) || empty($data['username']) || !isset($data['role']) || empty($data['role']) || !isset($data['admin_email']) || empty($data['admin_email'])) {
     http_response_code(400);
     echo json_encode(["success" => false, "message" => "Admin ID, username, role, and email are required"]);
@@ -66,19 +78,29 @@ if (!filter_var($data['admin_email'], FILTER_VALIDATE_EMAIL)) {
 $adminId = $data['admin_id'];
 
 try {
-    // Fetch current admin data to get the current email for verification
-    $fetchStmt = $conn->prepare("SELECT password, admin_email FROM login_admin WHERE admin_id = ?");
+    // 1. Fetch current admin data
+    // Fetch username (for email body), password hash, and current email
+    $fetchStmt = $conn->prepare("SELECT username, password, admin_email FROM login_admin WHERE admin_id = ?");
     $fetchStmt->bind_param("i", $adminId);
     $fetchStmt->execute();
     $adminData = $fetchStmt->get_result()->fetch_assoc();
     if (!$adminData) {
         throw new Exception("Admin not found.");
     }
-    $currentHash = $adminData['password'];
+    $targetUsername = $adminData['username'];
     $currentEmail = $adminData['admin_email'];
     $fetchStmt->close();
+    
+    // Fetch the username of the admin performing the change (for email body)
+    $actingAdminStmt = $conn->prepare("SELECT username FROM login_admin WHERE admin_id = ?");
+    $actingAdminStmt->bind_param("i", $actingAdminId);
+    $actingAdminStmt->execute();
+    $actingAdminData = $actingAdminStmt->get_result()->fetch_assoc();
+    $actingAdminUsername = $actingAdminData['username'] ?? 'Unknown Admin';
+    $actingAdminStmt->close();
 
-    // Check if the new username or new email already exists for another admin
+
+    // 2. Check for duplicate username or email against OTHER admins
     $checkStmt = $conn->prepare("SELECT admin_id FROM login_admin WHERE (username = ? OR admin_email = ?) AND admin_id != ?");
     $checkStmt->bind_param("ssi", $data['username'], $data['admin_email'], $adminId);
     $checkStmt->execute();
@@ -87,145 +109,151 @@ try {
     }
     $checkStmt->close();
 
-    // Determine what is being changed
-    $isPasswordChanging = !empty($data['password']);
-    $isEmailChanging = ($data['admin_email'] !== $currentEmail);
+    // 3. Determine what is being changed
+    $newPassword = $data['password'] ?? '';
+    $isPasswordChanging = !empty($newPassword); 
+    // Check if the email being set is different from the current email in DB
+    $isEmailChanging = (strtolower($data['admin_email']) !== strtolower($currentEmail));
 
-    // If password or email is being changed, we need OTP verification.
-    if ($isPasswordChanging || $isEmailChanging) {
+    // --- Prepare for Security Logging and Emailing ---
+    $messageType = 'simple_update'; // Default
+    $logDetails = [];
+    $sampleContactNumber = '+1-800-555-0199'; // Sample contact number
+
+    // --- Start Building the General Update Query ---
+    $queryParts = ["UPDATE login_admin SET username = ?, role = ?"];
+    $types = "ss";
+    $params = [$data['username'], $data['role']];
+
+    if ($adminPic !== null) {
+        $queryParts[] = "admin_pic = ?";
+        $types .= "s";
+        $params[] = $adminPic;
+    }
+    
+    // -------------------------------------------------------------------------
+    // 4. PASSWORD CHANGE FLOW 
+    // -------------------------------------------------------------------------
+    if ($isPasswordChanging) {
+        $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
         
-        // This is the second step: Verifying the submitted OTP
-        if (isset($data['otp'])) {
-            if (!isset($_SESSION['otp_data']) || $_SESSION['otp_data']['admin_id'] != $adminId) {
-                throw new Exception("OTP process not initiated or session expired.");
-            }
-            if ($_SESSION['otp_data']['otp'] != $data['otp']) {
-                throw new Exception("The OTP you entered is incorrect.");
-            }
-            if (time() > $_SESSION['otp_data']['expiry']) {
-                unset($_SESSION['otp_data']);
-                throw new Exception("OTP has expired. Please try again.");
-            }
+       
 
-            // OTP is valid. Get the pending changes from the session.
-            $newPasswordHash = $_SESSION['otp_data']['new_password'] ?? null;
-            $newEmail = $_SESSION['otp_data']['new_email'] ?? $currentEmail;
-            unset($_SESSION['otp_data']); // Clean up session
-
-            // Build the final update query
-            $query = "UPDATE login_admin SET username = ?, role = ?, admin_email = ?";
-            $types = "sss";
-            $params = [$data['username'], $data['role'], $newEmail];
-
-            if ($newPasswordHash) {
-                $query .= ", password = ?";
-                $types .= "s";
-                $params[] = $newPasswordHash;
-            }
-            if ($adminPic !== null) {
-                $query .= ", admin_pic = ?";
-                $types .= "s";
-                $params[] = $adminPic;
-            }
-            $query .= " WHERE admin_id = ?";
-            $types .= "i";
-            $params[] = $adminId;
-
-            $stmt = $conn->prepare($query);
-            $stmt->bind_param($types, ...$params);
-            if ($stmt->execute()) {
-                echo json_encode(["success" => true, "message" => "Admin updated successfully."]);
-            } else {
-                throw new Exception("Database update failed.");
-            }
-            $stmt->close();
-
+       
+        $queryParts[] = "password = ?";
+        $types .= "s";
+        $params[] = $newPasswordHash;
+        
+       
+        $mail = getMailer();
+        if (!$mail) {
+             error_log("CRITICAL: Mailer failed to initialize for password change notification for admin ID {$adminId}.");
         } else {
-            // This is the first step: Generating and sending the OTP
-            if ($isPasswordChanging) {
-                if (empty($data['old_password'])) {
-                    throw new Exception("Current password is required to set a new one.");
-                }
-                if (!password_verify($data['old_password'], $currentHash)) {
-                    throw new Exception("Incorrect current password.");
-                }
-            }
-
-            $otp = rand(100000, 999999);
+             $subject = 'SECURITY ALERT: Admin Password Change Notification';
+          
+             $body = "Hello,<br><br>
+                     The password for your admin account (**{$targetUsername}**) was just changed by another administrator (**{$actingAdminUsername}**).<br><br>
+                     <strong style='color: #dc3545;'>This change is now active.</strong><br><br>
+                     If this change was authorized, you can safely ignore this email.<br><br>
+                     <h3 style='color: #dc3545;'>Security Concern:</h3>
+                     If you did **NOT** authorize this change, please contact IT Department immediately at: **{$sampleContactNumber}**.
+                     <br><br>Thank you.";
             
-            // Store all pending changes in the session with the OTP
-            $sessionData = [
-                'otp' => $otp,
-                'expiry' => time() + 300, // OTP valid for 5 minutes
-                'admin_id' => $adminId,
-            ];
-            if ($isPasswordChanging) {
-                $sessionData['new_password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-            }
-            if ($isEmailChanging) {
-                $sessionData['new_email'] = $data['admin_email'];
-            }
-            $_SESSION['otp_data'] = $sessionData;
-
-            $mail = getMailer();
-            if (!$mail) {
-                throw new Exception("Mail server is not configured correctly.");
-            }
-
-            // Let's create a clear email explaining what's happening
-            $subject = 'Your Admin Account Security Verification';
-            $body = "Hello {$data['username']},<br><br>A request was made to update your account details. ";
-            $body .= "Please use the following verification code to confirm the changes:<br><br><b>{$otp}</b><br><br>";
-            if ($isEmailChanging) {
-                $body .= "This change will set your new login email to: <b>{$data['admin_email']}</b>.<br>";
-            }
-            if ($isPasswordChanging) {
-                $body .= "Your password will also be reset.<br>";
-            }
-            $body .= "<br>This code will expire in 5 minutes.<br><br>If you did not request this, you can safely ignore this email.<br><br>Thank you.";
-
             try {
-                // Send the email to the OLD (currently verified) email address
-                $mail->addAddress($currentEmail, $data['username']);
+                $mail->clearAllRecipients();
+                $mail->addAddress($currentEmail); 
                 $mail->isHTML(true);
                 $mail->Subject = $subject;
                 $mail->Body    = $body;
                 $mail->send();
-                echo json_encode(["success" => true, "otp_required" => true]);
             } catch (Exception $e) {
-                throw new Exception("Failed to send OTP email. Mailer Error: {$mail->ErrorInfo}");
+                 error_log("WARNING: Failed to send password change notification email for admin ID {$adminId}. Mailer Error: {$e->getMessage()}");
             }
         }
-    } else {
-        // This handles updates without a password or email change (e.g., just username, role, profile pic).
-        $query = "UPDATE login_admin SET username = ?, role = ?";
-        $types = "ss";
-        $params = [$data['username'], $data['role']];
         
-        if ($adminPic !== null) {
-            $query .= ", admin_pic = ?";
-            $types .= "s";
-            $params[] = $adminPic;
-        }
-
-        $query .= " WHERE admin_id = ?";
-        $types .= "i";
-        $params[] = $adminId;
-
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param($types, ...$params);
-
-        if ($stmt->execute()) {
-            echo json_encode(["success" => true]);
-        } else {
-            throw new Exception("Database update failed: " . $stmt->error);
-        }
-        $stmt->close();
+      
+        $logDetails[] = "Password changed by Admin ID {$actingAdminId}. alert sent.";
+        $messageType = ($isEmailChanging) ? 'password_and_email_notified' : 'password_notified';
     }
+
+
+    // -------------------------------------------------------------------------
+    // 5. EMAIL CHANGE FLOW 
+    // -------------------------------------------------------------------------
+    if ($isEmailChanging) {
+        
+        
+
+        
+        $logDetails[] = "Email changed from '{$currentEmail}' to '{$data['admin_email']}' by Admin ID {$actingAdminId}. alert sent.";
+        $messageType = ($isPasswordChanging) ? 'password_and_email_notified' : 'email_notified';
+
+        
+        $mail = getMailer();
+        if (!$mail) {
+             error_log("CRITICAL: Mailer failed to initialize for email change notification for admin ID {$adminId}.");
+        } else {
+             $subject = 'SECURITY ALERT: Admin Email Change Notification (Crucial)';
+             
+             $body = "Hello,<br><br>
+                     The email address for your admin account (**{$targetUsername}**) was just changed from **{$currentEmail}** to **{$data['admin_email']}** by another administrator (**{$actingAdminUsername}**).<br><br>
+                     <strong style='color: #dc3545;'>This change is now active.</strong><br><br>
+                     If this change was authorized, you can safely ignore this email.<br><br>
+                     <h3 style='color: #dc3545;'>Security Concern:</h3>
+                     If you did **NOT** authorize this change, please contact the IT Department at: **{$sampleContactNumber}**.
+                     <br><br>This alert was sent to your OLD email address ({$currentEmail}).
+                     <br><br>Thank you.";
+            
+            try {
+                $mail->clearAllRecipients();
+                $mail->addAddress($currentEmail); 
+                $mail->isHTML(true);
+                $mail->Subject = $subject;
+                $mail->Body    = $body;
+                $mail->send();
+            } catch (Exception $e) {
+                 error_log("WARNING: Failed to send email change notification to OLD email {$currentEmail} for admin ID {$adminId}. Mailer Error: {$e->getMessage()}");
+            }
+        }
+    }
+
+
+    
+    $queryParts[] = "admin_email = ?";
+    $types .= "s";
+    $params[] = $data['admin_email'];
+
+    $finalQuery = implode(', ', $queryParts);
+    $finalQuery .= " WHERE admin_id = ?";
+    $types .= "i";
+    $params[] = $adminId;
+
+
+    $stmt = $conn->prepare($finalQuery);
+    $stmt->bind_param($types, ...$params);
+
+    if ($stmt->execute()) {
+        $logAction = "ADMIN_UPDATED_PROFILE";
+        if ($isPasswordChanging || $isEmailChanging) {
+             $logAction = "ADMIN_UPDATED_SECURE_FIELDS_ALERT_ONLY"; // Updated log action
+        }
+        
+        // Log the security action if any secure field was changed or if a password/email was explicitly logged.
+        if (!empty($logDetails)) {
+             $logStmt = $conn->prepare("INSERT INTO admin_security_log (admin_id, action, details) VALUES (?, ?, ?)");
+             $logDetailsString = implode(' | ', $logDetails);
+             $logStmt->bind_param("iss", $adminId, $logAction, $logDetailsString);
+             $logStmt->execute();
+             $logStmt->close();
+        }
+
+        echo json_encode(["success" => true, "message" => "Admin updated successfully.", "message_type" => $messageType]);
+    } else {
+        throw new Exception("Database update failed: " . $stmt->error);
+    }
+    $stmt->close();
+
 } catch (Exception $e) {
     http_response_code(400);
     echo json_encode(["success" => false, "message" => $e->getMessage()]);
 }
-
-$conn->close();
-?>
