@@ -839,41 +839,35 @@ checkAccess();
          });
 
          function handleProfileImageChange(e, previewElement) {
-             const file = e.target.files[0];
-             const maxFileSize = 2 * 1024 * 1024; // 2MB
+            const file = e.target.files[0];
+            const maxFileSize = 2 * 1024 * 1024; // 2MB
 
-             if (file) {
-                 if (file.size > maxFileSize) {
-                     Swal.fire({
-                         icon: 'error',
-                         title: 'File Too Large',
-                         text: 'Please select an image smaller than 2MB.'
-                     });
-                     e.target.value = ''; 
-                     const existingContent = previewElement.querySelector('.current-profile-section');
-                     previewElement.innerHTML = existingContent ? existingContent.outerHTML : '';
-                     return;
-                 }
+            if (file) {
+                if (file.size > maxFileSize) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'Please select an image smaller than 2MB.'
+                    });
+                    e.target.value = ''; 
+                    return;
+                }
 
-                 const reader = new FileReader();
-                 reader.onload = function(event) {
-                     const existingContent = previewElement.querySelector('.current-profile-section');
-                     let newPreviewHtml = `
-                         <div class="new-profile-section">
-                             <h4>New Profile Picture:</h4>
-                             <div class="large-profile-display">
-                                 <img src="${event.target.result}" class="large-profile-preview" alt="New Admin Photo">
-                             </div>
-                         </div>`;
-                     
-                     previewElement.innerHTML = existingContent ? existingContent.outerHTML + newPreviewHtml : newPreviewHtml;
-                 };
-                 reader.readAsDataURL(file);
-             } else {
-                  const existingContent = previewElement.querySelector('.current-profile-section');
-                   previewElement.innerHTML = existingContent ? existingContent.outerHTML : '';
-             }
-         }
+                const reader = new FileReader();
+                reader.onload = function(event) {  
+                    const newPreviewHtml = `
+                        <div class="current-profile-section">
+                            <h4>New Profile Preview:</h4>
+                            <div class="large-profile-display">
+                                <img src="${event.target.result}" class="large-profile-preview" alt="New Admin Photo">
+                            </div>
+                        </div>`;
+                    
+                    previewElement.innerHTML = newPreviewHtml;
+                };
+                reader.readAsDataURL(file);
+            } 
+        }
      </script>
      <script>
          function updateDateTime() {

@@ -794,29 +794,21 @@ function formatDateWithTime(dateString) {
             }
 
             const reader = new FileReader();
+      
             reader.onload = function(event) {
-    
-                const existingContent = profilePreview.querySelector('.current-profile-section');
-                
-                let newPreviewHtml = `
-                    <div class="new-profile-section">
-                        <h4>New Profile Picture:</h4>
+
+                const newPreviewHtml = `
+                    <div class="current-profile-section">
+                        <h4>New Profile Preview:</h4>
                         <div class="large-profile-display">
-                            <img src="${event.target.result}" 
-                                 class="large-profile-preview" 
-                                 alt="New Driver Photo">
-                            <p>New image selected</p>
+                            <img src="${event.target.result}"
+                                class="large-profile-preview"
+                                alt="New Driver Photo">
                         </div>
                     </div>
                 `;
-                
-                if (existingContent) {
-                    // In edit mode - show both existing and new
-                    profilePreview.innerHTML = existingContent.outerHTML + newPreviewHtml;
-                } else {
-                    // In add mode - show only new
-                    profilePreview.innerHTML = newPreviewHtml;
-                }
+
+                profilePreview.innerHTML = newPreviewHtml;
             };
             reader.readAsDataURL(file);
         } else {
