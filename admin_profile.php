@@ -435,9 +435,9 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                                     Swal.fire('Security Check', data.message, 'info'); 
                                 } else {
                                     Swal.fire('Success!', data.message, 'success').then(() => {
-                                        closeModal('adminProfileModal');
-                                        // On non-OTP success, fetch profile to update main display (but not header)
+                                        closeModal('adminProfileModal');                                
                                         fetchAdminProfile();
+                                        
                                     });
                                 }
                             } else {
@@ -632,62 +632,52 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
              });
          });
          
-         // Function to handle the image preview logic (copied from adminmanagement.php)
-         function handleProfileImageChange(e, previewElement) {
-             const file = e.target.files[0];
-             const maxFileSize = 2 * 1024 * 1024; // 2MB
-             const currentPhotoSrc = document.getElementById('currentProfilePhoto').src;
+        function handleProfileImageChange(e, previewElement) {
+            const file = e.target.files[0];
+            const maxFileSize = 2 * 1024 * 1024; 
 
-             if (file) {
-                 if (file.size > maxFileSize) {
-                     Swal.fire({
-                         icon: 'error',
-                         title: 'File Too Large',
-                         text: 'Please select an image smaller than 2MB.'
-                     });
-                     e.target.value = ''; 
-                     // Restore original preview state
-                     previewElement.innerHTML = `
-                        <div class="current-profile-section">
-                            <h4>Current Profile Picture:</h4>
-                            <div class="large-profile-display">
-                                <img src="${currentPhotoSrc}" class="large-profile-preview" alt="Current Admin Photo">
-                            </div>
-                        </div>`;
-                     return;
-                 }
+            const previewImg = previewElement.querySelector('.large-profile-preview');
+            const titleHeader = previewElement.querySelector('h4');
+            const headerPhotoEl = document.getElementById('headerProfilePhoto');
 
-                 const reader = new FileReader();
-                 reader.onload = function(event) {
-                     let newPreviewHtml = `
-                         <div class="new-profile-section">
-                             <h4>New Profile Picture:</h4>
-                             <div class="large-profile-display">
-                                 <img src="${event.target.result}" class="large-profile-preview" alt="New Admin Photo">
-                             </div>
-                         </div>`;
-                     
-                     previewElement.innerHTML = `
-                         <div class="current-profile-section">
-                             <h4>Current Profile Picture:</h4>
-                             <div class="large-profile-display">
-                                 <img src="${currentPhotoSrc}" class="large-profile-preview" alt="Current Admin Photo">
-                             </div>
-                         </div>
-                         ${newPreviewHtml}`;
-                 };
-                 reader.readAsDataURL(file);
-             } else {
-                  // If file input is cleared, just show the current photo
-                   previewElement.innerHTML = `
-                        <div class="current-profile-section">
-                            <h4>Current Profile Picture:</h4>
-                            <div class="large-profile-display">
-                                <img src="${currentPhotoSrc}" class="large-profile-preview" alt="Current Admin Photo">
-                            </div>
-                        </div>`;
-             }
-         }
+            const originalSrc = document.getElementById('currentProfilePhoto').src;
+
+            if (!previewImg || !titleHeader || !headerPhotoEl) {
+                console.error("Preview elements could not be found!");
+                return;
+            }
+
+            if (file) {
+
+                if (file.size > maxFileSize) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'Please select an image smaller than 2MB.'
+                    });
+                    e.target.value = ''; 
+
+                    previewImg.src = originalSrc;
+                    titleHeader.textContent = 'Current Profile Picture:';
+                    headerPhotoEl.src = originalSrc;
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const newImageSrc = event.target.result;
+                    previewImg.src = event.target.result;
+                    titleHeader.textContent = 'New Profile Preview:';
+                    headerPhotoEl.src = newImageSrc;
+                };
+                reader.readAsDataURL(file);
+            } 
+            else {
+                previewImg.src = originalSrc;
+                titleHeader.textContent = 'Current Profile Picture:';
+                headerPhotoEl.src = newImageSrc;
+            }
+        }
 
          function updateDateTime() {
              const now = new Date();
@@ -700,131 +690,112 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
      
      <!-- Include the same loading script logic -->
     <script>
-       const AdminLoading = {
-           init() {
-               this.loadingEl = document.getElementById('admin-loading');
-               this.titleEl = this.loadingEl.querySelector('.loading-title');
-               this.messageEl = this.loadingEl.querySelector('.loading-message');
-               this.progressBar = this.loadingEl.querySelector('.progress-bar');
-               this.progressText = this.loadingEl.querySelector('.progress-text');
-               
-               // Check if we just navigated to this page
-               this.checkForIncomingNavigation(); 
-               this.setupNavigationInterception();
-           },
-           
-            checkForIncomingNavigation() {
-               // Check if we're coming from another page in the same site or if flag is set
-               const referrer = document.referrer;
-               const currentDomain = window.location.origin;
-               
-               // Also check sessionStorage for loading state
-               const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
-               
-               if ((referrer && referrer.startsWith(currentDomain)) || shouldShowLoading) {
-                 // Clear the flag
-                 sessionStorage.removeItem('showAdminLoading');
-                 
-                 // Show loading animation for incoming navigation
-                 this.show('Loading Page', 'Loading content...');
-                 
-                 // Simulate realistic loading progress
-                 let progress = 0;
-                 const progressInterval = setInterval(() => {
-                   progress += Math.random() * 25 + 10;
-                   this.updateProgress(Math.min(progress, 100));
-                   
-                   if (progress >= 100) {
-                     clearInterval(progressInterval);
-                     setTimeout(() => {
-                       this.hide();
-                     }, 600);
-                   }
-                 }, 180);
-               }
-           },
-           
-           show(title = 'Processing Request', message = 'Please wait...') {
-               this.titleEl.textContent = title;
-               this.messageEl.textContent = message;
-               this.loadingEl.style.display = 'flex';
-               
-               // Reset progress
-               this.updateProgress(0);
-               
-               setTimeout(() => this.loadingEl.classList.add('active'), 50);
-           },
-           hide() {
-               this.loadingEl.classList.remove('active');
-               setTimeout(() => this.loadingEl.style.display = 'none', 800);
-           },
-           updateProgress(percent) {
-               this.progressBar.style.width = `${percent}%`;
-               this.progressText.textContent = `${Math.round(percent)}%`;
-           },
-           setupNavigationInterception() {
-               document.addEventListener('click', (e) => {
-                   // Exclude internal modal/dropdown/swal clicks
-                   if (e.target.closest('.swal2-container, .modal, .dropdown, .profile')) return; 
-                   
-                   const link = e.target.closest('a');
-                   if (link && !link.hasAttribute('data-no-loading') && link.href && !link.href.startsWith('javascript:') && !link.href.startsWith('#')) {
-                       
-                       // Only intercept internal links
-                       try {
-                           const linkUrl = new URL(link.href);
-                           const currentUrl = new URL(window.location.href);
-                           
-                           if (linkUrl.origin !== currentUrl.origin) {
-                               return; // Let external links work normally
-                           }
-                           // Skip if it's the same page (or an anchor on the same page, which is handled by the !link.href.startsWith('#') check, but good to be explicit)
-                           if (linkUrl.pathname === currentUrl.pathname) {
-                               return;
-                           }
-                           
-                       } catch (e) {
-                           return; // Invalid URL, let it work normally
-                       }
-                       
-                       e.preventDefault();
-                       
-                       // Set flag for next page
-                       sessionStorage.setItem('showAdminLoading', 'true');
-                       
-                       const loading = this.startAction('Loading Page', `Preparing ${link.textContent.trim() || 'page'}...`);
-                       let progress = 0;
-                       const progressInterval = setInterval(() => {
-                           progress += Math.random() * 40;
-                           if (progress >= 90) clearInterval(progressInterval);
-                           loading.updateProgress(Math.min(progress, 100));
-                       }, 300);
-                       
-                       const minLoadTime = 1200;
-                       
-                       setTimeout(() => {
-                           loading.updateProgress(100);
-                           setTimeout(() => {
-                               window.location.href = link.href;
-                           }, 300);
-                       }, minLoadTime);
-                   }
-               });
-           },
-           startAction(actionName, message) {
-               this.show(actionName, message);
-               return {
-                   updateProgress: (percent) => this.updateProgress(percent),
-                   updateMessage: (msg) => this.messageEl.textContent = msg,
-                   complete: () => {
-                       this.updateProgress(100);
-                       this.updateMessage('Done!');
-                       setTimeout(() => this.hide(), 800);
-                   }
-               };
-           }
-      };
+
+  const AdminLoading = {
+  init() {
+    this.loadingEl = document.getElementById('admin-loading');
+    this.titleEl = this.loadingEl.querySelector('.loading-title');
+    this.messageEl = this.loadingEl.querySelector('.loading-message');
+    this.progressBar = this.loadingEl.querySelector('.progress-bar');
+    this.progressText = this.loadingEl.querySelector('.progress-text');
+    
+    this.checkForIncomingNavigation();
+    this.setupNavigationInterception();
+  },
+  
+  checkForIncomingNavigation() {
+    const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
+    
+    if (shouldShowLoading) {
+      sessionStorage.removeItem('showAdminLoading');
+      this.show('Loading Page', 'Loading content...');
       
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 25 + 10;
+        this.updateProgress(Math.min(progress, 100));
+        
+        if (progress >= 100) {
+          clearInterval(progressInterval);
+          setTimeout(() => this.hide(), 600);
+        }
+      }, 180);
+    }
+  },
+  
+  show(title = 'Processing Request', message = 'Please wait...') {
+    if (!this.loadingEl) return;
+    this.titleEl.textContent = title;
+    this.messageEl.textContent = message;
+    this.updateProgress(0);
+    this.loadingEl.style.display = 'flex';
+    setTimeout(() => this.loadingEl.classList.add('active'), 50);
+  },
+  
+  hide() {
+    if (!this.loadingEl) return;
+    this.loadingEl.classList.remove('active');
+    setTimeout(() => this.loadingEl.style.display = 'none', 800);
+  },
+  
+  updateProgress(percent) {
+    if (this.progressBar) this.progressBar.style.width = `${percent}%`;
+    if (this.progressText) this.progressText.textContent = `${Math.round(percent)}%`;
+  },
+  
+  setupNavigationInterception() {
+    document.addEventListener('click', (e) => {
+      // Exclude clicks inside modals, dropdowns, etc.
+      if (e.target.closest('.swal2-container, .modal, .dropdown')) {
+        return;
+      }
+      
+      const link = e.target.closest('a');
+      if (link && !link.hasAttribute('data-no-loading') && link.href && !link.href.startsWith('javascript:') && !link.href.startsWith('#')) {
+        try {
+          const linkUrl = new URL(link.href);
+          const currentUrl = new URL(window.location.href);
+          
+          if (linkUrl.origin !== currentUrl.origin) return; // External link
+          if (linkUrl.pathname === currentUrl.pathname) return; // Same page
+          
+        } catch (err) {
+          return; // Invalid URL
+        }
+        
+        e.preventDefault();
+        sessionStorage.setItem('showAdminLoading', 'true');
+        
+        const loading = this.startAction('Loading Page', `Preparing ${link.textContent.trim() || 'page'}...`);
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          progress += Math.random() * 40;
+          if (progress >= 90) clearInterval(progressInterval);
+          loading.updateProgress(Math.min(progress, 100));
+        }, 300);
+        
+        setTimeout(() => {
+          loading.updateProgress(100);
+          setTimeout(() => window.location.href = link.href, 300);
+        }, 1200);
+      }
+    });
+  },
+  
+  startAction(actionName, message) {
+    this.show(actionName, message);
+    return {
+      updateProgress: (percent) => this.updateProgress(percent),
+      updateMessage: (msg) => this.messageEl.textContent = msg,
+      complete: () => {
+        this.updateProgress(100);
+        this.updateMessage('Done!');
+        setTimeout(() => this.hide(), 800);
+      }
+    };
+  }
+};
+ 
       // Initialize when DOM is loaded
       document.addEventListener('DOMContentLoaded', () => {
           AdminLoading.init();

@@ -115,11 +115,18 @@ try {
         if (isset($pendingData['admin_pic'])) $_SESSION['admin_pic'] = $pendingData['admin_pic'];
 
 
-        echo json_encode([
-            "success" => true, 
-            "message" => "Profile updated and verified successfully!", 
-            "reload_required" => (isset($pendingData['username']) || isset($pendingData['admin_pic'])) // Check if session values changed
-        ]);
+        $response = [
+            'success' => true,
+            'message' => 'Profile updated and verified successfully!'
+        ];
+        if (isset($pendingData['username'])) {
+            $response['updated_username'] = $pendingData['username'];
+        }
+        if (isset($pendingData['admin_pic'])) {
+            $response['updated_photo_base64'] = $pendingData['admin_pic'];
+        }
+
+        echo json_encode($response);
         exit;
     }
 
@@ -230,11 +237,22 @@ try {
          if ($isNameChanging) $_SESSION['username'] = $newUsername;
         if ($isPhotoChanging) $_SESSION['admin_pic'] = $photoData;
 
-        echo json_encode([
-            'success' => true, 
-            'message' => 'Profile updated successfully.', 
-            "reload_required" => ($isNameChanging || $isPhotoChanging)
-        ]);
+        $response = [
+            'success' => true,
+            'message' => 'Profile updated successfully.'
+        ];
+
+        // Add the new username to the response IF it was changed
+        if ($isNameChanging) {
+            $response['updated_username'] = $newUsername;
+        }
+        // Add the new photo to the response IF it was changed
+        if ($isPhotoChanging) {
+            $response['updated_photo_base64'] = $photoData;
+        }
+
+        // Send the new data back to the JavaScript
+        echo json_encode($response);
     }
 
 } catch (Exception $e) {
