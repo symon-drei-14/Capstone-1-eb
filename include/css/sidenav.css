@@ -57,6 +57,8 @@
     display: flex;
     align-items: center;
     color: #F6F0F0;
+    /* Added to indicate it's clickable */
+    cursor: pointer; 
 }
 
 .profile-icon {

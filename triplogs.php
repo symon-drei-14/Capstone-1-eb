@@ -173,25 +173,25 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
             <div id="current-time" class="time-display"></div>
         </div>
 
-     <div class="profile">
-    <?php 
-   
-    if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
-       
-        echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
-    } else {
-       
-        echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
-    }
-    ?>
-    <div class="profile-name">
-        <?php 
-            echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
-        ?>
-    </div>
+     <div class="profile" onclick="window.location.href='admin_profile.php'" style="cursor: pointer;"> 
+     <?php 
+    
+     if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
+        
+         echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
+     } else {
+        
+         echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
+     }
+     ?>
+     <div class="profile-name">
+         <?php 
+             echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+         ?>
+     </div>
 </div>
 </div>
-    </header>
+</header>
 
    <?php require_once __DIR__ . '/include/sidebar.php'; ?>
     <div id="sidebar-backdrop" class="backdrop"></div>

@@ -1,0 +1,156 @@
+.profile-main-content {
+    margin: 80px 20px 20px 20px; 
+    width: calc(100% - 40px);
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    padding: 30px;
+    box-sizing: border-box;
+    min-height: calc(100vh - 100px); /* Keeps the footer down */
+}
+
+/* Reusing the H3 style from adminmanagement.css */
+.profile-main-content h3 {
+    font-family: 'Arial', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #a93129;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Profile Card Container */
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    background-color: #f8f8f8;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.profile-photo-display {
+    position: relative;
+    margin-bottom: 25px;
+    transition: transform 0.3s ease;
+}
+
+.profile-photo-display:hover {
+    transform: scale(1.05);
+}
+
+.profile-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid #B82132;
+    box-shadow: 0 0 0 8px rgba(184, 33, 50, 0.1);
+}
+
+.profile-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    width: 100%;
+    max-width: 600px;
+    margin-top: 20px;
+}
+
+.info-item {
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.info-item label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.info-item p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    word-wrap: break-word; /* Prevents overflow */
+}
+
+/* Password field special handling */
+.info-item .password-display {
+    font-family: monospace;
+    letter-spacing: 2px;
+    font-size: 18px;
+    color: #B82132;
+}
+
+.edit-profile-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 30px;
+    transition: all 0.2s ease;
+}
+
+.edit-profile-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Reusing existing modal styles from adminmanagement.css for the edit form */
+/* The styles for .modal, .modal-content, .form-group, .form-control, .form-row, .password-wrapper, .toggle-password, and .save-btn/cancel-btn are already in adminmanagement.css */
+
+/* OTP Modal styling (should inherit from adminmanagement.css, but adding context) */
+.otp-container {
+    margin: 20px auto;
+}
+
+/* === MODAL WIDTH OVERRIDE FOR PROFILE PAGE (to make it wider) === */
+/* The modal ID for the profile is #adminProfileModal */
+#adminProfileModal .modal-content {
+    max-width: 700px;
+}
+/* =============================================================== */
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .profile-main-content {
+        padding: 20px;
+        margin: 65px 10px 10px 10px;
+        width: calc(100% - 20px);
+    }
+    .profile-info-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    .profile-photo {
+        width: 120px;
+        height: 120px;
+    }
+    .edit-profile-btn {
+        width: 100%;
+        padding: 10px;
+    }
+    
+    /* Ensure modal uses the full available width on small screens */
+    #adminProfileModal .modal-content {
+        max-width: 95%; /* Default responsive setting */
+    }
+}

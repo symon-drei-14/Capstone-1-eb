@@ -39,7 +39,7 @@ checkAccess();
          <div id="current-time" class="time-display"></div>
      </div>
 
-    <div class="profile">
+     <div class="profile" onclick="window.location.href='admin_profile.php'" style="cursor: pointer;"> 
      <?php 
     
      if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
