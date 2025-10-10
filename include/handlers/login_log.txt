@@ -1597,3 +1597,12 @@
 2025-10-10 16:16:37 - Login request received
 {"email":"altusacc.401@gmail.com","otp":"521959"}
 
+2025-10-10 16:47:13 - Login request received
+{"email":"altusacc.401@gmail.com","password":"drivdr123"}
+
+2025-10-10 16:47:20 - Login request received
+{"email":"altusacc.401@gmail.com","password":"driver123"}
+
+2025-10-10 16:47:36 - Login request received
+{"email":"altusacc.401@gmail.com","otp":"565068"}
+
