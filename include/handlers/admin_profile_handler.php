@@ -78,13 +78,23 @@ try {
         
         $submittedOtp = $_POST['otp'];
         $pendingData = $_SESSION['profile_otp_data'];
+        $maxOtpAttempts = 5; // Setting the maximum OTP attempts here
         
+        // Initialize or increment attempts counter
+        $pendingData['attempts'] = ($pendingData['attempts'] ?? 0) + 1;
+        $_SESSION['profile_otp_data'] = $pendingData; // Save the incremented attempt count
+
         if ($pendingData['otp'] != $submittedOtp) {
-             throw new Exception("The verification code is incorrect.");
+            $remainingAttempts = $maxOtpAttempts - $pendingData['attempts'];
+            if ($remainingAttempts <= 0) {
+                 unset($_SESSION['profile_otp_data']); // Invalidate the security data
+                 throw new Exception("Too many incorrect verification codes. The update request has been canceled. Please try editing your profile again.");
+            }
+             throw new Exception("The verification code is incorrect. You have {$remainingAttempts} attempts remaining.");
         }
         if (time() > $pendingData['expiry']) {
             unset($_SESSION['profile_otp_data']);
-            throw new Exception("The verification code has expired. Please try again.");
+            throw new Exception("The verification code has expired. Please try editing your profile again.");
         }
 
         // OTP is valid. Apply pending changes.
@@ -164,6 +174,7 @@ try {
             'otp' => $otp,
             'expiry' => time() + 300, // OTP valid for 5 minutes
             'admin_id' => $currentAdminId,
+            'attempts' => 0 // Initialize OTP attempts counter
         ];
         
         // Store all potential changes in the session for later application
