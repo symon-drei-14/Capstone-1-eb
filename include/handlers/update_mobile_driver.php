@@ -25,7 +25,8 @@ try {
     $driver_id = $_POST['driver_id'];
 
     // Fetch current driver data to check against
-    $fetchStmt = $conn->prepare("SELECT name, email, password FROM drivers_table WHERE driver_id = ?");
+    // Ensure we fetch otp_attempts here for security checks
+    $fetchStmt = $conn->prepare("SELECT name, email, password, otp_attempts FROM drivers_table WHERE driver_id = ?");
     $fetchStmt->bind_param("s", $driver_id);
     $fetchStmt->execute();
     $driverData = $fetchStmt->get_result()->fetch_assoc();
@@ -35,6 +36,7 @@ try {
     $currentEmail = $driverData['email'];
     $currentHash = $driverData['password'];
     $currentName = $driverData['name'];
+    $currentOtpAttempts = $driverData['otp_attempts'];
     $fetchStmt->close();
 
     $isPasswordChanging = !empty($_POST['password']);
@@ -42,18 +44,52 @@ try {
     
     // This is the second step: verifying the submitted OTP
     if (isset($_POST['otp'])) {
+        
+        $max_otp_attempts = 5;
+        
+        // Safety checks for session data
         if (!isset($_SESSION['otp_data']) || $_SESSION['otp_data']['driver_id'] != $driver_id) {
-            throw new Exception("OTP process not initiated or session expired.");
+            // Reset attempts if the user starts a new flow or session expired mid-attempt
+            $conn->query("UPDATE drivers_table SET otp_attempts = 0 WHERE driver_id = '{$driver_id}'");
+            throw new Exception("OTP process not initiated or session expired. Please log in again.");
         }
-        if ($_SESSION['otp_data']['otp'] != $_POST['otp']) {
-            throw new Exception("The OTP you entered is incorrect.");
+        
+        if ($currentOtpAttempts >= $max_otp_attempts) {
+            // Driver has already maxed out attempts *before* this request, but they try again
+            $conn->query("UPDATE drivers_table SET otp_attempts = otp_attempts + 1 WHERE driver_id = '{$driver_id}'");
+            
+            // Notify driver of failed attempts via email (only needed once, but safe to re-send if they continue trying)
+            sendFailureEmail($currentEmail, $currentName, 'Profile Update OTP Failure', 'You have failed to enter the One-Time Passcode (OTP) correctly **5 or more times** while attempting to update your profile. Your account security is temporarily protected. Please contact the IT department if you cannot proceed.');
+            
+            unset($_SESSION['otp_data']);
+            throw new Exception("You have failed to enter the OTP too many times. Check your email for details.");
         }
+        
         if (time() > $_SESSION['otp_data']['expiry']) {
+             // Expired OTP - reset attempt count and remove session data
+            $conn->query("UPDATE drivers_table SET otp_attempts = 0 WHERE driver_id = '{$driver_id}'");
             unset($_SESSION['otp_data']);
             throw new Exception("OTP has expired. Please try again.");
         }
 
-        // OTP is valid. Get pending changes from the session.
+        if ($_SESSION['otp_data']['otp'] != $_POST['otp']) {
+            // Incorrect OTP - increment attempt count
+            $conn->query("UPDATE drivers_table SET otp_attempts = otp_attempts + 1 WHERE driver_id = '{$driver_id}'");
+            
+            // If this failed attempt reaches the max, send the final failure email
+            if ($currentOtpAttempts + 1 >= $max_otp_attempts) {
+                sendFailureEmail($currentEmail, $currentName, 'Profile Update OTP Failure', 'You have failed to enter the One-Time Passcode (OTP) correctly **5 or more times** while attempting to update your profile. Your account security is temporarily protected. Please contact the IT department if you cannot proceed.');
+                unset($_SESSION['otp_data']);
+                throw new Exception("You have failed to enter the OTP too many times. Check your email for details.");
+            }
+            
+            throw new Exception("The OTP you entered is incorrect. You have " . ($max_otp_attempts - $currentOtpAttempts - 1) . " attempts remaining.");
+        }
+        
+        // OTP is valid. Reset attempt count and apply changes.
+        $conn->query("UPDATE drivers_table SET otp_attempts = 0 WHERE driver_id = '{$driver_id}'");
+        
+        // Get pending changes from the session.
         $pendingData = $_SESSION['otp_data'];
         unset($_SESSION['otp_data']); // Clean up session
 
@@ -84,6 +120,10 @@ try {
         
     // This is the first step: initiating an update that requires an OTP
     } else if ($isPasswordChanging || $isEmailChanging) {
+        
+        // Before sending OTP, reset any previous OTP attempts since this is a new request
+        $conn->query("UPDATE drivers_table SET otp_attempts = 0 WHERE driver_id = '{$driver_id}'");
+
         // If password is changing, the old password must be verified first
         if ($isPasswordChanging) {
             if (empty($_POST['old_password'])) {
@@ -130,7 +170,7 @@ try {
         $subject = 'Your Account Security Verification';
         $body = "Hello {$currentName},<br><br>A request was made to update your account details. ";
         $body .= "Please use the following verification code to confirm the changes:<br><br><b>{$otp}</b><br><br>";
-        $body .= "This code will expire in 5 minutes.<br><br>If you did not request this, you can safely ignore this email.<br><br>Thank you.";
+        $body .= "This code will expire in 5 minutes.<br><br>If you did not request this, you can safely ignore this email.";
         
         $mail->addAddress($currentEmail, $currentName);
         $mail->isHTML(true);
@@ -189,6 +229,37 @@ try {
 } finally {
     if (isset($conn)) {
         $conn->close();
+    }
+}
+
+/**
+ * Sends an email notification about login or OTP failure.
+ */
+function sendFailureEmail($toEmail, $toName, $subject, $reason) {
+    $mail = getMailer();
+    if (!$mail) {
+        error_log("Failed to get mailer for failure email in update.");
+        return;
+    }
+
+    $body = "
+        <p>Hello {$toName},</p>
+        <p style='color: #CC0000; font-weight: bold;'>{$reason}</p>
+        <p>If you were attempting to log in or update your information, please try again later following the instructions.</p>
+        <hr>
+        <p style='font-size: 12px; color: #555;'>
+            <strong>Security Notice:</strong> If you were not the one attempting to log in or perform this action, please contact the IT department immediately.
+        </p>
+    ";
+
+    try {
+        $mail->addAddress($toEmail, $toName);
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body    = $body;
+        $mail->send();
+    } catch (Exception $e) {
+        error_log("Error sending failure email to {$toEmail} from update_mobile_driver: {$mail->ErrorInfo}");
     }
 }
 ?>
