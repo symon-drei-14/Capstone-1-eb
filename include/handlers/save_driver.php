@@ -145,7 +145,7 @@ try {
                          <strong style='color: #dc3545;'>This change is now active.</strong><br><br>
                          If this change was authorized, you can safely ignore this email.<br><br>
                          <h3 style='color: #dc3545;'>Security Concern:</h3>
-                         If you did **NOT** authorize this change, please contact security immediately at: **{$sampleContactNumber}**.
+                         If you did **NOT** authorize this change, please Contact the IT department immediately at: **{$sampleContactNumber}**.
                          <br><br>Thank you.";
                 
                 try {
@@ -179,7 +179,7 @@ try {
                          <strong style='color: #dc3545;'>This change is now active.</strong><br><br>
                          If this change was authorized, you can safely ignore this email.<br><br>
                          <h3 style='color: #dc3545;'>Security Concern:</h3>
-                         If you did **NOT** authorize this change, please contact security immediately at: **{$sampleContactNumber}**.
+                         If you did **NOT** authorize this change, please contact the IT department immediately at: **{$sampleContactNumber}**.
                          <br><br>This alert was sent to your OLD email address ({$currentEmail}).
                          <br><br>Thank you.";
                 
