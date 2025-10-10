@@ -127,29 +127,52 @@ if ($action === 'login') {
     } elseif (time() > $_SESSION['otp_user_data']['expiry']) {
         $response['message'] = 'OTP has expired. Please log in again.';
         unset($_SESSION['otp_user_data']);
-    } elseif ($_SESSION['otp_user_data']['otp'] != $otp_code) {
-        $response['message'] = 'Invalid OTP code.';
     } else {
-        // --- OTP is correct, complete the login ---
-        $user = $_SESSION['otp_user_data']['user'];
-        unset($_SESSION['otp_user_data']); // Clean up OTP data
+        // Initialize OTP attempts counter if it doesn't exist
+        $_SESSION['otp_user_data']['attempts'] = $_SESSION['otp_user_data']['attempts'] ?? 0;
+        $max_otp_attempts = 5; // Set the maximum number of OTP attempts
 
-        // Reset failed attempts on successful login
-        $resetStmt = $conn->prepare("UPDATE login_admin SET failed_attempts = 0, last_failed_attempt = NULL WHERE admin_id = ?");
-        $resetStmt->bind_param("i", $user['admin_id']);
-        $resetStmt->execute();
-        $resetStmt->close();
+        if ($_SESSION['otp_user_data']['otp'] != $otp_code) {
+            // Invalid OTP, increment attempt count
+            $_SESSION['otp_user_data']['attempts']++;
+            $remaining_attempts = $max_otp_attempts - $_SESSION['otp_user_data']['attempts'];
 
-        session_regenerate_id(true);
-        $_SESSION['admin_id'] = (int)$user['admin_id'];
-        $_SESSION['username'] = htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8');
-        $_SESSION['role'] = htmlspecialchars($user['role'], ENT_QUOTES, 'UTF-8');
-        $_SESSION['admin_pic'] = $user['admin_pic'];
-        $_SESSION['logged_in'] = true;
-        $_SESSION['last_activity'] = time();
+            if ($_SESSION['otp_user_data']['attempts'] >= $max_otp_attempts) {
+                // Too many failed OTP attempts, lock and delete the account
+                $user = $_SESSION['otp_user_data']['user'];
+                unset($_SESSION['otp_user_data']); // Clean up OTP data
 
-        $response['success'] = true;
-        $response['message'] = 'Login successful';
+                $lockStmt = $conn->prepare("UPDATE login_admin SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = 0, delete_reason = 'Too many OTP attempts', failed_attempts = 0, last_failed_attempt = NULL WHERE admin_id = ?");
+                $lockStmt->bind_param("i", $user['admin_id']);
+                $lockStmt->execute();
+                $lockStmt->close();
+                
+                $response['message'] = 'Your account has been locked due to too many failed OTP attempts.';
+            } else {
+                $response['message'] = "Invalid OTP code. You have {$remaining_attempts} attempts remaining.";
+            }
+        } else {
+            // --- OTP is correct, complete the login ---
+            $user = $_SESSION['otp_user_data']['user'];
+            unset($_SESSION['otp_user_data']); // Clean up OTP data
+
+            // Reset failed attempts on successful login
+            $resetStmt = $conn->prepare("UPDATE login_admin SET failed_attempts = 0, last_failed_attempt = NULL WHERE admin_id = ?");
+            $resetStmt->bind_param("i", $user['admin_id']);
+            $resetStmt->execute();
+            $resetStmt->close();
+
+            session_regenerate_id(true);
+            $_SESSION['admin_id'] = (int)$user['admin_id'];
+            $_SESSION['username'] = htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8');
+            $_SESSION['role'] = htmlspecialchars($user['role'], ENT_QUOTES, 'UTF-8');
+            $_SESSION['admin_pic'] = $user['admin_pic'];
+            $_SESSION['logged_in'] = true;
+            $_SESSION['last_activity'] = time();
+
+            $response['success'] = true;
+            $response['message'] = 'Login successful';
+        }
     }
 } else {
     $response['message'] = 'Invalid action specified.';

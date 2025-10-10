@@ -544,82 +544,100 @@ checkAccess();
 
    // The previous promptForOtp function is entirely removed as OTP is no longer used.
 
-        function restoreAdmin(adminId, reason = '') {
-     if (reason === 'Failed Login Attempts') {
-         Swal.fire({
-             title: 'Password Reset Required',
-             text: 'This account was locked. You must set a new password to restore it.',
-             icon: 'info',
-             html: `
-                 <input type="password" id="swal-password" class="swal2-input" placeholder="New Password" autocomplete="new-password">
-                 <input type="password" id="swal-confirm-password" class="swal2-input" placeholder="Confirm New Password" autocomplete="new-password">
-             `,
-             confirmButtonText: 'Restore & Set Password',
-             showCancelButton: true,
-             confirmButtonColor: '#28a745',
-             preConfirm: () => {
-                 const password = Swal.getPopup().querySelector('#swal-password').value;
-                 const confirmPassword = Swal.getPopup().querySelector('#swal-confirm-password').value;
-                 if (!password || !confirmPassword) {
-                     Swal.showValidationMessage(`Please enter and confirm the new password.`);
-                 } else if (password !== confirmPassword) {
-                     Swal.showValidationMessage(`The passwords do not match.`);
-                 }
-                 return { password: password };
-             }
-         }).then((result) => {
-             if (result.isConfirmed) {
-                 // Now we send the request to the backend with the new password
-                 fetch('include/handlers/restore_admin.php', {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({
-                         admin_id: adminId,
-                         password: result.value.password // Include the new password
-                     })
-                 })
-                 .then(response => response.json())
-                 .then(data => {
-                     if (data.success) {
-                         Swal.fire('Restored!', 'The admin account has been restored with a new password.', 'success');
-                         fetchAdminsPaginated(true); // Refresh the deleted list
-                     } else {
-                         Swal.fire('Error!', data.message, 'error');
-                     }
-                 })
-                 .catch(error => console.error('Error:', error));
-             }
-         });
-     } else {
-         // This is the original restore flow for normally deleted accounts
-         Swal.fire({
-             title: 'Restore Admin?',
-             text: "Are you sure you want to restore this admin?",
-             icon: 'question',
-             showCancelButton: true,
-             confirmButtonColor: '#28a745',
-             cancelButtonColor: '#6c757d',
-             confirmButtonText: 'Yes, restore it!'
-         }).then((result) => {
-             if (result.isConfirmed) {
-                 fetch('include/handlers/restore_admin.php', {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({ admin_id: adminId }) // No password needed here
-                 })
-                 .then(response => response.json())
-                 .then(data => {
-                     if (data.success) {
-                         Swal.fire('Restored!', 'The admin has been restored successfully.', 'success');
-                         fetchAdminsPaginated(true); // Refresh the deleted list
-                     } else {
-                         Swal.fire('Error!', data.message, 'error');
-                     }
-                 })
-                 .catch(error => console.error('Error:', error));
-             }
-         });
-     }
+       function restoreAdmin(adminId, reason = '') {
+    const mandatoryResetReasons = ['Failed Login Attempts', 'Too many OTP attempts'];
+
+    if (mandatoryResetReasons.includes(reason)) {
+        // --- Custom flow for security-locked accounts (OTP or Failed Login Attempts) ---
+        Swal.fire({
+            title: 'Security Reset Required',
+            text: 'This account was locked for security reasons. You must set a new password and email to restore it.',
+            icon: 'info',
+            html: `
+                <input type="password" id="swal-password" class="swal2-input" placeholder="New Password" autocomplete="new-password">
+                <input type="password" id="swal-confirm-password" class="swal2-input" placeholder="Confirm New Password" autocomplete="new-password">
+                <input type="email" id="swal-email" class="swal2-input" placeholder="New Email Address" required>
+            `,
+            confirmButtonText: 'Restore & Reset Credentials',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            preConfirm: () => {
+                const password = Swal.getPopup().querySelector('#swal-password').value;
+                const confirmPassword = Swal.getPopup().querySelector('#swal-confirm-password').value;
+                const email = Swal.getPopup().querySelector('#swal-email').value;
+                
+                if (!password || !confirmPassword || !email) {
+                    Swal.showValidationMessage(`All fields are required.`);
+                    return false;
+                } else if (password !== confirmPassword) {
+                    Swal.showValidationMessage(`The passwords do not match.`);
+                    return false;
+                }
+                
+                // Simple email regex check
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                     Swal.showValidationMessage(`Please enter a valid email address.`);
+                     return false;
+                }
+
+                return { password: password, admin_email: email };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Send request to the backend with the new password AND new email
+                fetch('include/handlers/restore_admin.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        admin_id: adminId,
+                        password: result.value.password,
+                        admin_email: result.value.admin_email // Include the new email
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Restored!', 'The admin account has been restored with new credentials.', 'success');
+                        fetchAdminsPaginated(true); // Refresh the deleted list
+                    } else {
+                        // Crucial: Handle errors like "Email already exists" from the backend
+                        Swal.fire('Error!', data.message, 'error');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    } else {
+        // --- Standard restore flow for normally deleted accounts ---
+        Swal.fire({
+            title: 'Restore Admin?',
+            text: "Are you sure you want to restore this admin?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, restore it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('include/handlers/restore_admin.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_id: adminId }) // No password/email needed here
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Restored!', 'The admin has been restored successfully.', 'success');
+                        fetchAdminsPaginated(true); // Refresh the deleted list
+                    } else {
+                        Swal.fire('Error!', data.message, 'error');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    }
 }
 
          function fetchAdminsPaginated(isDeletedView = false) {
