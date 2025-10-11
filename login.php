@@ -24,7 +24,7 @@
                 <p>Manage your logistics operations efficiently with our comprehensive admin dashboard.</p>
                 <ul class="features">
                     <li><i class="fas fa-check-circle"></i> Track shipments in real-time</li>
-                    <li><i class="fas fa-check-circle"></i> Manage Fleet chuvaness</li>
+                    <li><i class="fas fa-check-circle"></i> Manage Fleet</li>
                     <li><i class="fas fa-check-circle"></i> Monitor fleet and delivery personnelity</li>
                     <li><i class="fas fa-check-circle"></i> View detailed reports and analytics</li>
                 </ul>
