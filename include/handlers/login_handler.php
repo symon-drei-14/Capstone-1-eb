@@ -14,6 +14,7 @@ header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 session_start();
+require_once 'dbhandler.php';
 require_once 'phpmailer_config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -27,10 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$host = "localhost";
-$db_name = "capstonedb"; 
-$username = "root"; 
-$password = ""; 
 
 try {
     $input = file_get_contents("php://input");
