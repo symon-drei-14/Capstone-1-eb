@@ -1576,23 +1576,20 @@ $('#dailyExpenseSummaryBtn').on('click', function() {
 
 
             // Populate driver dropdowns
-  function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
+ function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
     $.ajax({
         url: 'include/handlers/truck_handler.php?action=getTrucks',
         type: 'GET',
-        async: false,
         success: function(truckResponse) {
             if (truckResponse.success) {
                 var unavailableTruckIds = truckResponse.trucks
-                    .filter(truck =>
-                        truck.display_status === 'In Repair' ||
-                        truck.display_status === 'Overdue' ||
-                        truck.is_deleted == 1
-                    )
+                    .filter(truck => truck.display_status === 'In Repair' || truck.display_status === 'Overdue' || truck.is_deleted == 1)
                     .map(truck => truck.truck_id.toString());
 
-                var driverOptions = '<option value="" disabled selected>Select Driver</option>';
-                var unavailableDriverOptions = '<optgroup label="Unavailable Drivers">';
+                let checkedInOptions = '';
+                let notCheckedInOptions = '';
+                let unavailableDriverOptions = '<optgroup label="❌ Unavailable Drivers">';
+                
                 let unavailableCount = 0;
                 const now = new Date();
 
@@ -1601,17 +1598,12 @@ $('#dailyExpenseSummaryBtn').on('click', function() {
                     let isSelectable = true;
                     let unavailabilityReason = '';
 
-                    // The driver already on this trip should always be selectable in the dropdown.
-                    // We only run the availability checks for other drivers.
                     if (!isCurrentTripDriver) {
-                        // Check 1: Is the truck itself unavailable?
                         if (driver.assigned_truck_id && unavailableTruckIds.includes(driver.assigned_truck_id.toString())) {
                             var truck = truckResponse.trucks.find(t => t.truck_id.toString() === driver.assigned_truck_id.toString());
                             isSelectable = false;
                             unavailabilityReason = `(Truck ${truck ? truck.display_status : 'Unavailable'})`;
                         }
-
-                        // Check 2: Is the driver penalized? Only check if they are still selectable.
                         if (isSelectable && driver.penalty_until) {
                             const penaltyTime = new Date(driver.penalty_until);
                             if (now < penaltyTime) {
@@ -1621,66 +1613,75 @@ $('#dailyExpenseSummaryBtn').on('click', function() {
                         }
                     }
 
-                    // Just for looks, let's show who's checked in.
                     var optionContent = `${driver.name}`;
                     if (driver.truck_plate_no) optionContent += ` (${driver.truck_plate_no})`;
                     if (driver.capacity) optionContent += ` [${driver.capacity}ft]`;
-                    
-                    let checkInStatus = '';
-                    if (driver.checked_in_at) {
-                        const checkedInTime = new Date(driver.checked_in_at);
-                        const expiryTime = new Date(checkedInTime.getTime() + 16 * 60 * 60 * 1000);
-                        checkInStatus = (now < expiryTime) ? ' (Checked-In)' : ' (Not Checked-In)';
-                    } else {
-                        checkInStatus = ' (Not Checked-In)';
-                    }
-                    
+
                     let capacityMatch = !selectedSize || !driver.capacity ||
                         (selectedSize.includes('20') && driver.capacity === '20') ||
                         (selectedSize.includes('40') && driver.capacity === '40');
 
-                    // If it's the current driver, or they are selectable and match capacity, add them to the main list.
                     if (isCurrentTripDriver || (isSelectable && capacityMatch)) {
+
+                        let isCheckedIn = false;
+                        if (driver.checked_in_at) {
+                            const checkedInTime = new Date(driver.checked_in_at);
+                            const expiryTime = new Date(checkedInTime.getTime() + 16 * 60 * 60 * 1000);
+                            if (now < expiryTime) {
+                                isCheckedIn = true;
+                            }
+                        }
+                        
                         var selectedAttr = isCurrentTripDriver ? ' selected' : '';
-                        driverOptions += `
+                        const optionHtml = `
                             <option
                                 value="${driver.name}"
                                 data-plate-no="${driver.truck_plate_no || ''}"
                                 data-driver-id="${driver.id || ''}"
                                 ${selectedAttr}
                             >
-                                ${optionContent}${checkInStatus}
+                                ${optionContent}
                             </option>`;
+                        
+                        if (isCheckedIn) {
+                            checkedInOptions += optionHtml;
+                        } else {
+                            notCheckedInOptions += optionHtml;
+                        }
+
                     } else {
-                        // Otherwise, add them to the disabled list.
                         unavailableCount++;
                         unavailableDriverOptions += `
-                            <option
-                                value="${driver.name}"
-                                disabled
-                                title="Reason: ${unavailabilityReason.replace(/[()]/g, '') || 'Capacity mismatch'}"
-                            >
+                            <option value="${driver.name}" disabled title="Reason: ${unavailabilityReason.replace(/[()]/g, '') || 'Capacity mismatch'}">
                                 ${optionContent} ${unavailabilityReason || '(Capacity Mismatch)'}
                             </option>`;
                     }
                 });
 
-                unavailableDriverOptions += '</optgroup>';
+                
+                let finalHtml = '<option value="" disabled selected>Select Driver</option>';
+
+                if (checkedInOptions) {
+                    finalHtml += '<optgroup label="✅ Checked-In & Available">' + checkedInOptions + '</optgroup>';
+                }
+                if (notCheckedInOptions) {
+                    finalHtml += '<optgroup label="➖ Not Checked-In (Available)">' + notCheckedInOptions + '</optgroup>';
+                }
                 if (unavailableCount > 0) {
-                    driverOptions += unavailableDriverOptions;
+                    finalHtml += unavailableDriverOptions + '</optgroup>';
                 }
 
-                $('#editEventDriver').html(driverOptions);
-                $('#addEventDriver').html(driverOptions);
+                $('#editEventDriver').html(finalHtml);
+                $('#addEventDriver').html(finalHtml);
 
             } else {
                 console.error('Error fetching truck data:', truckResponse.message);
-                populateAllDrivers(selectedSize, currentDriver);
+                populateAllDrivers(selectedSize, currentDriver); // Fallback
             }
         },
         error: function() {
             console.error('AJAX error fetching truck data');
-            populateAllDrivers(selectedSize, currentDriver);
+            populateAllDrivers(selectedSize, currentDriver); // Fallback
         }
     });
 }

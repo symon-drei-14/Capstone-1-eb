@@ -1657,3 +1657,9 @@
 2025-10-11 07:10:27 - Login request received
 {"email":"glen.diana07@gmail.com","otp":"469056"}
 
+2025-10-11 07:52:50 - Login request received
+{"email":"glenj.diana@gmail.com","password":"asdasd"}
+
+2025-10-11 07:53:18 - Login request received
+{"email":"glenj.diana@gmail.com","otp":"383084"}
+
