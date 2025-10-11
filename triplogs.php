@@ -2599,7 +2599,9 @@ function populateEditModal(event) {
     populateDispatcherDropdowns();
     populateConsigneeDropdowns();
     populateClientDropdowns();
-    populatePortDropdowns();
+    // CRITICAL FIX: Pass the current port value to the specialized function 
+    // so it can select the correct option after the list loads via AJAX.
+    populatePortDropdowns(event.port); 
     populateDestinationDropdowns();
     populateShippingLineDropdowns();
 
@@ -2620,16 +2622,19 @@ function populateEditModal(event) {
     }
 
     // Set dropdown values after a short delay to ensure they're populated
+    // Note: The unreliable setting of $('#editEventPort').val() has been REMOVED from this timeout block.
     setTimeout(() => {
         $('#editEventDriver').val(event.driver);
         $('#editEventHelper').val(event.helper);
         $('#editEventDispatcher').val(event.dispatcher || '');
         $('#editEventConsignee').val(event.consignee);
         $('#editEventClient').val(event.client);
-        $('#editEventPort').val(event.port || '');
+        
+        // This line is now gone and handled reliably in populatePortDropdowns() success callback.
+        
         $('#editEventDestination').val(event.destination);
         $('#editEventShippingLine').val(event.shippingLine);
-    }, 100);
+    }, 200); // Increased timeout to 200ms
 
     // This part handles the form's state based on the trip status.
     if (event.status === 'Cancelled') {
@@ -2663,10 +2668,10 @@ function populateEditModal(event) {
     
     $('#editModal').show();
 
-            $('#editEventDriver').prop('disabled', true);
+    $('#editEventDriver').prop('disabled', true);
     $('#editEventSize').prop('disabled', true);
     $('#editEventPlateNo').prop('disabled', true);
-    }
+}
 
 $(document).on('click', '.dropdown-item.view-expenses', function() {
     var tripId = $(this).data('id');
@@ -3300,7 +3305,7 @@ function formatCurrency(amount) {
     return '₱' + parseFloat(amount || 0).toFixed(2);
 }
 
-  function populatePortDropdowns() {
+function populatePortDropdowns(currentPortValue = null) {
     $.ajax({
         url: 'include/handlers/trip_operations.php',
         type: 'POST',
@@ -3310,9 +3315,17 @@ function formatCurrency(amount) {
             if (response.success && response.ports) {
                 var options = '<option value="" disabled selected>Select Port</option>';
                 response.ports.forEach(function(port) {
+                    // Make sure the option value is the port name
                     options += `<option value="${port.name}">${port.name}</option>`;
                 });
+                // Populate both modals
                 $('#editEventPort, #addEventPort').html(options);
+                
+                // CRITICAL FIX: Set the selected value now that the options are guaranteed to be in the DOM.
+                if (currentPortValue) {
+                    // Trim the value just in case of hidden characters, addressing the issue.
+                    $('#editEventPort').val(currentPortValue.trim());
+                }
             }
         },
         error: function() {
