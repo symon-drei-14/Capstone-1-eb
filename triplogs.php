@@ -2122,73 +2122,9 @@ eventClick: function(event, jsEvent, view) {
     $('#eventModal').data('eventId', event.id);
     
     // Update the edit button click handler
-    $('#eventModalEditBtn').off('click').on('click', function(e) {
-         e.stopPropagation();
-        var eventId = $('#eventModal').data('eventId');
-        
-        // Find the event data from the original eventsData array instead of the calendar event
-        var eventData = eventsData.find(function(e) { return e.id == eventId; });
-        
-        if (eventData) {
-            $('#editEventId').val(eventData.id);
-            $('#editEventPlateNo').val(eventData.truck_plate_no || eventData.plateNo);
-            
-            // Fix date formatting
-            var eventDate = eventData.date || eventData.trip_date;
-            if (eventDate) {
-                if (eventDate.includes('T')) {
-                    eventDate = eventDate.substring(0, 16); 
-                }
-            }
-            $('#editEventDate').val(eventDate);
-
-            // Populate all dropdowns first
-            populateDriverDropdowns(eventData.size);
-            populateHelperDropdowns();
-            populateDispatcherDropdowns();
-            populateConsigneeDropdowns();
-            populateClientDropdowns();
-            populatePortDropdowns();
-            populateDestinationDropdowns();
-            populateShippingLineDropdowns();
-
-            // Set immediate values (non-dropdown fields)
-            $('#editEventContainerNo').val(eventData.containerNo);
-            $('#editEventSize').val(eventData.truck_capacity ? eventData.truck_capacity + 'ft' : eventData.size);
-            $('#editEventFCL').val(eventData.fcl_status || eventData.size);
-            
-            // Use the correct property names from eventsData:
-            $('#editEventCashAdvance').val(eventData.cashAdvance);
-            $('#editEventAdditionalCashAdvance').val(eventData.additionalCashAdvance);
-            $('#editEventDiesel').val(eventData.diesel);
-            $('#editEventStatus').val(eventData.status);
-
-            // Set dropdown values after they're populated
-            setTimeout(() => {
-                $('#editEventDriver').val(eventData.driver);
-                $('#editEventHelper').val(eventData.helper);
-                $('#editEventDispatcher').val(eventData.dispatcher || '');
-                $('#editEventConsignee').val(eventData.consignee);
-                $('#editEventClient').val(eventData.client);
-                $('#editEventPort').val(eventData.port || '');
-                $('#editEventDestination').val(eventData.destination);
-                $('#editEventShippingLine').val(eventData.shippingLine);
-            }, 100);
-
-            // Show/hide buttons based on status
-           
-
-            if (eventData.driver_id && eventData.status !== 'Cancelled') {
-                $('#viewChecklistBtn').show();
-            } else {
-                $('#viewChecklistBtn').hide();
-            }
-           
+  
             // Close event modal and show edit modal
-            $('#eventModal').hide();
-            $('#editModal').show();
-        }
-    });
+            $('#eventModal').show();
 
    
     // Update history button handler
@@ -2896,6 +2832,9 @@ $('#addScheduleForm').on('submit', function(e) {
                     } else {
                         currentPage = 1;
                         renderTable();
+                        updateStats();
+                        refreshCalendarEvents();
+
                     }
                 }, 300);
             } else {
@@ -3145,6 +3084,8 @@ $('#editForm').on('submit', function(e) {
             timerProgressBar: true
         });
         updateStats();
+        refreshCalendarEvents();
+        renderTable(); 
 
         if ($('#tableViewBtn').hasClass('active')) {
             highlightTripId = editedTripId;
