@@ -564,14 +564,12 @@ try {
         LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
         LEFT JOIN ports p ON t.port_id = p.port_id -- Added this join for the ports table
         WHERE $whereClause 
-        AND t.status IN ('En Route', 'Pending')
+        AND t.status = 'En Route'
         AND NOT EXISTS (
             SELECT 1 FROM audit_logs_trips al2 
             WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
         )
-        ORDER BY 
-            CASE WHEN t.status = 'En Route' THEN 1 ELSE 2 END,
-            t.trip_date ASC
+        ORDER BY t.trip_date ASC
         LIMIT 1
     ");
     

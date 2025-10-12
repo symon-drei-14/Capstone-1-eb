@@ -400,13 +400,25 @@ function initMap() {
 
     fetchDriverData();
 
+    updateTimer = setInterval(() => {
+        fetchDriverData();
+    }, 10000);
+
     const refreshBtn = document.getElementById('refresh-btn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function() {
             const icon = this.querySelector('i');
             icon.classList.add('fa-spin');
+
+            if (updateTimer) {
+                clearInterval(updateTimer);
+            }
             
             fetchDriverData();
+
+            updateTimer = setInterval(() => {
+                fetchDriverData();
+            }, 30000);
 
             setTimeout(() => {
                 icon.classList.remove('fa-spin');
