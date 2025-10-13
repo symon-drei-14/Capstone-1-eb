@@ -717,7 +717,7 @@ function formatDateWithTime(dateString) {
     renderFilteredDrivers(filteredDrivers, searchTerm);
 }
 
-      function renderFilteredDrivers(filteredDrivers, searchTerm) {
+    function renderFilteredDrivers(filteredDrivers, searchTerm) {
     $('#driverTableBody').empty();
     
     if (filteredDrivers.length > 0) {
@@ -731,11 +731,12 @@ function formatDateWithTime(dateString) {
                 return str.replace(regex, '<span class="highlight">$1</span>');
             };
             
-            // Same logic here for showing the right date.
+            // Here's the fix! We highlight the parts, then build the string.
             let creationInfo;
             if (driver.last_modified_at && driver.last_modified_by) {
-                creationInfo = formatDateWithTime(driver.last_modified_at);
-                creationInfo += `<br><small style="color: #555;">Modified by: <strong>${driver.last_modified_by}</strong></small>`;
+                const modifiedDate = formatDateWithTime(driver.last_modified_at);
+                const modifiedBy = highlightText(driver.last_modified_by); // Highlight just the name
+                creationInfo = `${modifiedDate}<br><small style="color: #555;">Modified by: <strong>${modifiedBy}</strong></small>`;
             } else {
                 creationInfo = formatDateWithTime(driver.created_at);
             }
@@ -749,7 +750,8 @@ function formatDateWithTime(dateString) {
                 "<td data-label='Assigned Truck'>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
                 "<td data-label='Total Trips'>" + highlightText(driver.total_completed || 0) + "</td>" +
                 "<td data-label='Monthly Trips'>" + highlightText(driver.monthly_completed || 0) + "</td>" +
-                "<td data-label='Created / Modified'>" + highlightText(creationInfo) + "</td>" +
+                // The creationInfo is now correctly formatted before being placed here
+                "<td data-label='Created / Modified'>" + creationInfo + "</td>" +
                 "<td data-label='Last Login'>" + highlightText(formattedLastLogin) + "</td>" +
                 "<td data-label='Actions' class='actions'>" +
                     "<div class='dropdown'>" +
