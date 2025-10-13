@@ -1870,277 +1870,260 @@ h3.title {
             }
         }
 
-         /* Event Modal Improvements */
-#eventModal {
- display: none;
-        position: fixed;
-        z-index: 11000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        align-items: center;
-        justify-content: center;
-
-
-}
-
-#eventModal .modal-content {
-    width: 90%;
-    max-width: 900px;
-    max-height: 95vh;
-    overflow-y: auto;
-    padding: 25px;
-    background-color: #fff;
+#eventModal .modal-content.redesigned {
+    max-width: 800px;
+    height:95vh;
+    margin: 2% auto;
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    overflow-x: hidden;
-    overflow-y: hidden;
-   
-
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    padding: 0;
+    overflow-y: auto;
 }
 
-.event-modal-header {
-    display: flex;
-    justify-content: space-between; /* This pushes left and right content apart */
-    align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #e9ecef;
+#eventModal .modal-content.redesigned {
+    -ms-overflow-style: none; 
+    scrollbar-width: none;    
 }
-.event-modal-header .header-content-left {
+
+#eventModal .modal-content.redesigned::-webkit-scrollbar {
+    display: none;
+}
+#eventModal .modal-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 16px 24px;
     gap: 15px;
 }
 
+#eventModal .modal-header .header-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-grow: 1;
+}
 
-.event-modal-header h3 {
-    color: #2c3e50;
-    font-size: 1.5rem;
-    font-weight: 600;
+#eventModal .modal-header .header-icon {
+    font-size: 22px;
+    color: #B82132;
+}
+
+#eventModal .modal-title {
     margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #343a40;
 }
 
-
-  .event-details-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 13px;
-        }
-
-
-  .event-detail-section {
-            margin-bottom: 10px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #3498db;
-            line-height: 1.6;
-        }
-        
-
-          .event-detail-section h4 {
-            margin-bottom: 10px;
-        
-            color: #2c3e50;
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid rgba(0, 0, 255, 0.16);
-        }
-        
-        .event-detail-section h4 i {
-            margin-right: 8px;
-            color: #3498db;
-        }
-        
-        .detail-row {
-            display: flex;
-            margin-bottom: 8px;
-        }
-        
-        .detail-label {
-            flex: 0 0 40%;
-            font-weight: 600;
-            color: #555;
-            font-size: 16px;
-        }
-        
-        .detail-value {
-            flex: 0 0 60%;
-            color: #333;
-            font-size: 16px;
-        }
-
-
-
-
-
-.event-modal-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-
-    padding-top: 10px;
-    border-top: 1px solid #e9ecef;
-    flex-wrap: wrap;
+#eventModal .modal-subtitle {
+    font-size: 0.9rem;
+    color: #ffffff;
+    display: block;
 }
 
-
-
-
-.event-modal-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    padding-top: 0;
-    border-top: none;
-    flex-wrap: wrap;
+#eventModal .modal-header-status {
+    text-align: right;
+    flex-shrink: 0;
 }
 
-/* Add these new rules for the dropdown positioning */
-.event-modal-actions .dropdown {
+#eventModal .event-modal-actions {
     position: relative;
-    
+    top: auto;
+    right: auto;
 }
 
-.event-modal-actions .dropdown-content {
+#eventModal .event-modal-actions .dropdown-btn {
+    font-size: 18px;
+    color: #333;
+    padding: 1px 10px;
+    font-size: 22px;
+    margin-top: 15px;
+}
+
+#eventModal .event-modal-actions .dropdown-content {
     right: 0;
-    left: auto;
     top: 100%;
-    margin-top: 5px;
-    z-index: 11001;
-}
-#eventModalStatus{
-    padding:8px 12px;
-    font-size: 16px;
-    border-radius: 20px;
-}
-.event-modal-actions .icon-btn.edit {
-
-    color: #28a745;
-
 }
 
-.event-modal-actions .icon-btn.edit:hover {
-
-    border-color: #218838;
+#eventModal .modal-body {
+    padding: 16px 24px 24px;
+    background-color: #ffffff;
 }
 
-.event-modal-actions .icon-btn.delete {
-
-    color: #dc3545;
-    
-
+#eventModal .trip-summary-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
 }
 
-.event-modal-actions .icon-btn.delete:hover {
-    border-color: #c82333;
+#eventModal .summary-item.route-box-vertical {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
 }
 
-.event-modal-actions .icon-btn.view-reasons {
- 
-    color: #17a2b8;
-
+#eventModal .route-line-modal-top {
+    position: relative;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, #B82132, #6c757d);
+    opacity: 0.7;
+    margin-bottom: 8px;
 }
 
-.event-modal-actions .icon-btn.view-reasons:hover {
-    background-color: #138496;
-    border-color: #138496;
-}
-
-.event-modal-actions .icon-btn i {
-    font-size: 16px;
-}
-
-.event-modal-actions .icon-btn::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 120%; 
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-    z-index: 999999;
-    pointer-events: none;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    font-weight: 500;
-}
-
-/* Tooltip arrow */
-.event-modal-actions .icon-btn::before {
+#eventModal .route-line-modal-top::before {
     content: '';
     position: absolute;
-    bottom: 105%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 6px;
-    border-style: solid;
-    border-color: #333 transparent transparent transparent;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-    z-index: 999999;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    background-color: #B82132;
+    border-radius: 50%;
+    border: 2px solid #f8f9fa;
+    box-shadow: 0 0 0 2px #B82132;
 }
 
-/* Show tooltip on hover */
-.event-modal-actions .icon-btn:hover::after,
-.event-modal-actions .icon-btn:hover::before {
-    opacity: 1;
-    visibility: visible;
+#eventModal .route-line-modal-top::after {
+    font-family: "Font Awesome 6 Free";
+    content: "\f3c5";
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 20px;
+    background-color: #f8f9fa;
 }
 
-/* Specific tooltip colors for different button types */
-.event-modal-actions .icon-btn.edit::after{
-
-     background-color: #28a745;
-}
-.event-modal-actions .icon-btn.edit::before {
-
-
-   
-    border-color: #28a745 transparent transparent transparent;
+#eventModal .route-points-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
 }
 
-.event-modal-actions .icon-btn.delete::after {
-    background-color: #dc3545;
+#eventModal .route-box-vertical .route-point {
+    text-align: left;
 }
 
-.event-modal-actions .icon-btn.delete::before {
-    border-color: #dc3545 transparent transparent transparent;
-}
-
-.event-modal-actions .icon-btn.view-reasons::after {
-    background-color: #17a2b8;
-}
-
-.event-modal-actions .icon-btn.view-reasons::before {
-    border-color: #17a2b8 transparent transparent transparent;
+#eventModal .route-box-vertical .route-point.destination {
+    text-align: right;
 }
 
 
-/* Responsive tooltip adjustments */
+#eventModal .summary-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+#eventModal .summary-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #343a40;
+}
+
+
+#eventModal .trip-details-grid-revised {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+#eventModal .details-section {
+    background-color: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+#eventModal .section-title {
+    margin-top: 0;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #333;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#eventModal .details-section.full-width {
+    grid-column: 1 / -1;
+}
+
+#eventModal .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 8px;
+}
+
+#eventModal .detail-item:last-child {
+    margin-bottom: 0;
+}
+
+#eventModal .detail-item-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+}
+
+#eventModal .detail-item-row .detail-item {
+    flex: 1;
+    margin-bottom: 0;
+    min-width: 200px;
+}
+
+#eventModal .detail-icon {
+    font-size: 16px;
+    color: #B82132;
+    width: 20px;
+    text-align: center;
+}
+
+#eventModal .detail-text .detail-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+#eventModal .detail-text .detail-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #343a40;
+    display: block;
+}
+
+#eventModal .close {
+    position: static;
+    font-size: 28px;
+    width: 30px;
+    height: 30px;
+}
+
 @media (max-width: 768px) {
-    .event-modal-actions .icon-btn::after {
-        bottom: 110%;
-        font-size: 11px;
-        padding: 6px 10px;
+    #eventModal .trip-details-grid-revised {
+        grid-template-columns: 1fr;
     }
-    
-    .event-modal-actions .icon-btn::before {
-        bottom: 95%;
-        border-width: 5px;
+    #eventModal .route-line-modal {
+       display: none;
+    }
+    #eventModal .summary-item.route-box {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+     #eventModal .route-point.destination {
+        text-align: left;
     }
 }
 
@@ -2476,14 +2459,14 @@ h3.title {
         }
 
 
-        .modal-header {
+        #expensesModal .modal-header {
             background: linear-gradient(135deg, #ea7166 0%, #a24b4b 100%);
             padding: 20px 24px;
             position: relative;
             color: white;
         }
 
-        .expenseclose {
+        #expensesModal .expenseclose {
             position: absolute;
             top: 20px;
             right: 24px;
@@ -2500,13 +2483,13 @@ h3.title {
             background: linear-gradient(135deg, #ea7166 0%, #a24b4b 100%);
         }
 
-        .espenseclose:hover {
+        #expensesModal .espenseclose:hover {
             background: rgba(255, 255, 255, 0.1);
             color: white;
             transform: scale(1.1);
         }
 
-        .expensemodal-header {
+        #expensesModal .expensemodal-header {
             font-size: 22px;
             font-weight: 700;
             margin: 0;
@@ -2514,12 +2497,12 @@ h3.title {
         }
 
         /* Content Container */
-        .modal-body {
+        #expensesModal .modal-body {
             padding: 20px;
         }
 
         /* Section Styling */
-        .info-section {
+        #expensesModal .info-section {
             background: #fff;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
@@ -2528,7 +2511,7 @@ h3.title {
             position: relative;
         }
 
-        .info-section::before {
+        #expensesModal .info-section::before {
             content: '';
             position: absolute;
             top: 0;
@@ -2539,7 +2522,7 @@ h3.title {
             border-radius: 16px 16px 0 0;
         }
 
-        .section-title {
+        #expensesModal .section-title {
             font-size: 16px;
             font-weight: 600;
             color: #1e293b;
@@ -2549,7 +2532,7 @@ h3.title {
             gap: 10px;
         }
 
-        .section-icon {
+        #expensesModal .section-icon {
             width: 20px;
             height: 20px;
           background: linear-gradient(135deg, #ea7166 0%, #a24b4b 100%);
@@ -2562,13 +2545,13 @@ h3.title {
         }
 
 
-        .details-grid {
+        #expensesModal .details-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 12px;
         }
 
-        .detail-item {
+        #expensesModal .detail-item {
             background: #f8fafc;
             padding: 12px;
             border-radius: 8px;
@@ -2576,13 +2559,13 @@ h3.title {
             transition: all 0.3s ease;
         }
 
-        .detail-item:hover {
+        #expensesModal .detail-item:hover {
             border-left-color: #667eea;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
         }
 
-        .detail-label {
+        #expensesModal .detail-label {
             font-size: 12px;
             font-weight: 600;
             color: #64748b;
@@ -2591,27 +2574,27 @@ h3.title {
             margin-bottom: 6px;
         }
 
-        .detail-value {
+        #expensesModal .detail-value {
             font-size: 14px;
             font-weight: 500;
             color: #1e293b;
         }
 
-        .funds-card {
+        #expensesModal .funds-card {
             border: 1px solid #bae6fd;
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 16px;
         }
 
-        .funds-header {
+        #expensesModal .funds-header {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 14px;
         }
 
-        .funds-icon {
+        #expensesModal .funds-icon {
             width: 26px;
             height: 26px;
             background: linear-gradient(135deg, #0ea5e9, #0284c7);
@@ -2622,13 +2605,13 @@ h3.title {
             color: white;
         }
 
-        .funds-title {
+        #expensesModal .funds-title {
             font-size: 16px;
             font-weight: 600;
             color: #0c4a6e;
         }
 
-        .funds-item {
+        #expensesModal .funds-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -2637,11 +2620,11 @@ h3.title {
             font-size: 14px;
         }
 
-        .funds-item:last-child {
+        #expensesModal .funds-item:last-child {
             border-bottom: none;
         }
 
-        .funds-total {
+        #expensesModal .funds-total {
             background: white;
             padding: 12px;
             border-radius: 8px;
