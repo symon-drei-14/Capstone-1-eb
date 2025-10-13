@@ -300,10 +300,15 @@ function fetchTripCounts() {
         pageData.forEach(function(driver) {
             let formattedLastLogin = formatTime(driver.last_login);
             
-            // Format the creation/modification info
-            let creationInfo = formatDateWithTime(driver.created_at);
-            if (driver.last_modified_by) {
+            // Decide whether to show creation or modification info.
+            let creationInfo;
+            if (driver.last_modified_at && driver.last_modified_by) {
+                // If it was modified, show that info.
+                creationInfo = formatDateWithTime(driver.last_modified_at);
                 creationInfo += `<br><small style="color: #555;">Modified by: <strong>${driver.last_modified_by}</strong></small>`;
+            } else {
+                // Otherwise, just show when it was created.
+                creationInfo = formatDateWithTime(driver.created_at);
             }
             
        var row = "<tr>" +
@@ -712,7 +717,7 @@ function formatDateWithTime(dateString) {
     renderFilteredDrivers(filteredDrivers, searchTerm);
 }
 
-       function renderFilteredDrivers(filteredDrivers, searchTerm) {
+      function renderFilteredDrivers(filteredDrivers, searchTerm) {
     $('#driverTableBody').empty();
     
     if (filteredDrivers.length > 0) {
@@ -726,10 +731,13 @@ function formatDateWithTime(dateString) {
                 return str.replace(regex, '<span class="highlight">$1</span>');
             };
             
-            // Format creation/modification info
-            let creationInfo = formatDateWithTime(driver.created_at);
-            if (driver.last_modified_by) {
+            // Same logic here for showing the right date.
+            let creationInfo;
+            if (driver.last_modified_at && driver.last_modified_by) {
+                creationInfo = formatDateWithTime(driver.last_modified_at);
                 creationInfo += `<br><small style="color: #555;">Modified by: <strong>${driver.last_modified_by}</strong></small>`;
+            } else {
+                creationInfo = formatDateWithTime(driver.created_at);
             }
 
                var row = "<tr>" +

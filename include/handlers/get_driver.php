@@ -20,7 +20,7 @@ $driverId = $_GET['id'];
 try {
     // Prepare and execute the query
       $stmt = $conn->prepare("SELECT driver_id, firebase_uid, name, email, contact_no, password, assigned_truck_id, driver_pic, 
-                       created_at, last_login, last_modified_by FROM drivers_table WHERE driver_id = ?");
+                       created_at, last_login, last_modified_by, last_modified_at FROM drivers_table WHERE driver_id = ?");
     $stmt->bind_param("s", $driverId);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -33,6 +33,11 @@ try {
             $driver['created_at'] = date('Y-m-d H:i:s', strtotime($driver['created_at']));
         }
         
+        // Let's format the modification date too
+        if ($driver['last_modified_at'] !== null) {
+            $driver['last_modified_at'] = date('Y-m-d H:i:s', strtotime($driver['last_modified_at']));
+        }
+
         // Format last_login properly
         if ($driver['last_login'] !== null && $driver['last_login'] !== 'NULL') {
             $driver['last_login'] = date('Y-m-d H:i:s', strtotime($driver['last_login']));

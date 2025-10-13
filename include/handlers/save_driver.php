@@ -223,9 +223,12 @@ try {
         }
 
         // Keep track of who made the change
-        $updateFields[] = "last_modified_by = ?";
+         $updateFields[] = "last_modified_by = ?";
         $params[] = $_SESSION['username'];
         $types .= "s";
+
+        // Also, let's not forget to log when this change happened.
+        $updateFields[] = "last_modified_at = NOW()";
         
         if (empty($updateFields)) {
             echo json_encode(["success" => true, "message" => "No core fields were changed."]);
