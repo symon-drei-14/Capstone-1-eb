@@ -351,3 +351,12 @@
 2025-10-11 06:55:06 - MySQL insert successful
 2025-10-11 06:55:07 - Firebase save successful
 2025-10-11 06:55:10 - Welcome email sent successfully to glen.diana07@gmail.com
+2025-10-13 15:38:03 - Add Driver Request received
+2025-10-13 21:38:03 - POST data received successfully
+2025-10-13 21:38:03 - Data validation passed
+2025-10-13 21:38:03 - MySQL connection successful
+2025-10-13 21:38:03 - Email check passed
+2025-10-13 21:38:03 - MySQL SQL prepared successfully
+2025-10-13 21:38:03 - MySQL insert successful
+2025-10-13 21:38:04 - Firebase save successful
+2025-10-13 21:38:08 - Welcome email sent successfully to Teste32r@gmail.com

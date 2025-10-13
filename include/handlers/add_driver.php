@@ -36,11 +36,6 @@ require_once 'phpmailer_config.php';
 
 date_default_timezone_set('Asia/Manila');
 
-// $host = "localhost";
-// $db_name = "capstonedb";
-// $username = "root";
-// $password = "";
-
 try {
     // Handle file upload
     $driverPic = null;
