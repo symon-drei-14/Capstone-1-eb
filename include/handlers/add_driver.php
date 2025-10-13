@@ -32,12 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 require_once 'dbhandler.php';
-require_once 'phpmailer_config.php'; // For sending emails
+require_once 'phpmailer_config.php'; 
 
-$host = "localhost";
-$db_name = "capstonedb";
-$username = "root";
-$password = "";
+date_default_timezone_set('Asia/Manila');
+
+// $host = "localhost";
+// $db_name = "capstonedb";
+// $username = "root";
+// $password = "";
 
 try {
     // Handle file upload
@@ -145,7 +147,7 @@ try {
 
    
     $query = "INSERT INTO drivers_table (driver_id, firebase_uid, name, email, contact_no, password, assigned_truck_id, driver_pic, created_at, last_modified_by)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)";
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"; // Changed NOW() to a placeholder
              
     $stmt = $mysql_conn->prepare($query);
     
@@ -157,8 +159,10 @@ try {
         date('Y-m-d H:i:s') . " - MySQL SQL prepared successfully\n",
         FILE_APPEND);
     
+    $createdAt = date('Y-m-d H:i:s'); // Generate timestamp here
+
     $stmt->bind_param(
-        "sssssssss", 
+        "ssssssssss", // Added one 's' for the new timestamp parameter
         $driver_id,
         $firebase_uid,
         $data['name'],
@@ -167,6 +171,7 @@ try {
         $hashed_password,
         $assigned_truck_id, 
         $driverPic,
+        $createdAt, // Pass the PHP-generated timestamp
         $_SESSION['username'] 
     );
 

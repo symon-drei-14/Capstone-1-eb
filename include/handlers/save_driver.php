@@ -2,7 +2,9 @@
 header("Content-Type: application/json");
 session_start();
 require_once 'dbhandler.php';
-require_once 'phpmailer_config.php'; // Needed for mandatory security emails
+require_once 'phpmailer_config.php'; 
+
+date_default_timezone_set('Asia/Manila');
 
 // Define a sample number for the security alert
 $sampleContactNumber = '+1-800-555-0199'; 
@@ -223,12 +225,14 @@ try {
         }
 
         // Keep track of who made the change
-         $updateFields[] = "last_modified_by = ?";
+        $updateFields[] = "last_modified_by = ?";
         $params[] = $_SESSION['username'];
         $types .= "s";
 
         // Also, let's not forget to log when this change happened.
-        $updateFields[] = "last_modified_at = NOW()";
+        $updateFields[] = "last_modified_at = ?";
+        $params[] = date('Y-m-d H:i:s'); // Use PHP's date function with the correct timezone
+        $types .= "s";
         
         if (empty($updateFields)) {
             echo json_encode(["success" => true, "message" => "No core fields were changed."]);
