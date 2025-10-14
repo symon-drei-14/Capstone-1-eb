@@ -579,7 +579,11 @@ function formatDateWithTime(dateString) {
     if (!validatePassword()) {
         return;
     }
-    
+    const saveButton = document.getElementById('saveButton');
+    const originalButtonHTML = saveButton.innerHTML; 
+
+    saveButton.disabled = true;
+    saveButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
     const mode = document.getElementById("modalMode").value;
     const formData = new FormData();
     
@@ -638,6 +642,10 @@ function formatDateWithTime(dateString) {
                     title: 'Error',
                     text: 'An error occurred while adding the driver.'
                 });
+            },
+             complete: function() {
+                saveButton.disabled = false;
+                saveButton.innerHTML = originalButtonHTML;
             }
         });
     } else {
@@ -682,7 +690,11 @@ function formatDateWithTime(dateString) {
                     title: 'Error',
                     text: 'An error occurred while updating the driver data.'
                 });
-            }
+            },
+              complete: function() {
+                saveButton.disabled = false;
+                saveButton.innerHTML = originalButtonHTML;
+              }
         });
     }
 });
