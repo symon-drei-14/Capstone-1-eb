@@ -959,16 +959,18 @@ function renderTable(data, searchTerm = '') {
             </div>`;
         
         tr.innerHTML = `
-            <td data-label="Truck ID">${truckIdDisplay}</td>
-            <td data-label="License Plate">${licensePlateDisplay}</td>
-            <td data-label="Inspection Date">${dateDisplay}</td>
-            <td data-label="Remarks">${remarksHtml}</td>
-            <td data-label="Status"><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${statusDisplay}</span></td>
-            <td data-label="Supplier">${supplierDisplay}</td>
-            <td data-label="Cost">${costDisplay}</td>
+          <td data-label="Truck ID"><div class="cell-data">${truckIdDisplay}</div></td>
+            <td data-label="License Plate"><div class="cell-data">${licensePlateDisplay}</div></td>
+            <td data-label="Inspection Date"><div class="cell-data">${dateDisplay}</div></td>
+            <td data-label="Remarks"><div class="cell-data">${remarksHtml}</div></td>
+            <td data-label="Status"><div class="cell-data"><span class="status-${row.status.toLowerCase().replace(" ", "-")}">${statusDisplay}</span></div></td>
+            <td data-label="Supplier"><div class="cell-data">${supplierDisplay}</div></td>
+            <td data-label="Cost"><div class="cell-data">${costDisplay}</div></td>
             <td data-label="Last Modified">
-                <strong>${lastModifiedByDisplay}</strong><br>
-                ${formatDateTime(row.lastUpdatedAt)}
+                <div class="cell-data modified-details">
+                    <strong>${lastModifiedByDisplay}</strong> <br>
+                    <span>${formatDateTime(row.lastUpdatedAt)}</span>
+                </div>
             </td>
             <td data-label="Actions" class="actions">${actionsCell}</td>
         `;

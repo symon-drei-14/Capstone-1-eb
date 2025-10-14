@@ -23,7 +23,7 @@ h3 {
 }
 
 td {
-    padding: 12px;
+    padding: 20px;
 
     border-radius: 1px;
     text-align: center;
@@ -1806,150 +1806,160 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 }
 
 
+/* For Mobile Phones (e.g., <= 768px) */
+/* For Mobile Phones (e.g., <= 768px) */
 @media (max-width: 768px) {
     h3 {
-        margin-left: 10px;
+        margin: 70px 10px 10px;
         font-size: 1.5rem;
     }
+
+    .main-content3 {
+        margin: 10px;
+        width: calc(100% - 20px);
+        padding: 15px;
+    }
+
     .stats-cards {
         margin: 0;
     }
+
     .stat-card {
-        flex-basis: 100%; /* One card per row */
+        flex-basis: 100%;
     }
+
     .button-row {
         display: flex;
         flex-direction: column;
         gap: 10px;
         align-items: stretch;
-         overflow: visible; 
+        overflow: visible;
     }
-    .add_sched, .reminder_btn {
+
+    .add_sched,
+    .reminder_btn {
         width: 100%;
     }
 
-    /* Hide the original table header */
-    #maintenanceTable thead {
-        display: none;
-    }
+    /* --- Mobile Table "Card" View --- */
 
-    #maintenanceTable, 
-    #maintenanceTable tbody, 
-    #maintenanceTable tr, 
-    #maintenanceTable td {
-        display: block;
-        width: 100%;
- 
-    }
+#maintenanceTable thead {
+    display: none;
+}
 
-    /* 1. Improved Card Styling */
-    #maintenanceTable tr {
-        margin-bottom: 20px;
-        border: 1px solid #e0e0e0; /* Softer border */
-        border-radius: 8px;
-        padding: 15px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Subtle shadow */
-        background-color: #ffffff;
-    }
+#maintenanceTable,
+#maintenanceTable tbody,
+#maintenanceTable tr,
+#maintenanceTable td {
+    display: block;
+    width: 98%;
+}
 
+#maintenanceTable tr {
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+}
 
+#maintenanceTable td {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 12px 15px;
+    width: 93% !important;
+}
 
-    #maintenanceTable tr td:last-child {
-        border-bottom: none; /* Remove line from the last item */
-    }
+#maintenanceTable td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    text-align: left;
+    color: #555;
+    padding-right: 15px;
+    margin-right: auto;
+}
 
-    /* 3. Improved Label Styling */
-     #maintenanceTable td:before {
-        content: attr(data-label);
-        font-weight: 600;
-        text-align: left;
-        color: #555;
-        font-size: 0.9em;
-        
-        /* --- KEY CHANGES --- */
-        margin-right: auto;  /* This pushes the data content to the far right */
-        padding-right: 15px; /* Adds space between the label and the data */
-        flex-shrink: 0;      /* Prevents the label from shrinking if data is long */
-    }
-    
+#maintenanceTable td .cell-data {
+    text-align: right !important;
+    flex-shrink: 0;
+}
 
-      #maintenanceTable td {
-        display: flex;
-        align-items: center; /* Vertically align label and data */
-        text-align: right; /* Ensures data text itself is right-aligned */
-        border-bottom: 1px solid #f0f0f0;
-        padding: 12px 5px;
-        width: 100%;
-    }
+#maintenanceTable td:first-child {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #B82132;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
 
-   
-    #maintenanceTable .status-pending,
-    #maintenanceTable .status-completed,
-    #maintenanceTable .status-in-progress,
-    #maintenanceTable .status-overdue {
-        font-size: 0.8em;
-        font-weight: bold;
-        padding: 4px 10px;
-    }
+#maintenanceTable td[data-label="Actions"] {
+    justify-content: center;
+    padding: 8px 15px;
+    overflow: visible;
+}
 
-  #maintenanceTable td[data-label="Actions"] {
-        position: relative; /* This is the key fix for the dropdown */
-        padding-top: 15px;
-        justify-content: center;
-        overflow: visible; /* Ensure dropdown is not cut off */
-    }
+#maintenanceTable tr td:last-child {
+    border-bottom: none;
+}
 
-    
- 
+#maintenanceTable td .modified-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+#maintenanceTable td .modified-details strong {
+    font-weight: 600;
+}
+#maintenanceTable td .modified-details span {
+    color: #666;
+    font-size: 0.9em;
+}
+
+    /* --- Modal Adjustments --- */
     .modal-content {
         width: 95%;
-        margin: 10% auto;
-        padding: 15px;
+        margin: 20px auto;
+        max-height: 90vh;
     }
+
     .form-row {
         flex-direction: column;
         margin: 0;
     }
+
     .form-group {
         padding: 0;
     }
+
     .checkbox-grid {
-        grid-template-columns: 1fr; 
-    }
-    .dropdown-content {
-        /* Adjust positioning to better fit the mobile card layout */
-        right: 50%;
-        transform: translateX(50%);
-        top: 90%; /* Position it below the '...' button */
-    }
-     .search-container {
-        left: auto; /* Reset fixed positioning */
-        width: 100%;
-        margin-top: 10px;
-    }
-     #searchInput {
-        width: 100%;
+        grid-template-columns: 1fr;
     }
 
-     #maintenanceModal.receipt-visible .modal-content {
-        transform: translateX(0); /* Prevent the main modal from sliding */
-        opacity: 0.3; /* Optionally fade it into the background */
+    #historyModal .modal-content {
+        width: 95%;
+        margin: 20px auto;
     }
-     #receiptModal {
-        width: 95%; /* Make receipt modal almost full-width */
-        height: auto;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%); /* Center it perfectly */
+
+    #maintenanceModal.receipt-visible .modal-content {
+        transform: none !important;
+    }
+
+    #receiptModal {
+        width: 100%!important;
+        height: 100%;
+        right: 0!important;
+        top: 0;
+        transform: none;
+        padding: 10px !important;
+        background-color: rgba(0, 0, 0, 0.8)!important  ;
     }
 
     #receiptModal .modal-content {
-       top: auto;
-       transform: none;
-       max-height: 80vh;
+        max-height: 90vh;
     }
-
-
 }
 
 #expenseReportSection {

@@ -3033,11 +3033,11 @@ h3.title {
 } */
 
 #receiptModal {
-       background: transparent;
-    justify-content: center;
-    align-items: center;
+    z-index: 999990;
+    background-color:transparent;
+    justify-content: center; 
+    padding-right: 0;       
 }
-
 #receiptModal .modal-content {
     background-color: transparent;
     box-shadow: none;
@@ -3050,34 +3050,13 @@ h3.title {
     to {transform:scale(1)}
 }
 
-#receiptModal{
-    position: flex;
-    top: 0;
-    left: 500px;
-    color: #f1f1f1;
-    font-size: 40px;
-    font-weight: bold;
-    transition: 0.3s;
-
-}
-#receiptModal .close {
-    position: absolute;
-    top: 35px;
-    right: 525px;
-    color: #f1f1f1;
-     background: rgba(15, 23, 42, 0.6);
-    border-radius: 30px;
-    font-size: 40px;
-    font-weight: bold;
-    transition: 0.3s;
-    padding: 5px;
-}
-#receiptModal .close:hover,
-#receiptModal .close:focus {
-    color: #ffffff;
-    text-decoration: none;
-    cursor: pointer;
-    background: rgb(232, 101, 101);
+#receiptModal {
+   background: transparent;
+   justify-content: flex-end; 
+   align-items: center;
+   z-index: 999500;
+   padding-left: 60%;        
+   box-sizing: border-box;   
 }
 
 
@@ -3157,6 +3136,13 @@ h3.title {
     color: white;
 }
 
+#editForm, #addScheduleForm {
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px;
+    overflow: hidden;
+    padding: 20px;
+}
 
 @media (max-width: 992px) {
     .main-container {
@@ -3193,156 +3179,206 @@ h3.title {
 }
 
 
-        @media (max-width: 768px) {
-           
-            
-            h3.title {
-                margin-left: 10px;
-                font-size: 1.5rem;
-            }
+@media (max-width: 768px) {
 
-            .stats-container-wrapper {
-                margin: 15px 10px;
-            }
+    .expensemodal-content.shifted {
+        transform: none; 
+    }
+    #receiptModal {
+        z-index: 999990;
+        background-color: rgba(0, 0, 0, 0.85);
+        justify-content: center;
+        padding-right: 0;
+    }
+    #receiptModal img.modal-content {
+    max-width: 100vw !important;  /* Allow image to use 95% of the viewport width */
+    max-height: 100vh !important; /* Allow image to use 90% of the viewport height */
+}
+    #receiptModal .close {
+        top: 20px;
+        right: 35px;
+    }
 
-            .stat-card {
-                flex-basis: 100%;
+  
+    h3.title {
+        margin-left: 10px;
+        font-size: 1.5rem;
+    }
+    .stats-container-wrapper {
+        margin: 15px 10px;
+    }
+    .stats-container {
+        flex-wrap: wrap;
+    }
+    .stat-card {
+        flex-basis: 100%;
+    }
+    .calendar-container {
+        padding: 5px;
+    }
+    #calendar {
+        padding: 5px;
+        height: auto !important;
+    }
+    .calendar-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .status-filter-container {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    .search-container {
+        left: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+    #searchInput {
+        width: 100%;
+    }
+    .date-filter-container {
+        flex-direction: column;
+    }
+    .filter-toggle-container {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    body.table-view .filter-toggle-container,
+    body.table-view .status-filter-container {
+        margin-left: 0;
+        margin-right: 0;
+    }
 
-            }
+    .table-container {
+        overflow-x: hidden;
+    }
+    .events-table thead {
+        display: none;
+    }
+    .events-table,
+    .events-table tbody,
+    .events-table tr,
+    .events-table td {
+        display: block;
+        width: 95% !important; 
+        
+    }
+    .events-table tr {
+        margin-bottom: 1.5rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        background-color: #fff;
+        position: relative;
+    }
+    .events-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 0.75rem 0.5rem;
+        font-size: 14px;
+    }
+    .events-table td:last-of-type {
+        border-bottom: none;
+    }
+    .events-table td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        text-align: left;
+        margin-right: 1rem;
+        color: #333;
+        flex-basis: 45%;
+    }
+    .events-table td:nth-child(1) {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #B82132;
+        padding: 0 0.5rem 0.75rem; 
+        border-bottom: 2px solid #f0f0f0;
+    }
+    .events-table td:nth-child(1)::before {
+         font-size: 1.1rem;
+    }
+    .events-table td .status {
+        padding: 4px 12px;
+        font-size: 12px;
+        margin-left: auto; 
+    }
+    .events-table td:nth-child(18) {
+        position: absolute;
+        top: 0.5rem;
+        right: 0rem;
+        border: none;
+        padding: 0;
+        width: auto !important;
+        background-color: transparent;
+    }
+    .events-table td:nth-child(18)::before {
+        content: ""; 
+    }
+    .events-table .dropdown {
+        padding-top: 0;
+    }
 
-            .calendar-container {
-                padding: 5px;
-            }
+    #editModal .modal-content,
+    #addScheduleModal .modal-content,
+    #eventModal .modal-content {
+        width: 98%;
+        margin: 10px auto;
+    }
+    #editForm, #addScheduleForm {
+        grid-template-columns: 1fr !important; 
+        gap: 0;
+    }
+    #editForm > div, #addScheduleForm > div {
+        margin-bottom: 15px;
+    }
+    #editForm .edit-reasons-section {
+        width: auto;
+        grid-column: 1 / -1 !important; 
+    }
+    #eventModal .trip-details-grid-revised,
+    #expensesModal .details-grid {
+        grid-template-columns: 1fr;
+    }
 
-            #calendar {
-                padding: 5px;
-                height: auto !important;
+#checklistModal .modal-content, #checklistContent .events-table{
+     max-height: 80vh !important; 
+    max-width: 95%;
+  
+}
+ #checklistContent .events-table{
+    max-width: 92%;
+ }
+ 
+#checklistModal .events-table td {
+    flex-direction: column;    
+    align-items: flex-start; 
+    border-bottom: none;     
+    padding-bottom: 1.25rem;  
+}
 
-            }
+#checklistModal .events-table td:last-child {
+    padding-bottom: 0.75rem; 
+}
 
-            .calendar-controls {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .filter-toggle-container {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            body.table-view .filter-toggle-container,
-            body.table-view .status-filter-container {
-                margin-left: 0;
-                margin-right: 0;
-            }
+#checklistModal .events-table td:before {
+    margin-right: 0;         
+    margin-bottom: 0.25rem;  
+    flex-basis: auto;        
+    font-weight: 600;    
+    color: #6c757d;     
+}
 
-
-            .table-container {
-                overflow-x: hidden;
-            }
-
-            .events-table thead {
-                display: none;
-
-            }
-
-            .events-table,
-            .events-table tbody,
-            .events-table tr,
-            .events-table td {
-                display: block;
-                width: 98% !important; 
-            }
-
-            .events-table tr {
-                margin-bottom: 1.5rem;
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                padding: 1rem;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-                background-color: #fff;
-                position: relative;
-            }
-
-            .events-table td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                text-align: right;
-                border-bottom: 1px solid #f0f0f0;
-                padding: 0.75rem 0.5rem;
-                font-size: 14px;
-            }
-
-            .events-table td:last-of-type {
-                border-bottom: none;
-
-            }
-
-
-            .events-table td:before {
-                content: attr(data-label);
-                font-weight: 600;
-                text-align: left;
-                margin-right: 1rem;
-                color: #333;
-                flex-basis: 45%;
-
-            }
-            
-
-            .events-table td:nth-child(1) {
-                font-size: 1.1rem;
-                font-weight: bold;
-                color: #B82132;
-                padding: 0 0.5rem 0.75rem; 
-                border-bottom: 2px solid #f0f0f0;
-            }
-            .events-table td:nth-child(1)::before {
-                 font-size: 1.1rem; /
-            }
-
-            /* Handle the status badge */
-            .events-table td .status {
-                padding: 4px 12px;
-                font-size: 12px;
-                margin-left: auto; 
-            }
-            
-
-            .events-table td:nth-child(18) {
-                position: absolute;
-                top: 0.5rem;
-                right: 0rem;
-                border: none;
-                padding: 0;
-                width: auto !important;
-                background-color: transparent;
-            }
-
-            .events-table td:nth-child(18)::before {
-                content: ""; 
-            
-            }
-
-            .events-table .dropdown {
-                padding-top: 0;
-            }
-            
-   
-
-            #editModal .modal-content,
-            #addScheduleModal .modal-content,
-            #eventModal .event-details-grid {
-                grid-template-columns: 1fr;
-
-            }
-
-            #expensesModal .details-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
+#checklistModal .events-table td span {
+    text-align: left;    
+    font-weight: 500;
+}
+}
 .event-modal-actions .dropdown {
     position: relative;
     right: 30px;
@@ -3388,10 +3424,10 @@ h3.title {
 
 @keyframes continuousPulse {
   0% {
-    background-color: #d4edda; /* Light success green */
+    background-color: #d4edda;
   }
   15% {
-    background-color: #f0fff4; /* Very light green/honeydew */
+    background-color: #f0fff4; 
   }
   30% {
     background-color: #d4edda;
@@ -3472,7 +3508,7 @@ h3.title {
     #checklistModal .close {
         font-size: 1.8rem;
         font-weight: bold;
-        color: #ffffff !important;
+        color: #4e4e4e !important;
         opacity: 0.7;
         transition: opacity 0.2s;
         cursor: pointer;

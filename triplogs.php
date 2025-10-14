@@ -510,8 +510,8 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
         <span class="close">&times;</span>
         <h2 style="margin-top: 20;">Edit Trip <span id="editModalTripId" style="color: #6c757d; font-weight: normal;"></span></h2>
         </div>
-        <form id="editForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden; padding:20px;">
-            <input type="hidden" id="editEventId" name="eventId">
+    <form id="editForm">
+                <input type="hidden" id="editEventId" name="eventId">
             
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
@@ -822,8 +822,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
         <span class="close">&times;</span>
         <h2 style="margin-top:20;">Add Schedule</h2>
     </div>
-        <form id="addScheduleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; overflow: hidden; padding:20px;">
-            <!-- Column 1 -->
+        <form id="addScheduleForm">           
               <div style="display: flex; flex-direction: column; gap: 20px;">
                 <fieldset style="flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
                     <legend style="font-weight: bold;">Shipment Information</legend>
@@ -2398,13 +2397,13 @@ $('#eventModal .view-checklist').off('click').on('click', function(e) {
                 ];
                 
                 rows.forEach(function(row) {
-                    $('#checklistTableBody').append(`
-                        <tr>
-                            <td>${row.question}</td>
-                            <td>${row.response}</td>
-                        </tr>
-                    `);
-                });
+                $('#checklistTableBody').append(`
+                    <tr>
+                        <td data-label="Question"><span>${row.question}</span></td>
+                        <td data-label="Response"><span>${row.response}</span></td>
+                    </tr>
+                `);
+            });
                 
                 $('#checklistModal').show();
             } else {
