@@ -510,8 +510,9 @@ try {
             }
         }
 
-        $auditStmt = $conn->prepare("INSERT INTO audit_logs_trips (trip_id, modified_by, edit_reason) VALUES (?, ?, 'Trip created')");
-        $auditStmt->bind_param("is", $tripId, $currentUser);
+        $auditStmt = $conn->prepare("INSERT INTO audit_logs_trips (trip_id, modified_by, modified_at, edit_reason) VALUES (?, ?, ?, 'Trip created')");
+        $currentTime = date('Y-m-d H:i:s');
+        $auditStmt->bind_param("iss", $tripId, $currentUser, $currentTime);
         if (!$auditStmt->execute()) {
             throw new Exception("Failed to insert audit log: " . $auditStmt->error);
         }
@@ -699,8 +700,9 @@ try {
         
         // Update audit log
         $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
-        $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0 ");
-        $auditStmt->bind_param("ssi", $currentUser, $editReasons, $data['id']);
+        $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=?, edit_reason=? WHERE trip_id=? AND is_deleted=0 ");
+        $currentTime = date('Y-m-d H:i:s');
+        $auditStmt->bind_param("sssi", $currentUser, $currentTime, $editReasons, $data['id']);
         
         if (!$auditStmt->execute()) {
             throw new Exception("Failed to update audit log: " . $auditStmt->error);
@@ -843,16 +845,17 @@ try {
             throw new Exception("Cannot delete a trip that is currently 'En Route'. Please complete or cancel the trip first.");
         }
 
-        $auditStmt = $conn->prepare(
+       $auditStmt = $conn->prepare(
             "UPDATE audit_logs_trips SET 
                 is_deleted = 1,
                 delete_reason = ?,
                 modified_by = ?,
-                modified_at = NOW()
+                modified_at = ?
             WHERE trip_id = ? AND is_deleted = 0
             ORDER BY log_id DESC LIMIT 1" 
         );
-        $auditStmt->bind_param("ssi", $data['reason'], $currentUser, $tripId);
+        $currentTime = date('Y-m-d H:i:s');
+        $auditStmt->bind_param("sssi", $data['reason'], $currentUser, $currentTime, $tripId);
         $auditStmt->execute();
         $auditStmt->close();
         
@@ -1521,13 +1524,14 @@ if (!empty($conflictingTrips)) {
 }
     
     // Restore trip by marking as not deleted
-    $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
+ $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
         is_deleted = 0,
         delete_reason = NULL,
         modified_by = ?,
-        modified_at = NOW()
+        modified_at = ?
         WHERE trip_id = ? AND is_deleted = 1");
-    $stmt->bind_param("si", $currentUser, $data['id']);
+    $currentTime = date('Y-m-d H:i:s');
+    $stmt->bind_param("ssi", $currentUser, $currentTime, $data['id']);
     $stmt->execute();
     
     // Get trip details for truck status update
@@ -2018,10 +2022,11 @@ case 'get_trips_today':
             $auditReason = json_encode([$reasonText]);
             $auditStmt = $conn->prepare("
                 UPDATE audit_logs_trips 
-                SET modified_by = ?, modified_at = NOW(), edit_reason = ? 
+                SET modified_by = ?, modified_at = ?, edit_reason = ? 
                 WHERE trip_id = ? AND is_deleted = 0
             ");
-            $auditStmt->bind_param("ssi", $currentUser, $auditReason, $tripId);
+            $currentTime = date('Y-m-d H:i:s');
+            $auditStmt->bind_param("sssi", $currentUser, $currentTime, $auditReason, $tripId);
             $auditStmt->execute();
             $auditStmt->close();
 
@@ -2053,13 +2058,14 @@ case 'get_trips_today':
 
 
             $reasonText = ($reason === 'failed_checklist') ? 'Trip cancelled: original driver failed checklist and no replacement was found.' : 'Trip cancelled: original driver missed deadline and no replacement was found.';
-            $auditReason = json_encode([$reasonText . " Original driver penalized."]);
+        $auditReason = json_encode([$reasonText . " Original driver penalized."]);
             $auditStmt = $conn->prepare("
                 UPDATE audit_logs_trips 
-                SET modified_by = ?, modified_at = NOW(), edit_reason = ? 
+                SET modified_by = ?, modified_at = ?, edit_reason = ? 
                 WHERE trip_id = ? AND is_deleted = 0
             ");
-            $auditStmt->bind_param("ssi", $currentUser, $auditReason, $tripId);
+            $currentTime = date('Y-m-d H:i:s');
+            $auditStmt->bind_param("sssi", $currentUser, $currentTime, $auditReason, $tripId);
             $auditStmt->execute();
             $auditStmt->close();
             
@@ -2103,13 +2109,14 @@ case 'cancel_trip':
         $stmt->execute();
         $stmt->close();
 
-        $auditStmt = $conn->prepare(
+          $auditStmt = $conn->prepare(
             "UPDATE audit_logs_trips 
-             SET modified_by = ?, modified_at = NOW(), edit_reason = ? 
+             SET modified_by = ?, modified_at = ?, edit_reason = ? 
              WHERE trip_id = ? AND is_deleted = 0 
              ORDER BY log_id DESC LIMIT 1"
         );
-        $auditStmt->bind_param("ssi", $username, $editReason, $tripId);
+        $currentTime = date('Y-m-d H:i:s');
+        $auditStmt->bind_param("sssi", $username, $currentTime, $editReason, $tripId);
         $auditStmt->execute();
         $auditStmt->close();
 
