@@ -940,7 +940,7 @@ case 'get_trip_statistics':
     echo json_encode(['success' => true, 'statistics' => $stats]);
     break;
 
-        case 'update_trip_status':
+       case 'update_trip_status':
             $tripId = $data['trip_id'] ?? null;
             $newStatus = $data['status'] ?? null;
             
@@ -974,8 +974,10 @@ case 'get_trip_statistics':
             
             $stmt->close();
 
+            // FIX IS HERE: The reason string is now stored in a variable first.
+            $editReason = "Status updated to $newStatus";
             $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
-            $auditStmt->bind_param("ssi", $currentUser, "Status updated to $newStatus", $tripId);
+            $auditStmt->bind_param("ssi", $currentUser, $editReason, $tripId);
             $auditStmt->execute();
 
             $newTruckStatus = 'In Terminal';
