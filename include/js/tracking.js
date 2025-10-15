@@ -6,6 +6,7 @@ let routeLayer = null;
 let routeMarkers = [];
 let currentSearchTerm = '';
 let currentFilter = 'All';
+let isFirstMapUpdate = true;
 
 const sampleData = {
     "drivers": {
@@ -441,20 +442,23 @@ async function fetchDriverData() {
         if (data && data.drivers) {
             const enhancedDrivers = await enhanceDriversWithDestinations(data.drivers);
             allDrivers = enhancedDrivers;
-            updateMap(enhancedDrivers);
+            updateMap(enhancedDrivers, isFirstMapUpdate);
             updateDriversList(enhancedDrivers);
+            isFirstMapUpdate = false;
         } else {
             console.log("Using sample data (no drivers in API response)");
             allDrivers = sampleData.drivers;
-            updateMap(sampleData.drivers);
+            updateMap(sampleData.drivers, isFirstMapUpdate);
             updateDriversList(sampleData.drivers);
+            isFirstMapUpdate = false;
         }
     } catch (error) {
         console.error('Error fetching data:', error);
         console.log("Using sample data due to API error");
         allDrivers = sampleData.drivers;
-        updateMap(sampleData.drivers);
+        updateMap(sampleData.drivers, isFirstMapUpdate);
         updateDriversList(sampleData.drivers);
+        isFirstMapUpdate = false;
         
         const driversListContainer = document.getElementById('drivers-list');
         if (driversListContainer && !driversListContainer.innerHTML.includes('drivers-content')) {
@@ -595,6 +599,7 @@ function truncateDestination(destination, maxLength = 30) {
     return destination.substring(0, maxLength) + '...';
 }
 
+
 function updateMap(drivers) {
     if (!drivers || !map) return;
     
@@ -621,7 +626,6 @@ function updateMap(drivers) {
         const statusText = getStatusDisplayText(driverStatus);
         let truckLicense = driverData.plate_no || driverData.assigned_truck_id || 'N/A';
         
-        // Get all the data points we need
         const origin = driverData.origin;
         const portName = driverData.port_name;
         const destination = driverData.destination;
@@ -713,11 +717,12 @@ function updateMap(drivers) {
         }
     });
 
-    if (bounds.length > 0) {
+    if (isFirstMapUpdate && bounds.length > 0) {
         map.fitBounds(bounds, { padding: [20, 20] });
         if (bounds.length === 1) {
             map.setZoom(15); 
         }
+        isFirstMapUpdate = false;
     }
 
     setTimeout(() => {
