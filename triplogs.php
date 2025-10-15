@@ -254,8 +254,8 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                         <i class="fa-solid fa-calendar-plus" style="margin-right:5px;"></i>Add Schedule
                     </button>
 
-                    <button id="dailyExpenseSummaryBtn">
-    <i class="fa-solid fa-file-invoice-dollar" style="margin-right:5px;"></i>Daily Expense Summary
+                    <button id="expenseSummaryBtn">
+    <i class="fa-solid fa-file-invoice-dollar" style="margin-right:5px;"></i>Expense Summary
 </button>
                     
                     <div class="status-filter-container">
@@ -1077,12 +1077,21 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 
         
        <div id="expenseSummaryModal" class="modal">
-    <div class="modal-content" style="max-width: 400px; padding:20px;">
+    <div class="modal-content" style="max-width: 450px; padding:20px;">
         <span class="close">&times;</span>
-        <h3 style="margin-top: 0;">Generate Daily Expense Summary</h3>
-        <form id="expenseSummaryForm">
-            <label for="summaryDate" style="display:block; margin-bottom:10px;">Select Date:</label>
-            <input type="date" id="summaryDate" name="summaryDate" required style="width: 100%; padding: 8px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+        <h3 style="margin-top: 0;">Generate Expense Summary</h3>
+        <form id="expenseSummaryForm" action="expense_summary.php" method="GET" target="_blank">
+            <label for="summaryType" style="display:block; margin-bottom:10px;">Report Type:</label>
+            <select id="summaryType" name="type" required style="width: 100%; padding: 8px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+            </select>
+
+            <div id="date-picker-container">
+                </div>
+
             <div class="buttons" style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid #eee;">
                 <button type="button" class="close-btn cancel-btn">Cancel</button>
                 <button type="submit" class="Generate-btn">Generate Report</button>
@@ -1551,66 +1560,77 @@ $(document).on('click', '.icon-btn.edit', function() {
             
 
 // expense summary things
-$('#dailyExpenseSummaryBtn').on('click', function() {
-        
-        $('#summaryDate').val(new Date().toISOString().slice(0, 10));
-        $('#expenseSummaryModal').show();
-    });
+$('#expenseSummaryBtn').on('click', function() {
+    // Set the default view to 'daily' and trigger the change event to populate the date picker
+    $('#summaryType').val('daily').trigger('change');
+    $('#expenseSummaryModal').show();
+});
 
-    
-    // $('#expenseSummaryForm').on('submit', function(e) {
-    //     e.preventDefault();
-    //     const selectedDate = $('#summaryDate').val();
-    //     if (selectedDate) {
-            
-    //         window.open(`expense_summary.php?date=${selectedDate}`, '_blank');
-    //         $('#expenseSummaryModal').hide();
-    //     } else {
-    //         Swal.fire({
-    //             icon: 'warning',
-    //             title: 'No Date Selected',
-    //             text: 'Please select a date to generate the summary.'
-    //         });
-    //     }
-    // });
+$('#summaryType').on('change', function() {
+    const type = $(this).val();
+    const container = $('#date-picker-container');
+    container.empty(); // Clear previous picker
+    const today = new Date().toISOString();
 
-    $('#expenseSummaryForm').on('submit', function(e) {
-    e.preventDefault();
-    const selectedDate = $('#summaryDate').val();
-    if (selectedDate) {
-        
+    let inputHtml = '';
+    const commonStyle = 'width: 100%; padding: 8px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;';
+
+    if (type === 'daily') {
+        inputHtml = `
+            <label for="summaryDate" style="display:block; margin-bottom:10px;">Select Date:</label>
+            <input type="date" id="summaryDate" name="date" required value="${today.slice(0, 10)}" style="${commonStyle}">
+        `;
+    } else if (type === 'weekly') {
+        inputHtml = `
+            <label for="summaryWeek" style="display:block; margin-bottom:10px;">Select Week:</label>
+            <input type="week" id="summaryWeek" name="week" required style="${commonStyle}">
+        `;
+    } else if (type === 'monthly') {
+        inputHtml = `
+            <label for="summaryMonth" style="display:block; margin-bottom:10px;">Select Month:</label>
+            <input type="month" id="summaryMonth" name="month" required value="${today.slice(0, 7)}" style="${commonStyle}">
+        `;
+    } else if (type === 'yearly') {
+        inputHtml = `
+            <label for="summaryYear" style="display:block; margin-bottom:10px;">Select Year:</label>
+            <input type="number" id="summaryYear" name="year" required value="${today.slice(0, 4)}" placeholder="YYYY" min="2020" max="2099" style="${commonStyle}">
+        `;
+    }
+    container.html(inputHtml);
+});
+
+   $('#expenseSummaryForm').on('submit', function(e) {
+    e.preventDefault(); // Prevent the default form submission
+
+    const form = $(this);
+    // This simple line gets all the data, like "type=weekly&week=2025-W42"
+    const reportUrl = form.attr('action') + '?' + form.serialize();
+
+    // Use the browser's built-in validation to make sure a value was entered
+    if (form[0].checkValidity()) {
         $('#expenseSummaryModal').hide();
-        
-        
-        const reportUrl = `expense_summary.php?date=${selectedDate}`;
-        
-        
+
         const loading = AdminLoading.startAction(
-            'Generating Report', 
-            'Preparing your daily expense summary...'
+            'Generating Report',
+            'Preparing your expense summary...'
         );
 
-        
         let progress = 0;
         const progressInterval = setInterval(() => {
-            progress += Math.random() * 15 + 8; 
+            progress += Math.random() * 15 + 8;
             if (progress >= 85) {
                 clearInterval(progressInterval);
-                progress = 90; 
+                progress = 90;
             }
             loading.updateProgress(Math.min(progress, 90));
         }, 150);
 
-       
-        const minLoadTime = 1200; 
-        
+        const minLoadTime = 1200;
+
         setTimeout(() => {
-          
             loading.updateProgress(100);
-            
-            
             setTimeout(() => {
-                window.location.href = reportUrl; 
+                window.location.href = reportUrl;
             }, 300);
         }, minLoadTime);
 
@@ -1618,7 +1638,7 @@ $('#dailyExpenseSummaryBtn').on('click', function() {
         Swal.fire({
             icon: 'warning',
             title: 'No Date Selected',
-            text: 'Please select a date to generate the summary.'
+            text: 'Please select a date, week, month, or year to generate the summary.'
         });
     }
 });

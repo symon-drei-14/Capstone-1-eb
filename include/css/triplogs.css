@@ -15,7 +15,7 @@
      background-color: rgb(7, 111, 7);
 }
 
-#dailyExpenseSummaryBtn {
+#ExpenseSummaryBtn {
     background-color: #17a2b8; /* A nice teal color */
     color: white;
     padding:12px 15px;
@@ -27,7 +27,7 @@
     font-family: inherit; /* To match other buttons */
 }
 
-#dailyExpenseSummaryBtn:hover {
+#ExpenseSummaryBtn:hover {
     background-color: #138496;
 }
     #editReasonsModal {
@@ -3456,7 +3456,7 @@ h3.title {
 .restore-btn,
 .expense-close-btn,
 #addScheduleBtnTable,
-#dailyExpenseSummaryBtn,
+#ExpenseSummaryBtn,
 .toggle-btn {
     transition: all 0.2s ease-in-out;
 }
@@ -3470,7 +3470,7 @@ h3.title {
 .restore-btn:hover,
 .expense-close-btn:hover,
 #addScheduleBtnTable:hover,
-#dailyExpenseSummaryBtn:hover,
+#ExpenseSummaryBtn:hover,
 .toggle-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
