@@ -2201,4 +2201,21 @@ mark {
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
+
+#maintenanceExpenseSummaryModal .modal-content {
+    height: auto;
+    max-height: 60vh; 
+    width: 90%;
+    max-width: 450px;
+    margin-top: 10vh; 
+    overflow-y: visible; 
+}
+
+#maintenanceExpenseSummaryBtn {
+    background-color: #17a2b8; 
+}
+
+#maintenanceExpenseSummaryBtn:hover {
+    background-color: #138496; 
+}
         

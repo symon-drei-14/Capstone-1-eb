@@ -110,6 +110,11 @@
     <span>Reminders</span>
  <span id="reminders-badge" class="badge">0</span>
 </button>
+
+<button id="maintenanceExpenseSummaryBtn" class="add_sched">
+    <i class="fa-solid fa-file-invoice-dollar" style="margin-right:5px;"></i>Expense Summary
+</button>
+
         </div>
     </div>
     
@@ -384,6 +389,8 @@
            
             </div>
         </div>
+
+        
         
         <!-- Maintenance Reminders Modal -->
        <div id="remindersModal" class="modal">
@@ -394,6 +401,34 @@
         </div>
         <div class="reminders-list" id="remindersList">
         </div>
+    </div>
+</div>
+
+<div id="maintenanceExpenseSummaryModal" class="modal">
+   <div class="modal-content">
+        <div class="modal-header">
+            <h3>Generate Maintenance Expense Summary</h3>
+            <span class="close">&times;</span>
+        </div>
+        <form id="maintenanceExpenseSummaryForm" action="maintenance_expense_summary.php" method="GET">
+            <div class="modal-body">
+                <label for="summaryType" style="display:block; margin-bottom:10px;">Report Type:</label>
+                <select id="summaryType" name="type" required style="width: 100%; padding: 8px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+
+                <div id="date-picker-container">
+                    <!-- This container will be dynamically filled by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer" style="background: #f9f9f9; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+                <button type="button" class="cancelbtn">Cancel</button>
+                <button type="submit" class="submitbtn">Generate</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -499,7 +534,7 @@ function validateMaintenanceForm() {
         }
     }
 
-    // REMOVED THE OLD REMARKS VALIDATION
+    
     // Validate maintenance purposes instead
     const selectedPurposes = [];
     document.querySelectorAll('input[name="maintenancePurpose"]:checked').forEach(checkbox => {
@@ -2382,6 +2417,96 @@ function clearDateFilter() {
     currentPage = 1;
     loadMaintenanceData();
 }
+
+
+$('#maintenanceExpenseSummaryBtn').on('click', function() {
+    // Set the default view to 'daily' and trigger the change event to populate the date picker
+    $('#maintenanceExpenseSummaryModal #summaryType').val('daily').trigger('change');
+    $('#maintenanceExpenseSummaryModal').css('display', 'flex');
+});
+
+// Close modal functionality
+$('#maintenanceExpenseSummaryModal .close, #maintenanceExpenseSummaryModal .cancelbtn').on('click', function() {
+    closeModal('maintenanceExpenseSummaryModal');
+});
+
+// Dynamically change the date picker based on selected report type
+$('#maintenanceExpenseSummaryModal #summaryType').on('change', function() {
+    const type = $(this).val();
+    const container = $('#maintenanceExpenseSummaryModal #date-picker-container');
+    container.empty(); // Clear previous picker
+    const today = new Date().toISOString();
+
+    let inputHtml = '';
+    const commonStyle = 'width: 100%; padding: 8px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;';
+
+    if (type === 'daily') {
+        inputHtml = `
+            <label for="summaryDate" style="display:block; margin-bottom:10px;">Select Date:</label>
+            <input type="date" id="summaryDate" name="date" required value="${today.slice(0, 10)}" style="${commonStyle}">
+        `;
+    } else if (type === 'weekly') {
+        inputHtml = `
+            <label for="summaryWeek" style="display:block; margin-bottom:10px;">Select Week:</label>
+            <input type="week" id="summaryWeek" name="week" required style="${commonStyle}">
+        `;
+    } else if (type === 'monthly') {
+        inputHtml = `
+            <label for="summaryMonth" style="display:block; margin-bottom:10px;">Select Month:</label>
+            <input type="month" id="summaryMonth" name="month" required value="${today.slice(0, 7)}" style="${commonStyle}">
+        `;
+    } else if (type === 'yearly') {
+        inputHtml = `
+            <label for="summaryYear" style="display:block; margin-bottom:10px;">Select Year:</label>
+            <input type="number" id="summaryYear" name="year" required value="${today.slice(0, 4)}" placeholder="YYYY" min="2020" max="2099" style="${commonStyle}">
+        `;
+    }
+    container.html(inputHtml);
+});
+
+// Handle form submission with loading animation
+$('#maintenanceExpenseSummaryForm').on('submit', function(e) {
+    e.preventDefault(); 
+    
+    const form = $(this);
+    const reportUrl = form.attr('action') + '?' + form.serialize();
+
+    if (form[0].checkValidity()) {
+        closeModal('maintenanceExpenseSummaryModal');
+
+        // This uses the same loading animation object from your triplogs.php
+        const loading = AdminLoading.startAction(
+            'Generating Report', 
+            'Preparing your maintenance expense summary...'
+        );
+
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15 + 8;
+            if (progress >= 85) {
+                clearInterval(progressInterval);
+                progress = 90;
+            }
+            loading.updateProgress(Math.min(progress, 90));
+        }, 150);
+        
+        const minLoadTime = 1200;
+        
+        setTimeout(() => {
+            loading.updateProgress(100);
+            setTimeout(() => {
+                window.location.href = reportUrl; // Redirect in the same tab
+            }, 300);
+        }, minLoadTime);
+
+    } else {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Incomplete',
+            text: 'Please select a valid date or period to generate the summary.'
+        });
+    }
+});
 
     </script>
 
