@@ -1153,7 +1153,7 @@ let highlightTripId = null;
         renderTable();
     });
 
-    // Your new code is here - which is correct!
+  
     $('#editEventStatus').on('change', function() {
         if ($(this).val() === 'En Route') {
             $('#editAdditionalCashContainer').show();
@@ -1163,7 +1163,7 @@ let highlightTripId = null;
         }
     });
 
-    // These should also be inside the ready function
+    
     $('#dateFrom, #dateTo').on('change', filterTableByDateRange);
 
         $('#resetDateFilter').on('click', function() {
