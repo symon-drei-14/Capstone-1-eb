@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__ . '/include/check_access.php';
-checkAccess(); // Making sure the user is logged in
+checkAccess();
 
 require 'include/handlers/dbhandler.php';
 
-// --- NEW: Logic to handle different report types (daily, weekly, etc.) ---
+
 $reportType = $_GET['type'] ?? 'daily';
 $startDate = '';
 $endDate = '';
@@ -14,7 +14,7 @@ $subtitle = '';
 try {
     switch ($reportType) {
         case 'weekly':
-            $week = $_GET['week'] ?? ''; // e.g., 2025-W42
+            $week = $_GET['week'] ?? ''; 
             if ($week) {
                 $year = substr($week, 0, 4);
                 $weekNum = substr($week, 6, 2);
@@ -29,7 +29,7 @@ try {
             }
             break;
         case 'monthly':
-            $month = $_GET['month'] ?? ''; // e.g., 2025-10
+            $month = $_GET['month'] ?? ''; 
             if ($month) {
                 $startDate = date('Y-m-01', strtotime($month));
                 $endDate = date('Y-m-t', strtotime($month));
@@ -38,7 +38,7 @@ try {
             }
             break;
         case 'yearly':
-            $year = $_GET['year'] ?? ''; // e.g., 2025
+            $year = $_GET['year'] ?? ''; 
             if ($year) {
                 $startDate = $year . '-01-01';
                 $endDate = $year . '-12-31';
@@ -62,7 +62,7 @@ if (empty($startDate) || empty($endDate)) {
     die("Invalid date range selected. Please go back and try again.");
 }
 
-// -- MODIFIED: Fetch all trips for the selected DATE RANGE --
+
 $tripsSql = "
     SELECT 
         t.trip_id,
@@ -84,7 +84,7 @@ $tripsSql = "
 ";
 
 $stmt = $conn->prepare($tripsSql);
-// Bind the start and end dates for the range query
+
 $stmt->bind_param("ss", $startDate, $endDate);
 $stmt->execute();
 $tripsResult = $stmt->get_result();
@@ -97,7 +97,7 @@ while ($row = $tripsResult->fetch_assoc()) {
 }
 $stmt->close();
 
-// -- Step 2: Fetch all driver-submitted expenses for those trips (No changes needed here) --
+
 $driverExpenses = [];
 if (!empty($tripIds)) {
     $placeholders = implode(',', array_fill(0, count($tripIds), '?'));
@@ -125,7 +125,7 @@ if (!empty($tripIds)) {
     $stmt->close();
 }
 
-// -- Step 3: Calculate the totals for the summary (No changes needed here) --
+
 $totalCashAdvance = 0;
 $totalAdditionalCash = 0;
 $totalDiesel = 0;
@@ -201,12 +201,12 @@ $remainingBalance = ($totalCashAdvance + $totalAdditionalCash) - $totalDriverExp
                     <p style="text-align:center; color: #6c757d; margin-top: 20px;">No trips with expenses were found for this period.</p>
                 <?php else: ?>
                     <?php foreach ($trips as $tripId => $trip): 
-                        // Filter driver expenses for the current trip
+                       
                         $tripDriverExpenses = array_filter($driverExpenses, function($exp) use ($tripId) {
                             return $exp['trip_id'] == $tripId;
                         });
 
-                        // Calculate totals for this specific trip
+                      
                         $tripDriverExpensesTotal = 0;
                         foreach ($tripDriverExpenses as $expense) {
                             $tripDriverExpensesTotal += $expense['amount'];

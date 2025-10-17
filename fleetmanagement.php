@@ -13,7 +13,7 @@ checkAccess();
     <link rel="stylesheet" href="include/css/fleetmanagement.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
+ 
  
 </head>
 
@@ -36,21 +36,21 @@ checkAccess();
     </div>
 
    <div class="profile" onclick="window.location.href='admin_profile.php'" style="cursor: pointer;"> 
-     <?php 
-    
-     if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
-        
-         echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
-     } else {
-        
-         echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
-     }
-     ?>
-     <div class="profile-name">
-         <?php 
-             echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
-         ?>
-     </div>
+    <?php 
+   
+      if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
+       
+        echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
+      } else {
+       
+        echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
+      }
+      ?>
+      <div class="profile-name">
+          <?php 
+              echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+          ?>
+      </div>
 </div>
 </div>
 </header>
@@ -62,53 +62,53 @@ checkAccess();
  
 <div class="stats-container-wrapper">
     <div class="stats-container" id="statsContainer">
-                    <div class="stat-card">
-                         
-                        <div class="stat-icon icon-terminal">
-                            <i class="fas fa-truck-loading"></i>
+                        <div class="stat-card">
+                               
+                            <div class="stat-icon icon-terminal">
+                                <i class="fas fa-truck-loading"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">8</div>
+                                <div class="stat-label">In Terminal</div>
+                            </div>
+                            
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-value">8</div>
-                            <div class="stat-label">In Terminal</div>
+                        <div class="stat-card">
+                            <div class="stat-icon icon-enroute">
+                                <i class="fas fa-truck-moving"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">Enroute</div>
+                            </div>
                         </div>
-                        
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon icon-enroute">
-                            <i class="fas fa-truck-moving"></i>
+                        <div class="stat-card">
+                            <div class="stat-icon icon-repair">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">2</div>
+                                <div class="stat-label">In Repair</div>
+                            </div>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-value">5</div>
-                            <div class="stat-label">Enroute</div>
+                        <div class="stat-card">
+                            <div class="stat-icon icon-overdue">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">1</div>
+                                <div class="stat-label">Overdue</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon icon-repair">
-                            <i class="fas fa-tools"></i>
+                        <div class="stat-card">
+                            <div class="stat-icon icon-total">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">16</div>
+                                <div class="stat-label">Total Trucks</div>
+                            </div>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-value">2</div>
-                            <div class="stat-label">In Repair</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon icon-overdue">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value">1</div>
-                            <div class="stat-label">Overdue</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon icon-total">
-                            <i class="fas fa-truck"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value">16</div>
-                            <div class="stat-label">Total Trucks</div>
-                        </div>
-                    </div>
     </div>
 </div>
     <div class="main-content4">
@@ -162,7 +162,7 @@ checkAccess();
                                 <th>Capacity</th>
                                 <th>Status</th>
                                 <th>Last Modified</th>
-                               
+                                
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -175,7 +175,7 @@ checkAccess();
                     <button class="next" onclick="changeTruckPage(1)">►</button>
                 </div>
             </div>
-  
+ 
     </div>
 
     <div id="historyModal" class="modal">
@@ -242,27 +242,12 @@ checkAccess();
 
         <div class="modal-footer">
              <div class="button-group">
-                <button type="button" class="save-btn" onclick="validateAndSaveTruck()">Save</button>
-                <button type="button" class="cancel-btn" onclick="closeModal('truckModal')">Cancel</button>
-            </div>
+                 <button type="button" class="save-btn" onclick="validateAndSaveTruck()">Save</button>
+                 <button type="button" class="cancel-btn" onclick="closeModal('truckModal')">Cancel</button>
+             </div>
         </div>
     </div>
 </div>
-    <!-- <div id="deleteModal" class="modal">
-    <div class="modal-content" style="width: 40%;">
-        <span class="close" onclick="closeModal('deleteModal')">&times;</span>
-        <h2>Delete Truck</h2>
-        <input type="hidden" id="deleteTruckId">
-        <div class="form-group">
-            <label for="deleteReason">Reason for deletion:</label>
-            <textarea id="deleteReason" name="deleteReason" class="form-control" rows="4" required></textarea>
-        </div>
-        <div class="button-group">
-            <button type="button" class="save-btn" onclick="performSoftDelete()">Confirm Delete</button>
-            <button type="button" class="cancel-btn" onclick="closeModal('deleteModal')">Cancel</button>
-        </div>
-    </div>
-</div> -->
 
 <div id="reasonModal" class="modal">
     <div class="modal-content" style="width: 40%;">
@@ -295,20 +280,17 @@ checkAccess();
         document.getElementById('current-time').textContent = now.toLocaleTimeString();
     }
 
-    // Update immediately and then every second
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
 function toggleDeletedTrucks() {
      clearTimeout(searchTimeout);
     showDeleted = document.getElementById('showDeleted').checked;
-    // Reset to first page when toggling
     currentTruckPage = 1;
     renderTrucksTable();
 }
 
 function viewDeletionReason(truckId) {
-    // Find the truck in our data
     const truck = trucksData.find(t => t.truck_id == truckId);
     if (truck) {
         document.getElementById('deletionReasonText').textContent = 
@@ -340,7 +322,7 @@ function fetchTrucks() {
         })
         .catch(error => console.error('Error:', error));
 }
-       
+        
         
         function openModal(modalId) {
             document.getElementById(modalId).style.display = "block";
@@ -362,7 +344,6 @@ function fetchTrucks() {
       function openTruckModal(editMode = false, truckId = null) {
     isEditMode = editMode;
     
-    // Reset photo preview and file input
     resetTruckPhotoPreview();
     
     if (editMode) {
@@ -374,16 +355,13 @@ function fetchTrucks() {
             document.getElementById('capacity').value = truck.capacity;
             document.getElementById('status').value = truck.status || truck.display_status;
             
-            // Display existing truck photo if available
             const preview = document.getElementById('truckPhotoPreview');
             if (truck.truck_pic) {
                 const img = document.createElement('img');
-                // We're now using the full data URI from the database, which is more reliable
                 img.src = 'data:' + truck.truck_pic;
                 img.className = 'truck-preview-image';
                 preview.appendChild(img);
                 
-                // Add a note that this is the current photo
                 const note = document.createElement('p');
                 note.textContent = 'Current photo';
                 note.style.fontSize = '12px';
@@ -568,7 +546,7 @@ function deleteTruck(truckId) {
 }
         
 
-     
+   
 
 function performSoftDelete() {
     const truckId = document.getElementById('deleteTruckId').value;
@@ -594,8 +572,8 @@ function performSoftDelete() {
     })
     .then(response => response.json())
     .then(data => {
-          if (data.success) {
-              Swal.fire({
+         if (data.success) {
+             Swal.fire({
             icon: 'error',
             title: 'Soft Delete',
             text: 'Truck has been deleted successfully!'
@@ -624,12 +602,11 @@ function searchTrucks() {
         
         if (!searchTerm) {
              currentStatusFilter = 'all';
-            document.getElementById('statusFilter').value = 'all';
-             fetchTrucks();
+             document.getElementById('statusFilter').value = 'all';
+              fetchTrucks();
             return;
         }
     
-    // Filter trucks based on search term
     const filteredTrucks = trucksData.filter(truck => {
         return (
             truck.truck_id.toString().includes(searchTerm) ||
@@ -680,7 +657,6 @@ function renderTrucksTable() {
     } else if (currentStatusFilter === 'deleted') {
         filteredTrucks = filteredTrucks.filter(truck => truck.is_deleted == 1);
     } else {
-        // Show all non-deleted when 'all' is selected
         filteredTrucks = filteredTrucks.filter(truck => truck.is_deleted == 0);
     }
 
@@ -713,13 +689,12 @@ function renderTrucksTable() {
             statusClass = truck.display_status.toLowerCase().replace(/\s+/g, "-");
             statusText = truck.display_status;
         }
-     
+       
         tr.innerHTML = `
             <td data-label="ID">${highlightMatches(truck.truck_id)}</td>
             <td data-label="Truck Photo">
                 <div class='truck-image-container'>
                     ${truck.truck_pic ? 
-                        // The src now directly uses the truck_pic which contains the full data URI, handling any image type.
                         '<img src="data:' + truck.truck_pic + '" alt="Truck ' + truck.plate_no + '" class="truck-image" title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">' :
                         '<img src="include/img/truck' + (truck.capacity == 20 ? '1' : '2') + '.png" alt="Truck ' + truck.plate_no + '" class="truck-image" title="Plate: ' + truck.plate_no + '\nCapacity: ' + truck.capacity + '">'
                     }
@@ -775,60 +750,54 @@ function renderTrucksTable() {
     }
 }
    document.addEventListener('DOMContentLoaded', function() {
-            window.addEventListener('click', (event) => {
+           window.addEventListener('click', (event) => {
 
-            if (event.target.classList.contains('modal')) {
-                closeModal(event.target.id);
-            }
-             });
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.dropdown')) {
-                    closeAllDropdowns();
-                }
+           if (event.target.classList.contains('modal')) {
+               closeModal(event.target.id);
+           }
             });
-            
-            // Toggle dropdowns when clicking the button
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.dropdown-btn')) {
-                    const dropdown = e.target.closest('.dropdown');
-                    const dropdownContent = dropdown.querySelector('.dropdown-content');
-                    
-                    // Close all other dropdowns
-                    closeAllDropdownsExcept(dropdownContent);
-                    
-                    // Toggle this dropdown
-                    dropdownContent.classList.toggle('show');
-                    e.stopPropagation();
-                }
-            });
-            
-            // Handle dropdown item clicks
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.dropdown-item')) {
-                    // Close the dropdown
-                    const dropdownContent = e.target.closest('.dropdown-content');
-                    if (dropdownContent) {
-                        dropdownContent.classList.remove('show');
-                    }
-                }
-            });
-        });
-        
-        function closeAllDropdowns() {
-            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
-                dropdown.classList.remove('show');
-            });
-        }
-        
-        function closeAllDropdownsExcept(exceptDropdown) {
-            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
-                if (dropdown !== exceptDropdown) {
-                    dropdown.classList.remove('show');
-                }
-            });
-        }
+           document.addEventListener('click', function(e) {
+               if (!e.target.closest('.dropdown')) {
+                   closeAllDropdowns();
+               }
+           });
+           
+           document.addEventListener('click', function(e) {
+               if (e.target.closest('.dropdown-btn')) {
+                   const dropdown = e.target.closest('.dropdown');
+                   const dropdownContent = dropdown.querySelector('.dropdown-content');
+                   
+                   closeAllDropdownsExcept(dropdownContent);
+                   
+                   dropdownContent.classList.toggle('show');
+                   e.stopPropagation();
+               }
+           });
+           
+           document.addEventListener('click', function(e) {
+               if (e.target.closest('.dropdown-item')) {
+                   const dropdownContent = e.target.closest('.dropdown-content');
+                   if (dropdownContent) {
+                       dropdownContent.classList.remove('show');
+                   }
+               }
+           });
+       });
+       
+       function closeAllDropdowns() {
+           document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+               dropdown.classList.remove('show');
+           });
+       }
+       
+       function closeAllDropdownsExcept(exceptDropdown) {
+           document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+               if (dropdown !== exceptDropdown) {
+                   dropdown.classList.remove('show');
+               }
+           });
+       }
 
-// Add this new function for full delete
 function fullDeleteTruck(truckId) {
     Swal.fire({
         title: 'Permanent Deletion',
@@ -846,7 +815,6 @@ function fullDeleteTruck(truckId) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Show loading indicator
             Swal.fire({
                 title: 'Deleting Truck',
                 html: 'Permanently removing truck from system...',
@@ -968,7 +936,6 @@ function viewMaintenanceHistory(truckId) {
                     </div>`;
             }
             
-            // Show the modal
             document.getElementById('historyModal').style.display = 'block';
         })
         .catch(error => {
@@ -983,7 +950,6 @@ function viewMaintenanceHistory(truckId) {
 }
 
 function sortTrucks(sortBy) {
-    // Toggle sort order if clicking the same column
     if (sortBy === 'truck_id') {
         currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
     }
@@ -997,11 +963,9 @@ function sortTrucks(sortBy) {
         return 0;
     });
     
-    // Update sort indicator
     document.getElementById('sortIndicator').textContent = 
         currentSortOrder === 'asc' ? '↑' : '↓';
     
-    // Reset to first page and render
     currentTruckPage = 1;
     renderTrucksTable();
 }
@@ -1011,7 +975,7 @@ function changeTruckPage(direction) {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     
     let filteredTrucks = [...trucksData];
-  
+ 
     if (searchTerm) {
         filteredTrucks = filteredTrucks.filter(truck => {
             return (
@@ -1042,11 +1006,9 @@ function changeTruckPage(direction) {
         }
     }
     
-    // Calculate pagination
     const totalPages = Math.ceil(filteredTrucks.length / rowsPerPage);
     currentTruckPage += direction;
     
-    // Ensure we stay within bounds
     if (currentTruckPage < 1) currentTruckPage = 1;
     if (currentTruckPage > totalPages) currentTruckPage = totalPages;
     
@@ -1069,7 +1031,7 @@ function changeTruckPage(direction) {
             };
             
            return `<span class="date">${date.toLocaleDateString(undefined, dateOptions)}</span>  <span class="time">${date.toLocaleTimeString(undefined, timeOptions)}</span>`;
-        }
+       }
 
   function fetchTruckCounts() {
     fetch('include/handlers/truck_handler.php?action=getTruckCounts')
@@ -1093,33 +1055,28 @@ function updateStatsCards(counts) {
         
 
         function setupModalEventListeners() {
-    // History Modal close events
     const historyModal = document.getElementById('historyModal');
     const historyCloseBtn = historyModal.querySelector('.close');
     const historyCloseButton = historyModal.querySelector('.modal-footer button');
     
-    // Close button (X) event
     if (historyCloseBtn) {
         historyCloseBtn.addEventListener('click', function() {
             closeHistoryModal();
         });
     }
     
-    // Footer close button event
     if (historyCloseButton) {
         historyCloseButton.addEventListener('click', function() {
             closeHistoryModal();
         });
     }
     
-    // Click outside modal to close
     historyModal.addEventListener('click', function(e) {
         if (e.target === historyModal) {
             closeHistoryModal();
         }
     });
     
-    // ESC key to close modal
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             if (historyModal.style.display === 'block') {
@@ -1144,7 +1101,6 @@ function closeHistoryModal() {
     const historyModal = document.getElementById('historyModal');
     historyModal.style.display = 'none';
     
-    // Clear the modal content
     document.getElementById('historyModalContent').innerHTML = '';
 }
 
@@ -1218,7 +1174,7 @@ function closeHistoryModal() {
         confirmButtonText: 'Yes, restore it!',
         cancelButtonText: 'No, keep it',
         confirmButtonColor: '#28a745', 
-        cancelButtonColor: '#6c757d',  // Gray for cancel
+        cancelButtonColor: '#6c757d',  
         customClass: {
             confirmButton: 'btn-confirm',
             cancelButton: 'btn-cancel',
@@ -1227,7 +1183,6 @@ function closeHistoryModal() {
         buttonsStyling: false
     }).then((result) => {
         if (result.isConfirmed) {
-            // Show loading indicator
             Swal.fire({
                 title: 'Restoring Truck',
                 html: 'Please wait while we restore the truck...',
@@ -1280,21 +1235,16 @@ function closeHistoryModal() {
     });
 }
 document.addEventListener('DOMContentLoaded', function() {
-    // Get current page filename
     const currentPage = window.location.pathname.split('/').pop();
     
-    // Find all sidebar links
     const sidebarLinks = document.querySelectorAll('.sidebar-item a');
     
-    // Check each link
     sidebarLinks.forEach(link => {
         const linkPage = link.getAttribute('href').split('/').pop();
         
-        // If this link matches current page, add active class
         if (linkPage === currentPage) {
             link.parentElement.classList.add('active');
             
-            // Also highlight the icon
             const icon = link.parentElement.querySelector('.icon2');
             if (icon) {
                 icon.style.color = 'white';
@@ -1413,7 +1363,6 @@ function previewTruckPhoto(input) {
     preview.innerHTML = '';
     
     if (input.files && input.files[0]) {
-        // Check file size (max 2MB)
         if (input.files[0].size > 2 * 1024 * 1024) {
             Swal.fire({
                 icon: 'error',
@@ -1471,27 +1420,20 @@ function resetTruckPhotoPreview() {
     this.progressBar = document.querySelector('.progress-bar');
     this.progressText = document.querySelector('.progress-text');
     
-    // Show loading immediately if coming from another page
-    // this.checkForIncomingNavigation();
     this.setupNavigationInterception();
   },
   
   checkForIncomingNavigation() {
-    // Check if we're coming from another page in the same site
     const referrer = document.referrer;
     const currentDomain = window.location.origin;
     
-    // Also check sessionStorage for loading state
     const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
     
     if ((referrer && referrer.startsWith(currentDomain)) || shouldShowLoading) {
-      // Clear the flag
       sessionStorage.removeItem('showAdminLoading');
       
-      // Show loading animation for incoming navigation
       this.show('Loading Page', 'Loading content...');
       
-      // Simulate realistic loading progress
       let progress = 0;
       const progressInterval = setInterval(() => {
         progress += Math.random() * 25 + 10;
@@ -1513,7 +1455,6 @@ function resetTruckPhotoPreview() {
     this.titleEl.textContent = title;
     this.messageEl.textContent = message;
     
-    // Reset progress
     this.updateProgress(0);
     
     this.loadingEl.style.display = 'flex';
@@ -1542,7 +1483,6 @@ function resetTruckPhotoPreview() {
   
   setupNavigationInterception() {
     document.addEventListener('click', (e) => {
-      // Skip if click is inside SweetAlert modal, regular modals, or calendar
       if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal, .modal, .modal-content, .fc-event, #calendar')) {
         return;
       }
@@ -1553,27 +1493,24 @@ function resetTruckPhotoPreview() {
           !link.href.startsWith('#') && !link.href.startsWith('mailto:') &&
           !link.href.startsWith('tel:')) {
         
-        // Only intercept internal links
         try {
           const linkUrl = new URL(link.href);
           const currentUrl = new URL(window.location.href);
           
           if (linkUrl.origin !== currentUrl.origin) {
-            return; // Let external links work normally
+            return; 
           }
           
-          // Skip if it's the same page
           if (linkUrl.pathname === currentUrl.pathname) {
             return;
           }
           
         } catch (e) {
-          return; // Invalid URL, let it work normally
+          return; 
         }
         
         e.preventDefault();
         
-        // Set flag for next page
         sessionStorage.setItem('showAdminLoading', 'true');
         
         const loading = this.startAction(
@@ -1586,16 +1523,14 @@ function resetTruckPhotoPreview() {
           progress += Math.random() * 15 + 8;
           if (progress >= 85) {
             clearInterval(progressInterval);
-            progress = 90; // Stop at 90% until page actually loads
+            progress = 90; 
           }
           loading.updateProgress(Math.min(progress, 90));
         }, 150);
         
-        // Minimum delay to show animation
         const minLoadTime = 1200;
         
         setTimeout(() => {
-          // Complete the progress bar
           loading.updateProgress(100);
           setTimeout(() => {
             window.location.href = link.href;
@@ -1604,14 +1539,11 @@ function resetTruckPhotoPreview() {
       }
     });
 
-    // Handle form submissions
     document.addEventListener('submit', (e) => {
-      // Skip if form is inside SweetAlert or modal
       if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
         return;
       }
       
-      // Only show loading for forms that will cause page navigation
       const form = e.target;
       if (form.method && form.method.toLowerCase() === 'post' && form.action) {
         const loading = this.startAction(
@@ -1625,7 +1557,6 @@ function resetTruckPhotoPreview() {
       }
     });
     
-    // Handle browser back/forward buttons
     window.addEventListener('popstate', () => {
       this.show('Loading Page', 'Loading previous page...');
       setTimeout(() => {
@@ -1656,7 +1587,6 @@ function resetTruckPhotoPreview() {
     };
   },
   
-  // Public methods for manual control
   showManual: function(title, message) {
     this.show(title, message);
   },
@@ -1670,20 +1600,16 @@ function resetTruckPhotoPreview() {
   }
 };
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
   
-  // Add smooth transition to the GIF
   const loadingGif = document.querySelector('.loading-gif');
   if (loadingGif) {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
   
-  // Hide loading on page show (handles browser back button)
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
-      // Page was loaded from cache (back/forward button)
       setTimeout(() => {
         AdminLoading.hideManual();
       }, 500);
@@ -1691,13 +1617,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Handle page unload
-// window.addEventListener('beforeunload', () => {
-//   // Set flag that we're navigating
-//   sessionStorage.setItem('showAdminLoading', 'true');
-// });
-
-// Export for global access (optional)
 window.AdminLoading = AdminLoading;
 </script>
 <footer class="site-footer">
