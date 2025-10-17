@@ -1293,7 +1293,7 @@ function updateFormSectionsBasedOnStatus() {
         document.querySelector('.edit-reasons-section').style.display = 'none';
 
         
-        toggleCostInput();
+        updateFormSectionsBasedOnStatus();
     }
 }
 
