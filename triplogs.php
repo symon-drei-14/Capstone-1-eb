@@ -2650,12 +2650,12 @@ $(document).on('click', '.dropdown-item.edit', function() {
 });
 
 function populateEditModal(event) {
-    // Let's clear out any old reasons before we start.
+    
     $('#editForm input[name="editReason"]').prop('checked', false);
     $('#otherReasonText').val('');
     $('#otherReasonContainer').hide();
 
-    // This is the new part for the modal title
+    
     const tripIdFormatted = `#${String(event.id).padStart(4, '0')}`;
     $('#editModalTripId').text(tripIdFormatted);
 
@@ -2665,7 +2665,7 @@ function populateEditModal(event) {
     var eventDate = event.date || event.trip_date;
     if (eventDate) {
         if (eventDate.includes('T')) {
-            eventDate = eventDate.substring(0, 16); // Just get the YYYY-MM-DDTHH:MM part
+            eventDate = eventDate.substring(0, 16); 
         }
     }
     $('#editEventDate').val(eventDate);
@@ -2673,18 +2673,17 @@ function populateEditModal(event) {
     const currentSize = event.truck_capacity ? event.truck_capacity + 'ft' : event.size;
     populateDriverDropdowns(currentSize, event.driver);
 
-    // Get all the dropdowns ready
+    
     populateHelperDropdowns();
     populateDispatcherDropdowns();
     populateConsigneeDropdowns();
     populateClientDropdowns();
-    // CRITICAL FIX: Pass the current port value to the specialized function 
-    // so it can select the correct option after the list loads via AJAX.
+    
     populatePortDropdowns(event.port); 
     populateDestinationDropdowns();
     populateShippingLineDropdowns();
 
-    // Set other form fields
+   
     $('#editEventContainerNo').val(event.containerNo);
     $('#editEventSize').val(event.truck_capacity ? event.truck_capacity + 'ft' : event.size);
     $('#editEventFCL').val(event.fcl_status || event.size);
@@ -2693,15 +2692,14 @@ function populateEditModal(event) {
     $('#editEventDiesel').val(event.diesel);
     $('#editEventStatus').val(event.status);
 
-    // Show/hide additional cash field based on status
+  
     if (event.status === 'En Route') {
         $('#editAdditionalCashContainer').show();
     } else {
         $('#editAdditionalCashContainer').hide();
     }
 
-    // Set dropdown values after a short delay to ensure they're populated
-    // Note: The unreliable setting of $('#editEventPort').val() has been REMOVED from this timeout block.
+  
     setTimeout(() => {
         $('#editEventDriver').val(event.driver);
         $('#editEventHelper').val(event.helper);
@@ -2709,30 +2707,30 @@ function populateEditModal(event) {
         $('#editEventConsignee').val(event.consignee);
         $('#editEventClient').val(event.client);
         
-        // This line is now gone and handled reliably in populatePortDropdowns() success callback.
+        
         
         $('#editEventDestination').val(event.destination);
         $('#editEventShippingLine').val(event.shippingLine);
     }, 200); // Increased timeout to 200ms
 
-    // This part handles the form's state based on the trip status.
+    
     if (event.status === 'Cancelled') {
-        // A cancelled trip shouldn't be edited.
-        $('#editEventStatus option[value="Cancelled"]').show(); // Make sure the Cancelled option is visible
+        
+        $('#editEventStatus option[value="Cancelled"]').show(); 
         $('#editForm').find(':input:not(.close-btn, .cancel-btn)').prop('disabled', true); // Disable all fields
-        $('#editForm').find('.save-btn').hide(); // Hide the save button too
+        $('#editForm').find('.save-btn').hide(); // Hide the save button
     } else {
-        // Otherwise, make sure the form is active.
+       
         $('#editForm').find(':input').prop('disabled', false);
         $('#editForm').find('.save-btn').show();
-        $('#editEventStatus option[value="Cancelled"]').hide(); // Hide the Cancelled option so it can't be chosen
+        $('#editEventStatus option[value="Cancelled"]').hide(); 
 
-        // Re-apply the original logic to disable specific fields
+       
         $('#editEventDriver').prop('disabled', true);
         $('#editEventSize').prop('disabled', true);
     }
 
-    // Show/hide buttons based on status
+   
     if (event.status === 'Completed') {
         $('#viewExpensesBtn').show();
     } else {
@@ -2755,7 +2753,7 @@ function populateEditModal(event) {
 $(document).on('click', '.dropdown-item.view-expenses', function() {
     var tripId = $(this).data('id');
     
-    // Find the trip data from eventsData
+    
     var tripData = eventsData.find(function(trip) { 
         return trip.id == tripId; 
     });
@@ -2818,11 +2816,11 @@ if (response.expenses && response.expenses.length > 0) {
         const amount = parseFloat(expense.amount.replace('₱', '').replace(',', ''));
         totalExpenses += amount;
 
-        // Add a class and data attribute if a receipt exists
+        
         const receiptAttr = expense.receipt_image ? `data-receipt="${expense.receipt_image}"` : '';
         const clickableClass = expense.receipt_image ? 'clickable-expense' : '';
 
-        // Format the submitted time
+        
         const submittedTime = expense.submitted_time ? formatDateTime(expense.submitted_time) : 'N/A';
 
         var row = `
@@ -2952,7 +2950,7 @@ $('#addScheduleForm').on('submit', function(e) {
     
     if (event && event.edit_reasons) {
         try {
-            // Check if it's the default "Trip created" message
+            
             if (event.edit_reasons === "Trip created" || 
                 event.edit_reasons === '"Trip created"') {
                 $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
@@ -2963,7 +2961,7 @@ $('#addScheduleForm').on('submit', function(e) {
             
             var reasons;
             
-            // Handle different data types
+           
             if (typeof event.edit_reasons === 'string') {
                 reasons = JSON.parse(event.edit_reasons);
             } else if (Array.isArray(event.edit_reasons)) {
@@ -2974,17 +2972,17 @@ $('#addScheduleForm').on('submit', function(e) {
                 throw new Error('Unknown data format');
             }
             
-            // Ensure we have an array
+            
             if (!Array.isArray(reasons)) {
                 reasons = [reasons];
             }
             
-            // Filter out any empty or null reasons
+           
             reasons = reasons.filter(function(reason) {
                 return reason && reason !== "Trip created";
             });
             
-            // If no valid reasons after filtering
+            
             if (reasons.length === 0) {
                 $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
                     '<p>This trip has not been edited yet</p></div>');
@@ -3025,7 +3023,7 @@ $('#addScheduleForm').on('submit', function(e) {
 
 
 function validateEditReasons() {
-    // Check if at least one reason is selected
+   
     const checkedReasons = $('input[name="editReason"]:checked').length;
     const otherReasonText = $('#otherReasonText').val().trim();
     
@@ -3039,7 +3037,7 @@ function validateEditReasons() {
         return false;
     }
     
-    // Check if "Other" is checked but no reason provided
+  
 
     if ($('#reason7').is(':checked') && $('#otherReasonText').val().trim() === '') {
         Swal.fire({
@@ -3071,7 +3069,7 @@ $('#editForm').on('submit', function(e) {
         return; 
     }
     
-    // Check if "Other" is selected but textarea is empty
+    
     if ($('#reason7').is(':checked') && $('#otherReasonText').val().trim() === '') {
         Swal.fire({
             icon: 'error',
@@ -3131,7 +3129,7 @@ $('#editForm').on('submit', function(e) {
     if (response.success) {
         const editedTripId = $('#editEventId').val();
 
-        // To keep things snappy, let's update our local trip data right away.
+        
         const eventIndex = eventsData.findIndex(e => e.id == editedTripId);
         if (eventIndex !== -1) {
             const updatedEvent = eventsData[eventIndex];
@@ -3152,7 +3150,7 @@ $('#editForm').on('submit', function(e) {
             updatedEvent.diesel = $('#editEventDiesel').val();
             updatedEvent.status = $('#editEventStatus').val();
             
-            // The plate number and capacity are tied to the truck, which doesn't change here.
+           
             updatedEvent.plateNo = $('#editEventPlateNo').val();
             updatedEvent.truck_plate_no = $('#editEventPlateNo').val();
             updatedEvent.truck_capacity = $('#editEventSize').val().replace('ft', '');
@@ -3191,7 +3189,7 @@ $('#editForm').on('submit', function(e) {
     });
 });
                 
-            // Initial render
+            
             renderTable();
         });
 
@@ -3244,14 +3242,14 @@ function deleteTrip(tripId, rowElement) {
 
                                 const rowsOnPage = $('#eventTableBody tr').length;
                                 if (rowsOnPage === 1 && currentPage > 1) {
-                                    currentPage--; // go back a page if last row was deleted
+                                    currentPage--; 
                                 }
 
                                 if (rowElement) {
                                     rowElement.fadeOut(500, function() {
                                         $(this).remove();
 
-                                        // Fetch next row to keep row count constant
+                                        
                                         $.ajax({
                                             url: 'include/handlers/trip_operations.php',
                                             type: 'POST',
@@ -3270,11 +3268,11 @@ function deleteTrip(tripId, rowElement) {
                                                 if (nextRowResponse.success && nextRowResponse.rowHtml) {
                                                     $('#eventTableBody').append(nextRowResponse.rowHtml);
                                                 } else {
-                                                    renderTable(); // fallback refresh if no more rows
+                                                    renderTable(); 
                                                 }
                                             },
                                             error: function() {
-                                                renderTable(); // fallback
+                                                renderTable(); 
                                             }
                                         });
                                     });
@@ -3314,7 +3312,7 @@ function deleteTrip(tripId, rowElement) {
 
 $(document).on('click', '.dropdown-item.delete', function() {
     var eventId = $(this).data('id');
-    // We pass the closest table row 'tr' to the function
+   
     var rowElement = $(this).closest('tr');
     deleteTrip(eventId, rowElement); 
 });
@@ -3371,7 +3369,7 @@ $('#eventModalDeleteBtn').on('click', '.dropdown-item.delete', function() {
 
        $('#otherReasonText').on('input', function() {
 if ($(this).val().trim() !== '') {
-$('#reason7').prop('checked', true); // Now setting the "Other" checkbox
+$('#reason7').prop('checked', true); 
 }
 });
 
@@ -3396,15 +3394,15 @@ function populatePortDropdowns(currentPortValue = null) {
             if (response.success && response.ports) {
                 var options = '<option value="" disabled selected>Select Port</option>';
                 response.ports.forEach(function(port) {
-                    // Make sure the option value is the port name
+                    
                     options += `<option value="${port.name}">${port.name}</option>`;
                 });
-                // Populate both modals
+                
                 $('#editEventPort, #addEventPort').html(options);
                 
-                // CRITICAL FIX: Set the selected value now that the options are guaranteed to be in the DOM.
+                
                 if (currentPortValue) {
-                    // Trim the value just in case of hidden characters, addressing the issue.
+                  
                     $('#editEventPort').val(currentPortValue.trim());
                 }
             }
@@ -3420,12 +3418,12 @@ function populatePortDropdowns(currentPortValue = null) {
         const table = document.getElementById('eventsTable');
         const rows = table.getElementsByTagName('tr');
         
-        // Skip the header row (index 0)
+      
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
             let found = false;
             
-            // Check each cell in the row (skip the last one which has actions)
+            
             for (let j = 0; j < row.cells.length - 1; j++) {
                 const cell = row.cells[j];
                 if (cell.textContent.toLowerCase().includes(searchTerm)) {
@@ -3474,7 +3472,7 @@ function populatePortDropdowns(currentPortValue = null) {
 }
 
 $(document).on('click', '.dropdown-item.full-delete', function(e) {
-    e.stopPropagation(); // Prevent event bubbling to parent elements
+    e.stopPropagation(); 
     
     const tripId = $(this).data('id');
     const $row = $(this).closest('tr');
@@ -3499,14 +3497,14 @@ $(document).on('click', '.dropdown-item.full-delete', function(e) {
                 }),
                 success: function(response) {
                     if (response.success) {
-                        // Update stats cards with the returned data
+                       
                         $('.stat-value').eq(0).text(response.stats.pending);
                         $('.stat-value').eq(1).text(response.stats.enroute);
                         $('.stat-value').eq(2).text(response.stats.completed);
                         $('.stat-value').eq(3).text(response.stats.cancelled);
                         $('.stat-value').eq(4).text(response.stats.total);
 
-                        // Remove the row from the table
+                        
                         $row.remove();
                         
                         Swal.fire({
@@ -3641,7 +3639,7 @@ $(document).on('click', '.dropdown-item.full-delete', function(e) {
     });
 });
 function updateEventModalDetails() {
-    // Read all the new values from the completed edit form
+   
     const newValues = {
         date: $('#editEventDate').val(),
         driver: $('#editEventDriver').val(),
@@ -3661,7 +3659,7 @@ function updateEventModalDetails() {
         size: $('#editEventSize').val() 
     };
 
-    // Update the visible text in the Trip Details modal (#eventModal)
+
     $('#modal-status').text(newValues.status)
         .removeClass()
         .addClass('status ' + newValues.status.toLowerCase().replace(/\s+/g, '-'));
@@ -3669,7 +3667,7 @@ function updateEventModalDetails() {
     $('#modal-origin').text(newValues.port || 'N/A');
     $('#modal-destination').text(newValues.destination || 'N/A');
     $('#modal-plate-no').text(newValues.plateNo || 'N/A');
-    $('#modal-date').html(formatDateTime(newValues.date)); // Use formatDateTime for consistency
+    $('#modal-date').html(formatDateTime(newValues.date));
     $('#modal-size').text(newValues.size || 'N/A');
     $('#modal-container-no').text(newValues.containerNo || 'N/A');
     
@@ -3685,10 +3683,10 @@ function updateEventModalDetails() {
     $('#modal-shipping-line').text(newValues.shippingLine || 'N/A');
     $('#modal-consignee').text(newValues.consignee || 'N/A');
 
-    // Also update the 'currentEvent' data object stored on the modal to keep it in sync
+   
     var currentEvent = $('#eventModal').data('currentEvent');
     if (currentEvent) {
-        Object.assign(currentEvent, newValues); // Update the stored event data
+        Object.assign(currentEvent, newValues); 
         $('#eventModal').data('currentEvent', currentEvent);
     }
 }
@@ -3696,18 +3694,18 @@ function updateEventModalDetails() {
         // Get current page filename
         const currentPage = window.location.pathname.split('/').pop();
         
-        // Find all sidebar links
+        
         const sidebarLinks = document.querySelectorAll('.sidebar-item a');
         
-        // Check each link
+        
         sidebarLinks.forEach(link => {
             const linkPage = link.getAttribute('href').split('/').pop();
             
-            // If this link matches current page, add active class
+           
             if (linkPage === currentPage) {
                 link.parentElement.classList.add('active');
                 
-                // Also highlight the icon
+                
                 const icon = link.parentElement.querySelector('.icon2');
                 if (icon) {
                     icon.style.color = 'white';
@@ -3741,7 +3739,7 @@ function updateEventModalDetails() {
        if (otherCheckbox.checked && otherReasonText === '') {
         e.preventDefault();
         
-        // Use SweetAlert instead of basic alert
+        
         Swal.fire({
             icon: 'warning',
             title: 'Missing Information',
@@ -3749,7 +3747,7 @@ function updateEventModalDetails() {
             confirmButtonText: 'OK',
             confirmButtonColor: '#3085d6',
             didClose: () => {
-                // Focus on the textarea after alert is closed
+                
                 document.getElementById('otherReasonText').focus();
             }
         });
@@ -3871,14 +3869,7 @@ function updateTableInfo(totalItems, currentItemsCount) {
 }   
 
 
-/* document.addEventListener('click', function(e) {
-        if (e.target.closest('.cancel-trip')) {
-            const tripId = e.target.closest('.cancel-trip').dataset.id;
 
-            document.getElementById('cancelTripModal').style.display = 'block';
-        }
-    });
-*/
 $(document).on('click', '.clickable-expense', function() {
     const receiptUrl = $(this).data('receipt');
     if (receiptUrl) {
@@ -3937,10 +3928,10 @@ function cancelTrip(tripId) {
 
                         updateStats();
                         
-                        // Update the status cell directly for real-time effect
+                        
                         const $row = $(`tr[data-trip-id="${tripId}"]`);
                         if ($row.length) {
-                            // Find and update the status cell
+                           
                             const $statusCell = $row.find('td:contains("Pending"), td:contains("En Route"), td:contains("Completed")').filter(function() {
                                 return $(this).find('.status').length > 0;
                             });
@@ -3949,7 +3940,7 @@ function cancelTrip(tripId) {
                                 $statusCell.html('<span class="status cancelled">Cancelled</span>');
                             }
                             
-                            // Also update the eventsData array
+                            
                             const eventIndex = eventsData.findIndex(e => e.id == tripId);
                             if (eventIndex !== -1) {
                                 eventsData[eventIndex].status = 'Cancelled';
@@ -4097,27 +4088,26 @@ function refreshCalendarEvents() {
     this.progressBar = document.querySelector('.progress-bar');
     this.progressText = document.querySelector('.progress-text');
     
-    // Show loading immediately if coming from another page
-    // this.checkForIncomingNavigation();
+  
     this.setupNavigationInterception();
   },
   
   checkForIncomingNavigation() {
-    // Check if we're coming from another page in the same site
+    
     const referrer = document.referrer;
     const currentDomain = window.location.origin;
     
-    // Also check sessionStorage for loading state
+    
     const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
     
     if ((referrer && referrer.startsWith(currentDomain)) || shouldShowLoading) {
-      // Clear the flag
+      
       sessionStorage.removeItem('showAdminLoading');
       
-      // Show loading animation for incoming navigation
+      
       this.show('Loading Page', 'Loading content...');
       
-      // Simulate realistic loading progress
+      
       let progress = 0;
       const progressInterval = setInterval(() => {
         progress += Math.random() * 25 + 10;
@@ -4168,7 +4158,7 @@ function refreshCalendarEvents() {
   
   setupNavigationInterception() {
     document.addEventListener('click', (e) => {
-      // Skip if click is inside SweetAlert modal, regular modals, or calendar
+      
       if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal, .modal, .modal-content, .fc-event, #calendar')) {
         return;
       }
@@ -4179,27 +4169,27 @@ function refreshCalendarEvents() {
           !link.href.startsWith('#') && !link.href.startsWith('mailto:') &&
           !link.href.startsWith('tel:')) {
         
-        // Only intercept internal links
+       
         try {
           const linkUrl = new URL(link.href);
           const currentUrl = new URL(window.location.href);
           
           if (linkUrl.origin !== currentUrl.origin) {
-            return; // Let external links work normally
+            return; 
           }
           
-          // Skip if it's the same page
+          
           if (linkUrl.pathname === currentUrl.pathname) {
             return;
           }
           
         } catch (e) {
-          return; // Invalid URL, let it work normally
+          return; 
         }
         
         e.preventDefault();
         
-        // Set flag for next page
+       
         sessionStorage.setItem('showAdminLoading', 'true');
         
         const loading = this.startAction(
@@ -4212,16 +4202,16 @@ function refreshCalendarEvents() {
           progress += Math.random() * 15 + 8;
           if (progress >= 85) {
             clearInterval(progressInterval);
-            progress = 90; // Stop at 90% until page actually loads
+            progress = 90; 
           }
           loading.updateProgress(Math.min(progress, 90));
         }, 150);
         
-        // Minimum delay to show animation
+       
         const minLoadTime = 1200;
         
         setTimeout(() => {
-          // Complete the progress bar
+          
           loading.updateProgress(100);
           setTimeout(() => {
             window.location.href = link.href;
@@ -4230,9 +4220,9 @@ function refreshCalendarEvents() {
       }
     });
 
-    // Handle form submissions
+   
     document.addEventListener('submit', (e) => {
-      // Skip if form is inside SweetAlert or modal
+      
       if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
         return;
       }
