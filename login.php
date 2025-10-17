@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     otpInputs[index + i].value = char;
                 }
             });
-             // Focus on the last pasted character's input or the final input
+          
              const lastInputIndex = Math.min(index + pasteData.length, otpInputs.length) - 1;
              otpInputs[lastInputIndex].focus();
         });
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loginForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Reset messages and set button to loading state
+        
         errorMessage.style.display = 'none';
         successMessage.style.display = 'none';
         loginButton.innerHTML = 'Verifying... <i class="fas fa-spinner fa-spin"></i>';
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         
         if (isOtpStage) {
-            // --- Stage 2: SUBMITTING OTP ---
+           
             const otpValue = Array.from(otpInputs).map(input => input.value).join('');
 
             if (otpValue.length < 6) {
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('otp', otpValue);
 
         } else {
-            // --- Stage 1: SUBMITTING USERNAME/PASSWORD ---
+            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('password', password);
         }
 
-        // Send request to the server
+        
         fetch('include/handlers/login_process.php', {
             method: 'POST',
             body: formData,
@@ -185,16 +185,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 if (data.otp_required) {
-                    // Transition to OTP stage
+                    
                     showSuccess(data.message || 'OTP sent successfully.');
                     isOtpStage = true;
                     usernameGroup.style.display = 'none';
                     passwordGroup.style.display = 'none';
                     otpGroup.style.display = 'block';
-                    resetButton(); // Resets button text to "Verify Code"
+                    resetButton(); 
                     otpInputs[0].focus(); 
                 } else {
-                    // Login is fully successful
+                   
                     showSuccess('Login successful! Redirecting...');
                     setTimeout(() => {
                         window.location.href = 'dashboard.php';

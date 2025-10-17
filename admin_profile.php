@@ -2,7 +2,6 @@
 require_once __DIR__ . '/include/check_access.php';
 checkAccess();
 
-// Assume the logged-in admin's ID is stored in the session
 $loggedInAdminId = $_SESSION['admin_id'] ?? null;
 ?>
 
@@ -16,7 +15,7 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
     <link rel="stylesheet" href="include/css/loading.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="include/css/adminmanagement.css">
-    <link rel="stylesheet" href="include/css/admin_profile.css"> <!-- New Profile Styles -->
+    <link rel="stylesheet" href="include/css/admin_profile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -32,13 +31,13 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
          <img src="include/img/mansar2.png" alt="Company Name" class="company">
      </div>
 </div>
-  <div class="header-right">
+   <div class="header-right">
      <div class="datetime-container">
          <div id="current-date" class="date-display"></div>
          <div id="current-time" class="time-display"></div>
      </div>
 
-    <div class="profile" onclick="window.location.href='admin_profile.php'" style="cursor: pointer;"> <!-- Added click event to go to profile page -->
+     <div class="profile" onclick="window.location.href='admin_profile.php'" style="cursor: pointer;">
      <?php 
      if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
          echo '<img id="headerProfilePhoto" src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
@@ -55,46 +54,43 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
 </div>
 </header>
  <?php require_once __DIR__ . '/include/sidebar.php'; ?>
-     <div id="sidebar-backdrop" class="backdrop"></div>
+      <div id="sidebar-backdrop" class="backdrop"></div>
 
-     <!-- Main Profile Content -->
-     <div class="profile-main-content">
-         <h3><i class="fa-solid fa-user-gear"></i> My Admin Profile</h3>
-         
-         <div class="profile-card">
-             <div class="profile-photo-display">
-                 <!-- Profile photo dynamically loaded by JS -->
-                 <img id="currentProfilePhoto" src="include/img/profile.png" alt="Admin Photo" class="profile-photo">
-             </div>
+      <div class="profile-main-content">
+          <h3><i class="fa-solid fa-user-gear"></i> My Admin Profile</h3>
+          
+          <div class="profile-card">
+              <div class="profile-photo-display">
+                  <img id="currentProfilePhoto" src="include/img/profile.png" alt="Admin Photo" class="profile-photo">
+              </div>
 
-             <div class="profile-info-grid">
-                 <div class="info-item">
-                     <label>Username</label>
-                     <p id="displayUsername"></p>
-                 </div>
-                 <div class="info-item">
-                     <label>Email</label>
-                     <p id="displayEmail"></p>
-                 </div>
-                 <div class="info-item">
-                     <label>Role</label>
-                     <p id="displayRole"></p>
-                 </div>
-                 <div class="info-item">
-                     <label>Password (Hidden for Security)</label>
-                     <p class="password-display">************</p>
-                 </div>
-             </div>
+              <div class="profile-info-grid">
+                  <div class="info-item">
+                      <label>Username</label>
+                      <p id="displayUsername"></p>
+                  </div>
+                  <div class="info-item">
+                      <label>Email</label>
+                      <p id="displayEmail"></p>
+                  </div>
+                  <div class="info-item">
+                      <label>Role</label>
+                      <p id="displayRole"></p>
+                  </div>
+                  <div class="info-item">
+                      <label>Password (Hidden for Security)</label>
+                      <p class="password-display">************</p>
+                  </div>
+              </div>
 
-             <button class="edit-profile-btn" onclick="openAdminProfileModal()">
-                 <i class="fas fa-edit"></i> Edit Profile
-             </button>
-         </div>
+              <button class="edit-profile-btn" onclick="openAdminProfileModal()">
+                  <i class="fas fa-edit"></i> Edit Profile
+              </button>
+          </div>
 
-     </div>
+      </div>
 
-     <!-- EDIT PROFILE MODAL (Copied and adapted from adminmanagement.php) -->
-     <div id="adminProfileModal" class="modal">
+      <div id="adminProfileModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="profileModalTitle">Edit My Profile</h2>
@@ -115,7 +111,6 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                         <label for="profileUsername">Username *</label>
                         <input type="text" id="profileUsername" name="username" class="form-control" required>
                     </div>
-                    <!-- Role is only displayed on the profile page, not editable here as it's sensitive -->
                     <div class="form-group">
                          <label for="profileRole">Role</label>
                          <input type="text" id="profileRole" name="role" class="form-control" readonly>
@@ -127,14 +122,13 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                     <input type="email" id="profileAdminEmail" name="adminEmail" class="form-control" required placeholder="admin@example.com">
                 </div>
 
-                 <!-- REQUIRED FIELDS FOR PASSWORD UPDATE -->
                  <div id="oldPasswordGroup" class="form-group">
-                    <label for="profileOldPassword" id="oldPasswordLabel">Current Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="profileOldPassword" name="oldPassword" class="form-control">
-                        <i class="fa-regular fa-eye toggle-password"></i>
-                    </div>
-                    <small id="oldPasswordHelp" style="color: #d33; font-weight: 500;">Only required if you are changing your password.</small>
+                     <label for="profileOldPassword" id="oldPasswordLabel">Current Password</label>
+                     <div class="password-wrapper">
+                         <input type="password" id="profileOldPassword" name="oldPassword" class="form-control">
+                         <i class="fa-regular fa-eye toggle-password"></i>
+                     </div>
+                     <small id="oldPasswordHelp" style="color: #d33; font-weight: 500;">Only required if you are changing your password.</small>
                  </div>
 
                 <div class="form-row">
@@ -165,7 +159,6 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
         </div>
     </div>
     
-     <!-- OTP Verification Modal (Reusing existing OTP styles) -->
     <div id="otpModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -191,18 +184,15 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
     </div>
 
 
-    <!-- Loading and Footer (Copied from adminmanagement.php) -->
     <script>
-         // --- GLOBAL FUNCTIONS (Modal/Loading) ---
-         function openModal(modalId) {
+        function openModal(modalId) {
              document.getElementById(modalId).style.display = "block";
-         }
-         
-         function closeModal(modalId) {
+        }
+        
+        function closeModal(modalId) {
              const modalToClose = document.getElementById(modalId);
              if (!modalToClose) return;
 
-             // Reset OTP fields when closing the OTP modal
              if (modalId === 'otpModal') {
                  document.querySelectorAll('.otp-input').forEach(input => {
                      input.value = '';
@@ -216,16 +206,15 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                  modalToClose.style.display = 'none';
                  modalToClose.classList.remove('closing');
              }, 300); 
-         }
+        }
 
-         window.onclick = function(event) {
+        window.onclick = function(event) {
              if (event.target.classList.contains('modal')) {
                  closeModal(event.target.id);
              }
-         };
-         
-         // Helper function to move focus between OTP inputs
-         function moveToNext(currentInput, nextInputId) {
+        };
+        
+        function moveToNext(currentInput, nextInputId) {
              if (currentInput.value.length === currentInput.maxLength) {
                  const nextInput = document.getElementById(nextInputId);
                  if (nextInput) {
@@ -234,38 +223,33 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                      validateOtpInputs();
                  }
              }
-         }
-         // Helper to check if all OTP fields are filled
-         function validateOtpInputs() {
+        }
+        function validateOtpInputs() {
              const otpInputs = document.querySelectorAll('#otpModal .otp-input');
              let otp = '';
              otpInputs.forEach(input => otp += input.value);
              return otp.length === 6;
-         }
+        }
 
-         // --- PROFILE SPECIFIC FUNCTIONS ---
-         
-         let pendingFormData = null; // To hold form data during OTP flow
+        
+        let pendingFormData = null; 
 
-         function fetchAdminProfile() {
+        function fetchAdminProfile() {
              const adminId = <?php echo json_encode($loggedInAdminId); ?>;
              if (!adminId) {
                  Swal.fire('Error', 'Admin ID not found in session.', 'error');
                  return;
              }
 
-             // Using the existing get_admin.php handler
              fetch(`include/handlers/get_admin.php?id=${adminId}`)
                  .then(response => response.json())
                  .then(data => {
                      if (data.success) {
                          const admin = data.admin;
-                         // Display values on the main page
                          document.getElementById('displayUsername').textContent = admin.username;
                          document.getElementById('displayEmail').textContent = admin.admin_email || 'N/A';
                          document.getElementById('displayRole').textContent = admin.role || 'N/A';
                          
-                         // Update profile photo
                          const photoEl = document.getElementById('currentProfilePhoto');
                          if (admin.admin_pic) {
                              photoEl.src = 'data:image/jpeg;base64,' + admin.admin_pic;
@@ -273,7 +257,6 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                              photoEl.src = 'include/img/profile.png';
                          }
                          
-                         // Set values in the modal form
                          document.getElementById('profileAdminId').value = admin.admin_id;
                          document.getElementById('profileUsername').value = admin.username;
                          document.getElementById('profileAdminEmail').value = admin.admin_email || '';
@@ -283,26 +266,23 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                      }
                  })
                  .catch(error => console.error('Error:', error));
-         }
-         
-         // --- NEW FUNCTION: Manually update the header (name/photo) ---
-         function updateHeaderProfile(updatedUsername, updatedPhotoBase64) {
-            const headerNameEl = document.getElementById('headerProfileName');
-            const headerPhotoEl = document.getElementById('headerProfilePhoto');
-            
-            if (headerNameEl && updatedUsername) {
-                headerNameEl.textContent = updatedUsername;
-            }
-            
-            if (headerPhotoEl && updatedPhotoBase64) {
-                headerPhotoEl.src = 'data:image/jpeg;base64,' + updatedPhotoBase64;
-            } else if (headerPhotoEl && updatedPhotoBase64 === '') {
-                 // Reset to default if photo was somehow cleared (though unlikely here)
-                 headerPhotoEl.src = 'include/img/profile.png';
-            }
-         }
-         // Helper to update the label for 'Current Password' dynamically
-         function updateOldPasswordLabel(isPasswordChanging) {
+        }
+        
+        function updateHeaderProfile(updatedUsername, updatedPhotoBase64) {
+           const headerNameEl = document.getElementById('headerProfileName');
+           const headerPhotoEl = document.getElementById('headerProfilePhoto');
+           
+           if (headerNameEl && updatedUsername) {
+               headerNameEl.textContent = updatedUsername;
+           }
+           
+           if (headerPhotoEl && updatedPhotoBase64) {
+               headerPhotoEl.src = 'data:image/jpeg;base64,' + updatedPhotoBase64;
+           } else if (headerPhotoEl && updatedPhotoBase64 === '') {
+                headerPhotoEl.src = 'include/img/profile.png';
+           }
+        }
+        function updateOldPasswordLabel(isPasswordChanging) {
              const label = document.getElementById('oldPasswordLabel');
              const help = document.getElementById('oldPasswordHelp');
              const input = document.getElementById('profileOldPassword');
@@ -316,10 +296,9 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                  help.style.display = 'block';
                  input.removeAttribute('required');
              }
-         }
-         
-         // Event listener to trigger label update when new password changes
-         document.addEventListener('DOMContentLoaded', () => {
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
              const newPasswordInput = document.getElementById('profilePassword');
              if (newPasswordInput) {
                  newPasswordInput.addEventListener('input', () => {
@@ -327,208 +306,183 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                      updateOldPasswordLabel(isPasswordChanging);
                  });
              }
-             // Initial setup for when modal opens
              updateOldPasswordLabel(false);
-         });
+        });
 
-         function openAdminProfileModal() {
+        function openAdminProfileModal() {
              const form = document.getElementById('profileForm');
              form.reset();
              
-             // Reset preview section
              const previewEl = document.getElementById('profileAdminProfilePreview');
              const photoSrc = document.getElementById('currentProfilePhoto').src;
              const initialPhotoHtml = `
-                <div class="current-profile-section">
-                    <h4>Current Profile Picture:</h4>
-                    <div class="large-profile-display">
-                        <img src="${photoSrc}" class="large-profile-preview" alt="Current Admin Photo">
-                    </div>
-                </div>`;
+                 <div class="current-profile-section">
+                     <h4>Current Profile Picture:</h4>
+                     <div class="large-profile-display">
+                         <img src="${photoSrc}" class="large-profile-preview" alt="Current Admin Photo">
+                     </div>
+                 </div>`;
              previewEl.innerHTML = initialPhotoHtml;
              
-             // Fetch and populate data (though already fetched for the display, this ensures freshness)
              fetchAdminProfile(); 
              
-             // Reset password fields and visibility
              document.getElementById('profilePassword').required = false;
              document.getElementById('profileConfirmPassword').required = false;
              document.getElementById('profileOldPassword').required = false; 
              document.getElementById('profileOldPassword').value = '';
              
-             // Ensure label is initially set to optional state
              updateOldPasswordLabel(false); 
              
              openModal('adminProfileModal');
-         }
-
-        function saveAdminProfile() {
-            const form = document.getElementById('profileForm');
-            const username = document.getElementById('profileUsername').value;
-            const adminEmail = document.getElementById('profileAdminEmail').value;
-            const oldPassword = document.getElementById('profileOldPassword').value;
-            const newPassword = document.getElementById('profilePassword').value;
-            const confirmPassword = document.getElementById('profileConfirmPassword').value;
-            const profileInput = document.getElementById('profileAdminProfile');
-
-            if (!username || !adminEmail) {
-                Swal.fire('Validation Error', 'Username and email are required.', 'warning');
-                return;
-            }
-            if (newPassword !== confirmPassword) {
-                Swal.fire('Validation Error', 'New passwords do not match.', 'warning');
-                return;
-            }
-
-            // Determine if a sensitive change (email or password) is being made
-            const isEmailChanging = adminEmail !== document.getElementById('displayEmail').textContent;
-            const isPasswordChanging = newPassword.length > 0;
-            
-            // The overall trigger for OTP is EITHER email or password change
-            const requiresOtp = isEmailChanging || isPasswordChanging;
-
-            // Check for current password ONLY if password is changing
-            if (isPasswordChanging) {
-                if (!oldPassword) {
-                    Swal.fire('Security Required', 'Please enter your **Current Password** to set a new one.', 'warning');
-                    document.getElementById('profileOldPassword').focus();
-                    return;
-                }
-            }
-            
-            // Disable button and show saving status in the button itself (not the Mansar overlay)
-            const saveButton = document.querySelector('#adminProfileModal .save-btn');
-            saveButton.disabled = true;
-            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-            pendingFormData = new FormData(form);
-            pendingFormData.delete('confirmPassword'); // We don't need this on the server
-            pendingFormData.delete('role'); // Role is readonly
-
-            // If the user isn't changing email or password, but just name/photo, we skip OTP and submit directly
-            if (!requiresOtp) {
-                // Remove oldPassword from FormData if not needed to avoid server processing
-                pendingFormData.delete('oldPassword'); 
-                submitProfileUpdate(pendingFormData, saveButton);
-            } else {
-                // Sensitive change: submit for OTP initiation
-                Swal.fire({
-                    title: 'Sending Verification Code...',
-                    text: 'Please wait while we send the OTP to your registered email.', 
-                    icon: 'info',
-                    showConfirmButton: false,
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                        
-                        fetch('include/handlers/admin_profile_handler.php', {
-                            method: 'POST',
-                            body: pendingFormData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            Swal.close(); 
-                            if (data.success) {
-                                if (data.otp_required) {
-                                    closeModal('adminProfileModal');
-                                    openModal('otpModal');
-                                    Swal.fire('Security Check', data.message, 'info'); 
-                                } else {
-                                    Swal.fire('Success!', data.message, 'success').then(() => {
-                                        closeModal('adminProfileModal');                                
-                                        fetchAdminProfile();
-                                        
-                                    });
-                                }
-                            } else {
-                                Swal.fire('Error!', data.message, 'error');
-                            }
-                        })
-                        .catch(error => {
-                            Swal.close();
-                            console.error('Error:', error);
-                            Swal.fire('Request Failed', 'A network error occurred during verification.', 'error');
-                        })
-                        .finally(() => {
-                            // Re-enable the Save button in the profile modal after this first step
-                            saveButton.disabled = false;
-                            saveButton.innerHTML = 'Save Changes';
-                        });
-                    }
-                });
-            }
-        }
-        
-        function submitProfileUpdate(formData, saveButton) {
-            
-            // We'll use a Swal for the final update step for consistency
-            Swal.fire({
-                title: 'Updating Profile...',
-                text: 'Applying final changes to your account.',
-                icon: 'info',
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            fetch('include/handlers/admin_profile_handler.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                Swal.close(); // Close the "Updating Profile" Swal
-                if (data.success) {
-                    
-                    Swal.fire('Success!', data.message, 'success').then(() => {
-                        
-                        // Close modals and refresh profile data immediately
-                        closeModal('adminProfileModal');
-                        closeModal('otpModal');
-                        fetchAdminProfile();
-                        
-                        // *** FIX: DO NOT RELOAD THE PAGE/SHOW MANSAR LOADER ***
-                        // Instead, manually update the header using the returned data.
-                        if (data.updated_username || data.updated_photo_base64) {
-                            updateHeaderProfile(data.updated_username, data.updated_photo_base64);
-                        }
-                        
-                        // Since we are no longer reloading the page, we don't need AdminLoading here.
-                        
-                        // if (data.reload_required) {
-                        //    AdminLoading.startAction('Reloading Page', 'Updating navigation bar...');
-                        //    setTimeout(() => location.reload(), 1000); 
-                        // }
-                    });
-                } else {
-                    Swal.fire('Error!', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                Swal.close();
-                console.error('Error:', error);
-                Swal.fire('Request Failed', 'A network error occurred while saving the profile.', 'error');
-            })
-            .finally(() => {
-                // Ensure the OTP verification button is re-enabled if the second step fails.
-                const verifyButton = document.querySelector('#otpModal .save-btn');
-                if (verifyButton) {
-                    verifyButton.disabled = false;
-                    verifyButton.innerHTML = 'Verify Code';
-                }
-                
-                // Re-enable the main profile modal button if it was a non-sensitive update
-                if (saveButton) {
-                    saveButton.disabled = false;
-                    saveButton.innerHTML = 'Save Changes';
-                }
-            });
         }
 
+       function saveAdminProfile() {
+           const form = document.getElementById('profileForm');
+           const username = document.getElementById('profileUsername').value;
+           const adminEmail = document.getElementById('profileAdminEmail').value;
+           const oldPassword = document.getElementById('profileOldPassword').value;
+           const newPassword = document.getElementById('profilePassword').value;
+           const confirmPassword = document.getElementById('profileConfirmPassword').value;
+           const profileInput = document.getElementById('profileAdminProfile');
 
-        function confirmOtp() {
+           if (!username || !adminEmail) {
+               Swal.fire('Validation Error', 'Username and email are required.', 'warning');
+               return;
+           }
+           if (newPassword !== confirmPassword) {
+               Swal.fire('Validation Error', 'New passwords do not match.', 'warning');
+               return;
+           }
+
+           const isEmailChanging = adminEmail !== document.getElementById('displayEmail').textContent;
+           const isPasswordChanging = newPassword.length > 0;
+           
+           const requiresOtp = isEmailChanging || isPasswordChanging;
+
+           if (isPasswordChanging) {
+               if (!oldPassword) {
+                   Swal.fire('Security Required', 'Please enter your **Current Password** to set a new one.', 'warning');
+                   document.getElementById('profileOldPassword').focus();
+                   return;
+               }
+           }
+           
+           const saveButton = document.querySelector('#adminProfileModal .save-btn');
+           saveButton.disabled = true;
+           saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+           pendingFormData = new FormData(form);
+           pendingFormData.delete('confirmPassword'); 
+           pendingFormData.delete('role'); 
+
+           if (!requiresOtp) {
+               pendingFormData.delete('oldPassword'); 
+               submitProfileUpdate(pendingFormData, saveButton);
+           } else {
+               Swal.fire({
+                   title: 'Sending Verification Code...',
+                   text: 'Please wait while we send the OTP to your registered email.', 
+                   icon: 'info',
+                   showConfirmButton: false,
+                   allowOutsideClick: false,
+                   didOpen: () => {
+                       Swal.showLoading();
+                       
+                       fetch('include/handlers/admin_profile_handler.php', {
+                           method: 'POST',
+                           body: pendingFormData
+                       })
+                       .then(response => response.json())
+                       .then(data => {
+                           Swal.close(); 
+                           if (data.success) {
+                               if (data.otp_required) {
+                                   closeModal('adminProfileModal');
+                                   openModal('otpModal');
+                                   Swal.fire('Security Check', data.message, 'info'); 
+                               } else {
+                                   Swal.fire('Success!', data.message, 'success').then(() => {
+                                       closeModal('adminProfileModal');                                  
+                                       fetchAdminProfile();
+                                       
+                                   });
+                               }
+                           } else {
+                               Swal.fire('Error!', data.message, 'error');
+                           }
+                       })
+                       .catch(error => {
+                           Swal.close();
+                           console.error('Error:', error);
+                           Swal.fire('Request Failed', 'A network error occurred during verification.', 'error');
+                       })
+                       .finally(() => {
+                           saveButton.disabled = false;
+                           saveButton.innerHTML = 'Save Changes';
+                       });
+                   }
+               });
+           }
+       }
+       
+       function submitProfileUpdate(formData, saveButton) {
+           
+           Swal.fire({
+               title: 'Updating Profile...',
+               text: 'Applying final changes to your account.',
+               icon: 'info',
+               showConfirmButton: false,
+               allowOutsideClick: false,
+               didOpen: () => {
+                   Swal.showLoading();
+               }
+           });
+
+           fetch('include/handlers/admin_profile_handler.php', {
+               method: 'POST',
+               body: formData
+           })
+           .then(response => response.json())
+           .then(data => {
+               Swal.close(); 
+               if (data.success) {
+                   
+                   Swal.fire('Success!', data.message, 'success').then(() => {
+                       
+                       closeModal('adminProfileModal');
+                       closeModal('otpModal');
+                       fetchAdminProfile();
+                       
+                       if (data.updated_username || data.updated_photo_base64) {
+                           updateHeaderProfile(data.updated_username, data.updated_photo_base64);
+                       }
+                       
+                   });
+               } else {
+                   Swal.fire('Error!', data.message, 'error');
+               }
+           })
+           .catch(error => {
+               Swal.close();
+               console.error('Error:', error);
+               Swal.fire('Request Failed', 'A network error occurred while saving the profile.', 'error');
+           })
+           .finally(() => {
+               const verifyButton = document.querySelector('#otpModal .save-btn');
+               if (verifyButton) {
+                   verifyButton.disabled = false;
+                   verifyButton.innerHTML = 'Verify Code';
+               }
+               
+               if (saveButton) {
+                   saveButton.disabled = false;
+                   saveButton.innerHTML = 'Save Changes';
+               }
+           });
+       }
+
+
+       function confirmOtp() {
              const otpInputs = document.querySelectorAll('#otpModal .otp-input');
              let otp = '';
              otpInputs.forEach(input => otp += input.value);
@@ -547,26 +501,21 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
              verifyButton.disabled = true;
              verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
-             // Add OTP to the pending form data
              const finalFormData = pendingFormData || new FormData();
              finalFormData.append('otp', otp);
              finalFormData.append('adminId', document.getElementById('profileAdminId').value);
 
 
              submitProfileUpdate(finalFormData, null); 
-        }
+       }
 
-        // --- GENERAL SETUP ---
-        document.addEventListener('DOMContentLoaded', () => {
-             // Initial fetch
+       document.addEventListener('DOMContentLoaded', () => {
              fetchAdminProfile();
              
-             // Bind image change handler to the modal file input
              document.getElementById('profileAdminProfile').addEventListener('change', (e) => {
-                  handleProfileImageChange(e, document.getElementById('profileAdminProfilePreview'));
+                 handleProfileImageChange(e, document.getElementById('profileAdminProfilePreview'));
              });
              
-             // Bind password toggles for the modal
              const passwordToggles = document.querySelectorAll('.toggle-password');
              passwordToggles.forEach(toggle => {
                  toggle.addEventListener('click', function () {
@@ -578,7 +527,6 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                  });
              });
 
-             // Bind OTP inputs for smooth typing
              const otpInputs = document.querySelectorAll('.otp-input');
              otpInputs.forEach((input, index) => {
                  input.addEventListener('keydown', (e) => {
@@ -591,10 +539,8 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                  });
              });
              
-             // Initialize loading animation logic
              AdminLoading.init();
              
-             // Sidebar and Date/Time logic (copied from adminmanagement.php)
              updateDateTime();
              setInterval(updateDateTime, 1000);
 
@@ -630,66 +576,65 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
                      closeSidebar();
                  }
              });
-         });
-         
-        function handleProfileImageChange(e, previewElement) {
-            const file = e.target.files[0];
-            const maxFileSize = 2 * 1024 * 1024; 
+        });
+        
+       function handleProfileImageChange(e, previewElement) {
+           const file = e.target.files[0];
+           const maxFileSize = 2 * 1024 * 1024; 
 
-            const previewImg = previewElement.querySelector('.large-profile-preview');
-            const titleHeader = previewElement.querySelector('h4');
-            const headerPhotoEl = document.getElementById('headerProfilePhoto');
+           const previewImg = previewElement.querySelector('.large-profile-preview');
+           const titleHeader = previewElement.querySelector('h4');
+           const headerPhotoEl = document.getElementById('headerProfilePhoto');
 
-            const originalSrc = document.getElementById('currentProfilePhoto').src;
+           const originalSrc = document.getElementById('currentProfilePhoto').src;
 
-            if (!previewImg || !titleHeader || !headerPhotoEl) {
-                console.error("Preview elements could not be found!");
-                return;
-            }
+           if (!previewImg || !titleHeader || !headerPhotoEl) {
+               console.error("Preview elements could not be found!");
+               return;
+           }
 
-            if (file) {
+           if (file) {
 
-                if (file.size > maxFileSize) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'File Too Large',
-                        text: 'Please select an image smaller than 2MB.'
-                    });
-                    e.target.value = ''; 
+               if (file.size > maxFileSize) {
+                   Swal.fire({
+                       icon: 'error',
+                       title: 'File Too Large',
+                       text: 'Please select an image smaller than 2MB.'
+                   });
+                   e.target.value = ''; 
 
-                    previewImg.src = originalSrc;
-                    titleHeader.textContent = 'Current Profile Picture:';
-                    headerPhotoEl.src = originalSrc;
-                    return;
-                }
+                   previewImg.src = originalSrc;
+                   titleHeader.textContent = 'Current Profile Picture:';
+                   headerPhotoEl.src = originalSrc;
+                   return;
+               }
 
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const newImageSrc = event.target.result;
-                    previewImg.src = event.target.result;
-                    titleHeader.textContent = 'New Profile Preview:';
-                    headerPhotoEl.src = newImageSrc;
-                };
-                reader.readAsDataURL(file);
-            } 
-            else {
-                previewImg.src = originalSrc;
-                titleHeader.textContent = 'Current Profile Picture:';
-                headerPhotoEl.src = newImageSrc;
-            }
-        }
+               const reader = new FileReader();
+               reader.onload = function(event) {
+                   const newImageSrc = event.target.result;
+                   previewImg.src = event.target.result;
+                   titleHeader.textContent = 'New Profile Preview:';
+                   headerPhotoEl.src = newImageSrc;
+               };
+               reader.readAsDataURL(file);
+           } 
+           else {
+               previewImg.src = originalSrc;
+               titleHeader.textContent = 'Current Profile Picture:';
+               headerPhotoEl.src = newImageSrc;
+           }
+       }
 
-         function updateDateTime() {
+        function updateDateTime() {
              const now = new Date();
              const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
              document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, options);
              document.getElementById('current-time').textContent = now.toLocaleTimeString();
-         }
+        }
 
-     </script>
-     
-     <!-- Include the same loading script logic -->
-    <script>
+   </script>
+   
+   <script>
 
   const AdminLoading = {
   init() {
@@ -745,7 +690,6 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
   
   setupNavigationInterception() {
     document.addEventListener('click', (e) => {
-      // Exclude clicks inside modals, dropdowns, etc.
       if (e.target.closest('.swal2-container, .modal, .dropdown')) {
         return;
       }
@@ -756,11 +700,11 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
           const linkUrl = new URL(link.href);
           const currentUrl = new URL(window.location.href);
           
-          if (linkUrl.origin !== currentUrl.origin) return; // External link
-          if (linkUrl.pathname === currentUrl.pathname) return; // Same page
+          if (linkUrl.origin !== currentUrl.origin) return; 
+          if (linkUrl.pathname === currentUrl.pathname) return; 
           
         } catch (err) {
-          return; // Invalid URL
+          return; 
         }
         
         e.preventDefault();
@@ -796,7 +740,6 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
   }
 };
  
-      // Initialize when DOM is loaded
       document.addEventListener('DOMContentLoaded', () => {
           AdminLoading.init();
       });

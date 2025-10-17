@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/include/check_access.php';
-checkAccess(); // No role needed—logic is handled internally
+checkAccess(); 
 
 
 require_once 'include/handlers/get_driving_drivers.php';
@@ -27,10 +27,10 @@ $maintenanceQuery = "
         ON m.maintenance_type_id = mt.maintenance_type_id
     WHERE m.status != 'Completed'
       AND m.maintenance_id NOT IN (
-          SELECT maintenance_id 
-          FROM audit_logs_maintenance 
-          WHERE is_deleted = 1
-      )
+            SELECT maintenance_id 
+            FROM audit_logs_maintenance 
+            WHERE is_deleted = 1
+        )
     ORDER BY m.date_mtnce ASC
     LIMIT 5
 ";
@@ -72,7 +72,6 @@ if ($maintenanceResult && $maintenanceResult->num_rows > 0) {
 
 require 'include/handlers/dbhandler.php';
 
-// Fetch trip data
 $sql = "SELECT 
             t.trip_id,
             t.container_no as container_no,
@@ -86,7 +85,7 @@ $sql = "SELECT
             h.name as helper,
             disp.name as dispatcher,
             c.name as client,
-            p.name as port, /* ADD THIS LINE */
+            p.name as port, 
             dest.name as destination,
             sl.name as shipping_line,
             cons.name as consignee,
@@ -100,7 +99,7 @@ $sql = "SELECT
         LEFT JOIN helpers h ON t.helper_id = h.helper_id
         LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
         LEFT JOIN clients c ON t.client_id = c.client_id
-        LEFT JOIN ports p ON t.port_id = p.port_id /* ADD THIS LINE */
+        LEFT JOIN ports p ON t.port_id = p.port_id 
         LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
         LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
         LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
@@ -164,21 +163,21 @@ $eventsDataJson = json_encode($eventsData);
     </div>
 
    <div class="profile" onclick="window.location.href='admin_profile.php'" style="cursor: pointer;"> 
-     <?php 
-    
-     if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
-        
-         echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
-     } else {
-        
-         echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
-     }
-     ?>
-     <div class="profile-name">
-         <?php 
-             echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
-         ?>
-     </div>
+       <?php 
+   
+      if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
+       
+        echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
+      } else {
+       
+        echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
+      }
+      ?>
+      <div class="profile-name">
+          <?php 
+              echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+          ?>
+      </div>
 </div>
 </div>
 </header>
@@ -257,7 +256,6 @@ $eventsDataJson = json_encode($eventsData);
     $tripCount = count($enrouteTrips);
     $specialLayoutClass = '';
     
-    // Determine special layout classes
     if ($tripCount === 1) {
         $specialLayoutClass = 'single-card';
     } elseif ($tripCount === 2) {
@@ -438,7 +436,7 @@ $eventsDataJson = json_encode($eventsData);
              <span class="date"><?php echo $dateString; ?></span>
               <span class="status-badge <?php echo $badgeClass; ?>">
             <?php echo htmlspecialchars($record['status']); ?>
-             </span>
+              </span>
              </div>
              <div class="maintenance-progress">
                  <div class="progress-bar <?php echo $barClass; ?>"></div>
@@ -460,21 +458,6 @@ $eventsDataJson = json_encode($eventsData);
     </div>
     <?php
 
-        // if (count($drivingDrivers) > 0) {
-
-        //     foreach ($drivingDrivers as $driver) {
-        //         echo '<div class="performance">
-        //                     <i class="fa fa-user icon-bg"></i>
-        //                     <p>' . htmlspecialchars($driver['driver']) . ' - Destination: ' . htmlspecialchars($driver['destination']) . '</p>
-        //                 </div>';
-        //     }
-        // } else {
-
-        //     echo '<div class="performance">
-        //                 <i class="fa fa-info-circle icon-bg"></i>
-        //                 <p>No active drivers currently on duty</p>
-        //             </div>';
-        // }
         ?>
 <div class="card1">
     <div class="card-header">
@@ -502,15 +485,15 @@ $eventsDataJson = json_encode($eventsData);
     <div id="tripnumber"></div>
 </div>
     
-            
+        
 </section>
 
 
 <section class="calendar-section">
      <div class="card-header-calendar">
-        
-   
+         
 
+     
         <div class="calendar-legend">
             <i class="fas fa-calendar-alt header-icon"></i>
         <h3>Event Calendar</h3>
@@ -691,13 +674,11 @@ $eventsDataJson = json_encode($eventsData);
         document.getElementById('current-time').textContent = now.toLocaleTimeString();
     }
 
-    // Update immediately and then every second
     updateDateTime();
     setInterval(updateDateTime, 1000);
 $(document).ready(function() {
     let currentPage = 1;
 
-    // Function to load trips for a specific page
    function loadTrips(page) {
     $.ajax({
         url: 'include/handlers/dashboard_handler.php',
@@ -717,7 +698,6 @@ $(document).ready(function() {
                         var formattedDate = dateObj.toLocaleDateString();
                         var formattedTime = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-                        // Determine truck image - MODIFIED
                         var truckImage = '';
                         if (trip.truck_pic && trip.truck_pic.length > 0) {
                             truckImage = '<img src="data:image/jpeg;base64,' + trip.truck_pic + '" alt="Truck ' + trip.plate_no + '" class="truck-image" style="width: 30px; height: 30px; object-fit: cover; border-radius: 4px;">';
@@ -770,12 +750,9 @@ function fetchTripDetails(tripId) {
     });
 }
 
-    // Function to update pagination controls
     function updatePaginationControls(pagination) {
-        // Remove existing pagination controls if they exist
         $('.pagination-controls').remove();
 
-        // Create new pagination controls
         var controls = `
             <div class="pagination-controls" style="margin-top: 10px; text-align: center;">
                 <button class="pagination-btn prev" ${pagination.currentPage <= 1 ? 'disabled' : ''}>
@@ -793,10 +770,8 @@ function fetchTripDetails(tripId) {
         $('.table-container').append(controls);
     }
 
-    // Initial load
     loadTrips(currentPage);
 
-    // Pagination button click handlers
     $(document).on('click', '.pagination-btn.prev', function() {
         if (currentPage > 1) {
             loadTrips(currentPage - 1);
@@ -849,7 +824,6 @@ $('.shipment-card').on('click', function() {
             var trackingUrl = `tracking.php?trip_id=${trip.trip_id}`;
             $('#track-delivery-btn').attr('href', trackingUrl);
 
-            // Show the modal
             $('#tripDetailsModal').show();
 
         } else {
@@ -865,20 +839,17 @@ $('.close').on('click', function() {
     $('#tripDetailsModal').hide();
 });
 
-// Click outside to close modal
 window.addEventListener('click', function(event) {
     const mainModal = document.getElementById('tripDetailsModal');
-    const receiptModal = document.getElementById('receiptModal'); // Assuming you have a receipt modal with this ID
+    const receiptModal = document.getElementById('receiptModal'); 
 
-    // Prioritize closing receipt modal if it's open
     if (receiptModal && receiptModal.style.display === 'block') {
         if (event.target == receiptModal) {
-            closeReceiptModal(); // Assumes you have a closeReceiptModal function
+            closeReceiptModal(); 
         }
-        return; // Stop further processing to keep the main modal open
+        return; 
     }
     
-    // If no receipt modal, handle the main modal
     if (mainModal && event.target == mainModal) {
         mainModal.style.display = 'none';
     }
@@ -893,7 +864,6 @@ $(document).on('mouseenter', '.maintenance-item', function() {
     $(this).css('transform', 'scale(1)');
 });
 
-// Smooth scroll for anchor links
 $('a[href*="#"]').on('click', function(e) {
     e.preventDefault();
     $('html, body').animate(
@@ -905,21 +875,16 @@ $('a[href*="#"]').on('click', function(e) {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Get current page filename
     const currentPage = window.location.pathname.split('/').pop();
 
-    // Find all sidebar links
     const sidebarLinks = document.querySelectorAll('.sidebar-item a');
 
-    // Check each link
     sidebarLinks.forEach(link => {
         const linkPage = link.getAttribute('href').split('/').pop();
 
-        // If this link matches current page, add active class
         if (linkPage === currentPage) {
             link.parentElement.classList.add('active');
 
-            // Also highlight the icon
             const icon = link.parentElement.querySelector('.icon2');
             if (icon) {
                 icon.style.color = 'white';
@@ -1063,24 +1028,24 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
                  <div class="details-section system-info full-width">
-                      <h4 class="section-title">System Information</h4>
-                      <div class="detail-item-row">
-                           <div class="detail-item">
-                               <i class="fas fa-user-edit detail-icon"></i>
-                               <div class="detail-text">
-                                   <span class="detail-label">Last Modified By</span>
-                                   <span class="detail-value" id="modal-modified-by"></span>
-                               </div>
-                           </div>
-                           <div class="detail-item">
-                               <i class="fas fa-clock detail-icon"></i>
-                               <div class="detail-text">
-                                   <span class="detail-label">Last Modified At</span>
-                                   <span class="detail-value" id="modal-modified-at"></span>
-                               </div>
-                           </div>
-                     </div>
-                 </div>
+                       <h4 class="section-title">System Information</h4>
+                       <div class="detail-item-row">
+                            <div class="detail-item">
+                                <i class="fas fa-user-edit detail-icon"></i>
+                                <div class="detail-text">
+                                    <span class="detail-label">Last Modified By</span>
+                                    <span class="detail-value" id="modal-modified-by"></span>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-clock detail-icon"></i>
+                                <div class="detail-text">
+                                    <span class="detail-label">Last Modified At</span>
+                                    <span class="detail-value" id="modal-modified-at"></span>
+                                </div>
+                            </div>
+                       </div>
+                   </div>
             </div>
 </div>
            <div class="modal-footer">
@@ -1110,6 +1075,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <script>
 
+ 
   const AdminLoading = {
   init() {
     this.loadingEl = document.getElementById('admin-loading');
@@ -1118,27 +1084,20 @@ document.addEventListener('DOMContentLoaded', function() {
     this.progressBar = document.querySelector('.progress-bar');
     this.progressText = document.querySelector('.progress-text');
     
-    // Show loading immediately if coming from another page
-    // this.checkForIncomingNavigation();
     this.setupNavigationInterception();
   },
   
   checkForIncomingNavigation() {
-    // Check if we're coming from another page in the same site
     const referrer = document.referrer;
     const currentDomain = window.location.origin;
     
-    // Also check sessionStorage for loading state
     const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
     
     if ((referrer && referrer.startsWith(currentDomain)) || shouldShowLoading) {
-      // Clear the flag
       sessionStorage.removeItem('showAdminLoading');
       
-      // Show loading animation for incoming navigation
       this.show('Loading Page', 'Loading content...');
       
-      // Simulate realistic loading progress
       let progress = 0;
       const progressInterval = setInterval(() => {
         progress += Math.random() * 25 + 10;
@@ -1160,7 +1119,6 @@ document.addEventListener('DOMContentLoaded', function() {
     this.titleEl.textContent = title;
     this.messageEl.textContent = message;
     
-    // Reset progress
     this.updateProgress(0);
     
     this.loadingEl.style.display = 'flex';
@@ -1189,7 +1147,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   setupNavigationInterception() {
     document.addEventListener('click', (e) => {
-      // Skip if click is inside SweetAlert modal, regular modals, or calendar
       if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal, .modal, .modal-content, .fc-event, #calendar')) {
         return;
       }
@@ -1200,27 +1157,24 @@ document.addEventListener('DOMContentLoaded', function() {
           !link.href.startsWith('#') && !link.href.startsWith('mailto:') &&
           !link.href.startsWith('tel:')) {
         
-        // Only intercept internal links
         try {
           const linkUrl = new URL(link.href);
           const currentUrl = new URL(window.location.href);
           
           if (linkUrl.origin !== currentUrl.origin) {
-            return; // Let external links work normally
+            return; 
           }
           
-          // Skip if it's the same page
           if (linkUrl.pathname === currentUrl.pathname) {
             return;
           }
           
         } catch (e) {
-          return; // Invalid URL, let it work normally
+          return; 
         }
         
         e.preventDefault();
         
-        // Set flag for next page
         sessionStorage.setItem('showAdminLoading', 'true');
         
         const loading = this.startAction(
@@ -1233,16 +1187,14 @@ document.addEventListener('DOMContentLoaded', function() {
           progress += Math.random() * 15 + 8;
           if (progress >= 85) {
             clearInterval(progressInterval);
-            progress = 90; // Stop at 90% until page actually loads
+            progress = 90; 
           }
           loading.updateProgress(Math.min(progress, 90));
         }, 150);
         
-        // Minimum delay to show animation
         const minLoadTime = 1200;
         
         setTimeout(() => {
-          // Complete the progress bar
           loading.updateProgress(100);
           setTimeout(() => {
             window.location.href = link.href;
@@ -1251,14 +1203,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
-    // Handle form submissions
     document.addEventListener('submit', (e) => {
-      // Skip if form is inside SweetAlert or modal
       if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
         return;
       }
       
-      // Only show loading for forms that will cause page navigation
       const form = e.target;
       if (form.method && form.method.toLowerCase() === 'post' && form.action) {
         const loading = this.startAction(
@@ -1272,7 +1221,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Handle browser back/forward buttons
     window.addEventListener('popstate', () => {
       this.show('Loading Page', 'Loading previous page...');
       setTimeout(() => {
@@ -1303,7 +1251,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   },
   
-  // Public methods for manual control
   showManual: function(title, message) {
     this.show(title, message);
   },
@@ -1317,20 +1264,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 };
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
   
-  // Add smooth transition to the GIF
   const loadingGif = document.querySelector('.loading-gif');
   if (loadingGif) {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
   
-  // Hide loading on page show (handles browser back button)
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
-      // Page was loaded from cache (back/forward button)
       setTimeout(() => {
         AdminLoading.hideManual();
       }, 500);
@@ -1338,13 +1281,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Handle page unload
-// window.addEventListener('beforeunload', () => {
-//   // Set flag that we're navigating
-//   sessionStorage.setItem('showAdminLoading', 'true');
-// });
-
-// Export for global access (optional)
 window.AdminLoading = AdminLoading;
 
 
@@ -1361,21 +1297,15 @@ window.AdminLoading = AdminLoading;
         document.getElementById('current-time').textContent = now.toLocaleTimeString();
     }
 
-    // Update immediately and then every second
     updateDateTime();
     setInterval(updateDateTime, 1000);
     
-// Replace the existing cost trends chart initialization with this code
-
-// Global variables for the cost trends functionality
 let costTrendsChart = null;
-let currentView = 'current'; // 'current', 'monthly', 'yearly'
+let currentView = 'current'; 
 
-// Initialize cost trends chart
 function initializeCostTrendsChart() {
     loadCostTrendsData();
     
-    // Add view toggle buttons
     addCostTrendsControls();
 }
 
@@ -1384,7 +1314,6 @@ function addCostTrendsControls() {
 
     const header = costTrendsCard.querySelector('h3');
     
-    // Create control buttons
     const controlsDiv = document.createElement('div');
     controlsDiv.style.cssText = `
         display: flex; 
@@ -1424,17 +1353,14 @@ function addCostTrendsControls() {
         controlsDiv.appendChild(button);
     });
     
-    // Insert controls after the header
     header.insertAdjacentElement('afterend', controlsDiv);
     
-    // Set active button
     document.getElementById('btn-current').style.cssText = buttonStyle + activeButtonStyle;
 }
 
 function switchCostView(view) {
     currentView = view;
     
-    // Update active button
     document.querySelectorAll('[id^="btn-"]').forEach(btn => {
         btn.style.cssText = `
             padding: 8px 16px;
@@ -1459,7 +1385,6 @@ function switchCostView(view) {
         transition: all 0.3s ease;
     `;
     
-    // Load appropriate data
     switch(view) {
         case 'current':
             loadCostTrendsData();
@@ -1481,7 +1406,6 @@ function loadCostTrendsData() {
                 renderCostTrendsChart(data, 'donut', 'Cost Distribution - Current Year');
             } else {
                 console.error('Error loading cost trends:', data.error);
-                // Fallback to original static data if there's an error
                 renderDefaultCostChart();
             }
         })
@@ -1589,7 +1513,6 @@ function renderMonthlyChart(data) {
         costTrendsChart.destroy();
     }
     
-    // Prepare data for line chart
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 
                     'July', 'August', 'September', 'October', 'November', 'December'];
     
@@ -1682,7 +1605,6 @@ function renderYearlyChart(data) {
         costTrendsChart.destroy();
     }
     
-    // Get all years from the data
     const years = Object.keys(data.yearlyData).sort();
     
     const series = [];
@@ -1772,7 +1694,6 @@ function renderYearlyChart(data) {
 }
 
 function renderDefaultCostChart() {
-    // Fallback to your original static chart if data loading fails
     const options = {
         series: [44, 55, 41, 17, 15],
         chart: {
@@ -1839,19 +1760,16 @@ function ucfirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Small delay to ensure ApexCharts is ready
     setTimeout(() => {
         initializeCostTrendsChart();
-          initializeMaintenanceFrequencyChart();
-          initializeTripCountChart(); 
+         initializeMaintenanceFrequencyChart();
+         initializeTripCountChart(); 
     }, 500);
 });
 
-  
+   
    function initializeTripCountChart() {
-    // Grabs data from our analytics handler to show the trip trends.
     fetch('include/handlers/analytics_handler.php?action=get_completed_trip_counts')
         .then(response => response.json())
         .then(apiData => {
@@ -1868,7 +1786,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             enabled: false
                         },
                         toolbar: {
-                            show: false // A cleaner look for the dashboard
+                            show: false 
                         }
                     },
                     dataLabels: {
@@ -1985,9 +1903,8 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // If we got the data, set up the chart options
                 var options = {
-                    series: data.series, // using dynamic series data from the server
+                    series: data.series, 
                     chart: {
                         type: 'bar',
                         height: 350,
@@ -2013,7 +1930,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         colors: ['#fff']
                     },
                     xaxis: {
-                        categories: data.categories, // using dynamic year categories from the server
+                        categories: data.categories, 
                         labels: {
                             formatter: function (val) {
                                 return val;
@@ -2028,7 +1945,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     tooltip: {
                         y: {
                             formatter: function (val) {
-                                return val; // keeps the tooltip simple
+                                return val; 
                             }
                         }
                     },
@@ -2042,7 +1959,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 };
                 
-                // create and render the chart
                 var maintenanceChart = new ApexCharts(document.querySelector("#maintenance"), options);
                 maintenanceChart.render();
             } else {

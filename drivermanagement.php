@@ -1,6 +1,6 @@
 <?php
     require_once __DIR__ . '/include/check_access.php';
-    checkAccess(); // No role needed—logic is handled internally
+    checkAccess(); 
 
     require_once 'include/handlers/dbhandler.php';
 
@@ -30,27 +30,27 @@
     </div>
 </div>
   <div class="header-right">
-     <div class="datetime-container">
-         <div id="current-date" class="date-display"></div>
-         <div id="current-time" class="time-display"></div>
-     </div>
+       <div class="datetime-container">
+           <div id="current-date" class="date-display"></div>
+           <div id="current-time" class="time-display"></div>
+       </div>
 
-     <div class="profile" onclick="window.location.href='admin_profile.php'" style="cursor: pointer;"> 
-     <?php 
-    
-     if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
-        
-         echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
-     } else {
-        
-         echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
-     }
-     ?>
-     <div class="profile-name">
-         <?php 
-             echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
-         ?>
-     </div>
+       <div class="profile" onclick="window.location.href='admin_profile.php'" style="cursor: pointer;"> 
+       <?php 
+   
+      if (isset($_SESSION['admin_pic']) && !empty($_SESSION['admin_pic'])) {
+       
+        echo '<img src="data:image/jpeg;base64,' . $_SESSION['admin_pic'] . '" alt="Admin Profile" class="profile-icon">';
+      } else {
+       
+        echo '<img src="include/img/profile.png" alt="Admin Profile" class="profile-icon">';
+      }
+      ?>
+      <div class="profile-name">
+          <?php 
+              echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User';
+          ?>
+      </div>
 </div>
 </div>
 </header>
@@ -130,7 +130,7 @@
                     <input type="text" id="driverName" name="driverName" required>
                 </div>
 
-              
+            
     <div class="form-row">
         <div class="form-group">
             <label for="driverEmail">Email *</label>
@@ -143,7 +143,6 @@
         </div>
     </div>
     
-    <!-- REMOVED: The 'Current Password' field (id="oldPasswordGroup") and its contents are removed as per security requirements. -->
     
       <small id="passwordHelp">Leave blank to keep current password</small>
 <div class="form-row">
@@ -153,7 +152,7 @@
             <input type="password" id="password" name="password" required>
             <i class="fa-regular fa-eye toggle-password"></i>
         </div>
-  
+ 
     </div>
     
     <div class="form-group">
@@ -204,7 +203,6 @@ let totalPages = 0;
             document.getElementById('current-time').textContent = now.toLocaleTimeString();
         }
 
-        // Update immediately and then every second
         updateDateTime();
         setInterval(updateDateTime, 1000);
 
@@ -214,25 +212,21 @@ let totalPages = 0;
     document.getElementById("saveButtonText").textContent = "Add Driver";
     document.getElementById("passwordHelp").style.display = "none";
     document.getElementById("password").required = true;
-    // document.getElementById("oldPasswordGroup").style.display = "none"; // REMOVED: HTML is now removed
     document.getElementById("password").required = true;
     document.getElementById("confirmPassword").required = true;
     
-    // Clear all fields
     document.getElementById("driverId").value = "";
     document.getElementById("driverName").value = "";
     document.getElementById("driverEmail").value = "";
     document.getElementById("driverContact").value = "";
     
-    // Explicitly clear all password fields (removed oldPassword)
     document.getElementById("password").value = "";
     document.getElementById("confirmPassword").value = "";
     
     document.getElementById("assignedTruck").value = "";
-    document.getElementById("driverProfile").value = ""; // Clear file input
-    document.getElementById("profilePreview").innerHTML = ""; // Clear preview
+    document.getElementById("driverProfile").value = ""; 
+    document.getElementById("profilePreview").innerHTML = ""; 
 
-    // Populate available trucks for a new driver
     populateAvailableTrucks();
     
     document.getElementById("driverModal").style.display = "block";
@@ -246,7 +240,6 @@ let totalPages = 0;
         success: function(data) {
             if (data.success) {
                 driversData = data.drivers;
-                // Fetch trip counts for each driver
                 fetchTripCounts().then(() => {
                     renderTable();
                 });
@@ -271,7 +264,6 @@ function fetchTripCounts() {
         }),
         success: function(response) {
             if (response.success) {
-                // Add trip counts to each driver
                 driversData.forEach(driver => {
                     const driverStats = response.trip_counts.find(d => d.driver_id == driver.driver_id);
                     driver.total_completed = driverStats ? driverStats.total_completed : 0;
@@ -282,15 +274,13 @@ function fetchTripCounts() {
     });
 }
 
-     function renderTable() {
-    // Clear existing highlights
+      function renderTable() {
     document.querySelectorAll('.highlight').forEach(el => {
         el.outerHTML = el.innerHTML;
     });
     
     $('#driverTableBody').empty();
     
-    // Calculate pagination
     totalPages = Math.ceil(driversData.length / rowsPerPage);
     var startIndex = (currentPage - 1) * rowsPerPage;
     var endIndex = startIndex + rowsPerPage;
@@ -300,46 +290,43 @@ function fetchTripCounts() {
         pageData.forEach(function(driver) {
             let formattedLastLogin = formatTime(driver.last_login);
             
-            // Decide whether to show creation or modification info.
             let creationInfo;
             if (driver.last_modified_at && driver.last_modified_by) {
-                // If it was modified, show that info.
                 creationInfo = formatDateWithTime(driver.last_modified_at);
                 creationInfo += `<br><small style="color: #555;">Modified by: <strong>${driver.last_modified_by}</strong></small>`;
             } else {
-                // Otherwise, just show when it was created.
                 creationInfo = formatDateWithTime(driver.created_at);
             }
             
        var row = "<tr>" +
-                "<td data-label='Profile'>" + (driver.driver_pic ? '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : '<i class="fa-solid fa-circle-user profile-icon"></i>') + "</td>" +
-                "<td data-label='ID'>" + driver.driver_id + "</td>" +
-                "<td data-label='Name'>" + driver.name + "</td>" +
-                "<td data-label='Email'>" + driver.email + "</td>" +
-                "<td data-label='Contact No.'>" + (driver.contact_no || 'N/A') + "</td>" +
-                "<td data-label='Assigned Truck'>" + (driver.assigned_truck_id || 'None') + "</td>" +
-                "<td data-label='Total Trips'>" + (driver.total_completed || 0) + "</td>" +
-                "<td data-label='Monthly Trips'>" + (driver.monthly_completed || 0) + "</td>" +
-                "<td data-label='Created / Modified'>" + creationInfo + "</td>" +
-                "<td data-label='Last Login'>" + formattedLastLogin + "</td>" +
-                "<td data-label='Actions' class='actions'>" +
-                    "<div class='dropdown'>" +
-                    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'><i class='fas fa-ellipsis-v'></i></button>" +
-                    "<div class='dropdown-content'>" +
-                    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i> Edit Driver</button>" +
-                    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i> Delete Driver</button>" +
-                    "</div></div></td>" +
-                "</tr>";
-                $('#driverTableBody').append(row);
-            });
-        } else {
-           $('#driverTableBody').append("<tr><td colspan='11'>No drivers found</td></tr>");
-        }
-        
-        updatePagination();
-    }
+               "<td data-label='Profile'>" + (driver.driver_pic ? '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : '<i class="fa-solid fa-circle-user profile-icon"></i>') + "</td>" +
+               "<td data-label='ID'>" + driver.driver_id + "</td>" +
+               "<td data-label='Name'>" + driver.name + "</td>" +
+               "<td data-label='Email'>" + driver.email + "</td>" +
+               "<td data-label='Contact No.'>" + (driver.contact_no || 'N/A') + "</td>" +
+               "<td data-label='Assigned Truck'>" + (driver.assigned_truck_id || 'None') + "</td>" +
+               "<td data-label='Total Trips'>" + (driver.total_completed || 0) + "</td>" +
+               "<td data-label='Monthly Trips'>" + (driver.monthly_completed || 0) + "</td>" +
+               "<td data-label='Created / Modified'>" + creationInfo + "</td>" +
+               "<td data-label='Last Login'>" + formattedLastLogin + "</td>" +
+               "<td data-label='Actions' class='actions'>" +
+               "<div class='dropdown'>" +
+               "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'><i class='fas fa-ellipsis-v'></i></button>" +
+               "<div class='dropdown-content'>" +
+               "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i> Edit Driver</button>" +
+               "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i> Delete Driver</button>" +
+               "</div></div></td>" +
+               "</tr>";
+               $('#driverTableBody').append(row);
+           });
+       } else {
+          $('#driverTableBody').append("<tr><td colspan='11'>No drivers found</td></tr>");
+       }
+       
+       updatePagination();
+   }
 
-        function formatTime(dateString) {
+       function formatTime(dateString) {
     if (!dateString || dateString === 'NULL') return 'Never';
     
     const date = new Date(dateString);
@@ -377,7 +364,7 @@ function formatDateWithTime(dateString) {
 
     return `<span class="date">${formattedDate}</span> <span class="time">${formattedTime}</span>`;
 }
-        
+       
        function updatePagination() {
     totalPages = Math.ceil(driversData.length / rowsPerPage);
     
@@ -389,7 +376,6 @@ function formatDateWithTime(dateString) {
         return;
     }
     
-    // Ensure current page is within bounds
     if (currentPage > totalPages) {
         currentPage = totalPages;
     }
@@ -422,21 +408,17 @@ function formatDateWithTime(dateString) {
 }
 
    $(document).ready(function() {
-    // Remove any existing event listeners first
     $('#prevPageBtn').off('click');
     $('#nextPageBtn').off('click');
     
-    // Previous button
     $('#prevPageBtn').on('click', function() {
         changePage(-1);
     });
 
-    // Next button
     $('#nextPageBtn').on('click', function() {
         changePage(1);
     });
     
-    // FIXED: Page number clicks using event delegation with data attribute
     $(document).off('click', '.page-number');
     $(document).on('click', '.page-number', function() {
         var page = parseInt($(this).data('page'));
@@ -445,17 +427,16 @@ function formatDateWithTime(dateString) {
         }
     });
     
-    // Initial load
     fetchDrivers();
 });
 
-        function closeModal() {
+       function closeModal() {
     driverModal.classList.add('closing');
     setTimeout(() => {
         driverModal.style.display = 'none';
         driverModal.classList.remove('closing'); 
     }, 300); 
-        }
+       }
 
    function editDriver(driverId) {
     $.ajax({
@@ -471,7 +452,6 @@ function formatDateWithTime(dateString) {
                 document.getElementById("saveButtonText").textContent = "Save Changes";
                 document.getElementById("passwordHelp").style.display = "block";
                 
-                // REMOVED: Hiding the oldPasswordGroup field as it's now removed from HTML.
                 document.getElementById("password").required = false;
                 document.getElementById("confirmPassword").required = false;
                 
@@ -480,14 +460,11 @@ function formatDateWithTime(dateString) {
                 document.getElementById("driverName").value = driver.name;
                 document.getElementById("driverEmail").value = driver.email;
                 
-                // Clear password fields every time
                 document.getElementById("password").value = '';
                 document.getElementById("confirmPassword").value = '';
                 
-                // Populate available trucks, passing the driver's ID and their currently assigned truck
                 populateAvailableTrucks(driver.driver_id, driver.assigned_truck_id);
                 
-                // Display existing profile picture if it exists
                 const profilePreview = document.getElementById('profilePreview');
                 if (driver.driver_pic) {
                     profilePreview.innerHTML = `
@@ -512,7 +489,6 @@ function formatDateWithTime(dateString) {
                     `;
                 }
                 
-                // Clear the file input
                 document.getElementById("driverProfile").value = '';
                 
                 document.getElementById("driverModal").style.display = "block";
@@ -575,7 +551,6 @@ function formatDateWithTime(dateString) {
       document.getElementById("driverForm").addEventListener("submit", function(e) {
     e.preventDefault();
     
-    // Validate passwords FIRST
     if (!validatePassword()) {
         return;
     }
@@ -595,19 +570,16 @@ function formatDateWithTime(dateString) {
     formData.append("contact_no", document.getElementById("driverContact").value);
     formData.append("mode", mode);
     
-    // Add old password for edit mode (REMOVED: Old password is no longer sent)
     if (mode === 'edit') {
         formData.append("driverId", document.getElementById("driverId").value);
     }
     
-    // Add profile picture if selected
     const profileInput = document.getElementById("driverProfile");
     if (profileInput.files.length > 0) {
         formData.append("driverProfile", profileInput.files[0]);
     }
     
     if (mode === 'add') {
-        // For adding new driver, use the same structure as register.js
         const driver_id = Date.now().toString();
         formData.append("driver_id", driver_id);
         formData.append("firebase_uid", driver_id);
@@ -643,13 +615,12 @@ function formatDateWithTime(dateString) {
                     text: 'An error occurred while adding the driver.'
                 });
             },
-             complete: function() {
+              complete: function() {
                 saveButton.disabled = false;
                 saveButton.innerHTML = originalButtonHTML;
-            }
+              }
         });
     } else {
-        // For editing existing driver
         $.ajax({
             url: 'include/handlers/save_driver.php',
             type: 'POST',
@@ -699,10 +670,9 @@ function formatDateWithTime(dateString) {
     }
 });
 
-         function searchDrivers() {
+        function searchDrivers() {
     const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
     
-    // Reset to first page when searching
     currentPage = 1;
     
     if (searchTerm === '') {
@@ -743,43 +713,40 @@ function formatDateWithTime(dateString) {
                 return str.replace(regex, '<span class="highlight">$1</span>');
             };
             
-            // Here's the fix! We highlight the parts, then build the string.
             let creationInfo;
             if (driver.last_modified_at && driver.last_modified_by) {
                 const modifiedDate = formatDateWithTime(driver.last_modified_at);
-                const modifiedBy = highlightText(driver.last_modified_by); // Highlight just the name
+                const modifiedBy = highlightText(driver.last_modified_by); 
                 creationInfo = `${modifiedDate}<br><small style="color: #555;">Modified by: <strong>${modifiedBy}</strong></small>`;
             } else {
                 creationInfo = formatDateWithTime(driver.created_at);
             }
 
-               var row = "<tr>" +
-                "<td data-label='Profile'>" + (driver.driver_pic ? '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : '<i class="fa-solid fa-circle-user profile-icon"></i>') + "</td>" +
-                "<td data-label='ID'>" + highlightText(driver.driver_id) + "</td>" +
-                "<td data-label='Name'>" + highlightText(driver.name) + "</td>" +
-                "<td data-label='Email'>" + highlightText(driver.email) + "</td>" +
-                "<td data-label='Contact No.'>" + highlightText(driver.contact_no || 'N/A') + "</td>" +
-                "<td data-label='Assigned Truck'>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
-                "<td data-label='Total Trips'>" + highlightText(driver.total_completed || 0) + "</td>" +
-                "<td data-label='Monthly Trips'>" + highlightText(driver.monthly_completed || 0) + "</td>" +
-                // The creationInfo is now correctly formatted before being placed here
-                "<td data-label='Created / Modified'>" + creationInfo + "</td>" +
-                "<td data-label='Last Login'>" + highlightText(formattedLastLogin) + "</td>" +
-                "<td data-label='Actions' class='actions'>" +
-                    "<div class='dropdown'>" +
-                    "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'><i class='fas fa-ellipsis-v'></i></button>" +
-                    "<div class='dropdown-content'>" +
-                    "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i> Edit Driver</button>" +
-                    "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i> Delete Driver</button>" +
-                    "</div></div></td>" +
-                "</tr>";
-                $('#driverTableBody').append(row);
+              var row = "<tr>" +
+               "<td data-label='Profile'>" + (driver.driver_pic ? '<img src="data:image/jpeg;base64,' + driver.driver_pic + '" class="driver-photo">' : '<i class="fa-solid fa-circle-user profile-icon"></i>') + "</td>" +
+               "<td data-label='ID'>" + highlightText(driver.driver_id) + "</td>" +
+               "<td data-label='Name'>" + highlightText(driver.name) + "</td>" +
+               "<td data-label='Email'>" + highlightText(driver.email) + "</td>" +
+               "<td data-label='Contact No.'>" + highlightText(driver.contact_no || 'N/A') + "</td>" +
+               "<td data-label='Assigned Truck'>" + highlightText(driver.assigned_truck_id || 'None') + "</td>" +
+               "<td data-label='Total Trips'>" + highlightText(driver.total_completed || 0) + "</td>" +
+               "<td data-label='Monthly Trips'>" + highlightText(driver.monthly_completed || 0) + "</td>" +
+               "<td data-label='Created / Modified'>" + creationInfo + "</td>" +
+               "<td data-label='Last Login'>" + highlightText(formattedLastLogin) + "</td>" +
+               "<td data-label='Actions' class='actions'>" +
+               "<div class='dropdown'>" +
+               "<button class='dropdown-btn' data-tooltip='Actions' onclick='toggleDropdown(this)'><i class='fas fa-ellipsis-v'></i></button>" +
+               "<div class='dropdown-content'>" +
+               "<button class='dropdown-item edit' onclick='editDriver(\"" + driver.driver_id + "\")'><i class='fas fa-edit'></i> Edit Driver</button>" +
+               "<button class='dropdown-item delete' onclick='deleteDriver(\"" + driver.driver_id + "\")'><i class='fas fa-trash-alt'></i> Delete Driver</button>" +
+               "</div></div></td>" +
+               "</tr>";
+               $('#driverTableBody').append(row);
         });
     } else {
         $('#driverTableBody').append("<tr><td colspan='11'>No drivers found</td></tr>");
     }
     
-    // Hide pagination during search
     $('#page-numbers').empty();
     $('#page-numbers').append('<div class="search-results">Showing ' + filteredDrivers.length + ' result(s)</div>');
     $('#prevPageBtn').prop('disabled', true);
@@ -793,7 +760,7 @@ function formatDateWithTime(dateString) {
         const maxSize = 2 * 1024 * 1024; 
 
         if (file) {
-     
+   
             if (file.size > maxSize) {
                 Swal.fire({
                     icon: 'error',
@@ -834,16 +801,13 @@ function formatDateWithTime(dateString) {
             };
             reader.readAsDataURL(file);
         } else {
-            // If no file selected and in edit mode, restore original preview
             const mode = document.getElementById("modalMode").value;
             if (mode === 'edit') {
-                // Keep existing image display only
                 const existingContent = profilePreview.querySelector('.current-profile-section');
                 if (existingContent) {
                     profilePreview.innerHTML = existingContent.outerHTML;
                 }
             } else {
-                // Clear preview in add mode
                 profilePreview.innerHTML = '';
             }
         }
@@ -858,54 +822,48 @@ function formatDateWithTime(dateString) {
 
         
    document.addEventListener('DOMContentLoaded', function() {
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.dropdown')) {
-                    closeAllDropdowns();
-                }
-            });
-            
-            // Toggle dropdowns when clicking the button
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.dropdown-btn')) {
-                    const dropdown = e.target.closest('.dropdown');
-                    const dropdownContent = dropdown.querySelector('.dropdown-content');
-                    
-                    // Close all other dropdowns
-                    closeAllDropdownsExcept(dropdownContent);
-                    
-                    // Toggle this dropdown
-                    dropdownContent.classList.toggle('show');
-                    e.stopPropagation();
-                }
-            });
-            
-            // Handle dropdown item clicks
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.dropdown-item')) {
-                    // Close the dropdown
-                    const dropdownContent = e.target.closest('.dropdown-content');
-                    if (dropdownContent) {
-                        dropdownContent.classList.remove('show');
-                    }
-                }
-            });
-        });
-        
-        function closeAllDropdowns() {
-            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
-                dropdown.classList.remove('show');
-            });
-        }
-        
-        function closeAllDropdownsExcept(exceptDropdown) {
-            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
-                if (dropdown !== exceptDropdown) {
-                    dropdown.classList.remove('show');
-                }
-            });
-        }
-        
+           document.addEventListener('click', function(e) {
+               if (!e.target.closest('.dropdown')) {
+                   closeAllDropdowns();
+               }
+           });
+           
+           document.addEventListener('click', function(e) {
+               if (e.target.closest('.dropdown-btn')) {
+                   const dropdown = e.target.closest('.dropdown');
+                   const dropdownContent = dropdown.querySelector('.dropdown-content');
+                   
+                   closeAllDropdownsExcept(dropdownContent);
+                   
+                   dropdownContent.classList.toggle('show');
+                   e.stopPropagation();
+               }
+           });
+           
+           document.addEventListener('click', function(e) {
+               if (e.target.closest('.dropdown-item')) {
+                   const dropdownContent = e.target.closest('.dropdown-content');
+                   if (dropdownContent) {
+                       dropdownContent.classList.remove('show');
+                   }
+               }
+           });
+       });
+       
+       function closeAllDropdowns() {
+           document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+               dropdown.classList.remove('show');
+           });
+       }
+       
+       function closeAllDropdownsExcept(exceptDropdown) {
+           document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+               if (dropdown !== exceptDropdown) {
+                   dropdown.classList.remove('show');
+               }
+           });
+       }
+       
     </script>
 
     <script>
@@ -977,13 +935,7 @@ function validatePassword() {
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const mode = document.getElementById('modalMode').value;
-    // const oldPassword = document.getElementById('oldPassword').value; // REMOVED: Field is gone
-
-    // NOTE: The role bypass logic is now solely handled on the backend (save_driver.php)
     
-    // In edit mode, if a new password is set, the old password validation is removed entirely.
-    
-    // Check if new passwords match.
     if (password !== confirmPassword) {
         Swal.fire({
             icon: 'error',
@@ -1088,27 +1040,20 @@ function validatePassword() {
     this.progressBar = document.querySelector('.progress-bar');
     this.progressText = document.querySelector('.progress-text');
     
-    // Show loading immediately if coming from another page
-    // this.checkForIncomingNavigation();
     this.setupNavigationInterception();
   },
   
   checkForIncomingNavigation() {
-    // Check if we're coming from another page in the same site
     const referrer = document.referrer;
     const currentDomain = window.location.origin;
     
-    // Also check sessionStorage for loading state
     const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
     
     if ((referrer && referrer.startsWith(currentDomain)) || shouldShowLoading) {
-      // Clear the flag
       sessionStorage.removeItem('showAdminLoading');
       
-      // Show loading animation for incoming navigation
       this.show('Loading Page', 'Loading content...');
       
-      // Simulate realistic loading progress
       let progress = 0;
       const progressInterval = setInterval(() => {
         progress += Math.random() * 25 + 10;
@@ -1130,7 +1075,6 @@ function validatePassword() {
     this.titleEl.textContent = title;
     this.messageEl.textContent = message;
     
-    // Reset progress
     this.updateProgress(0);
     
     this.loadingEl.style.display = 'flex';
@@ -1159,7 +1103,6 @@ function validatePassword() {
   
   setupNavigationInterception() {
     document.addEventListener('click', (e) => {
-      // Skip if click is inside SweetAlert modal, regular modals, or calendar
       if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal, .modal, .modal-content, .fc-event, #calendar')) {
         return;
       }
@@ -1170,27 +1113,24 @@ function validatePassword() {
           !link.href.startsWith('#') && !link.href.startsWith('mailto:') &&
           !link.href.startsWith('tel:')) {
         
-        // Only intercept internal links
         try {
           const linkUrl = new URL(link.href);
           const currentUrl = new URL(window.location.href);
           
           if (linkUrl.origin !== currentUrl.origin) {
-            return; // Let external links work normally
+            return; 
           }
           
-          // Skip if it's the same page
           if (linkUrl.pathname === currentUrl.pathname) {
             return;
           }
           
         } catch (e) {
-          return; // Invalid URL, let it work normally
+          return; 
         }
         
         e.preventDefault();
         
-        // Set flag for next page
         sessionStorage.setItem('showAdminLoading', 'true');
         
         const loading = this.startAction(
@@ -1203,16 +1143,14 @@ function validatePassword() {
           progress += Math.random() * 15 + 8;
           if (progress >= 85) {
             clearInterval(progressInterval);
-            progress = 90; // Stop at 90% until page actually loads
+            progress = 90; 
           }
           loading.updateProgress(Math.min(progress, 90));
         }, 150);
         
-        // Minimum delay to show animation
         const minLoadTime = 1200;
         
         setTimeout(() => {
-          // Complete the progress bar
           loading.updateProgress(100);
           setTimeout(() => {
             window.location.href = link.href;
@@ -1221,14 +1159,11 @@ function validatePassword() {
       }
     });
 
-    // Handle form submissions
     document.addEventListener('submit', (e) => {
-      // Skip if form is inside SweetAlert or modal
       if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
         return;
       }
       
-      // Only show loading for forms that will cause page navigation
       const form = e.target;
       if (form.method && form.method.toLowerCase() === 'post' && form.action) {
         const loading = this.startAction(
@@ -1242,7 +1177,6 @@ function validatePassword() {
       }
     });
     
-    // Handle browser back/forward buttons
     window.addEventListener('popstate', () => {
       this.show('Loading Page', 'Loading previous page...');
       setTimeout(() => {
@@ -1273,7 +1207,6 @@ function validatePassword() {
     };
   },
   
-  // Public methods for manual control
   showManual: function(title, message) {
     this.show(title, message);
   },
@@ -1287,20 +1220,16 @@ function validatePassword() {
   }
 };
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
   
-  // Add smooth transition to the GIF
   const loadingGif = document.querySelector('.loading-gif');
   if (loadingGif) {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
   
-  // Hide loading on page show (handles browser back button)
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
-      // Page was loaded from cache (back/forward button)
       setTimeout(() => {
         AdminLoading.hideManual();
       }, 500);
@@ -1308,13 +1237,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Handle page unload
-// window.addEventListener('beforeunload', () => {
-//   // Set flag that we're navigating
-//   sessionStorage.setItem('showAdminLoading', 'true');
-// });
-
-// Export for global access (optional)
 window.AdminLoading = AdminLoading;
 </script>
     </body>

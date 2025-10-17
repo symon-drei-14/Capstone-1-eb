@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/include/check_access.php';
-checkAccess(); // No role needed—logic is handled internally
+checkAccess(); 
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -359,16 +359,16 @@ checkAccess(); // No role needed—logic is handled internally
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
   
-  // Add smooth transition to the GIF
+  
   const loadingGif = document.querySelector('.loading-gif');
   if (loadingGif) {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
   
-  // Hide loading on page show (handles browser back button)
+  
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
-      // Page was loaded from cache (back/forward button)
+      
       setTimeout(() => {
         AdminLoading.hideManual();
       }, 500);
@@ -376,13 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Handle page unload
-// window.addEventListener('beforeunload', () => {
-//   // Set flag that we're navigating
-//   sessionStorage.setItem('showAdminLoading', 'true');
-// });
 
-// Export for global access (optional)
 window.AdminLoading = AdminLoading;
 </script>
 <footer class="site-footer">

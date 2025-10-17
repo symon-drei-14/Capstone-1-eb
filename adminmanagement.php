@@ -192,7 +192,7 @@ checkAccess();
                  <input type="email" id="adminEmail" name="adminEmail" class="form-control" required placeholder="admin@example.com">
              </div>
 
-             <!-- The 'Current Password' field (id="oldPasswordGroup") has been removed per security requirements, as it is no longer needed for admin-to-admin changes. -->
+            
 
              <div class="form-row">
                  <div class="form-group">
@@ -223,7 +223,7 @@ checkAccess();
 </div>
 
      <script>
-         // State variables for pagination
+        
          let currentAdminPage = 1;
          let activeRowsPerPage = 5;
          let totalAdmins = 0;
@@ -232,7 +232,7 @@ checkAccess();
          let deletedRowsPerPage = 5;
          let totalDeletedAdmins = 0;
 
-         // Modal functions
+       
          function openModal(modalId) {
              document.getElementById(modalId).style.display = "block";
          }
@@ -269,7 +269,7 @@ checkAccess();
             
                  modalTitle.textContent = 'Edit Admin';
                  passwordHelp.style.display = 'block';
-                 // Removed oldPasswordGroup manipulation since the field is gone
+              
                  passwordInput.required = false;
                  confirmPasswordInput.required = false;
                  passwordLabel.textContent = "New Password";
@@ -447,7 +447,7 @@ checkAccess();
              .then(data => {
                  if (data.success) {
                      Swal.fire('Deleted!', 'The admin has been moved to the deleted list.', 'success');
-                     fetchAdminsPaginated(false); // Refresh active admins list
+                     fetchAdminsPaginated(false); 
                  } else {
                      Swal.fire('Error!', data.message, 'error');
                  }
@@ -462,7 +462,7 @@ checkAccess();
         const adminEmail = document.getElementById('adminEmail').value;
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
-        // const oldPassword = document.getElementById('oldPassword').value; // REMOVED: No longer needed for admin-to-admin changes
+        
         const profileInput = document.getElementById('adminProfile');
 
 
@@ -474,7 +474,7 @@ checkAccess();
             Swal.fire('Validation Error', 'New passwords do not match.', 'warning');
             return;
         }
-        // REMOVED VALIDATION: The check for 'Current Password' is no longer required.
+        
         
         if (!adminId && !password) {
             Swal.fire('Validation Error', 'Password is required for new admins.', 'warning');
@@ -491,7 +491,7 @@ checkAccess();
         formData.append('role', role);
         formData.append('admin_email', adminEmail);
         formData.append('password', password);
-        // formData.append('old_password', oldPassword); // REMOVED: Not sent to backend anymore
+        
         
         if (profileInput.files.length > 0) {
             formData.append('adminProfile', profileInput.files[0]);
@@ -506,7 +506,7 @@ checkAccess();
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // OTP flow removed. Now we check for the server's notification flag (message_type).
+                    
                     let successMessage = `Admin has been ${adminId ? 'updated' : 'added'} successfully.`;
                     
                     if (data.message_type === 'password_notified') {
@@ -542,13 +542,13 @@ checkAccess();
             });
     }
 
-   // The previous promptForOtp function is entirely removed as OTP is no longer used.
+   
 
        function restoreAdmin(adminId, reason = '') {
     const mandatoryResetReasons = ['Failed Login Attempts', 'Too many OTP attempts'];
 
     if (mandatoryResetReasons.includes(reason)) {
-        // --- Custom flow for security-locked accounts (OTP or Failed Login Attempts) ---
+        
         Swal.fire({
             title: 'Security Reset Required',
             text: 'This account was locked for security reasons. You must set a new password and email to restore it.',
@@ -574,7 +574,7 @@ checkAccess();
                     return false;
                 }
                 
-                // Simple email regex check
+              
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email)) {
                      Swal.showValidationMessage(`Please enter a valid email address.`);
@@ -585,23 +585,23 @@ checkAccess();
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                // Send request to the backend with the new password AND new email
+               
                 fetch('include/handlers/restore_admin.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         admin_id: adminId,
                         password: result.value.password,
-                        admin_email: result.value.admin_email // Include the new email
+                        admin_email: result.value.admin_email 
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         Swal.fire('Restored!', 'The admin account has been restored with new credentials.', 'success');
-                        fetchAdminsPaginated(true); // Refresh the deleted list
+                        fetchAdminsPaginated(true); 
                     } else {
-                        // Crucial: Handle errors like "Email already exists" from the backend
+                        
                         Swal.fire('Error!', data.message, 'error');
                     }
                 })
@@ -609,7 +609,7 @@ checkAccess();
             }
         });
     } else {
-        // --- Standard restore flow for normally deleted accounts ---
+        
         Swal.fire({
             title: 'Restore Admin?',
             text: "Are you sure you want to restore this admin?",
@@ -623,13 +623,13 @@ checkAccess();
                 fetch('include/handlers/restore_admin.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: adminId }) // No password/email needed here
+                    body: JSON.stringify({ admin_id: adminId })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         Swal.fire('Restored!', 'The admin has been restored successfully.', 'success');
-                        fetchAdminsPaginated(true); // Refresh the deleted list
+                        fetchAdminsPaginated(true); 
                     } else {
                         Swal.fire('Error!', data.message, 'error');
                     }
@@ -695,7 +695,7 @@ checkAccess();
 
              if (totalPages <= 1) return;
 
-             // Previous Button
+             
              const prevButton = document.createElement('button');
              prevButton.innerHTML = '&laquo;';
              prevButton.className = 'prev';
@@ -703,7 +703,7 @@ checkAccess();
              prevButton.onclick = () => goToPageFunction(currentPage - 1);
              container.appendChild(prevButton);
 
-             // Page Number Buttons
+          
              for (let i = 1; i <= totalPages; i++) {
                  const pageButton = document.createElement('button');
                  pageButton.textContent = i;
@@ -716,7 +716,7 @@ checkAccess();
                  container.appendChild(pageButton);
              }
 
-             // Next Button
+             
              const nextButton = document.createElement('button');
              nextButton.innerHTML = '&raquo;';
              nextButton.className = 'next';
@@ -816,19 +816,19 @@ checkAccess();
          };
 
          document.addEventListener('DOMContentLoaded', () => {
-             // Setup listeners
+             
              document.getElementById('showDeletedCheckbox').addEventListener('change', toggleDeletedAdmins);
              document.getElementById('rowsPerPage').addEventListener('change', changeRowsPerPage);
              document.getElementById('deletedRowsPerPage').addEventListener('change', changeRowsPerPage);
              
-             // Set initial rows per page values
+             
              document.getElementById('rowsPerPage').value = activeRowsPerPage;
              document.getElementById('deletedRowsPerPage').value = deletedRowsPerPage;
 
-             // Initial fetch for active admins
+             
              fetchAdminsPaginated(false);
 
-             // Other initializations
+             
              const currentPage = window.location.pathname.split('/').pop();
              const sidebarLinks = document.querySelectorAll('.sidebar-item a');
              sidebarLinks.forEach(link => {
@@ -858,7 +858,7 @@ checkAccess();
 
          function handleProfileImageChange(e, previewElement) {
             const file = e.target.files[0];
-            const maxFileSize = 2 * 1024 * 1024; // 2MB
+            const maxFileSize = 2 * 1024 * 1024; 
 
             if (file) {
                 if (file.size > maxFileSize) {

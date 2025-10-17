@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/include/check_access.php';
-checkAccess(); // No role needed—logic is handled internally
+checkAccess(); 
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -387,23 +387,7 @@ checkAccess(); // No role needed—logic is handled internally
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<!-- <div id="deleteModal" class="modal">
-    <div class="modal-content" style="width: 40%;">
-        <span class="close" onclick="closeModal('deleteModal')">&times;</span>
-        <h2>Delete Item</h2>
-        <input type="hidden" id="deleteItemId">
-        <input type="hidden" id="deleteItemType">
-        <div class="form-group">
-            <label for="deleteReason">Reason for deletion:</label>
-            <textarea id="deleteReason" name="deleteReason" class="form-control" rows="4" required></textarea>
-        </div>
-        <div class="button-group">
-            <button type="button" class="save-btn" onclick="performSoftDelete()">Confirm Delete</button>
-            <button type="button" class="cancel-btn" onclick="closeModal('deleteModal')">Cancel</button>
-        </div>
-    </div>
-</div> -->
+
 
 <!-- Reason View Modal -->
 <div id="reasonModal" class="modal">
@@ -428,7 +412,7 @@ checkAccess(); // No role needed—logic is handled internally
     </div>
 </div>
 <script>
-    // Global variables
+  
     let currentTab = 'dispatchers';
 
 let showDeletedData = {
@@ -453,14 +437,14 @@ let showDeletedData = {
     ports: { items: [], currentPage: 1, rowsPerPage: 5, searchTerm: '' } 
     };
     
-    // Initialize when DOM is loaded
+    
     document.addEventListener('DOMContentLoaded', function() {
         setupTabs();
         fetchAllData();
         updateDateTime();
         setInterval(updateDateTime, 1000);
         
-        // Set up sidebar active state
+        
         const currentPage = window.location.pathname.split('/').pop();
         const sidebarLinks = document.querySelectorAll('.sidebar-item a');
         
@@ -600,8 +584,7 @@ let showDeletedData = {
                     nameDisplay = item.name.replace(regex, match => `<span class="highlight">${match}</span>`);
                 }
 
-                // FIX: Properly create the ID key, handling hyphens by converting them to underscores.
-                // This changes 'shipping-line_id' to the correct 'shipping_line_id'.
+                
                 const itemIdKey = `${type.replace('-', '_').slice(0, -1)}_id`;
                 
                 tr.innerHTML = `
@@ -675,10 +658,10 @@ function handleDropdownClick(e) {
         const dropdown = e.target.closest('.dropdown');
         const dropdownContent = dropdown.querySelector('.dropdown-content');
         
-        // Close all other dropdowns
+       
         closeAllDropdownsExcept(dropdownContent);
         
-        // Toggle this dropdown
+        
         dropdownContent.classList.toggle('show');
         e.stopPropagation();
     }
@@ -686,7 +669,7 @@ function handleDropdownClick(e) {
 
 function handleDropdownItemClick(e) {
     if (e.target.closest('.dropdown-item')) {
-        // Close the dropdown
+        
         const dropdownContent = e.target.closest('.dropdown-content');
         if (dropdownContent) {
             dropdownContent.classList.remove('show');
@@ -731,7 +714,7 @@ function handleDropdownItemClick(e) {
             document.getElementById('modalTitle').textContent = `Edit ${capitalizeFirstLetter(type.slice(0, -1))}`;
             document.getElementById('itemId').value = id;
             
-            // FIX: Use the correct ID key to find the item in the array.
+            
             const idKey = `${type.replace('-', '_').slice(0, -1)}_id`;
             const item = data[type].items.find(item => item[idKey] == id);
 
@@ -778,7 +761,7 @@ window.addEventListener('click', function(event) {
         const action = id ? 'update' : 'add';
         const formData = new FormData();
 
-        // FIX: Use our new helper to create the correct action name (e.g., 'addShippingLine').
+        
         const actionName = formatActionName(type.slice(0, -1));
         formData.append('action', `${action}${actionName}`);
 
@@ -837,7 +820,7 @@ function deleteItem(type, id) {
                     if (confirmResult.isConfirmed) {
                         const formData = new FormData();
                         
-                        // FIX: Use our helper to create the correct action name for soft deleting.
+                       
                         const actionName = formatActionName(type.slice(0, -1));
                         formData.append('action', `softDelete${actionName}`);
                         
@@ -919,7 +902,7 @@ function deleteItem(type, id) {
     }
     
     function viewDeletionReason(type, id) {
-        // FIX: Use the correct ID key to find the item in the array.
+        
         const idKey = `${type.replace('-', '_').slice(0, -1)}_id`;
         const item = data[type].items.find(item => item[idKey] == id);
 
@@ -945,7 +928,7 @@ function deleteItem(type, id) {
             if (result.isConfirmed) {
                 const formData = new FormData();
 
-                // FIX: Use our helper to create the correct action name for restoring.
+                
                 const actionName = formatActionName(type.slice(0, -1));
                 formData.append('action', `restore${actionName}`);
                 formData.append('id', id);
@@ -984,7 +967,7 @@ function deleteItem(type, id) {
             if (result.isConfirmed) {
                 const formData = new FormData();
                 
-                // FIX: Use our helper to create the correct action name for permanent deletion.
+                
                 const actionName = formatActionName(type.slice(0, -1));
                 formData.append('action', `fullDelete${actionName}`);
                 formData.append('id', id);
