@@ -1106,7 +1106,7 @@ function formatDateTime(datetimeString) {
     
     const date = new Date(datetimeString);
     
-    // Format month as abbreviated word
+   
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const month = months[date.getMonth()];
     
@@ -1159,7 +1159,7 @@ let highlightTripId = null;
             $('#editAdditionalCashContainer').show();
         } else {
             $('#editAdditionalCashContainer').hide();
-            $('#editEventAdditionalCashAdvance').val(''); // Clear the value when hidden
+            $('#editEventAdditionalCashAdvance').val(''); 
         }
     });
 
@@ -1173,14 +1173,14 @@ let highlightTripId = null;
             renderTable();
         });
 
-        // ### NEW: Search input handler with debounce ###
+        
         let searchTimeout;
         $('#searchInput').on('keyup', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                currentPage = 1; // Reset to the first page on a new search
+                currentPage = 1; 
                 renderTable();
-            }, 400); // Wait 400ms after the user stops typing
+            }, 400); 
         });
 
     
@@ -1199,10 +1199,10 @@ function filterTableByDateRange() {
     currentDateFrom = dateFrom;
     currentDateTo = dateTo;
     
-    // Reset to first page when applying new filters
+    
     currentPage = 1;
     
-    // Re-render the table with new filters
+    
     renderTable();
 }
 
@@ -1233,7 +1233,7 @@ function renderTable() {
         action = 'get_active_trips';
     }
     
-    // Get date filter values
+    
     const dateFrom = $('#dateFrom').val();
     const dateTo = $('#dateTo').val();
     
@@ -1305,7 +1305,7 @@ function renderTable() {
         },
         success: function(response) {
             if (response.success && response.hasConflict) {
-                // Show warning modal with detailed information
+                
                 Swal.fire({
                     title: 'Maintenance Conflict',
                     html: `This truck has scheduled maintenance on <strong>${response.maintenanceDate}</strong>.<br><br>
@@ -1316,15 +1316,15 @@ function renderTable() {
                     confirmButtonText: 'OK',
                     showCancelButton: false
                 }).then((result) => {
-                    callback(false); // Don't proceed
+                    callback(false); 
                 });
             } else {
-                callback(true); // No conflict, proceed
+                callback(true); 
             }
         },
         error: function() {
             console.error('Error checking maintenance');
-            // On error, allow proceeding but show a warning
+            
             Swal.fire({
                 title: 'Warning',
                 text: 'Could not verify maintenance schedule. Please proceed with caution.',
@@ -1533,7 +1533,7 @@ $(document).on('click', '.icon-btn.edit', function() {
     var eventData = eventsData.find(function(e) { return e.id == eventId; });
 
     if (eventData) {
-        // Now we are using the correct event data found by its ID
+      
         populateHelperDropdowns();
         populateDispatcherDropdowns();
         populateConsigneeDropdowns();
@@ -1561,7 +1561,7 @@ $(document).on('click', '.icon-btn.edit', function() {
 
 // expense summary things
 $('#expenseSummaryBtn').on('click', function() {
-    // Set the default view to 'daily' and trigger the change event to populate the date picker
+   
     $('#summaryType').val('daily').trigger('change');
     $('#expenseSummaryModal').show();
 });
@@ -1569,7 +1569,7 @@ $('#expenseSummaryBtn').on('click', function() {
 $('#summaryType').on('change', function() {
     const type = $(this).val();
     const container = $('#date-picker-container');
-    container.empty(); // Clear previous picker
+    container.empty(); 
     const today = new Date().toISOString();
 
     let inputHtml = '';
@@ -1600,13 +1600,13 @@ $('#summaryType').on('change', function() {
 });
 
    $('#expenseSummaryForm').on('submit', function(e) {
-    e.preventDefault(); // Prevent the default form submission
+    e.preventDefault();
 
     const form = $(this);
-    // This simple line gets all the data, like "type=weekly&week=2025-W42"
+   
     const reportUrl = form.attr('action') + '?' + form.serialize();
 
-    // Use the browser's built-in validation to make sure a value was entered
+   
     if (form[0].checkValidity()) {
         $('#expenseSummaryModal').hide();
 
@@ -1757,7 +1757,7 @@ $('#summaryType').on('change', function() {
 
 
     function selectNextDriver(capacity) {
-    // Convert '20ft' to '20'
+    
     const capacityValue = capacity.replace('ft', '').trim();
     
     if (!capacityValue) {
@@ -1777,7 +1777,7 @@ $('#summaryType').on('change', function() {
         success: function(response) {
             if (response.success && response.driver) {
                 const driver = response.driver;
-                // Set the value for the dropdown and the plate number input
+                // Sets the value for the dropdown and the plate number input
                 $('#addEventDriver').val(driver.name);
                 $('#addEventPlateNo').val(driver.plate_no);
                 
@@ -1848,22 +1848,22 @@ $('#summaryType').on('change', function() {
             var selectedOption = $(this).find('option:selected');
             var plateNo = selectedOption.data('plate-no');
             
-            // Determine which form we're in (add or edit)
+            
             var isAddForm = $(this).attr('id') === 'addEventDriver';
             var plateNoField = isAddForm ? '#addEventPlateNo' : '#editEventPlateNo';
             
             $(plateNoField).val(plateNo || '');
         });
 
-    // Add event listener for size dropdown changes
+   
      $('#addEventSize, #editEventSize').on('change', function() {
         var selectedSize = $(this).val();
         var isAddForm = $(this).attr('id') === 'addEventSize';
         
-        // First, filter the dropdown list to show only capable drivers
+        
         populateDriverDropdowns(selectedSize); 
         
-        // If we are in the ADD modal, automatically select the next driver from the queue
+      
         if(isAddForm) {
             selectNextDriver(selectedSize);
         }
