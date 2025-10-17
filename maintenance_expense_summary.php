@@ -4,7 +4,7 @@ checkAccess();
 
 require 'include/handlers/dbhandler.php';
 
-// --- Determine Date Range and Report Title from URL parameters ---
+
 $reportType = $_GET['type'] ?? 'daily';
 $startDate = '';
 $endDate = '';
@@ -62,11 +62,11 @@ if (empty($startDate) || empty($endDate)) {
     die("Invalid date range selected. Please go back and try again.");
 }
 
-// --- Fetch Maintenance Data and Expenses ---
+
 $maintenanceRecords = [];
 $grandTotalCost = 0;
 
-// Get all non-deleted maintenance records within the date range
+
 $maintSql = "SELECT m.maintenance_id, m.date_mtnce, m.remarks, m.cost, t.plate_no, s.name as supplier_name
              FROM maintenance_table m
              LEFT JOIN truck_table t ON m.truck_id = t.truck_id
@@ -86,9 +86,9 @@ $maintResult = $maintStmt->get_result();
 $maintenanceIds = [];
 while ($row = $maintResult->fetch_assoc()) {
     $maintenanceRecords[$row['maintenance_id']] = $row;
-    $maintenanceRecords[$row['maintenance_id']]['expenses'] = []; // Prepare to hold expenses
+    $maintenanceRecords[$row['maintenance_id']]['expenses'] = []; 
     $maintenanceIds[] = $row['maintenance_id'];
-    // The main 'cost' is the sum of detailed expenses, so we'll calculate it below.
+   
 }
 $maintStmt->close();
 
@@ -96,7 +96,7 @@ if (!empty($maintenanceIds)) {
     $placeholders = implode(',', array_fill(0, count($maintenanceIds), '?'));
     $types = str_repeat('i', count($maintenanceIds));
 
-    // Fetch all associated expenses for the collected maintenance IDs
+  
     $expenseSql = "SELECT maintenance_id, expense_type, amount 
                    FROM maintenance_expenses 
                    WHERE maintenance_id IN ($placeholders)";
@@ -154,7 +154,7 @@ if (!empty($maintenanceIds)) {
                     <p style="text-align:center; color: #6c757d; margin-top: 20px;">No maintenance expenses were found for this period.</p>
                 <?php else: ?>
                     <?php foreach ($maintenanceRecords as $id => $record): ?>
-                        <div class="trip-card"> <!-- Reusing 'trip-card' class for styling -->
+                        <div class="trip-card"> 
                             <div class="trip-card-header">
                                 <h3>Maintenance ID: MT-<?php echo str_pad($id, 6, '0', STR_PAD_LEFT); ?></h3>
                                 <p>
@@ -185,7 +185,7 @@ if (!empty($maintenanceIds)) {
                                         <?php endforeach; ?>
                                     </tbody>
                                     <tfoot>
-                                        <tr class="trip-total"> <!-- Reusing style -->
+                                        <tr class="trip-total"> 
                                             <th>Total for this Record</th>
                                             <th class="amount">₱<?php echo number_format($recordTotal, 2); ?></th>
                                         </tr>

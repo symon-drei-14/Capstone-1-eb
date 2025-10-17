@@ -3,7 +3,7 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
-// Handle preflight requests
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
@@ -12,7 +12,6 @@ session_start();
 date_default_timezone_set('Asia/Manila');
 require 'dbhandler.php';
 
-// Check database connection first
 if (!$conn) {
     http_response_code(500);
     echo json_encode([
@@ -28,7 +27,6 @@ $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 $action = $data['action'] ?? '';
 
-// Helper functions from trip_operations.php
 function getOrCreateClientId($conn, $clientName) {
     $stmt = $conn->prepare("SELECT client_id FROM clients WHERE name = ?");
     $stmt->bind_param("s", $clientName);
@@ -172,7 +170,7 @@ function updateTripExpenses($conn, $tripId, $cashAdvance) {
             $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance) VALUES (?, ?)");
             $stmt->bind_param("id", $tripId, $cashAdvance);
         } else {
-            return true; // No need to insert 0 cash advance
+            return true; 
         }
     }
     
@@ -185,7 +183,6 @@ try {
             $conn->begin_transaction();
             
             try {
-                // Get foreign key IDs
                 $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
                 $driverId = getDriverIdByName($conn, $data['driver']);
                 $clientId = getOrCreateClientId($conn, $data['client']);
@@ -202,7 +199,6 @@ try {
                     throw new Exception("Driver {$data['driver']} not found");
                 }
                 
-                // Insert trip
                 $stmt = $conn->prepare("INSERT INTO trips 
                     (truck_id, driver_id, helper_id, dispatcher_id, client_id, 
                     destination_id, shipping_line_id, consignee_id, container_no, 
@@ -228,20 +224,17 @@ try {
                 
                 $tripId = $conn->insert_id;
 
-                // Insert cash advance if provided
                 $cashAdvance = floatval($data['cashAdvance'] ?? 0);
                 if (!insertTripExpenses($conn, $tripId, $cashAdvance)) {
                     throw new Exception("Failed to insert trip expenses");
                 }
 
-                // Insert audit log
                 $auditStmt = $conn->prepare("INSERT INTO audit_logs_trips (trip_id, modified_by, edit_reason) VALUES (?, ?, 'Trip created')");
                 $auditStmt->bind_param("is", $tripId, $currentUser);
                 if (!$auditStmt->execute()) {
                     throw new Exception("Failed to insert audit log: " . $auditStmt->error);
                 }
 
-                // Update truck status
                 if ($data['status'] === 'En Route') {
                     $updateTruck = $conn->prepare("UPDATE truck_table SET status = 'Enroute' WHERE truck_id = ?");
                     $updateTruck->bind_param("i", $truckId);
@@ -261,7 +254,6 @@ try {
     $conn->begin_transaction();
     
     try {
-        // Get current trip info
         $getCurrent = $conn->prepare("SELECT status, truck_id, driver_id FROM trips WHERE trip_id = ?");
         $getCurrent->bind_param("i", $data['id']);
         $getCurrent->execute();
@@ -271,10 +263,8 @@ try {
             throw new Exception("Trip not found");
         }
         
-        // Get current driver ID before update
         $currentDriverId = $current['driver_id'];
         
-        // Get foreign key IDs
         $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
         $driverId = getDriverIdByName($conn, $data['driver']);
         $clientId = getOrCreateClientId($conn, $data['client']);
@@ -284,9 +274,7 @@ try {
         $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
         $consigneeId = getConsigneeId($conn, $data['consignee']);
 
-        // Check if driver is being changed
         if ($currentDriverId != $driverId) {
-            // Delete the existing checklist when driver changes
             if (!deleteTripChecklist($conn, $data['id'])) {
                 throw new Exception("Failed to reset checklist for new driver");
             }
@@ -299,7 +287,6 @@ try {
             throw new Exception("Driver {$data['driver']} not found");
         }
 
-        // Update trip
         $stmt = $conn->prepare("UPDATE trips SET 
             truck_id=?, driver_id=?, helper_id=?, dispatcher_id=?, client_id=?, 
             destination_id=?, shipping_line_id=?, consignee_id=?, container_no=?, 
@@ -324,17 +311,14 @@ try {
             throw new Exception("Failed to update trip: " . $stmt->error);
         }
         
-        // Update trip expenses
         $cashAdvance = floatval($data['cashAdvance'] ?? 0);
         updateTripExpenses($conn, $data['id'], $cashAdvance);
         
-        // Update audit log
         $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
         $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
         $auditStmt->bind_param("ssi", $currentUser, $editReasons, $data['id']);
         $auditStmt->execute();
         
-        // Update truck status if status changed
         if ($current['status'] !== $data['status']) {
             $newTruckStatus = 'In Terminal';
             if ($data['status'] === 'En Route') {
@@ -362,7 +346,6 @@ try {
     break;
 
         case 'delete':
-            // Mark trip as deleted in audit log (soft delete)
             $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
                 is_deleted = 1,
                 delete_reason = ?,
@@ -376,7 +359,6 @@ try {
             );
             $stmt->execute();
             
-            // Get trip details for truck status update
             $getTrip = $conn->prepare("
                 SELECT t.status, tr.truck_id 
                 FROM trips t 
@@ -419,7 +401,6 @@ try {
     $params = [];
     $types = "";
     
-    // Filter by driver if specified
     if (isset($data['driver_id'])) {
         $whereClause = "WHERE t.driver_id = ?";
         $params = [$data['driver_id']];
@@ -430,13 +411,11 @@ try {
         $types = "s";
     }
     
-    // Add filter for non-deleted trips
     $whereClause .= ($whereClause ? " AND " : "WHERE ") . "NOT EXISTS (
         SELECT 1 FROM audit_logs_trips al2 
         WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
     )";
     
-    // The query is updated to join with the audit log to get the latest modification details.
     $sql = "
         SELECT 
             t.trip_id,
@@ -504,7 +483,6 @@ try {
     
     $trips = [];
     while ($row = $result->fetch_assoc()) {
-        // Map to old column names for compatibility
         $row['size'] = $row['truck_capacity'];
         $trips[] = $row;
     }
@@ -513,7 +491,7 @@ try {
     echo json_encode(['success' => true, 'trips' => $trips]);
     break;
 
-       case 'get_driver_current_trip':
+        case 'get_driver_current_trip':
     $driverId = $data['driver_id'] ?? null;
     $driverName = $data['driver_name'] ?? null;
     
@@ -544,7 +522,7 @@ try {
             dest.name as destination,
             sl.name as shipping_line,
             cons.name as consignee,
-            p.name as port_name, -- Added this line to get the port name
+            p.name as port_name,
             COALESCE(te.cash_advance, 0) as cash_advance,
             COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
             COALESCE(te.diesel, 0) as diesel,
@@ -562,7 +540,7 @@ try {
         LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
         LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
         LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-        LEFT JOIN ports p ON t.port_id = p.port_id -- Added this join for the ports table
+        LEFT JOIN ports p ON t.port_id = p.port_id
         WHERE $whereClause 
         AND t.status = 'En Route'
         AND NOT EXISTS (
@@ -702,7 +680,6 @@ try {
             cons.name as consignee,
             DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
             DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp,
-            -- Get trip start and end times from route data if available
             (SELECT MIN(timestamp) FROM trip_routes WHERE trip_id = t.trip_id) as trip_start_time,
             (SELECT MAX(timestamp) FROM trip_routes WHERE trip_id = t.trip_id) as trip_end_time
         FROM trips t
@@ -891,7 +868,6 @@ case 'get_trip_statistics':
             MAX(timestamp) as end_time,
             AVG(CASE WHEN speed > 0 THEN speed END) as avg_speed,
             MAX(speed) as max_speed,
-            -- Calculate total distance (approximate)
             SUM(
                 6371000 * acos(
                     cos(radians(LAG(latitude) OVER (ORDER BY timestamp))) * 
@@ -940,7 +916,7 @@ case 'get_trip_statistics':
     echo json_encode(['success' => true, 'statistics' => $stats]);
     break;
 
-       case 'update_trip_status':
+        case 'update_trip_status':
             $tripId = $data['trip_id'] ?? null;
             $newStatus = $data['status'] ?? null;
             
@@ -974,7 +950,6 @@ case 'get_trip_statistics':
             
             $stmt->close();
 
-            // FIX IS HERE: The reason string is now stored in a variable first.
             $editReason = "Status updated to $newStatus";
             $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
             $auditStmt->bind_param("ssi", $currentUser, $editReason, $tripId);
@@ -999,15 +974,13 @@ case 'get_trip_statistics':
             break;
 
     
- case 'save_checklist':
-    // Get the ID of the driver submitting the checklist
+case 'save_checklist':
     $submittingDriverId = $data['driver_id'] ?? null;
 
     if (!$submittingDriverId) {
         throw new Exception("Submitting driver's ID is missing from the request.");
     }
 
-    // Check if the trip exists and get its details for validation
     $tripCheck = $conn->prepare("SELECT driver_id, trip_date FROM trips WHERE trip_id = ?");
     $tripCheck->bind_param("i", $data['trip_id']);
     $tripCheck->execute();
@@ -1022,10 +995,8 @@ case 'get_trip_statistics':
     $trip = $tripResult->fetch_assoc();
     $tripCheck->close();
     
-    // Let's see if we need to bypass the standard time window check.
     $bypassTimeCheck = false;
 
-    // We'll check the latest audit log to see if the trip was recently reassigned.
     $auditCheck = $conn->prepare("
         SELECT edit_reason, modified_at
         FROM audit_logs_trips
@@ -1039,21 +1010,18 @@ case 'get_trip_statistics':
 
     if ($auditResult->num_rows > 0) {
         $latestAudit = $auditResult->fetch_assoc();
-        // The reason text will tell us if it was a reassignment.
         if (strpos($latestAudit['edit_reason'], 'reassigned') !== false) {
             $modifiedTime = new DateTime($latestAudit['modified_at']);
             $now = new DateTime();
             $secondsSinceReassigned = $now->getTimestamp() - $modifiedTime->getTimestamp();
             
-            // Give the new driver a one-hour grace period to get their checklist in.
-            if ($secondsSinceReassigned < 3600) { // 3600 seconds = 1 hour
+            if ($secondsSinceReassigned < 3600) { 
                 $bypassTimeCheck = true;
             }
         }
     }
     $auditCheck->close();
     
-    // Now, let's check the time window, but only if we're not bypassing.
     if (!$bypassTimeCheck) {
         $tripDateTime = new DateTime($trip['trip_date']);
         $now = new DateTime();
@@ -1079,9 +1047,6 @@ case 'get_trip_statistics':
         }
     }
 
-    // --- SERVER-SIDE VALIDATION ---
-    // This is a safety net to ensure no invalid checklists are saved,
-    // mirroring the logic from your React Native code.
     $hoursSlept = floatval($data['hours_sleep'] ?? 0);
     $alcoholReading = floatval($data['alcohol_test'] ?? 0);
     $isFit = boolval($data['fit_to_work'] ?? false);
@@ -1094,21 +1059,16 @@ case 'get_trip_statistics':
     $isSober = $alcoholReading === 0.0;
     $passedAllChecks = $noFatigue && $noDrugs && $noDistractions && $noIllness;
 
-    // A driver fails if they are not fit, not sober, didn't pass all checks, or lack enough sleep.
     $didFailChecklist = !$isFit || !$isSober || !$passedAllChecks || !$hasEnoughSleep;
 
     if ($didFailChecklist) {
-        // If the checklist data is invalid, we reject the submission.
-        // The client-side is responsible for triggering the actual reassignment process.
         echo json_encode([
             'success' => false,
             'message' => 'Checklist submission failed. The driver does not meet the fitness-to-work requirements (e.g., 6-9 hours of sleep, zero alcohol, fit to work).'
         ]);
-        break; // Stop execution for this case.
+        break; 
     }
-    // --- END OF VALIDATION ---
 
-    // Check if a checklist for this trip already exists
     $checkStmt = $conn->prepare("SELECT id FROM driver_checklist WHERE trip_id = ?");
     $checkStmt->bind_param("i", $data['trip_id']);
     $checkStmt->execute();
@@ -1116,7 +1076,6 @@ case 'get_trip_statistics':
     $checkStmt->close();
 
     if ($exists) {
-        // If it exists, we update it.
         $stmt = $conn->prepare("UPDATE driver_checklist SET 
             no_fatigue = ?, no_drugs = ?, no_distractions = ?, no_illness = ?,
             fit_to_work = ?, alcohol_test = ?, hours_sleep = ?, submitted_at = NOW()
@@ -1126,7 +1085,6 @@ case 'get_trip_statistics':
             $data['fit_to_work'], $data['alcohol_test'], $data['hours_sleep'], $data['trip_id']
         );
     } else {
-        // Otherwise, we create a new one.
         $stmt = $conn->prepare("INSERT INTO driver_checklist (
             trip_id, no_fatigue, no_drugs, no_distractions, no_illness,
             fit_to_work, alcohol_test, hours_sleep, submitted_at
@@ -1159,12 +1117,11 @@ case 'get_driver_queue_status':
         
             if ($status) {
                 $isCheckedIn = false;
-                // Check if the check-in time is not null and is within the last 16 hours
                 if ($status['checked_in_at']) {
                     $checkedInTime = new DateTime($status['checked_in_at']);
                     $now = new DateTime();
                     $intervalSeconds = $now->getTimestamp() - $checkedInTime->getTimestamp();
-                    if ($intervalSeconds < (16 * 3600)) { // 16 hours in seconds
+                    if ($intervalSeconds < (16 * 3600)) { 
                         $isCheckedIn = true;
                     }
                 }
@@ -1185,7 +1142,6 @@ case 'get_driver_queue_status':
                 throw new Exception("Driver ID is required.");
             }
             
-            // Before checking in, we'll verify the driver isn't currently penalized.
             $checkPenalty = $conn->prepare("SELECT penalty_until FROM drivers_table WHERE driver_id = ?");
             $checkPenalty->bind_param("i", $driverId);
             $checkPenalty->execute();
