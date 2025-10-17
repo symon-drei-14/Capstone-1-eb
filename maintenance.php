@@ -1,6 +1,6 @@
     <?php
     require_once __DIR__ . '/include/check_access.php';
-    checkAccess(); // No role needed—logic is handled internally
+    checkAccess(); 
     ?>
 
     <!DOCTYPE html>
@@ -421,7 +421,7 @@
                 </select>
 
                 <div id="date-picker-container">
-                    <!-- This container will be dynamically filled by JavaScript -->
+                  
                 </div>
             </div>
             <div class="modal-footer" style="background: #f9f9f9; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
@@ -505,7 +505,7 @@ function validateMaintenanceForm() {
         {id: 'status', name: 'Status'}
     ];
     
-    // Check each required field
+   
     for (const field of requiredFields) {
         const element = document.getElementById(field.id);
         
@@ -535,7 +535,7 @@ function validateMaintenanceForm() {
     }
 
     
-    // Validate maintenance purposes instead
+    
     const selectedPurposes = [];
     document.querySelectorAll('input[name="maintenancePurpose"]:checked').forEach(checkbox => {
         if (checkbox.value === "Other") {
@@ -558,7 +558,7 @@ function validateMaintenanceForm() {
         return false;
     }
 
-    // Validate date for new records
+    
     if (!isEditing) {
         const today = new Date();
         const inspectionDate = new Date(document.getElementById("date").value);
@@ -596,7 +596,7 @@ function searchMaintenance() {
         document.querySelector('.table-container').classList.add('loading');
         
         fetchAllRecordsForSearch().then(allRecords => {
-            // Pass the search term to the next function
+          
             performSearch(searchTerm, allRecords); 
             document.querySelector('.table-container').classList.remove('loading');
         }).catch(error => {
@@ -623,7 +623,7 @@ function performSearch(searchTerm, allRecords) {
         );
     });
     
-    // Pass both the filtered data AND the search term to renderTable
+    
     renderTable(filteredRecords, searchTerm); 
     updateShowingInfo(filteredRecords.length, filteredRecords.length);
     document.querySelector('.pagination').style.display = 'none';
@@ -700,7 +700,7 @@ function loadSuppliers() {
         })
         .catch(error => {
             console.error('Error loading suppliers:', error);
-            // Show user-friendly error
+            
             const select = document.getElementById('supplierId');
             if (select) {
                 select.innerHTML = '<option value="">Error loading suppliers</option>';
@@ -751,7 +751,7 @@ function loadSuppliers() {
 
             
         function fetchTrucksList() {
-        fetch('include/handlers/truck_handler.php?action=getActiveTrucks') // Changed endpoint
+        fetch('include/handlers/truck_handler.php?action=getActiveTrucks') 
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -776,13 +776,13 @@ function loadSuppliers() {
         truckDropdown.appendChild(option);
     });
     
-    // Add event listener for truck selection change
+   
     truckDropdown.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         const plateNo = selectedOption.getAttribute('data-plate-no');
         document.getElementById('licensePlate').value = plateNo || '';
         
-        // Check 6-month validation for preventive maintenance during edit
+        
         checkTruckChange();
     });
 }
@@ -800,10 +800,10 @@ function filterTableByStatus() {
 
     
 function loadMaintenanceData() {
-    // We'll build the URL step-by-step
+   
     let url = `include/handlers/maintenance_handler.php?action=getRecords&page=${currentPage}&limit=${rowsPerPage}`;
 
-    // Add the new sorting parameters to the request
+    
     url += `&sortBy=${encodeURIComponent(currentSortColumn)}&sortDir=${encodeURIComponent(currentSortDirection)}`;
 
     if (currentStatusFilter === 'deleted') {
@@ -836,7 +836,7 @@ function loadMaintenanceData() {
             currentPage = response.currentPage || 1;
             updatePagination();
             updateShowingInfo(response.totalRecords, response.records.length);
-            updateSortIcons(); // Update the sort icons after the data is loaded
+            updateSortIcons(); 
         })
         .catch(error => {
             console.error("Error loading data:", error);
@@ -935,7 +935,7 @@ function renderTable(data, searchTerm = '') {
             tr.classList.add('deleted-row');
         }   
         
-        // Use the highlightMatches function on each piece of data
+        
         const truckIdDisplay = highlightMatches(String(row.truckId), searchTerm);
         const licensePlateDisplay = highlightMatches(row.licensePlate || 'N/A', searchTerm);
         const dateDisplay = highlightMatches(formatDate(row.maintenanceDate), searchTerm);
@@ -1039,9 +1039,9 @@ $(document).on('click', '.view-remarks-btn', function() {
     $(this).closest('.dropdown-content').removeClass('show');
 });
 
-    // Add this new function for full delete
+    
    function fullDeleteMaintenance(id, status) {
-    // Check if the record's status is 'In Progress'.
+    
     if (status === 'In Progress') {
         Swal.fire({
             title: 'Action Not Allowed',
@@ -1069,7 +1069,7 @@ $(document).on('click', '.view-remarks-btn', function() {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Show loading state
+            
             Swal.fire({
                 title: 'Deleting Record',
                 html: 'Please wait while we permanently remove this record...',
@@ -1138,7 +1138,7 @@ $(document).on('click', '.view-remarks-btn', function() {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     
-    // Format date in word form: "Month Day, Year"
+   
     const options = { 
         year: 'numeric', 
         month: 'long', 
@@ -1166,12 +1166,12 @@ $(document).on('click', '.view-remarks-btn', function() {
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-    // Adjust if we're at the end
+   
     if (endPage - startPage + 1 < maxVisiblePages) {
         startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
 
-    // Always show page 1
+    
     if (startPage > 1) {
         const firstPageButton = document.createElement("button");
         firstPageButton.textContent = "1";
@@ -1192,7 +1192,7 @@ $(document).on('click', '.view-remarks-btn', function() {
         }
     }
 
-    // Create numbered page buttons
+    
     for (let i = startPage; i <= endPage; i++) {
         const pageButton = document.createElement("button");
         pageButton.textContent = i;
@@ -1206,7 +1206,7 @@ $(document).on('click', '.view-remarks-btn', function() {
         paginationContainer.appendChild(pageButton);
     }
 
-    // Always show last page if needed
+   
     if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
             const ellipsis = document.createElement("span");
@@ -1227,7 +1227,7 @@ $(document).on('click', '.view-remarks-btn', function() {
         paginationContainer.appendChild(lastPageButton);
     }
 
-    // Create Next button
+  
     const nextButton = document.createElement("button");
     nextButton.classList.add("next");
     nextButton.innerHTML = '&raquo;';
@@ -1248,17 +1248,7 @@ $(document).on('click', '.view-remarks-btn', function() {
             }
             
 
-//             function toggleCostInput() {
-//     const statusSelect = document.getElementById('status');
-//     const costSection = document.getElementById('costSection');
-    
-//     if (statusSelect.value === 'In Progress') {
-//         costSection.style.display = 'block';
-//     } else {
-//         costSection.style.display = 'none';
-//         document.getElementById('cost').value = ''; // Also clear value when hiding
-//     }
-// }
+
 
 function updateFormSectionsBasedOnStatus() {
     const statusSelect = document.getElementById('status');
@@ -1266,12 +1256,12 @@ function updateFormSectionsBasedOnStatus() {
     const expenseReportSection = document.getElementById('expenseReportSection');
     const maintenanceId = document.getElementById("maintenanceId").value;
 
-    // Show the expense and cost sections if status is 'In Progress' or 'Completed'
+   
     if (statusSelect.value === 'In Progress' || statusSelect.value === 'Completed') {
         costSection.style.display = 'block';
         expenseReportSection.style.display = 'block';
 
-        // For new records, show a message. For existing records, load expenses.
+        
         if (!isEditing || !maintenanceId) {
             document.querySelector('#expenseReportSection .expense-form-container').style.display = 'none';
             document.getElementById('expenseList').innerHTML = '<p>Please save the maintenance schedule first to add expenses.</p>';
@@ -1302,7 +1292,7 @@ function updateFormSectionsBasedOnStatus() {
         
         document.querySelector('.edit-reasons-section').style.display = 'none';
 
-        // Call toggleCostInput to ensure cost section is hidden
+        
         toggleCostInput();
     }
 }
@@ -1330,7 +1320,7 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
     });
     document.getElementById('otherReasonText').value = '';
 
-    // Call toggleCostInput to set initial visibility of the cost section
+    
     updateFormSectionsBasedOnStatus();
 
     document.getElementById("maintenanceModal").style.display = "block";
@@ -1339,25 +1329,25 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
 function populateMaintenancePurposes(remarks) {
     if (!remarks) return;
     
-    // Reset all checkboxes
+   
     document.querySelectorAll('input[name="maintenancePurpose"]').forEach(checkbox => {
         checkbox.checked = false;
     });
     document.getElementById('otherPurposeText').value = '';
     document.querySelector('.other-purpose').style.display = 'none';
     
-    // Split remarks by commas to get individual purposes
+
     const purposes = remarks.split(',').map(p => p.trim());
     
     purposes.forEach(purpose => {
-        // Check if it's an "Other" purpose
+       
         if (purpose.startsWith('Other:')) {
             const otherText = purpose.replace('Other:', '').trim();
             document.getElementById('purpose-other').checked = true;
             document.getElementById('otherPurposeText').value = otherText;
             document.querySelector('.other-purpose').style.display = 'block';
         } else {
-            // Find and check the matching checkbox
+           
             const checkboxes = document.querySelectorAll('input[name="maintenancePurpose"]');
             for (let checkbox of checkboxes) {
                 if (checkbox.value === purpose) {
@@ -1535,7 +1525,7 @@ function addOrUpdateExpense() {
 
     const reader = new FileReader();
     reader.onload = function(event) {
-        const receiptBase64 = event.target.result; // This will be null if no file was selected
+        const receiptBase64 = event.target.result; 
 
         const expenseData = {
             maintenanceId: parseInt(maintenanceId),
@@ -1635,22 +1625,22 @@ function saveMaintenanceRecord() {
     const truckId = parseInt(document.getElementById("truckId").value);
     const newStatus = document.getElementById("status").value;
 
-    // We need to check if a user is trying to set maintenance to 'In Progress' for a truck that's on the road.
+   
     if (newStatus === 'In Progress') {
         const selectedTruck = trucksList.find(truck => truck.truck_id === truckId);
         
-        // If the truck is 'Enroute', it can't be in the shop. Simple as that.
+        
         if (selectedTruck && selectedTruck.display_status === 'Enroute') {
             Swal.fire({
                 icon: 'error',
                 title: 'Action Not Allowed',
                 text: 'This truck is currently "Enroute" and cannot be set to "In Progress" for maintenance. Please update the truck\'s trip status first.'
             });
-            return; // Stop the save process
+            return; 
         }
     }
 
-    // Collect selected maintenance purposes
+   
     const selectedPurposes = [];
     document.querySelectorAll('input[name="maintenancePurpose"]:checked').forEach(checkbox => {
         if (checkbox.value === "Other") {
@@ -1794,7 +1784,7 @@ function saveMaintenanceRecord() {
 }
             
   function deleteMaintenance(id, status) {
-    // First, check if the record's status is 'In Progress'.
+    
     if (status === 'In Progress') {
         Swal.fire({
             title: 'Action Not Allowed',
@@ -1805,7 +1795,7 @@ function saveMaintenanceRecord() {
         return;
     }
 
-    // First SweetAlert: Ask for the reason for deletion.
+    
     Swal.fire({
         title: 'Reason for Deletion',
         input: 'textarea',
@@ -1819,11 +1809,11 @@ function saveMaintenanceRecord() {
             }
         }
     }).then((reasonResult) => {
-        // Proceed only if a reason was submitted.
+        
         if (reasonResult.isConfirmed && reasonResult.value) {
             const deleteReason = reasonResult.value;
 
-            // Second SweetAlert: Final confirmation.
+           
             Swal.fire({
                 title: 'Are you sure?',
                 text: "This record will be marked as deleted. You can restore it later.",
@@ -1970,7 +1960,7 @@ function saveMaintenanceRecord() {
     const modal = document.getElementById("remindersModal");
     const list = document.getElementById("remindersList");
     
-    // Show loading state
+    
     list.innerHTML = "<p>Loading reminders...</p>";
     modal.style.display = "block";
     
@@ -2035,7 +2025,7 @@ function saveMaintenanceRecord() {
             fragment.appendChild(reminderItem);
         });
             
-            list.innerHTML = ""; // Clear loading message
+            list.innerHTML = ""; 
             list.appendChild(fragment);
         })
         .catch(error => {
@@ -2053,25 +2043,25 @@ function saveMaintenanceRecord() {
            function sortByDate() {
     const sortColumn = 'date_mtnce';
     if (currentSortColumn === sortColumn) {
-        // Flip the direction if we're already sorting by date
+        
         currentSortDirection = currentSortDirection === 'ASC' ? 'DESC' : 'ASC';
     } else {
-        // Switch to sorting by date
+       
         currentSortColumn = sortColumn;
         currentSortDirection = 'ASC';
     }
-    currentPage = 1; // Always reset to page 1 on a new sort
+    currentPage = 1; 
     loadMaintenanceData();
 }
 
 function updateSortIcons() {
-    // First, reset both icons to the default state
+   
     document.getElementById('truckIdSortIcon').textContent = '⬍';
     document.getElementById('dateSortIcon').textContent = '⬍';
 
     const icon = currentSortDirection === 'ASC' ? '⬆' : '⬇';
 
-    // Now, set the correct icon on the currently sorted column
+   
     if (currentSortColumn === 'truck_id') {
         document.getElementById('truckIdSortIcon').textContent = icon;
     } else if (currentSortColumn === 'date_mtnce') {
@@ -2082,14 +2072,14 @@ function updateSortIcons() {
            function sortByTruckId() {
     const sortColumn = 'truck_id';
     if (currentSortColumn === sortColumn) {
-        // If we're already sorting by truck ID, just flip the direction
+        
         currentSortDirection = currentSortDirection === 'ASC' ? 'DESC' : 'ASC';
     } else {
-        // Otherwise, switch to this column and default to ascending
+        
         currentSortColumn = sortColumn;
         currentSortDirection = 'ASC';
     }
-    currentPage = 1; // Go back to the first page for the new sort
+    currentPage = 1; 
     loadMaintenanceData();
 }
 
@@ -2110,7 +2100,7 @@ function updateSortIcons() {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Show loading indicator
+            
             Swal.fire({
                 title: 'Restoring...',
                 html: 'Please wait while we restore the record',
@@ -2134,7 +2124,7 @@ function updateSortIcons() {
                             timer: 2000,
                             showConfirmButton: false,
                             willClose: () => {
-                                // Reset to first page and clear any filters
+                                
                                 currentPage = 1;
                                 document.getElementById('searchInput').value = '';
                                 document.getElementById('statusFilter').value = 'all';
@@ -2221,21 +2211,21 @@ function updateSortIcons() {
 
 
         document.addEventListener('DOMContentLoaded', function() {
-    // Get current page filename
+    
     const currentPage = window.location.pathname.split('/').pop();
     
-    // Find all sidebar links
+    
     const sidebarLinks = document.querySelectorAll('.sidebar-item a');
     
-    // Check each link
+    
     sidebarLinks.forEach(link => {
         const linkPage = link.getAttribute('href').split('/').pop();
         
-        // If this link matches current page, add active class
+        
         if (linkPage === currentPage) {
             link.parentElement.classList.add('active');
             
-            // Also highlight the icon
+           
             const icon = link.parentElement.querySelector('.icon2');
             if (icon) {
                 icon.style.color = 'white';
@@ -2280,7 +2270,7 @@ function loadMaintenancePurposes() {
                     container.appendChild(checkboxItem);
                 });
                 
-                // Add the "Other" option
+                
                 const otherItem = document.createElement('div');
                 otherItem.className = 'checkbox-item';
                 otherItem.innerHTML = `
@@ -2296,7 +2286,7 @@ function loadMaintenancePurposes() {
         });
 }
 
-// Function to toggle the other purpose textarea
+
 function toggleOtherPurpose() {
     const otherCheckbox = document.getElementById('purpose-other');
     const otherPurposeSection = document.querySelector('.other-purpose');
@@ -2309,14 +2299,13 @@ function toggleOtherPurpose() {
     }
 }
 
-// Function to check maintenance type and validate date for preventive maintenance
+
 function checkMaintenanceType() {
     const maintenanceType = document.getElementById('maintenanceTypeId').value;
     const dateInput = document.getElementById('date');
     const truckId = document.getElementById('truckId').value;
     
-    if (maintenanceType === '1' && truckId) { // Preventive Maintenance
-        // Check if date is at least 6 months after last preventive maintenance
+    if (maintenanceType === '1' && truckId) { 
         fetch(`include/handlers/maintenance_handler.php?action=checkPreventiveDate&truckId=${truckId}`)
             .then(response => response.json())
             .then(data => {
@@ -2325,10 +2314,10 @@ function checkMaintenanceType() {
                     const minDate = new Date(lastDate);
                     minDate.setMonth(minDate.getMonth() + 6);
                     
-                    // Set the minimum date for the date input
+                    
                     dateInput.min = minDate.toISOString().split('T')[0];
                     
-                    // Show warning if selected date is before minimum date
+                    
                     if (new Date(dateInput.value) < minDate) {
                         dateInput.value = minDate.toISOString().split('T')[0];
                         Swal.fire({
@@ -2344,7 +2333,7 @@ function checkMaintenanceType() {
                 console.error('Error checking preventive maintenance date:', error);
             });
     } else {
-        // Remove restriction for emergency maintenance
+        
         dateInput.removeAttribute('min');
     }
 }
@@ -2356,7 +2345,7 @@ function checkTruckChange() {
     const dateInput = document.getElementById('date');
     const maintenanceId = document.getElementById('maintenanceId').value;
     
-    if (maintenanceType === '1' && truckId && isEditing) { // Preventive Maintenance during edit
+    if (maintenanceType === '1' && truckId && isEditing) { 
         fetch(`include/handlers/maintenance_handler.php?action=checkPreventiveEditDate&truckId=${truckId}&maintenanceId=${maintenanceId}`)
             .then(response => response.json())
             .then(data => {
@@ -2368,7 +2357,7 @@ function checkTruckChange() {
                         confirmButtonText: 'OK'
                     });
                     
-                    // Reset truck selection to previous value
+                    
                     document.getElementById('truckId').value = '';
                     document.getElementById('licensePlate').value = '';
                 }
@@ -2420,21 +2409,21 @@ function clearDateFilter() {
 
 
 $('#maintenanceExpenseSummaryBtn').on('click', function() {
-    // Set the default view to 'daily' and trigger the change event to populate the date picker
+    
     $('#maintenanceExpenseSummaryModal #summaryType').val('daily').trigger('change');
     $('#maintenanceExpenseSummaryModal').css('display', 'flex');
 });
 
-// Close modal functionality
+
 $('#maintenanceExpenseSummaryModal .close, #maintenanceExpenseSummaryModal .cancelbtn').on('click', function() {
     closeModal('maintenanceExpenseSummaryModal');
 });
 
-// Dynamically change the date picker based on selected report type
+
 $('#maintenanceExpenseSummaryModal #summaryType').on('change', function() {
     const type = $(this).val();
     const container = $('#maintenanceExpenseSummaryModal #date-picker-container');
-    container.empty(); // Clear previous picker
+    container.empty(); 
     const today = new Date().toISOString();
 
     let inputHtml = '';
@@ -2464,7 +2453,7 @@ $('#maintenanceExpenseSummaryModal #summaryType').on('change', function() {
     container.html(inputHtml);
 });
 
-// Handle form submission with loading animation
+
 $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
     e.preventDefault(); 
     
@@ -2474,7 +2463,7 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
     if (form[0].checkValidity()) {
         closeModal('maintenanceExpenseSummaryModal');
 
-        // This uses the same loading animation object from your triplogs.php
+        
         const loading = AdminLoading.startAction(
             'Generating Report', 
             'Preparing your maintenance expense summary...'
@@ -2495,7 +2484,7 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
         setTimeout(() => {
             loading.updateProgress(100);
             setTimeout(() => {
-                window.location.href = reportUrl; // Redirect in the same tab
+                window.location.href = reportUrl; 
             }, 300);
         }, minLoadTime);
 
@@ -2538,27 +2527,26 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
     this.progressBar = document.querySelector('.progress-bar');
     this.progressText = document.querySelector('.progress-text');
     
-    // Show loading immediately if coming from another page
-    // this.checkForIncomingNavigation();
+    
     this.setupNavigationInterception();
   },
   
   checkForIncomingNavigation() {
-    // Check if we're coming from another page in the same site
+    
     const referrer = document.referrer;
     const currentDomain = window.location.origin;
     
-    // Also check sessionStorage for loading state
+  
     const shouldShowLoading = sessionStorage.getItem('showAdminLoading');
     
     if ((referrer && referrer.startsWith(currentDomain)) || shouldShowLoading) {
-      // Clear the flag
+      
       sessionStorage.removeItem('showAdminLoading');
       
-      // Show loading animation for incoming navigation
+      
       this.show('Loading Page', 'Loading content...');
       
-      // Simulate realistic loading progress
+      
       let progress = 0;
       const progressInterval = setInterval(() => {
         progress += Math.random() * 25 + 10;
@@ -2609,7 +2597,7 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
   
   setupNavigationInterception() {
     document.addEventListener('click', (e) => {
-      // Skip if click is inside SweetAlert modal, regular modals, or calendar
+      
       if (e.target.closest('.swal2-container, .swal2-popup, .swal2-modal, .modal, .modal-content, .fc-event, #calendar')) {
         return;
       }
@@ -2620,27 +2608,27 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
           !link.href.startsWith('#') && !link.href.startsWith('mailto:') &&
           !link.href.startsWith('tel:')) {
         
-        // Only intercept internal links
+        
         try {
           const linkUrl = new URL(link.href);
           const currentUrl = new URL(window.location.href);
           
           if (linkUrl.origin !== currentUrl.origin) {
-            return; // Let external links work normally
+            return; 
           }
           
-          // Skip if it's the same page
+         
           if (linkUrl.pathname === currentUrl.pathname) {
             return;
           }
           
         } catch (e) {
-          return; // Invalid URL, let it work normally
+          return; 
         }
         
         e.preventDefault();
         
-        // Set flag for next page
+       
         sessionStorage.setItem('showAdminLoading', 'true');
         
         const loading = this.startAction(
@@ -2653,16 +2641,16 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
           progress += Math.random() * 15 + 8;
           if (progress >= 85) {
             clearInterval(progressInterval);
-            progress = 90; // Stop at 90% until page actually loads
+            progress = 90; 
           }
           loading.updateProgress(Math.min(progress, 90));
         }, 150);
         
-        // Minimum delay to show animation
+    
         const minLoadTime = 1200;
         
         setTimeout(() => {
-          // Complete the progress bar
+          
           loading.updateProgress(100);
           setTimeout(() => {
             window.location.href = link.href;
@@ -2671,14 +2659,14 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
       }
     });
 
-    // Handle form submissions
+    
     document.addEventListener('submit', (e) => {
-      // Skip if form is inside SweetAlert or modal
+     
       if (e.target.closest('.swal2-container, .swal2-popup, .modal')) {
         return;
       }
       
-      // Only show loading for forms that will cause page navigation
+      
       const form = e.target;
       if (form.method && form.method.toLowerCase() === 'post' && form.action) {
         const loading = this.startAction(
@@ -2692,7 +2680,7 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
       }
     });
     
-    // Handle browser back/forward buttons
+  
     window.addEventListener('popstate', () => {
       this.show('Loading Page', 'Loading previous page...');
       setTimeout(() => {
@@ -2723,7 +2711,7 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
     };
   },
   
-  // Public methods for manual control
+
   showManual: function(title, message) {
     this.show(title, message);
   },
@@ -2737,20 +2725,20 @@ $('#maintenanceExpenseSummaryForm').on('submit', function(e) {
   }
 };
 
-// Initialize when DOM is loaded
+
 document.addEventListener('DOMContentLoaded', () => {
   AdminLoading.init();
   
-  // Add smooth transition to the GIF
+
   const loadingGif = document.querySelector('.loading-gif');
   if (loadingGif) {
     loadingGif.style.transition = 'opacity 0.7s ease 0.3s';
   }
   
-  // Hide loading on page show (handles browser back button)
+  
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
-      // Page was loaded from cache (back/forward button)
+      
       setTimeout(() => {
         AdminLoading.hideManual();
       }, 500);
@@ -2758,13 +2746,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Handle page unload
-// window.addEventListener('beforeunload', () => {
-//   // Set flag that we're navigating
-//   sessionStorage.setItem('showAdminLoading', 'true');
-// });
 
-// Export for global access (optional)
 window.AdminLoading = AdminLoading;
 
 

@@ -1,6 +1,6 @@
 <?php
     require_once __DIR__ . '/include/check_access.php';
-    checkAccess(); // No role needed—logic is handled internally
+    checkAccess(); 
 
 
     ?>
