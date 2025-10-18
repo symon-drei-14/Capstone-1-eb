@@ -2191,86 +2191,59 @@ eventClick: function(event, jsEvent, view) {
    
    
     $('#eventModalHistoryBtn').off('click').on('click', function() {
-        var eventId = $('#eventModal').data('eventId');
-        var eventData = eventsData.find(function(e) { return e.id == eventId; });
+    var eventId = $('#eventModal').data('eventId');
+    var eventData = eventsData.find(function(e) { return e.id == eventId; });
+    
+    if (eventData && eventData.edit_reasons) {
+        var reasons;
+        try {
+            reasons = JSON.parse(eventData.edit_reasons);
+        } catch (e) {
+            reasons = [eventData.edit_reasons];
+        }
+
+        if (!Array.isArray(reasons)) {
+            reasons = [reasons];
+        }
         
-        if (eventData && eventData.edit_reasons) {
-            try {
-               
-                if (eventData.edit_reasons === "Trip created" || 
-                    eventData.edit_reasons === '"Trip created"') {
-                    $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
-                        '<p>This trip has not been edited yet</p></div>');
-                    $('#eventModal').hide();
-                    $('#editReasonsModal').show();
-                    return;
-                }
-                
-                var reasons;
-                
-              
-                if (typeof eventData.edit_reasons === 'string') {
-                    reasons = JSON.parse(eventData.edit_reasons);
-                } else if (Array.isArray(eventData.edit_reasons)) {
-                    reasons = eventData.edit_reasons;
-                } else if (typeof eventData.edit_reasons === 'object') {
-                    reasons = Object.values(eventData.edit_reasons);
-                } else {
-                    throw new Error('Unknown data format');
-                }
-                
-               
-                if (!Array.isArray(reasons)) {
-                    reasons = [reasons];
-                }
-                
-                
-                reasons = reasons.filter(function(reason) {
-                    return reason && reason !== "Trip created";
-                });
-                
-                
-                if (reasons.length === 0) {
-                    $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
-                        '<p>This trip has not been edited yet</p></div>');
-                    $('#eventModal').hide();
-                    $('#editReasonsModal').show();
-                    return;
-                }
-                
-                var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
-                html += '<ul style="list-style-type: none; padding-left: 5px;">';
-                
-                reasons.forEach(function(reason) {
-                    html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
-                    html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
-                    html += '</li>';
-                });
-                
-                html += '</ul>';
-                html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
-                html += 'Last modified by: ' + (eventData.modifiedby || 'System') + '<br>';
-                html += 'On: ' + formatDateTime(eventData.modifiedat);
-                html += '</p></div>';
-                
-                $('#editReasonsContent').html(html);
-                $('#eventModal').hide();
-                $('#editReasonsModal').show();
-                
-            } catch (e) {
-                console.error('Error processing edit reasons:', e, eventData.edit_reasons);
-                $('#editReasonsContent').html('<div style="padding: 15px; background: #fff8f8; border: 1px solid #ffdddd;">'+
-                    '<p>Error displaying edit history</p></div>');
-                $('#eventModal').hide();
-                $('#editReasonsModal').show();
-            }
-        } else {
+        reasons = reasons.filter(function(reason) {
+            return reason && reason !== "Trip created" && reason !== '"Trip created"';
+        });
+        
+        if (reasons.length === 0) {
             $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
-                '<p>No edit remarks recorded for this trip</p></div>');
+                '<p>This trip has not been edited yet</p></div>');
             $('#eventModal').hide();
             $('#editReasonsModal').show();
+            return;
         }
-    });
+        
+        var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
+        html += '<ul style="list-style-type: none; padding-left: 5px;">';
+        
+        reasons.forEach(function(reason) {
+            html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
+            html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
+            html += '</li>';
+        });
+        
+        html += '</ul>';
+        html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
+        html += 'Last modified by: ' + (eventData.modifiedby || 'System') + '<br>';
+        html += 'On: ' + formatDateTime(eventData.modifiedat);
+        html += '</p></div>';
+        
+        $('#editReasonsContent').html(html);
+        $('#eventModal').hide();
+        $('#editReasonsModal').show();
+        
+    } else {
+        $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
+            '<p>No edit remarks recorded for this trip</p></div>');
+        $('#eventModal').hide();
+        $('#editReasonsModal').show();
+    }
+});
     
 
 $('#eventModal .view-expenses').off('click').on('click', function(e){
@@ -2931,71 +2904,46 @@ $('#addScheduleForm').on('submit', function(e) {
     var event = eventsData.find(function(e) { return e.id == eventId; });
     
     if (event && event.edit_reasons) {
+        var reasons;
         try {
-            
-            if (event.edit_reasons === "Trip created" || 
-                event.edit_reasons === '"Trip created"') {
-                $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
-                    '<p>This trip has not been edited yet</p></div>');
-                $('#editReasonsModal').show();
-                return;
-            }
-            
-            var reasons;
-            
-           
-            if (typeof event.edit_reasons === 'string') {
-                reasons = JSON.parse(event.edit_reasons);
-            } else if (Array.isArray(event.edit_reasons)) {
-                reasons = event.edit_reasons;
-            } else if (typeof event.edit_reasons === 'object') {
-                reasons = Object.values(event.edit_reasons);
-            } else {
-                throw new Error('Unknown data format');
-            }
-            
-            
-            if (!Array.isArray(reasons)) {
-                reasons = [reasons];
-            }
-            
-           
-            reasons = reasons.filter(function(reason) {
-                return reason && reason !== "Trip created";
-            });
-            
-            
-            if (reasons.length === 0) {
-                $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
-                    '<p>This trip has not been edited yet</p></div>');
-                $('#editReasonsModal').show();
-                return;
-            }
-            
-            var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
-            html += '<ul style="list-style-type: none; padding-left: 5px;">';
-            
-            reasons.forEach(function(reason) {
-                html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
-                html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
-                html += '</li>';
-            });
-            
-            html += '</ul>';
-            html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
-            html += 'Last modified by: ' + (event.modifiedby || 'System') + '<br>';
-            html += 'On: ' + formatDateTime(event.modifiedat);
-            html += '</p></div>';
-            
-            $('#editReasonsContent').html(html);
-            $('#editReasonsModal').show();
-            
+            reasons = JSON.parse(event.edit_reasons);
         } catch (e) {
-            console.error('Error processing edit reasons:', e, event.edit_reasons);
-            $('#editReasonsContent').html('<div style="padding: 15px; background: #fff8f8; border: 1px solid #ffdddd;">'+
-                '<p>Error displaying edit history</p></div>');
-            $('#editReasonsModal').show();
+            reasons = [event.edit_reasons];
         }
+
+        if (!Array.isArray(reasons)) {
+            reasons = [reasons];
+        }
+        
+        reasons = reasons.filter(function(reason) {
+            return reason && reason !== "Trip created" && reason !== '"Trip created"';
+        });
+
+        if (reasons.length === 0) {
+            $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
+                '<p>This trip has not been edited yet</p></div>');
+            $('#editReasonsModal').show();
+            return;
+        }
+        
+        var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
+        html += '<ul style="list-style-type: none; padding-left: 5px;">';
+        
+        reasons.forEach(function(reason) {
+            html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
+            html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
+            html += '</li>';
+        });
+        
+        html += '</ul>';
+        html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
+        html += 'Last modified by: ' + (event.modifiedby || event.last_modified_by || 'System') + '<br>';
+        html += 'On: ' + formatDateTime(event.modifiedat || event.last_modified_at);
+        html += '</p></div>';
+        
+        $('#editReasonsContent').html(html);
+        $('#editReasonsModal').show();
+
     } else {
         $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
             '<p>No edit remarks recorded for this trip</p></div>');
