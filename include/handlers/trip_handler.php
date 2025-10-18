@@ -948,8 +948,9 @@ case 'get_trip_statistics':
             $stmt->close();
 
             $editReason = "Status updated to $newStatus";
-            $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
-            $auditStmt->bind_param("ssi", $currentUser, $editReason, $tripId);
+            $currentTime = date('Y-m-d H:i:s');
+            $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=?, edit_reason=? WHERE trip_id=? AND is_deleted=0");
+            $auditStmt->bind_param("sssi", $currentUser, $currentTime, $editReason, $tripId);
             $auditStmt->execute();
 
             $newTruckStatus = 'In Terminal';
@@ -1072,23 +1073,25 @@ case 'save_checklist':
     $exists = $checkStmt->get_result()->num_rows > 0;
     $checkStmt->close();
 
+    $currentTime = date('Y-m-d H:i:s');
+
     if ($exists) {
         $stmt = $conn->prepare("UPDATE driver_checklist SET 
             no_fatigue = ?, no_drugs = ?, no_distractions = ?, no_illness = ?,
-            fit_to_work = ?, alcohol_test = ?, hours_sleep = ?, submitted_at = NOW()
+            fit_to_work = ?, alcohol_test = ?, hours_sleep = ?, submitted_at = ?
             WHERE trip_id = ?");
-        $stmt->bind_param("iiiiiddi", 
+        $stmt->bind_param("iiiiiddsi", 
             $data['no_fatigue'], $data['no_drugs'], $data['no_distractions'], $data['no_illness'],
-            $data['fit_to_work'], $data['alcohol_test'], $data['hours_sleep'], $data['trip_id']
+            $data['fit_to_work'], $data['alcohol_test'], $data['hours_sleep'], $currentTime, $data['trip_id']
         );
     } else {
         $stmt = $conn->prepare("INSERT INTO driver_checklist (
             trip_id, no_fatigue, no_drugs, no_distractions, no_illness,
             fit_to_work, alcohol_test, hours_sleep, submitted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->bind_param("iiiiiidd", 
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiiiiidds", 
             $data['trip_id'], $data['no_fatigue'], $data['no_drugs'], $data['no_distractions'],
-            $data['no_illness'], $data['fit_to_work'], $data['alcohol_test'], $data['hours_sleep']
+            $data['no_illness'], $data['fit_to_work'], $data['alcohol_test'], $data['hours_sleep'], $currentTime
         );
     }
 
