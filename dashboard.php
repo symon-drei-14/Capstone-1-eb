@@ -185,7 +185,7 @@ $eventsDataJson = json_encode($eventsData);
 <?php require_once __DIR__ . '/include/sidebar.php'; ?>
 
 <div id="sidebar-backdrop" class="backdrop"></div>
-<div class="quick-actions-bar">
+<!-- <div class="quick-actions-bar">
     <button class="quick-action-btn">
         <i class="fas fa-plus"></i> New Delivery
     </button>
@@ -195,7 +195,7 @@ $eventsDataJson = json_encode($eventsData);
     <button class="quick-action-btn">
         <i class="fas fa-calendar-alt"></i> Schedule Maintenance
     </button>
-</div>
+</div> -->
 
 <div class="dashboard-grid">
 

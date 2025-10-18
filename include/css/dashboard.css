@@ -1564,7 +1564,7 @@ tr:last-child td:last-child {
 .status.in-transit { background-color: #007bff; }
 .status.completed { background-color: #28a745; }
 .status.pending { background-color: #ffc107; color: #333; }
-.status.cancelled { background-color: #6c757d; }
+.status.cancelled { background-color: #dc3545; }
 
 
 .modal-body {
