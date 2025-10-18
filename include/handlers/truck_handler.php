@@ -211,7 +211,7 @@ try {
     echo json_encode(['success' => true, 'trucks' => $trucks]);
     break;
 
-         case 'addTruck':
+        case 'addTruck':
     if (!validatePlateNumber($data['plate_no'])) {
         throw new Exception("Invalid plate number format. Use format like ABC123 or ABC-1234");
     }
@@ -240,8 +240,8 @@ try {
     }
 
     $stmt = $conn->prepare("INSERT INTO truck_table 
-                          (plate_no, capacity, status, truck_pic, last_modified_by) 
-                          VALUES (?, ?, ?, ?, ?)");
+                          (plate_no, capacity, status, truck_pic, last_modified_by, last_modified_at) 
+                          VALUES (?, ?, ?, ?, ?, NOW())");
     $stmt->bind_param("sssss", 
         $data['plate_no'], 
         $data['capacity'], 

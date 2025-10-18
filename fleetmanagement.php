@@ -1014,10 +1014,10 @@ function changeTruckPage(direction) {
     
     renderTrucksTable();
 }
-
-       function formatDateTime(datetimeString) {
+function formatDateTime(datetimeString) {
             if (!datetimeString) return 'N/A';
-            const date = new Date(datetimeString);
+            // Treat the incoming datetime string from the database as UTC
+            const date = new Date(datetimeString + ' UTC');
             const dateOptions = { 
                 year: 'numeric', 
                 month: 'long', 
