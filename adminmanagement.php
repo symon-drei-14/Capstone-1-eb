@@ -328,7 +328,7 @@ checkAccess();
                  .catch(error => console.error('Error:', error));
          }
 
-         function renderAdminsTable(admins, tableBodyId) {
+        function renderAdminsTable(admins, tableBodyId) {
          const tableBody = document.getElementById(tableBodyId);
          tableBody.innerHTML = '';
          const searchTerm = document.getElementById('adminSearch').value;
@@ -356,7 +356,6 @@ checkAccess();
                          }
                      </td>
                      <td data-label="Username">${highlightText(admin.username)}</td>
-                     <td data-label="Email">${highlightText(admin.admin_email || '')}</td>
                      <td class="deleted-only" data-label="Deleted By">${highlightText(admin.deleted_by || '')}</td>
                      <td class="deleted-only" data-label="Deleted At">${highlightText(deletedAt)}</td>
                      <td class="deleted-only" data-label="Reason">${highlightText(admin.delete_reason || '')}</td>
