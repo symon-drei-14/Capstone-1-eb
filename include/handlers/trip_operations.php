@@ -1670,6 +1670,10 @@ if (!empty($conflictingTrips)) {
 
     $expenses = [];
     while ($row = $result->fetch_assoc()) {
+        if (!empty($row['submitted_time'])) {
+            $date = new DateTime($row['submitted_time']);
+            $row['submitted_time'] = $date->format('Y-m-d\TH:i:s');
+        }
         $expenses[] = $row;
     }
 
@@ -1957,19 +1961,14 @@ case 'get_trips_today':
         
         // --- PHASE 2: Fallback Logic ---
         if (!$newDriver) {
-            $capacityFilter = null;
-            $fallbackCapacity = null;
+            $fallbackDetails = null;
 
+            // Only a 20ft trip can fall back to a 40ft truck.
+            // A 40ft trip cannot be handled by a 20ft truck.
             if ($capacity == '20') {
                 $capacityFilter = "t.capacity = '40'";
                 $fallbackCapacity = '40';
-            }
-            else if ($capacity == '40') {
-                $capacityFilter = "t.capacity = '20'";
-                $fallbackCapacity = '20';
-            }
-            
-            if ($capacityFilter) {
+                
                 $query2 = sprintf($findNextDriverQuery, $capacityFilter);
                 $stmt2 = $conn->prepare($query2);
                 $stmt2->bind_param("iss", $originalDriverId, $checkInCutoff, $currentTime); 
