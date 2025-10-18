@@ -127,8 +127,16 @@ function formatDateTime($datetimeString) {
                         <div class="info-value"><?php echo htmlspecialchars($trip['container_no']); ?></div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">Container Size</div>
+                        <div class="info-label">Full Container Load (FCL)</div>
                         <div class="info-value"><?php echo htmlspecialchars($trip['fcl_status']); ?></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Truck Capacity</div>
+                        <div class="info-value">
+                            <?php 
+                                echo htmlspecialchars($trip['truck_capacity'] ? $trip['truck_capacity'] . 'ft' : 'N/A'); 
+                            ?>
+                        </div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Plate Number</div>
@@ -254,7 +262,7 @@ function formatDateTime($datetimeString) {
 
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; font-size: 12px; color: #6c757d;">
                 Report generated on <?php echo date('F j, Y g:i A'); ?><br>
-                Mansar Logistics - Nakakasigurado tama ang gamot
+                Mansar Logistics
             </div>
         </div>
     </div>

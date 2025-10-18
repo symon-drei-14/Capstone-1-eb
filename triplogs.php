@@ -931,7 +931,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
             <!-- Expense Fields Section -->
            <div style="display: flex; flex-direction: column; gap: 20px;">
     <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
-        <legend style="font-weight: bold;">Money Money</legend>
+        <legend style="font-weight: bold;">Financial Information</legend>
         <div>
             <label for="addEventCashAdvance">Cash Advance:</label>
             <input type="number" id="addEventCashAdvance" name="eventCashAdvance" 
@@ -1017,7 +1017,8 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
             <th>Helper</th>
             <th>Dispatcher</th>
             <th>Container No.</th>
-         <th>Client - Port</th>
+            <th>Client</th>
+            <th>Port (Origin)</th>
             <th>Destination</th>
             <th>Shipping Line</th>
             <th>Consignee</th>
@@ -1058,9 +1059,13 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
 
         
        <div id="expenseSummaryModal" class="modal">
-    <div class="modal-content" style="max-width: 450px; padding:20px;">
+        
+    <div class="modal-content" style=" max-width: 450px; ">
+         <div class="modal-header">
+            
         <span class="close">&times;</span>
-        <h3 style="margin-top: 0;">Generate Expense Summary</h3>
+            <h3 style="margin-top: 0; font-size: 20px" > <i class="fa-solid fa-file"></i>  Generate Expense Summary</h3>
+        </div>
         <form id="expenseSummaryForm" action="expense_summary.php" method="GET" target="_blank">
             <label for="summaryType" style="display:block; margin-bottom:10px;">Report Type:</label>
             <select id="summaryType" name="type" required style="width: 100%; padding: 8px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #ccc;">
@@ -1400,7 +1405,8 @@ function renderTripRows(trips, showDeleted) {
                 <td data-label="Helper">${highlightText(trip.helper || 'N/A', searchTerm)}</td>
                 <td data-label="Dispatcher">${highlightText(trip.dispatcher || 'N/A', searchTerm)}</td>
                 <td data-label="Container No.">${highlightText(trip.container_no || 'N/A', searchTerm)}</td>
-                <td data-label="Client - Port">${highlightText(trip.client || 'N/A', searchTerm)}${trip.port ? ' - ' + highlightText(trip.port, searchTerm) : ''}</td>
+                <td data-label="Client">${highlightText(trip.client || 'N/A', searchTerm)}</td>
+                <td data-label="Port (Origin)">${highlightText(trip.port || 'N/A', searchTerm)}</td>
                 <td data-label="Destination">${highlightText(trip.destination || 'N/A', searchTerm)}</td>
                 <td data-label="Shipping Line">${highlightText(trip.shipping_line || 'N/A', searchTerm)}</td>
                 <td data-label="Consignee">${highlightText(trip.consignee || 'N/A', searchTerm)}</td>

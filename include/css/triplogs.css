@@ -386,7 +386,7 @@
 
 /* Table Headers */
 .events-table th {
-     background-color:  #e7e7e786;
+
     font-weight: bold;
     padding: 18px 6px;
     text-align: center;
@@ -398,6 +398,7 @@
     vertical-align: middle;
     white-space: wrap;
     flex-shrink: 2;
+      border-bottom: 5px double #d3d1d15c;
  
 }
 
@@ -410,6 +411,7 @@
     vertical-align: middle;
     color: #242424;
     font-size: 14px;
+    
 }
 
 /* Specific Column Optimizations */
@@ -421,18 +423,19 @@
 .events-table th:nth-child(6), .events-table td:nth-child(6) { width: 8%; }   /* Container No */
 .events-table th:nth-child(7), .events-table td:nth-child(7) { width: 5%; }   /* Client */
 .events-table th:nth-child(8), .events-table td:nth-child(8) { width: 8%; }   /* Destination */
-.events-table th:nth-child(9), .events-table td:nth-child(9) { width: 7%; }   /* Shipping Line */
+.events-table th:nth-child(9), .events-table td:nth-child(9) { width: 8%; }   /* Shipping Line */
 .events-table th:nth-child(10), .events-table td:nth-child(10) { width: 7%; } /* Consignee */
-.events-table th:nth-child(11), .events-table td:nth-child(11) { width: 4%; } /* Container Size */
-.events-table th:nth-child(12), .events-table td:nth-child(12) { width: 5%; } /* FCL Status */
+.events-table th:nth-child(11), .events-table td:nth-child(11) { width: 6%; } /* Container Size */
+.events-table th:nth-child(12), .events-table td:nth-child(12) { width: 2%; } /* FCL Status */
 .events-table th:nth-child(13), .events-table td:nth-child(13) { width: 6%; } /* Cash Advance */
 .events-table th:nth-child(14), .events-table td:nth-child(14) { width: 6%; } /* Additional Cash */
 .events-table th:nth-child(15), .events-table td:nth-child(15) { width: 5%; } /* Diesel */
-.events-table th:nth-child(16), .events-table td:nth-child(16) { width: 6%; } /* Status */
+.events-table th:nth-child(16), .events-table td:nth-child(16) { width: 7%; } /* Status */
 .events-table th:nth-child(17), .events-table td:nth-child(17) { width: 8%; } /* Created At */
-.events-table th:nth-child(18), .events-table td:nth-child(18) { width: 6%;  } /* Action */
+
 .events-table td:nth-child(18){
     border-bottom: none !important;
+    display: block;
 }
 
 .events-table th:nth-child(1){
@@ -2250,7 +2253,7 @@ h3.title {
     cursor: pointer;
     transition: all 0.3s ease;
     font-size:18px;
-    color: #dc4848ff;
+     color: #333;
 }
 
 .dropdown-btn:hover {
@@ -3422,6 +3425,26 @@ h3.title {
     overflow-x: hidden !important;
 }
 
+#expenseSummaryModal .modal-header{
+ background-color: #f8f9fa;
+        padding: 20px 0 0 20px;
+       
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+}
+
+#expenseSummaryModal .modal-header i {
+    font-size: 24px;
+    color: #B82132; 
+    margin-right: 15px;
+}
+
+#expenseSummaryForm {
+    max-width: 450px; 
+    padding:20px;
+}
 @keyframes continuousPulse {
   0% {
     background-color: #d4edda;

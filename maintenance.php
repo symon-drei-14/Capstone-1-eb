@@ -407,7 +407,8 @@
 <div id="maintenanceExpenseSummaryModal" class="modal">
    <div class="modal-content">
         <div class="modal-header">
-            <h3>Generate Maintenance Expense Summary</h3>
+            <i class="fa-solid fa-file"></i>
+            <h4>Generate Maintenance Expense Summary</h4>
             <span class="close">&times;</span>
         </div>
         <form id="maintenanceExpenseSummaryForm" action="maintenance_expense_summary.php" method="GET">
@@ -424,7 +425,7 @@
                   
                 </div>
             </div>
-            <div class="modal-footer" style="background: #f9f9f9; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+            <div class="modal-footer" style="background: #f9f9f9; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; ">
                 <button type="button" class="cancelbtn">Cancel</button>
                 <button type="submit" class="submitbtn">Generate</button>
             </div>

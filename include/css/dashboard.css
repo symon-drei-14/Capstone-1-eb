@@ -570,6 +570,7 @@ tr:last-child td:last-child {
     margin-top: 20px;
     border-radius: 10px;
     overflow: hidden;
+    position: relative;
 }
 
 .maintenance-header {
@@ -1020,7 +1021,7 @@ tr:last-child td:last-child {
 .shipment-card {
     flex: 1 1 calc(33.333% - 20px);
     max-width: 340px;
-    max-height:430px;
+    max-height:500px;
     background-color: white;
     border-radius: 8px;
     box-shadow:
