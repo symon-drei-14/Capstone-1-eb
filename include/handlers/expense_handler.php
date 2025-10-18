@@ -345,7 +345,7 @@ try {
             break;
 
         case 'get_expense_types':
-            $stmt = safePrepare($conn, "SELECT type_id, name FROM expense_types ORDER BY name LIMIT 4", "get_expense_types");
+            $stmt = safePrepare($conn, "SELECT type_id, name FROM expense_types WHERE name IN ('Toll', 'Gas', 'Repair', 'Food')", "get_expense_types");
             $stmt->execute();
             $result = $stmt->get_result();
             $types = [];
