@@ -354,7 +354,7 @@ try {
             echo json_encode(['success' => true, 'expense_types' => $types]);
             break;
 
-            case 'update_expense':
+           case 'update_expense':
     $expenseId = intval($data['expense_id'] ?? 0);
     $tripId = intval($data['trip_id'] ?? 0);
     $expenseType = trim($data['expense_type'] ?? '');
@@ -365,7 +365,6 @@ try {
         throw new Exception("Missing required fields for update (ID, Trip ID, Type, Amount).");
     }
 
-    // Find or create the expense type ID
     $typeStmt = safePrepare($conn, "SELECT type_id FROM expense_types WHERE name = ?", "update_expense - select type");
     $typeStmt->bind_param("s", $expenseType);
     $typeStmt->execute();
@@ -383,27 +382,25 @@ try {
     }
     $typeStmt->close();
 
-    // Before updating, get the old image path to delete the file later if it changes
     $oldImageStmt = safePrepare($conn, "SELECT receipt_image FROM driver_expenses WHERE expense_id = ?", "update_expense - get old image");
     $oldImageStmt->bind_param("i", $expenseId);
     $oldImageStmt->execute();
     $oldImagePath = $oldImageStmt->get_result()->fetch_assoc()['receipt_image'] ?? null;
     $oldImageStmt->close();
 
-    // Update the record in the database
+    $currentTime = date('Y-m-d H:i:s');
     $updateStmt = safePrepare($conn, "
         UPDATE driver_expenses 
-        SET expense_type_id = ?, amount = ?, receipt_image = ?
+        SET expense_type_id = ?, amount = ?, receipt_image = ?, created_at = ?
         WHERE expense_id = ?
     ", "update_expense - update");
-    $updateStmt->bind_param("idsi", $expenseTypeId, $amount, $receiptImage, $expenseId);
+    $updateStmt->bind_param("idssi", $expenseTypeId, $amount, $receiptImage, $currentTime, $expenseId);
 
     if (!$updateStmt->execute()) {
         throw new Exception("Database update failed: " . $updateStmt->error);
     }
     $updateStmt->close();
 
-    // If the image was changed, and an old one existed, delete the old file
     if ($oldImagePath && $oldImagePath !== $receiptImage) {
         $fullOldPath = realpath(__DIR__ . '/../') . '/' . $oldImagePath;
         if (file_exists($fullOldPath)) {
@@ -411,7 +408,6 @@ try {
         }
     }
 
-    // IMPORTANT: Recalculate totals for the trip
     updateTripSummary($conn, $tripId);
 
     echo json_encode(['success' => true, 'message' => 'Expense updated successfully.']);
