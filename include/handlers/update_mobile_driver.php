@@ -12,6 +12,8 @@ require_once 'dbhandler.php';
 require_once 'phpmailer_config.php'; // For sending emails
 session_start();
 
+date_default_timezone_set('Asia/Manila');
+
 if (!$conn) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Database connection failed']);
@@ -107,6 +109,14 @@ try {
             throw new Exception("No pending changes found to apply.");
         }
         
+        $updateFields[] = "last_modified_at = ?";
+        $params[] = date('Y-m-d H:i:s');
+        $types .= "s";
+
+        $updateFields[] = "last_modified_by = ?";
+        $params[] = $currentName;
+        $types .= "s";
+
         $query = "UPDATE drivers_table SET " . implode(", ", $updateFields) . " WHERE driver_id = ?";
         $params[] = $driver_id;
         $types .= "s";
@@ -197,6 +207,14 @@ try {
             echo json_encode(['success' => true, 'message' => 'No changes were made.']);
             exit;
         }
+
+        $updateFields[] = "last_modified_at = ?";
+        $params[] = date('Y-m-d H:i:s');
+        $types .= "s";
+
+        $updateFields[] = "last_modified_by = ?";
+        $params[] = $currentName;
+        $types .= "s";
 
         $query = "UPDATE drivers_table SET " . implode(", ", $updateFields) . " WHERE driver_id = ?";
         $params[] = $driver_id;
