@@ -69,8 +69,7 @@ $tripsSql = "
         tr.plate_no,
         d.name as driver_name,
         COALESCE(te.cash_advance, 0) as cash_advance,
-        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-        COALESCE(te.diesel, 0) as diesel
+        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance
     FROM trips t
     LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
     LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
@@ -128,20 +127,18 @@ if (!empty($tripIds)) {
 
 $totalCashAdvance = 0;
 $totalAdditionalCash = 0;
-$totalDiesel = 0;
 $totalDriverExpenses = 0;
 
 foreach ($trips as $trip) {
     $totalCashAdvance += $trip['cash_advance'];
     $totalAdditionalCash += $trip['additional_cash_advance'];
-    $totalDiesel += $trip['diesel'];
 }
 
 foreach ($driverExpenses as $expense) {
     $totalDriverExpenses += $expense['amount'];
 }
 
-$grandTotal = $totalCashAdvance + $totalAdditionalCash + $totalDiesel;
+$grandTotal = $totalCashAdvance + $totalAdditionalCash;
 $remainingBalance = ($totalCashAdvance + $totalAdditionalCash) - $totalDriverExpenses;
 ?>
 
@@ -168,31 +165,27 @@ $remainingBalance = ($totalCashAdvance + $totalAdditionalCash) - $totalDriverExp
             <div class="info-section">
                 <h2 class="section-title"><i class="fas fa-coins"></i> Total Summary for the Period</h2>
                 <table class="summary-table">
-                    <tr>
-                        <td>Total Cash Advance:</td>
-                        <td>₱<?php echo number_format($totalCashAdvance, 2); ?></td>
-                    </tr>
-                    <tr>
-                        <td>Total Additional Cash:</td>
-                        <td>₱<?php echo number_format($totalAdditionalCash, 2); ?></td>
-                    </tr>
-                    <tr>
-                        <td>Total Diesel Expenses:</td>
-                        <td>₱<?php echo number_format($totalDiesel, 2); ?></td>
-                    </tr>
-                     <tr>
-                        <td>Total Driver-Submitted Expenses:</td>
-                        <td>₱<?php echo number_format($totalDriverExpenses, 2); ?></td>
-                    </tr>
-                    <tr class="remaining-balance">
-                        <td>Remaining Balance (Cash on Hand):</td>
-                        <td>₱<?php echo number_format($remainingBalance, 2); ?></td>
-                    </tr>
-                    <tr class="grand-total">
-                        <td>GRAND TOTAL DISBURSED:</td>
-                        <td>₱<?php echo number_format($grandTotal, 2); ?></td>
-                    </tr>
-                </table>
+    <tr>
+        <td>Total Cash Advance:</td>
+        <td>₱<?php echo number_format($totalCashAdvance, 2); ?></td>
+    </tr>
+    <tr>
+        <td>Total Additional Cash:</td>
+        <td>₱<?php echo number_format($totalAdditionalCash, 2); ?></td>
+    </tr>
+     <tr>
+        <td>Total Driver-Submitted Expenses:</td>
+        <td>₱<?php echo number_format($totalDriverExpenses, 2); ?></td>
+    </tr>
+    <tr class="remaining-balance">
+        <td>Remaining Balance (Cash on Hand):</td>
+        <td>₱<?php echo number_format($remainingBalance, 2); ?></td>
+    </tr>
+    <tr class="grand-total">
+        <td>GRAND TOTAL DISBURSED:</td>
+        <td>₱<?php echo number_format($grandTotal, 2); ?></td>
+    </tr>
+</table>
             </div>
 
             <div class="info-section">
@@ -211,10 +204,10 @@ $remainingBalance = ($totalCashAdvance + $totalAdditionalCash) - $totalDriverExp
                         foreach ($tripDriverExpenses as $expense) {
                             $tripDriverExpensesTotal += $expense['amount'];
                         }
-                        $tripCashGiven = $trip['cash_advance'] + $trip['additional_cash_advance'];
-                        $tripRemainingBalance = $tripCashGiven - $tripDriverExpensesTotal;
-                        $tripTotal = $tripCashGiven + $trip['diesel'];
-                    ?>
+                      $tripCashGiven = $trip['cash_advance'] + $trip['additional_cash_advance'];
+$tripRemainingBalance = $tripCashGiven - $tripDriverExpensesTotal;
+$tripTotal = $tripCashGiven;
+?>
                         <div class="trip-card">
                             <div class="trip-card-header">
                                 <h3>Trip ID: TR-<?php echo str_pad($tripId, 6, '0', STR_PAD_LEFT); ?></h3>
@@ -239,10 +232,7 @@ $remainingBalance = ($totalCashAdvance + $totalAdditionalCash) - $totalDriverExp
                                         <td>Additional Cash</td>
                                         <td class="amount">₱<?php echo number_format($trip['additional_cash_advance'], 2); ?></td>
                                     </tr>
-                                    <tr>
-                                        <td>Diesel</td>
-                                        <td class="amount">₱<?php echo number_format($trip['diesel'], 2); ?></td>
-                                    </tr>
+                                   
                                     <?php if (empty($tripDriverExpenses)): ?>
                                         <tr>
                                             <td colspan="2" class="no-expenses-row">No driver-submitted expenses for this trip.</td>

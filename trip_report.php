@@ -24,8 +24,7 @@ $sql = "SELECT
             sl.name as shipping_line,
             cons.name as consignee,
             COALESCE(te.cash_advance, 0) as cash_advance,
-            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-            COALESCE(te.diesel, 0) as diesel
+            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance
         FROM trips t
         LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
         LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
@@ -203,24 +202,22 @@ function formatDateTime($datetimeString) {
                 </h2>
                 
                 <h4 style="margin: 0 0 10px; color: #495057;">Initial Funds</h4>
-                <table class="expense-table">
-                    <thead>
-                        <tr>
-                            <th>Cash Advance</th>
-                            <th>Additional Cash</th>
-                            <th>Diesel</th>
-                            <th>Total Initial</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>₱<?php echo number_format($trip['cash_advance'], 2); ?></td>
-                            <td>₱<?php echo number_format($trip['additional_cash_advance'], 2); ?></td>
-                            <td>₱<?php echo number_format($trip['diesel'], 2); ?></td>
-                            <td><strong>₱<?php echo number_format($trip['cash_advance'] + $trip['additional_cash_advance'] + $trip['diesel'], 2); ?></strong></td>
-                        </tr>
-                    </tbody>
-                </table>
+               <table class="expense-table">
+    <thead>
+        <tr>
+            <th>Cash Advance</th>
+            <th>Additional Cash</th>
+            <th>Total Initial</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>₱<?php echo number_format($trip['cash_advance'], 2); ?></td>
+            <td>₱<?php echo number_format($trip['additional_cash_advance'], 2); ?></td>
+            <td><strong>₱<?php echo number_format($trip['cash_advance'] + $trip['additional_cash_advance'], 2); ?></strong></td>
+        </tr>
+    </tbody>
+</table>
 
                 <?php if (!empty($expenses)): ?>
                 <h4 style="margin: 20px 0 10px; color: #495057;">Breakdown of Researchers</h4>

@@ -77,7 +77,6 @@ $sql = "SELECT
             al.modified_at as last_modified_at,
             COALESCE(te.cash_advance, 0) as cash_advance,
             COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-            COALESCE(te.diesel, 0) as diesel,
             tr.plate_no,  
             t.trip_date   
         FROM trips t
@@ -119,7 +118,6 @@ if ($result->num_rows > 0) {
     'size' => $row['fcl_status'],
     'cashAdvance' => $row['cash_advance'],
     'additionalCashAdvance' => $row['additional_cash_advance'],
-    'diesel' => $row['diesel'],
     'status' => $row['status'],
     'modifiedby' => $row['last_modified_by'],
     'modifiedat' => $row['last_modified_at'],
@@ -442,13 +440,8 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                                 <span class="detail-value" id="modal-additional-cash"></span>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <i class="fas fa-gas-pump detail-icon"></i>
-                            <div class="detail-text">
-                                <span class="detail-label">Diesel</span>
-                                <span class="detail-value" id="modal-diesel"></span>
-                            </div>
-                        </div>
+
+                        
                     </div>
                 </div>
 
@@ -621,11 +614,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
             <input type="number" id="editEventAdditionalCashAdvance" name="eventAdditionalCashAdvance" 
                    min="0" step="0.01" placeholder="0.00" style="width: 100%;">
         </div>
-        <div>
-            <label for="editEventDiesel">Diesel:</label>
-            <input type="number" id="editEventDiesel" name="eventDiesel" 
-                   min="0" step="0.01" placeholder="0.00" style="width: 100%;">
-        </div>
+        
     </fieldset>
 </div>
 
@@ -744,10 +733,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                         <strong>Additional Cash:</strong> 
                         <span id="expenseAdditionalCash"></span>
                     </div>
-                    <div class="funds-item">
-                        <strong>Diesel:</strong> 
-                        <span id="expenseDiesel"></span>
-                    </div>
+                    
                     <div class="funds-total">
                         <strong>Total Initial Funds:</strong> 
                         <span id="totalInitialFunds"></span>
@@ -951,11 +937,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
             <input type="number" id="addEventCashAdvance" name="eventCashAdvance" 
                 min="2000" step="0.01" placeholder="2000.00" value="2000" style="width: 100%;">
         </div>
-        <div>
-            <label for="addEventDiesel">Diesel:</label>
-            <input type="number" id="addEventDiesel" name="eventDiesel" 
-                   min="0" step="0.01" placeholder="0.00" style="width: 100%;">
-        </div>
+        
     </fieldset>
 </div>
 
@@ -1043,7 +1025,6 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
             <th>FCL</th>
             <th>Cash Advance</th>
             <th>Additional Cash</th>
-            <th>Diesel</th>
             <th>Status</th>
             <th>Last Modified</th>
             <th></th>
@@ -1427,7 +1408,6 @@ function renderTripRows(trips, showDeleted) {
                 <td data-label="FCL">${highlightText(trip.fcl_status || 'N/A', searchTerm)}</td>
                 <td data-label="Cash Advance">₱${parseFloat(trip.cash_advance || 0).toFixed(2)}</td>
                 <td data-label="Additional Cash">₱${parseFloat(trip.additional_cash_advance || 0).toFixed(2)}</td>
-                <td data-label="Diesel">₱${parseFloat(trip.diesel || 0).toFixed(2)}</td>
                 ${statusCell}
                 <td data-label="Last Modified">${formatDateTime(trip.last_modified_at || trip.created_at)} 
                     ${trip.last_modified_by ? `<br> <strong>${highlightText(trip.last_modified_by, searchTerm)}</strong></small>` : ''}
@@ -1917,13 +1897,13 @@ $('#summaryType').on('change', function() {
         });
         
         if (driver && driver.truck_plate_no) {
-            // Determine which form we're in (add or edit)
+            
             var isAddForm = $(this).attr('id') === 'addEventDriver';
             var plateNoField = isAddForm ? '#addEventPlateNo' : '#editEventPlateNo';
             
             $(plateNoField).val(driver.truck_plate_no);
         } else {
-            // Clear the plate number if driver has no assigned truck
+            
             var isAddForm = $(this).attr('id') === 'addEventDriver';
             var plateNoField = isAddForm ? '#addEventPlateNo' : '#editEventPlateNo';
             $(plateNoField).val('');
@@ -1931,55 +1911,52 @@ $('#summaryType').on('change', function() {
     });
             
             // Format events for calendar
-                var calendarEvents = eventsData.map(function(event) {
-        return {
-            id: event.id,
-            title: event.client + ' - ' + event.destination,
-            start: event.date,
-            plateNo: event.plateNo,
-            driver: event.driver,
-            driver_id: event.driver_id, // eto yung driver_id
-            helper: event.helper,
-                dispatcher: event.dispatcher,
-            containerNo: event.containerNo,
-             port: event.port,
-            client: event.client,
-            destination: event.destination,
-            shippingLine: event.shippingLine,
-            consignee: event.consignee,
-            size: event.size,
-             cashAdvance: event.cashAdvance || event.cash_advance,
+               var calendarEvents = eventsData.map(function(event) {
+    return {
+        id: event.id,
+        title: event.client + ' - ' + event.destination,
+        start: event.date,
+        plateNo: event.plateNo,
+        driver: event.driver,
+        driver_id: event.driver_id, 
+        helper: event.helper,
+        dispatcher: event.dispatcher,
+        containerNo: event.containerNo,
+         port: event.port,
+        client: event.client,
+        destination: event.destination,
+        shippingLine: event.shippingLine,
+        consignee: event.consignee,
+        size: event.size,
+         cashAdvance: event.cashAdvance || event.cash_advance,
         additionalCashAdvance: event.additionalCashAdvance || event.additional_cash_advance, 
-        diesel: event.diesel,
-            status: event.status,
-            modifiedby: event.modifiedby,
-            modifiedat: event.modifiedat,
-            truck_plate_no: event.truck_plate_no,
-            truck_capacity: event.truck_capacity,
-            edit_reasons: event.edit_reasons,
-             fcl_status: event.fcl_status 
-        };
-    });
+        status: event.status,
+        modifiedby: event.modifiedby,
+        modifiedat: event.modifiedat,
+        truck_plate_no: event.truck_plate_no,
+        truck_capacity: event.truck_capacity,
+        edit_reasons: event.edit_reasons,
+         fcl_status: event.fcl_status 
+    };
+});
 
  function resetAddScheduleForm() {
-        $('#addEventPlateNo').val('');
-        $('#addEventDate').val('');
-        $('#addEventDriver').val('').trigger('change');
-        $('#addEventHelper').val('');
-         $('#addEventDispatcher').val('');
-        $('#addEventContainerNo').val('');
-        $('#addEventClient').val('');
-        $('#addEventPort').val('');
-        $('#addEventDestination').val('');
-        $('#addEventShippingLine').val('');
-        $('#addEventConsignee').val('');
-        $('#addEventSize').val('');
-        $('#addEventFCL').val('');
-        $('#addEventCashAdvance').val('2000');
-       
-        $('#addEventDiesel').val('');
-        $('#addEventStatus').val('Pending');
-    }
+    $('#addEventPlateNo').val('');
+    $('#addEventDate').val('');
+    $('#addEventDriver').val('').trigger('change');
+    $('#addEventHelper').val('');
+     $('#addEventDispatcher').val('');
+    $('#addEventContainerNo').val('');
+    $('#addEventClient').val('');
+    $('#addEventPort').val('');
+    $('#addEventDestination').val('');
+    $('#addEventShippingLine').val('');
+    $('#addEventConsignee').val('');
+    $('#addEventSize').val('');
+    $('#addEventFCL').val('');
+    $('#addEventCashAdvance').val('2000');
+    $('#addEventStatus').val('Pending');
+}
 
 $(document).on('click', '.close, .close-btn.cancel-btn', function() {
 
@@ -2156,7 +2133,7 @@ eventClick: function(event, jsEvent, view) {
     $('#modal-size').text(event.truck_capacity ? event.truck_capacity + 'ft' : (event.size || 'N/A'));
     $('#modal-cash-advance').text('₱' + (parseFloat(event.cashAdvance || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     $('#modal-additional-cash').text('₱' + (parseFloat(event.additionalCashAdvance || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    $('#modal-diesel').text('₱' + (parseFloat(event.diesel || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    
 
     $('#modal-driver').text(event.driver || 'N/A');
     $('#modal-helper').text(event.helper || 'N/A');
@@ -2337,12 +2314,12 @@ e.stopPropagation();
 
                 const cashAdvance = parseFloat(response.cashAdvance || tripData.cashAdvance || 0);
                 const additionalCash = parseFloat(response.additionalCashAdvance || tripData.additionalCashAdvance || 0);
-                const diesel = parseFloat(response.diesel || tripData.diesel || 0);
-                const totalInitialFunds = cashAdvance + additionalCash + diesel;
+                
+                const totalInitialFunds = cashAdvance + additionalCash;
 
                 $('#expenseCashAdvance').text('₱' + cashAdvance.toFixed(2));
                 $('#expenseAdditionalCash').text('₱' + additionalCash.toFixed(2));
-                $('#expenseDiesel').text('₱' + diesel.toFixed(2));
+                
                 $('#totalInitialFunds').text('₱' + totalInitialFunds.toFixed(2));
 
                 let totalExpenses = 0;
@@ -2689,7 +2666,7 @@ function populateEditModal(event) {
     $('#editEventFCL').val(event.fcl_status || event.size);
     $('#editEventCashAdvance').val(event.cashAdvance);
     $('#editEventAdditionalCashAdvance').val(event.additionalCashAdvance);
-    $('#editEventDiesel').val(event.diesel);
+    
     $('#editEventStatus').val(event.status);
 
   
@@ -2801,12 +2778,12 @@ $(document).on('click', '.dropdown-item.view-expenses', function() {
                 
                 const cashAdvance = parseFloat(response.cashAdvance || tripData.cashAdvance || 0);
                 const additionalCash = parseFloat(response.additionalCashAdvance || tripData.additionalCashAdvance || 0);
-                const diesel = parseFloat(response.diesel || tripData.diesel || 0);
-                const totalInitialFunds = cashAdvance + additionalCash + diesel;
+           
+                const totalInitialFunds = cashAdvance + additionalCash;
                 
                 $('#expenseCashAdvance').text('₱' + cashAdvance.toFixed(2));
                 $('#expenseAdditionalCash').text('₱' + additionalCash.toFixed(2));
-                $('#expenseDiesel').text('₱' + diesel.toFixed(2));
+               
                 $('#totalInitialFunds').text('₱' + totalInitialFunds.toFixed(2));
                 
                 let totalExpenses = 0;
@@ -2880,23 +2857,22 @@ $('#addScheduleForm').on('submit', function(e) {
         data: JSON.stringify({
             action: 'add',
             plateNo: truckPlateNo,
-            date: $('#addEventDate').val(),
-            driver: selectedDriver,
-            helper: $('#addEventHelper').val(),
-            dispatcher: $('#addEventDispatcher').val(),
-            port: $('#addEventPort').val(),
-            containerNo: $('#addEventContainerNo').val(),
-            client: $('#addEventClient').val(),
-            destination: $('#addEventDestination').val(),
-            shippingLine: $('#addEventShippingLine').val(),
-            consignee: $('#addEventConsignee').val(),
-            size: $('#addEventSize').val(),
-            fcl_status: $('#addEventFCL').val(),
-            cashAdvance: $('#addEventCashAdvance').val(),
-            additionalCashAdvance: $('#addEventAdditionalCashAdvance').val(),
-            diesel: $('#addEventDiesel').val(),
-            status: $('#addEventStatus').val()
-        }),
+        date: $('#addEventDate').val(),
+        driver: selectedDriver,
+        helper: $('#addEventHelper').val(),
+        dispatcher: $('#addEventDispatcher').val(),
+        port: $('#addEventPort').val(),
+        containerNo: $('#addEventContainerNo').val(),
+        client: $('#addEventClient').val(),
+        destination: $('#addEventDestination').val(),
+        shippingLine: $('#addEventShippingLine').val(),
+        consignee: $('#addEventConsignee').val(),
+        size: $('#addEventSize').val(),
+        fcl_status: $('#addEventFCL').val(),
+        cashAdvance: $('#addEventCashAdvance').val(),
+        additionalCashAdvance: $('#addEventAdditionalCashAdvance').val(),
+        status: $('#addEventStatus').val()
+    }),
         success: function(response) {
             console.log('Raw response:', response);
             if (response.success) {
@@ -3104,27 +3080,26 @@ $('#editForm').on('submit', function(e) {
             contentType: 'application/json',
             data: JSON.stringify({
                 action: 'edit',
-                id: $('#editEventId').val(),
-                plateNo: truckPlateNo,
-                date: $('#editEventDate').val(),
-                driver: selectedDriver,
-                helper: $('#editEventHelper').val(),
-                dispatcher: $('#editEventDispatcher').val(),
-                containerNo: $('#editEventContainerNo').val(),
-                client: $('#editEventClient').val(),
-                port: $('#editEventPort').val(),
-                destination: $('#editEventDestination').val(),
-                shippingLine: $('#editEventShippingLine').val(),
-                consignee: $('#editEventConsignee').val(),
-                size: $('#editEventSize').val(),
-                 fclStatus: $('#editEventFCL').val(),
-                
-                cashAdvance: $('#editEventCashAdvance').val(),
-                additionalCashAdvance: $('#editEventAdditionalCashAdvance').val(),
-                diesel: $('#editEventDiesel').val(),
-                status: $('#editEventStatus').val(),
-                editReasons: editReasons
-            }),
+               id: $('#editEventId').val(),
+        plateNo: truckPlateNo,
+        date: $('#editEventDate').val(),
+        driver: selectedDriver,
+        helper: $('#editEventHelper').val(),
+        dispatcher: $('#editEventDispatcher').val(),
+        containerNo: $('#editEventContainerNo').val(),
+        client: $('#editEventClient').val(),
+        port: $('#editEventPort').val(),
+        destination: $('#editEventDestination').val(),
+        shippingLine: $('#editEventShippingLine').val(),
+        consignee: $('#editEventConsignee').val(),
+        size: $('#editEventSize').val(),
+         fclStatus: $('#editEventFCL').val(),
+
+        cashAdvance: $('#editEventCashAdvance').val(),
+        additionalCashAdvance: $('#editEventAdditionalCashAdvance').val(),
+        status: $('#editEventStatus').val(),
+        editReasons: editReasons
+    }),
             success: function(response) {
     if (response.success) {
         const editedTripId = $('#editEventId').val();
@@ -3147,7 +3122,7 @@ $('#editForm').on('submit', function(e) {
             updatedEvent.fcl_status = $('#editEventFCL').val();
             updatedEvent.cashAdvance = $('#editEventCashAdvance').val();
             updatedEvent.additionalCashAdvance = $('#editEventAdditionalCashAdvance').val();
-            updatedEvent.diesel = $('#editEventDiesel').val();
+            
             updatedEvent.status = $('#editEventStatus').val();
             
            
@@ -3653,7 +3628,6 @@ function updateEventModalDetails() {
         consignee: $('#editEventConsignee').val(),
         cashAdvance: $('#editEventCashAdvance').val(),
         additionalCashAdvance: $('#editEventAdditionalCashAdvance').val(),
-        diesel: $('#editEventDiesel').val(),
         status: $('#editEventStatus').val(),
         plateNo: $('#editEventPlateNo').val(),
         size: $('#editEventSize').val() 
@@ -3677,7 +3651,7 @@ function updateEventModalDetails() {
     
     $('#modal-cash-advance').text('₱' + (parseFloat(newValues.cashAdvance || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     $('#modal-additional-cash').text('₱' + (parseFloat(newValues.additionalCashAdvance || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    $('#modal-diesel').text('₱' + (parseFloat(newValues.diesel || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    
 
     $('#modal-client-name').text(newValues.client || 'N/A');
     $('#modal-shipping-line').text(newValues.shippingLine || 'N/A');
@@ -4007,7 +3981,6 @@ function refreshCalendarEvents() {
                         size: trip.fcl_status,
                         cashAdvance: trip.cash_advance,
                         additionalCashAdvance: trip.additional_cash_advance,
-                        diesel: trip.diesel,
                         status: trip.status,
                         modifiedby: trip.last_modified_by,
                         modifiedat: trip.last_modified_at,
@@ -4017,7 +3990,7 @@ function refreshCalendarEvents() {
                         fcl_status: trip.fcl_status
                     };
                 });
-                
+
                  eventsData = response.trips.map(trip => {
                      return {
                         id: trip.trip_id,
@@ -4036,7 +4009,6 @@ function refreshCalendarEvents() {
                         size: trip.fcl_status,
                         cashAdvance: trip.cash_advance,
                         additionalCashAdvance: trip.additional_cash_advance,
-                        diesel: trip.diesel,
                         status: trip.status,
                         modifiedby: trip.last_modified_by,
                         modifiedat: trip.last_modified_at,
@@ -4046,8 +4018,6 @@ function refreshCalendarEvents() {
                         fcl_status: trip.fcl_status
                     };
                 });
-
-
 
                 $('#calendar').fullCalendar('removeEvents');
                 $('#calendar').fullCalendar('addEventSource', newCalendarEvents);

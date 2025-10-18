@@ -107,8 +107,7 @@ try {
                     al.modified_at as last_modified_at,
                     al.edit_reason as edit_reasons,
                     COALESCE(te.cash_advance, 0) as cash_adv,
-                    COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-                    COALESCE(te.diesel, 0) as diesel
+                    COALESCE(te.additional_cash_advance, 0) as additional_cash_advance
                 FROM trips t
                 LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
                 LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
@@ -156,8 +155,7 @@ try {
                 'last_modified_by' => $trip['last_modified_by'],
                 'last_modified_at' => $trip['last_modified_at'],
                 'edit_reasons' => $trip['edit_reasons'],
-                'additional_cash_advance' => $trip['additional_cash_advance'],
-                'diesel' => $trip['diesel']
+                'additional_cash_advance' => $trip['additional_cash_advance']
             ];
 
             echo json_encode(['success' => true, 'trip' => $formattedTrip]);

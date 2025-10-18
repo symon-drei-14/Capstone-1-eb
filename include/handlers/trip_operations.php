@@ -134,26 +134,26 @@ function checkDriverEnRouteTrips($conn, $driverId, $excludeTripId = null) {
     return $count > 0;
 }
 
-function insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance = 0, $diesel = 0) {
-    $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance, additional_cash_advance, diesel) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("iddd", $tripId, $cashAdvance, $additionalCashAdvance, $diesel);
+function insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance = 0) {
+    $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance, additional_cash_advance) VALUES (?, ?, ?)");
+    $stmt->bind_param("idd", $tripId, $cashAdvance, $additionalCashAdvance);
     return $stmt->execute();
 }
 
-function updateTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance = 0, $diesel = 0) {
+function updateTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance = 0) {
     $checkStmt = $conn->prepare("SELECT expense_id FROM trip_expenses WHERE trip_id = ?");
     $checkStmt->bind_param("i", $tripId);
     $checkStmt->execute();
     $exists = $checkStmt->get_result()->num_rows > 0;
-    
+
     if ($exists) {
-        $stmt = $conn->prepare("UPDATE trip_expenses SET cash_advance = ?, additional_cash_advance = ?, diesel = ? WHERE trip_id = ?");
-        $stmt->bind_param("dddi", $cashAdvance, $additionalCashAdvance, $diesel, $tripId);
+        $stmt = $conn->prepare("UPDATE trip_expenses SET cash_advance = ?, additional_cash_advance = ? WHERE trip_id = ?");
+        $stmt->bind_param("ddi", $cashAdvance, $additionalCashAdvance, $tripId);
     } else {
-        $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance, additional_cash_advance, diesel) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("iddd", $tripId, $cashAdvance, $additionalCashAdvance, $diesel);
+        $stmt = $conn->prepare("INSERT INTO trip_expenses (trip_id, cash_advance, additional_cash_advance) VALUES (?, ?, ?)");
+        $stmt->bind_param("idd", $tripId, $cashAdvance, $additionalCashAdvance);
     }
-    
+
     return $stmt->execute();
 }
 
@@ -355,7 +355,7 @@ function renderTripRowHtml($trip, $showDeleted, $searchTerm) {
             <td data-label="FCL">' . $highlight($trip['fcl_status'] ?? 'N/A', $searchTerm) . '</td>
             <td data-label="Cash Advance">₱' . number_format(floatval($trip['cash_advance'] ?? 0), 2) . '</td>
             <td data-label="Additional Cash">₱' . number_format(floatval($trip['additional_cash_advance'] ?? 0), 2) . '</td>
-            <td data-label="Diesel">₱' . number_format(floatval($trip['diesel'] ?? 0), 2) . '</td>
+            
             ' . $statusCell . '
             <td data-label="Last Modified">' . $formattedModifiedDate . $lastModifiedBy . '</td>
             ' . $actionCell . '
@@ -500,15 +500,14 @@ try {
         
         $tripId = $conn->insert_id;
 
-        $cashAdvance = floatval($data['cashAdvance'] ?? 0);
-        $additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
-        $diesel = floatval($data['diesel'] ?? 0);
-        
-        if ($cashAdvance > 0 || $additionalCashAdvance > 0 || $diesel > 0) {
-            if (!insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance, $diesel)) {
-                throw new Exception("Failed to insert trip expenses");
-            }
-        }
+       $cashAdvance = floatval($data['cashAdvance'] ?? 0);
+$additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
+
+if ($cashAdvance > 0 || $additionalCashAdvance > 0) {
+    if (!insertTripExpenses($conn, $tripId, $cashAdvance, $additionalCashAdvance)) {
+        throw new Exception("Failed to insert trip expenses");
+    }
+}
 
         $auditStmt = $conn->prepare("INSERT INTO audit_logs_trips (trip_id, modified_by, modified_at, edit_reason) VALUES (?, ?, ?, 'Trip created')");
         $currentTime = date('Y-m-d H:i:s');
@@ -690,13 +689,12 @@ try {
         }
         
         // Update trip expenses with all three fields
-        $cashAdvance = floatval($data['cashAdvance'] ?? 0);
-        $additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
-        $diesel = floatval($data['diesel'] ?? 0);
-        
-        if (!updateTripExpenses($conn, $data['id'], $cashAdvance, $additionalCashAdvance, $diesel)) {
-            throw new Exception("Failed to update trip expenses");
-        }
+       $cashAdvance = floatval($data['cashAdvance'] ?? 0);
+$additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
+
+if (!updateTripExpenses($conn, $data['id'], $cashAdvance, $additionalCashAdvance)) {
+    throw new Exception("Failed to update trip expenses");
+}
         
         // Update audit log
         $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
@@ -886,15 +884,14 @@ try {
             $searchTerm = $data['searchTerm'] ?? ''; 
 
             $query = "SELECT 
-                t.trip_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
-                tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
-                disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
-                sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
-                al.modified_at as last_modified_at, al.edit_reason,
-                COALESCE(te.cash_advance, 0) as cash_advance,
-                COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-                COALESCE(te.diesel, 0) as diesel
-              FROM trips t
+    t.trip_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
+    tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
+    disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
+    sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
+    al.modified_at as last_modified_at, al.edit_reason,
+    COALESCE(te.cash_advance, 0) as cash_advance,
+    COALESCE(te.additional_cash_advance, 0) as additional_cash_advance
+  FROM trips t
               LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
               LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
               LEFT JOIN helpers h ON t.helper_id = h.helper_id
@@ -1113,25 +1110,24 @@ case 'fetchNextRow':
         $isTodayView = ($statusFilter === 'today');
         
         $baseQuery = "SELECT 
-            t.trip_id, t.driver_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
-            tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
-            disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
-            sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
-            al.modified_at as last_modified_at, al.edit_reason, al.delete_reason,
-            COALESCE(te.cash_advance, 0) as cash_advance,
-            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-            COALESCE(te.diesel, 0) as diesel
-          FROM trips t
-          LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-          LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-          LEFT JOIN helpers h ON t.helper_id = h.helper_id
-          LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-          LEFT JOIN clients c ON t.client_id = c.client_id
-          LEFT JOIN ports p ON t.port_id = p.port_id
-          LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-          LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-          LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-          LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id";
+        t.trip_id, t.driver_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
+        tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
+        disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
+        sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
+        al.modified_at as last_modified_at, al.edit_reason, al.delete_reason,
+        COALESCE(te.cash_advance, 0) as cash_advance,
+        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance
+      FROM trips t
+      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+      LEFT JOIN helpers h ON t.helper_id = h.helper_id
+      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+      LEFT JOIN clients c ON t.client_id = c.client_id
+      LEFT JOIN ports p ON t.port_id = p.port_id
+      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id";
         
         $params = [];
         $types = "";
@@ -1358,31 +1354,30 @@ case 'get_notifications':
     $dateFrom = $data['dateFrom'] ?? '';
     $dateTo = $data['dateTo'] ?? '';
     
-    $query = "SELECT 
-        t.trip_id,
-        t.container_no,
-        t.trip_date,
-        t.status,
-        t.fcl_status,
-        t.created_at,
-        tr.plate_no, 
-        tr.capacity as truck_capacity,
-        d.name as driver,
-        h.name as helper,
-        disp.name as dispatcher,
-        c.name as client,
-        p.name as port,  
-        dest.name as destination,
-        sl.name as shipping_line,
-        cons.name as consignee,
-        al.modified_by as last_modified_by,
-        al.modified_at as last_modified_at,
-        al.delete_reason,
-        1 as is_deleted,
-        COALESCE(te.cash_advance, 0) as cash_advance,
-        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-        COALESCE(te.diesel, 0) as diesel
-      FROM trips t
+   $query = "SELECT 
+    t.trip_id,
+    t.container_no,
+    t.trip_date,
+    t.status,
+    t.fcl_status,
+    t.created_at,
+    tr.plate_no, 
+    tr.capacity as truck_capacity,
+    d.name as driver,
+    h.name as helper,
+    disp.name as dispatcher,
+    c.name as client,
+    p.name as port,  
+    dest.name as destination,
+    sl.name as shipping_line,
+    cons.name as consignee,
+    al.modified_by as last_modified_by,
+    al.modified_at as last_modified_at,
+    al.delete_reason,
+    1 as is_deleted,
+    COALESCE(te.cash_advance, 0) as cash_advance,
+    COALESCE(te.additional_cash_advance, 0) as additional_cash_advance
+  FROM trips t
       LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
       LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
       LEFT JOIN helpers h ON t.helper_id = h.helper_id
@@ -1649,15 +1644,13 @@ if (!empty($conflictingTrips)) {
       case 'get_expenses':
     $tripId = $data['tripId'] ?? 0;
 
-    // First get the cash advance and diesel amounts from the main trip_expenses table
-    $stmt = $conn->prepare("SELECT cash_advance, additional_cash_advance, diesel FROM trip_expenses WHERE trip_id = ?");
+    $stmt = $conn->prepare("SELECT cash_advance, additional_cash_advance FROM trip_expenses WHERE trip_id = ?");
     $stmt->bind_param("i", $tripId);
     $stmt->execute();
     $expenseResult = $stmt->get_result();
     $tripExpenses = $expenseResult->fetch_assoc();
     $stmt->close();
 
-    // Then get all expenses, including the driver-submitted ones with their receipts and timestamps
     $stmt = $conn->prepare("
         SELECT
             et.name as expense_type,
@@ -1683,8 +1676,7 @@ if (!empty($conflictingTrips)) {
         'success' => true,
         'expenses' => $expenses,
         'cashAdvance' => $tripExpenses['cash_advance'] ?? 0,
-        'additionalCashAdvance' => $tripExpenses['additional_cash_advance'] ?? 0,
-        'diesel' => $tripExpenses['diesel'] ?? 0
+        'additionalCashAdvance' => $tripExpenses['additional_cash_advance'] ?? 0
     ]);
     break;
 
@@ -1698,47 +1690,46 @@ case 'get_trips_today':
     // Get today's date
     $today = date('Y-m-d');
     
-    $query = "SELECT 
-        t.trip_id,
-        t.container_no,
-        t.trip_date,
-        t.status,
-        t.fcl_status,
-        t.created_at,
-        tr.plate_no, 
-        tr.capacity as truck_capacity,
-        d.name as driver,
-        d.driver_id,
-        h.name as helper,
-        disp.name as dispatcher,
-        c.name as client,
-        p.name as port,  
-        dest.name as destination,
-        sl.name as shipping_line,
-        cons.name as consignee,
-        al.modified_by as last_modified_by,
-        al.modified_at as last_modified_at,
-        al.edit_reason,
-        COALESCE(te.cash_advance, 0) as cash_advance,
-        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-        COALESCE(te.diesel, 0) as diesel
-      FROM trips t
-      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-      LEFT JOIN helpers h ON t.helper_id = h.helper_id
-      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-      LEFT JOIN clients c ON t.client_id = c.client_id
-      LEFT JOIN ports p ON t.port_id = p.port_id  
-      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-      LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
-      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-      WHERE NOT EXISTS (
-          SELECT 1 FROM audit_logs_trips al2 
-          WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
-      )
-      AND DATE(t.trip_date) = ?";
+   $query = "SELECT 
+    t.trip_id,
+    t.container_no,
+    t.trip_date,
+    t.status,
+    t.fcl_status,
+    t.created_at,
+    tr.plate_no, 
+    tr.capacity as truck_capacity,
+    d.name as driver,
+    d.driver_id,
+    h.name as helper,
+    disp.name as dispatcher,
+    c.name as client,
+    p.name as port,  
+    dest.name as destination,
+    sl.name as shipping_line,
+    cons.name as consignee,
+    al.modified_by as last_modified_by,
+    al.modified_at as last_modified_at,
+    al.edit_reason,
+    COALESCE(te.cash_advance, 0) as cash_advance,
+    COALESCE(te.additional_cash_advance, 0) as additional_cash_advance
+  FROM trips t
+  LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+  LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+  LEFT JOIN helpers h ON t.helper_id = h.helper_id
+  LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+  LEFT JOIN clients c ON t.client_id = c.client_id
+  LEFT JOIN ports p ON t.port_id = p.port_id  
+  LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+  LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+  LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+  LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
+  LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+  WHERE NOT EXISTS (
+      SELECT 1 FROM audit_logs_trips al2 
+      WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+  )
+  AND DATE(t.trip_date) = ?";
     
     if ($statusFilter !== 'all') {
         $query .= " AND t.status = ?";
@@ -1797,41 +1788,40 @@ case 'get_trips_today':
     $tripId = $data['id'] ?? 0;
     
     $query = "SELECT 
-        t.trip_id as id,
-        t.container_no as containerNo,
-        t.trip_date as date,
-        t.status,
-        t.fcl_status,
-        tr.plate_no as plateNo, 
-        tr.capacity as truck_capacity,
-        d.name as driver,
-        d.driver_id,
-        h.name as helper,
-        disp.name as dispatcher,
-        c.name as client,
-        p.name as port,  
-        dest.name as destination,
-        sl.name as shippingLine,
-        cons.name as consignee,
-        al.modified_by as modifiedby,
-        al.modified_at as modifiedat,
-        al.edit_reason as edit_reasons,
-        COALESCE(te.cash_advance, 0) as cashAdvance,
-        COALESCE(te.additional_cash_advance, 0) as additionalCashAdvance,
-        COALESCE(te.diesel, 0) as diesel
-      FROM trips t
-      LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-      LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-      LEFT JOIN helpers h ON t.helper_id = h.helper_id
-      LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-      LEFT JOIN clients c ON t.client_id = c.client_id
-      LEFT JOIN ports p ON t.port_id = p.port_id  
-      LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-      LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-      LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-      LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
-      LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-      WHERE t.trip_id = ?";
+    t.trip_id as id,
+    t.container_no as containerNo,
+    t.trip_date as date,
+    t.status,
+    t.fcl_status,
+    tr.plate_no as plateNo, 
+    tr.capacity as truck_capacity,
+    d.name as driver,
+    d.driver_id,
+    h.name as helper,
+    disp.name as dispatcher,
+    c.name as client,
+    p.name as port,  
+    dest.name as destination,
+    sl.name as shippingLine,
+    cons.name as consignee,
+    al.modified_by as modifiedby,
+    al.modified_at as modifiedat,
+    al.edit_reason as edit_reasons,
+    COALESCE(te.cash_advance, 0) as cashAdvance,
+    COALESCE(te.additional_cash_advance, 0) as additionalCashAdvance
+  FROM trips t
+  LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+  LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+  LEFT JOIN helpers h ON t.helper_id = h.helper_id
+  LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+  LEFT JOIN clients c ON t.client_id = c.client_id
+  LEFT JOIN ports p ON t.port_id = p.port_id  
+  LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+  LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+  LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+  LEFT JOIN audit_logs_trips al ON t.trip_id = al.trip_id AND al.is_deleted = 0
+  LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+  WHERE t.trip_id = ?";
     
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $tripId);

@@ -417,54 +417,53 @@ try {
     )";
     
     $sql = "
-        SELECT 
-            t.trip_id,
-            t.container_no,
-            t.trip_date,
-            t.status,
-            t.created_at,
-            tr.plate_no,
-            tr.capacity as truck_capacity,
-            d.name as driver,
-            d.driver_id,
-            d.name as driver_name,
-            d.email as driver_email,
-            h.name as helper,
-            disp.name as dispatcher,
-            c.name as client,
-            dest.name as destination,
-            sl.name as shipping_line,
-            cons.name as consignee,
-            COALESCE(te.cash_advance, 0) as cash_advance,
-            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-            COALESCE(te.diesel, 0) as diesel,
-            (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_cash_advance,
-            COALESCE(te.cash_advance, 0) as cash_adv,
-            DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
-            t.trip_date as date,
-            DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp,
-            al.modified_at AS last_modified_at,
-            al.edit_reason
-        FROM trips t
-        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-        LEFT JOIN helpers h ON t.helper_id = h.helper_id
-        LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-        LEFT JOIN clients c ON t.client_id = c.client_id
-        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-        LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-        LEFT JOIN (
-            SELECT trip_id, MAX(modified_at) as max_modified_at
-            FROM audit_logs_trips
-            WHERE is_deleted = 0
-            GROUP BY trip_id
-        ) max_al ON t.trip_id = max_al.trip_id
-        LEFT JOIN audit_logs_trips al ON al.trip_id = max_al.trip_id AND al.modified_at = max_al.max_modified_at
-        $whereClause
-        ORDER BY t.trip_date DESC, t.created_at DESC
-    ";
+    SELECT 
+        t.trip_id,
+        t.container_no,
+        t.trip_date,
+        t.status,
+        t.created_at,
+        tr.plate_no,
+        tr.capacity as truck_capacity,
+        d.name as driver,
+        d.driver_id,
+        d.name as driver_name,
+        d.email as driver_email,
+        h.name as helper,
+        disp.name as dispatcher,
+        c.name as client,
+        dest.name as destination,
+        sl.name as shipping_line,
+        cons.name as consignee,
+        COALESCE(te.cash_advance, 0) as cash_advance,
+        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+        (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_cash_advance,
+        COALESCE(te.cash_advance, 0) as cash_adv,
+        DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+        t.trip_date as date,
+        DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_timestamp,
+        al.modified_at AS last_modified_at,
+        al.edit_reason
+    FROM trips t
+    LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+    LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+    LEFT JOIN helpers h ON t.helper_id = h.helper_id
+    LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+    LEFT JOIN clients c ON t.client_id = c.client_id
+    LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+    LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+    LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+    LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+    LEFT JOIN (
+        SELECT trip_id, MAX(modified_at) as max_modified_at
+        FROM audit_logs_trips
+        WHERE is_deleted = 0
+        GROUP BY trip_id
+    ) max_al ON t.trip_id = max_al.trip_id
+    LEFT JOIN audit_logs_trips al ON al.trip_id = max_al.trip_id AND al.modified_at = max_al.max_modified_at
+    $whereClause
+    ORDER BY t.trip_date DESC, t.created_at DESC
+";
     
     $stmt = $conn->prepare($sql);
     if ($stmt === false) {
@@ -504,52 +503,51 @@ try {
     $type = $driverId ? "i" : "s";
     
     $stmt = $conn->prepare("
-        SELECT 
-            t.trip_id,
-            t.container_no,
-            t.trip_date,
-            t.status,
-            tr.plate_no,
-            tr.capacity as size,
-            tr.capacity as truck_capacity,
-            d.name as driver,
-            d.driver_id,
-            d.name as driver_name,
-            d.email as driver_email,
-            h.name as helper,
-            disp.name as dispatcher,
-            c.name as client,
-            dest.name as destination,
-            sl.name as shipping_line,
-            cons.name as consignee,
-            p.name as port_name,
-            COALESCE(te.cash_advance, 0) as cash_advance,
-            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-            COALESCE(te.diesel, 0) as diesel,
-            (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_cash_advance,
-            COALESCE(te.cash_advance, 0) as cash_adv,
-            DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
-            t.trip_date as date
-        FROM trips t 
-        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-        LEFT JOIN helpers h ON t.helper_id = h.helper_id
-        LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-        LEFT JOIN clients c ON t.client_id = c.client_id
-        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-        LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-        LEFT JOIN ports p ON t.port_id = p.port_id
-        WHERE $whereClause 
-        AND t.status = 'En Route'
-        AND NOT EXISTS (
-            SELECT 1 FROM audit_logs_trips al2 
-            WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
-        )
-        ORDER BY t.trip_date ASC
-        LIMIT 1
-    ");
+    SELECT 
+        t.trip_id,
+        t.container_no,
+        t.trip_date,
+        t.status,
+        tr.plate_no,
+        tr.capacity as size,
+        tr.capacity as truck_capacity,
+        d.name as driver,
+        d.driver_id,
+        d.name as driver_name,
+        d.email as driver_email,
+        h.name as helper,
+        disp.name as dispatcher,
+        c.name as client,
+        dest.name as destination,
+        sl.name as shipping_line,
+        cons.name as consignee,
+        p.name as port_name,
+        COALESCE(te.cash_advance, 0) as cash_advance,
+        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+        (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_cash_advance,
+        COALESCE(te.cash_advance, 0) as cash_adv,
+        DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+        t.trip_date as date
+    FROM trips t 
+    LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+    LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+    LEFT JOIN helpers h ON t.helper_id = h.helper_id
+    LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+    LEFT JOIN clients c ON t.client_id = c.client_id
+    LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+    LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+    LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+    LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+    LEFT JOIN ports p ON t.port_id = p.port_id
+    WHERE $whereClause 
+    AND t.status = 'En Route'
+    AND NOT EXISTS (
+        SELECT 1 FROM audit_logs_trips al2 
+        WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+    )
+    ORDER BY t.trip_date ASC
+    LIMIT 1
+");
     
     if ($stmt === false) {
         throw new Exception("Failed to prepare current trip query: " . $conn->error);
@@ -585,49 +583,48 @@ try {
     $type = $driverId ? "i" : "s";
     
     $stmt = $conn->prepare("
-        SELECT 
-            t.trip_id,
-            t.container_no,
-            t.trip_date,
-            t.status,
-            tr.plate_no,
-            tr.capacity as size,
-            tr.capacity as truck_capacity,
-            d.name as driver,
-            d.driver_id,
-            d.name as driver_name,
-            d.email as driver_email,
-            h.name as helper,
-            disp.name as dispatcher,
-            c.name as client,
-            dest.name as destination,
-            sl.name as shipping_line,
-            cons.name as consignee,
-            COALESCE(te.cash_advance, 0) as cash_advance,
-            COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
-            COALESCE(te.diesel, 0) as diesel,
-            (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_cash_advance,
-            COALESCE(te.cash_advance, 0) as cash_adv,
-            DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
-            t.trip_date as date
-        FROM trips t 
-        LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
-        LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
-        LEFT JOIN helpers h ON t.helper_id = h.helper_id
-        LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
-        LEFT JOIN clients c ON t.client_id = c.client_id
-        LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
-        LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
-        LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
-        LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
-        WHERE $whereClause 
-        AND t.status = 'Pending'
-        AND NOT EXISTS (
-            SELECT 1 FROM audit_logs_trips al2 
-            WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
-        )
-        ORDER BY t.trip_date ASC
-    ");
+    SELECT 
+        t.trip_id,
+        t.container_no,
+        t.trip_date,
+        t.status,
+        tr.plate_no,
+        tr.capacity as size,
+        tr.capacity as truck_capacity,
+        d.name as driver,
+        d.driver_id,
+        d.name as driver_name,
+        d.email as driver_email,
+        h.name as helper,
+        disp.name as dispatcher,
+        c.name as client,
+        dest.name as destination,
+        sl.name as shipping_line,
+        cons.name as consignee,
+        COALESCE(te.cash_advance, 0) as cash_advance,
+        COALESCE(te.additional_cash_advance, 0) as additional_cash_advance,
+        (COALESCE(te.cash_advance, 0) + COALESCE(te.additional_cash_advance, 0)) as total_cash_advance,
+        COALESCE(te.cash_advance, 0) as cash_adv,
+        DATE_FORMAT(t.trip_date, '%Y-%m-%d') as formatted_date,
+        t.trip_date as date
+    FROM trips t 
+    LEFT JOIN truck_table tr ON t.truck_id = tr.truck_id
+    LEFT JOIN drivers_table d ON t.driver_id = d.driver_id
+    LEFT JOIN helpers h ON t.helper_id = h.helper_id
+    LEFT JOIN dispatchers disp ON t.dispatcher_id = disp.dispatcher_id
+    LEFT JOIN clients c ON t.client_id = c.client_id
+    LEFT JOIN destinations dest ON t.destination_id = dest.destination_id
+    LEFT JOIN shipping_lines sl ON t.shipping_line_id = sl.shipping_line_id
+    LEFT JOIN consignees cons ON t.consignee_id = cons.consignee_id
+    LEFT JOIN trip_expenses te ON t.trip_id = te.trip_id
+    WHERE $whereClause 
+    AND t.status = 'Pending'
+    AND NOT EXISTS (
+        SELECT 1 FROM audit_logs_trips al2 
+        WHERE al2.trip_id = t.trip_id AND al2.is_deleted = 1
+    )
+    ORDER BY t.trip_date ASC
+");
     
     if ($stmt === false) {
         throw new Exception("Failed to prepare scheduled trips query: " . $conn->error);
