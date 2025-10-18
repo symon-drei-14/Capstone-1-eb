@@ -129,7 +129,7 @@ if ($result->num_rows > 0) {
     }
 }
 
-    // Fetch drivers with their assigned truck capacity
+   
 $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capacity, d.assigned_truck_id, d.checked_in_at, d.penalty_until 
                 FROM drivers_table d
                 LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id";
@@ -144,8 +144,8 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
     'capacity' => $driverRow['capacity'],
     'truck_plate_no' => $driverRow['truck_plate_no'],
     'assigned_truck_id' => $driverRow['assigned_truck_id'],
-    'checked_in_at' => $driverRow['checked_in_at'], // Add this line
-    'penalty_until' => $driverRow['penalty_until']  // Add this line
+    'checked_in_at' => $driverRow['checked_in_at'], 
+    'penalty_until' => $driverRow['penalty_until']  
 ];
         }
     }
@@ -1091,18 +1091,18 @@ function formatDateTime(datetimeString) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const month = months[date.getMonth()];
     
-    // Format day
+    
     const day = date.getDate();
     
-    // Format year
+    
     const year = date.getFullYear();
     
-    // Format time in 12-hour format with AM/PM
+    
     let hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; // Convert 0 to 12
+    hours = hours ? hours : 12; 
     
   return `<span class="date">${month} ${day}, ${year}</span><br> <span class="time">${hours}:${minutes} ${ampm}</span>`;
 }
@@ -1624,7 +1624,7 @@ $('#summaryType').on('change', function() {
 });
 
 
-            // Populate driver dropdowns
+            
  function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
     $.ajax({
         url: 'include/handlers/truck_handler.php?action=getTrucks',
@@ -1725,12 +1725,12 @@ $('#summaryType').on('change', function() {
 
             } else {
                 console.error('Error fetching truck data:', truckResponse.message);
-                populateAllDrivers(selectedSize, currentDriver); // Fallback
+                populateAllDrivers(selectedSize, currentDriver); 
             }
         },
         error: function() {
             console.error('AJAX error fetching truck data');
-            populateAllDrivers(selectedSize, currentDriver); // Fallback
+            populateAllDrivers(selectedSize, currentDriver); 
         }
     });
 }
@@ -1757,7 +1757,7 @@ $('#summaryType').on('change', function() {
         success: function(response) {
             if (response.success && response.driver) {
                 const driver = response.driver;
-                // Sets the value for the dropdown and the plate number input
+                
                 $('#addEventDriver').val(driver.name);
                 $('#addEventPlateNo').val(driver.plate_no);
                 
@@ -1797,7 +1797,7 @@ $('#summaryType').on('change', function() {
         renderTable();
     });
 
-    // Fallback function to show all drivers
+    
     function populateAllDrivers(selectedSize = '', currentDriver = '') {
         var driverOptions = '<option value="">Select Driver</option>';
         driversData.forEach(function(driver) {
@@ -1910,7 +1910,7 @@ $('#summaryType').on('change', function() {
         }
     });
             
-            // Format events for calendar
+           
                var calendarEvents = eventsData.map(function(event) {
     return {
         id: event.id,
@@ -1966,7 +1966,7 @@ $(document).on('click', '.close, .close-btn.cancel-btn', function() {
     }
 });
 
-    // Also reset when clicking outside the modal
+   
    $(window).on('click', function(event) {
         if ($(event.target).hasClass('modal')) {
             
@@ -1983,8 +1983,8 @@ $(document).on('click', '.close, .close-btn.cancel-btn', function() {
     });
             
         $('#addScheduleBtnTable').on('click', function() {
-        resetAddScheduleForm(); // Clear the form first
-        populateDriverDropdowns(); // Repopulate drivers
+        resetAddScheduleForm(); 
+        populateDriverDropdowns(); 
         $('#addScheduleModal').show();
     });
 
@@ -2055,7 +2055,7 @@ $(document).on('click', '.close, .close-btn.cancel-btn', function() {
         pageNumbers.append(lastPageBtn);
     }
     
-    // Next button
+ 
     $('#nextPageBtn').prop('disabled', currentPage === totalPages);
 }
 
@@ -2084,7 +2084,7 @@ $(document).on('click', '.close, .close-btn.cancel-btn', function() {
                  }
             });
 
-            // Initialize calendar
+          
           $('#calendar').fullCalendar({
     header: { 
         left: 'prev,next today', 
@@ -2169,28 +2169,28 @@ eventClick: function(event, jsEvent, view) {
 
 
 
-    // Set status with appropriate styling
+   
     const statusElement = $('#eventModalStatus');
     statusElement.text(event.status || 'N/A');
     statusElement.removeClass().addClass('status ' + (event.status ? event.status.toLowerCase().replace(/\s+/g, '') : ''));
     
-    // Store event ID for action buttons
+   
     $('#eventModal').data('eventId', event.id);
     
-    // Update the edit button click handler
+    
   
-            // Close event modal and show edit modal
+           
             $('#eventModal').show();
 
    
-    // Update history button handler
+   
     $('#eventModalHistoryBtn').off('click').on('click', function() {
         var eventId = $('#eventModal').data('eventId');
         var eventData = eventsData.find(function(e) { return e.id == eventId; });
         
         if (eventData && eventData.edit_reasons) {
             try {
-                // Check if it's the default "Trip created" message
+               
                 if (eventData.edit_reasons === "Trip created" || 
                     eventData.edit_reasons === '"Trip created"') {
                     $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
@@ -2202,7 +2202,7 @@ eventClick: function(event, jsEvent, view) {
                 
                 var reasons;
                 
-                // Handle different data types
+              
                 if (typeof eventData.edit_reasons === 'string') {
                     reasons = JSON.parse(eventData.edit_reasons);
                 } else if (Array.isArray(eventData.edit_reasons)) {
@@ -2213,17 +2213,17 @@ eventClick: function(event, jsEvent, view) {
                     throw new Error('Unknown data format');
                 }
                 
-                // Ensure we have an array
+               
                 if (!Array.isArray(reasons)) {
                     reasons = [reasons];
                 }
                 
-                // Filter out any empty or null reasons
+                
                 reasons = reasons.filter(function(reason) {
                     return reason && reason !== "Trip created";
                 });
                 
-                // If no valid reasons after filtering
+                
                 if (reasons.length === 0) {
                     $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
                         '<p>This trip has not been edited yet</p></div>');
@@ -2271,7 +2271,7 @@ $('#eventModal .view-expenses').off('click').on('click', function(e){
 e.stopPropagation();
  var tripId = $(this).data('id');
 
-    // Find the trip data from eventsData
+    
     var tripData = eventsData.find(function(trip) {
         return trip.id == tripId;
     });
@@ -2484,7 +2484,7 @@ $('#eventModal .view-checklist').off('click').on('click', function(e) {
             $('#noEventsMessage').show();
         }
 
-        // Toggle event details on thumbnail click
+        
         $('.event-thumbnail').on('click', function() {
             $(this).next('.event-details').toggle();
         });
@@ -2546,11 +2546,11 @@ setTimeout(function() {
         $('#noEventsMessage').show();
     }
     
-    // Highlight today's date
+    
     $('.fc-today').addClass('fc-day-selected');
 }, 500);
             
-            // View toggle buttons
+            
     $('#calendarViewBtn').on('click', function() {
             $(this).addClass('active');
             $('#tableViewBtn').removeClass('active');
@@ -2560,7 +2560,7 @@ setTimeout(function() {
             $('body').removeClass('table-view'); 
             $('#calendar').fullCalendar('render');
             
-            // Hide the filter in calendar view
+            
             $('.status-filter-container').hide();
         });
 
@@ -2574,7 +2574,7 @@ setTimeout(function() {
             currentPage = 1;
             renderTable();
             
-            // Show the filter in table view
+           
             $('.status-filter-container').show();
         });
   $(document).ready(function() {
@@ -2582,18 +2582,18 @@ setTimeout(function() {
                 $('.status-filter-container, rows-per-page-container, .table-controls').hide();
             }
         });
-            // Edit button click handler
+            
 $(document).on('click', '.dropdown-item.edit', function() {
     var eventId = $(this).data('id');
     
-    // First try to find the event in the existing eventsData
+    
     var event = eventsData.find(function(e) { return e.id == eventId; });
     
     if (event) {
-        // Event found in eventsData, proceed normally
+       
         populateEditModal(event);
     } else {
-        // Event not found in eventsData (likely a restored trip), fetch it from server
+       
         $.ajax({
             url: 'include/handlers/trip_operations.php',
             type: 'POST',
@@ -2604,7 +2604,7 @@ $(document).on('click', '.dropdown-item.edit', function() {
             }),
             success: function(response) {
                 if (response.success && response.trip) {
-                    // Add to eventsData for future reference
+                   
                     eventsData.push(response.trip);
                     populateEditModal(response.trip);
                 } else {
@@ -2688,14 +2688,14 @@ function populateEditModal(event) {
         
         $('#editEventDestination').val(event.destination);
         $('#editEventShippingLine').val(event.shippingLine);
-    }, 200); // Increased timeout to 200ms
+    }, 200); 
 
     
     if (event.status === 'Cancelled') {
         
         $('#editEventStatus option[value="Cancelled"]').show(); 
-        $('#editForm').find(':input:not(.close-btn, .cancel-btn)').prop('disabled', true); // Disable all fields
-        $('#editForm').find('.save-btn').hide(); // Hide the save button
+        $('#editForm').find(':input:not(.close-btn, .cancel-btn)').prop('disabled', true); 
+        $('#editForm').find('.save-btn').hide(); 
     } else {
        
         $('#editForm').find(':input').prop('disabled', false);
@@ -3030,11 +3030,11 @@ function validateEditReasons() {
 }
 
 
-            // Edit form submit handler
+            
 $('#editForm').on('submit', function(e) {
     e.preventDefault();
     
-    // Validate edit reasons
+    
     if ($('input[name="editReason"]:checked').length === 0) {
         Swal.fire({
             icon: 'error',
@@ -3577,7 +3577,7 @@ $(document).on('click', '.dropdown-item.full-delete', function(e) {
                 }),
                 success: function(response) {
                     if (response.success) {
-                        // Update stats cards with the returned data
+                        
                         $('.stat-value').eq(0).text(response.stats.pending);
                         $('.stat-value').eq(1).text(response.stats.enroute);
                         $('.stat-value').eq(2).text(response.stats.completed);
@@ -3593,7 +3593,7 @@ $(document).on('click', '.dropdown-item.full-delete', function(e) {
                             timer: 2000,
                             showConfirmButton: false
                         });
-                        renderTable(); // Refresh the table
+                        renderTable(); 
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -3665,7 +3665,7 @@ function updateEventModalDetails() {
     }
 }
     document.addEventListener('DOMContentLoaded', function() {
-        // Get current page filename
+        
         const currentPage = window.location.pathname.split('/').pop();
         
         
@@ -3787,7 +3787,7 @@ $(document).on('click', '.dropdown-item.view-checklist', function() {
     });
 });
 
-// Show/hide the checklist button based on trip status
+
 $('#editEventStatus').on('change', function() {
     if ($(this).val() !== 'Cancelled') {
         $('#viewChecklistBtn').show();
@@ -4099,7 +4099,7 @@ function refreshCalendarEvents() {
     this.titleEl.textContent = title;
     this.messageEl.textContent = message;
     
-    // Reset progress
+   
     this.updateProgress(0);
     
     this.loadingEl.style.display = 'flex';
