@@ -315,8 +315,9 @@ try {
         updateTripExpenses($conn, $data['id'], $cashAdvance);
         
         $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
-        $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=NOW(), edit_reason=? WHERE trip_id=? AND is_deleted=0");
-        $auditStmt->bind_param("ssi", $currentUser, $editReasons, $data['id']);
+        $currentTime = date('Y-m-d H:i:s');
+        $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=?, edit_reason=? WHERE trip_id=? AND is_deleted=0");
+        $auditStmt->bind_param("sssi", $currentUser, $currentTime, $editReasons, $data['id']);
         $auditStmt->execute();
         
         if ($current['status'] !== $data['status']) {
@@ -345,16 +346,18 @@ try {
     }
     break;
 
-        case 'delete':
+      case 'delete':
+            $currentTime = date('Y-m-d H:i:s');
             $stmt = $conn->prepare("UPDATE audit_logs_trips SET 
                 is_deleted = 1,
                 delete_reason = ?,
                 modified_by = ?,
-                modified_at = NOW()
+                modified_at = ?
                 WHERE trip_id = ? AND is_deleted = 0");
-            $stmt->bind_param("ssi", 
+            $stmt->bind_param("sssi", 
                 $data['reason'] ?? 'Deleted via mobile',
                 $currentUser,
+                $currentTime,
                 $data['id']
             );
             $stmt->execute();
@@ -1136,7 +1139,7 @@ case 'get_driver_queue_status':
             }
             break;
 
-        case 'check_in_driver':
+      case 'check_in_driver':
             $driverId = $data['driver_id'] ?? null;
             if (!$driverId) {
                 throw new Exception("Driver ID is required.");
@@ -1155,8 +1158,9 @@ case 'get_driver_queue_status':
                 }
             }
         
-            $stmt = $conn->prepare("UPDATE drivers_table SET checked_in_at = NOW() WHERE driver_id = ?");
-            $stmt->bind_param("i", $driverId);
+            $currentTime = date('Y-m-d H:i:s');
+            $stmt = $conn->prepare("UPDATE drivers_table SET checked_in_at = ? WHERE driver_id = ?");
+            $stmt->bind_param("si", $currentTime, $driverId);
             
             if ($stmt->execute()) {
                 echo json_encode(['success' => true, 'message' => 'Successfully checked in to the queue.']);

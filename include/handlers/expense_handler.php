@@ -188,11 +188,12 @@ try {
                 }
             }
 
+            $currentTime = date('Y-m-d H:i:s');
             $insert = safePrepare($conn, "
-                INSERT INTO driver_expenses (trip_id, driver_id, expense_type_id, amount, receipt_image, created_by)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO driver_expenses (trip_id, driver_id, expense_type_id, amount, receipt_image, created_by, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ", "add_expense - insert");
-            $insert->bind_param("iiidss", $tripId, $driverId, $expenseTypeId, $amount, $receiptImage, $currentUser);
+            $insert->bind_param("iiidsss", $tripId, $driverId, $expenseTypeId, $amount, $receiptImage, $currentUser, $currentTime);
             if (!$insert->execute()) {
                 throw new Exception("Insert expense failed: " . $insert->error);
             }

@@ -415,7 +415,7 @@ AND (
 
 try {
     switch ($action) {
-      case 'add':
+     case 'add':
     $conn->begin_transaction();
     
     try {
@@ -516,15 +516,15 @@ if ($cashAdvance > 0 || $additionalCashAdvance > 0) {
             throw new Exception("Failed to insert audit log: " . $auditStmt->error);
         }
 
-         $updateDriverQueueStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = NOW() WHERE driver_id = ?");
-        $updateDriverQueueStmt->bind_param("s", $driverId);
+         $updateDriverQueueStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = ? WHERE driver_id = ?");
+        $updateDriverQueueStmt->bind_param("ss", $currentTime, $driverId);
         if (!$updateDriverQueueStmt->execute()) {
             
             throw new Exception("Failed to update driver queue position: " . $updateDriverQueueStmt->error);
         }
 
-         $updateLastAssignedStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = NOW() WHERE driver_id = ?");
-        $updateLastAssignedStmt->bind_param("s", $driverId);
+         $updateLastAssignedStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = ? WHERE driver_id = ?");
+        $updateLastAssignedStmt->bind_param("ss", $currentTime, $driverId);
         if (!$updateLastAssignedStmt->execute()) {
             
             error_log("Failed to update driver's last_assigned_at timestamp for driver_id: " . $driverId);
@@ -1251,16 +1251,17 @@ case 'register_fcm_token':
         error_log("Deactivate existing tokens result: " . ($deactivateResult ? 'success' : 'failed'));
         $deactivateStmt->close();
 
+        $currentTime = date('Y-m-d H:i:s');
         $stmt = $conn->prepare("
             INSERT INTO fcm_tokens (driver_id, fcm_token, device_type, is_active, created_at, updated_at) 
-            VALUES (?, ?, ?, 1, NOW(), NOW())
+            VALUES (?, ?, ?, 1, ?, ?)
             ON DUPLICATE KEY UPDATE 
                 is_active = 1, 
                 device_type = VALUES(device_type),
-                updated_at = NOW()
+                updated_at = VALUES(updated_at)
         ");
         
-        $stmt->bind_param("sss", $driverId, $fcmToken, $deviceType);
+        $stmt->bind_param("sssss", $driverId, $fcmToken, $deviceType, $currentTime, $currentTime);
         $result = $stmt->execute();
         
         if ($result) {
@@ -1842,7 +1843,9 @@ case 'get_trips_today':
         throw new Exception("Capacity is required to find the next driver.");
     }
 
-    // This query now finds the next available driver based on the updated queuing rules
+    $currentTime = date('Y-m-d H:i:s');
+    $checkInCutoff = (new DateTime())->modify('-16 hours')->format('Y-m-d H:i:s');
+
     $stmt = $conn->prepare("
         SELECT 
             d.driver_id,
@@ -1855,9 +1858,9 @@ case 'get_trips_today':
           -- Rule 1: Must be checked in
           AND d.checked_in_at IS NOT NULL
           -- Rule 2: Check-in must be valid (within the last 16 hours)
-          AND d.checked_in_at >= TIMESTAMPADD(HOUR, -16, NOW())
+          AND d.checked_in_at >= ?
           -- Rule 3: Must not be currently penalized
-          AND (d.penalty_until IS NULL OR d.penalty_until < NOW())
+          AND (d.penalty_until IS NULL OR d.penalty_until < ?)
           -- Rule 4: Truck must be available for a trip
           AND t.is_deleted = 0
           -- A truck can be 'Enroute' and the driver still be available for a *future* trip.
@@ -1868,7 +1871,7 @@ case 'get_trips_today':
         ORDER BY d.last_assigned_at ASC, d.checked_in_at ASC
         LIMIT 1
     ");
-    $stmt->bind_param("s", $capacity);
+    $stmt->bind_param("sss", $capacity, $checkInCutoff, $currentTime);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -1880,7 +1883,7 @@ case 'get_trips_today':
     }
     break;
 
-           case 'reassign_trip_on_failure':
+      case 'reassign_trip_on_failure':
     $conn->begin_transaction();
     
     try {
@@ -1910,16 +1913,20 @@ case 'get_trips_today':
         $originalTruckId = $tripDetails['truck_id'];
 
         // Always apply the 16-hour penalty to the original driver
+        $penaltyTime = (new DateTime())->modify('+16 hours')->format('Y-m-d H:i:s');
         $penaltyStmt = $conn->prepare("
             UPDATE drivers_table 
-            SET penalty_until = TIMESTAMPADD(HOUR, 16, NOW()) 
+            SET penalty_until = ? 
             WHERE driver_id = ?
         ");
-        $penaltyStmt->bind_param("i", $originalDriverId);
+        $penaltyStmt->bind_param("si", $penaltyTime, $originalDriverId);
         $penaltyStmt->execute();
         $penaltyStmt->close();
 
         // 2. Define the base logic for finding the next available driver (based on queue and availability)
+        $currentTime = date('Y-m-d H:i:s');
+        $checkInCutoff = (new DateTime())->modify('-16 hours')->format('Y-m-d H:i:s');
+
         $findNextDriverQuery = "
             SELECT d.driver_id, d.name, t.truck_id, t.plate_no, t.capacity
             FROM drivers_table d
@@ -1927,8 +1934,8 @@ case 'get_trips_today':
             WHERE %s -- Capacity filter placeholder
               AND d.driver_id != ? -- Can't be the penalized driver
               AND d.checked_in_at IS NOT NULL
-              AND d.checked_in_at >= TIMESTAMPADD(HOUR, -16, NOW())
-              AND (d.penalty_until IS NULL OR d.penalty_until < NOW())
+              AND d.checked_in_at >= ?
+              AND (d.penalty_until IS NULL OR d.penalty_until < ?)
               AND t.is_deleted = 0
               AND t.status NOT IN ('In Repair', 'Overdue', 'Enroute')
             ORDER BY d.last_assigned_at ASC, d.checked_in_at ASC
@@ -1942,7 +1949,7 @@ case 'get_trips_today':
         $capacityFilter1 = "t.capacity = ?";
         $query1 = sprintf($findNextDriverQuery, $capacityFilter1);
         $stmt1 = $conn->prepare($query1);
-        $stmt1->bind_param("si", $capacity, $originalDriverId);
+        $stmt1->bind_param("siss", $capacity, $originalDriverId, $checkInCutoff, $currentTime);
         $stmt1->execute();
         $result1 = $stmt1->get_result();
         $newDriver = $result1->fetch_assoc();
@@ -1953,54 +1960,43 @@ case 'get_trips_today':
             $capacityFilter = null;
             $fallbackCapacity = null;
 
-            // Scenario A: 20ft trip falls back to 40ft capacity (original request)
             if ($capacity == '20') {
                 $capacityFilter = "t.capacity = '40'";
                 $fallbackCapacity = '40';
             }
-            // Scenario B: 40ft trip falls back to 20ft capacity (new request fix)
-            // Note: This only applies if a 40ft truck can somehow be substituted for a 20ft container,
-            // but usually a 40ft container *needs* a 40ft truck. Assuming the business rule means
-            // a 40ft driver/truck can take the cargo if a smaller option is available/needed
-            // or maybe the container size was actually smaller than the assigned truck's capacity.
-            // Since the user explicitly asked for this: we implement the fallback.
             else if ($capacity == '40') {
                 $capacityFilter = "t.capacity = '20'";
                 $fallbackCapacity = '20';
             }
             
-            // Execute fallback search if a rule was matched
             if ($capacityFilter) {
                 $query2 = sprintf($findNextDriverQuery, $capacityFilter);
                 $stmt2 = $conn->prepare($query2);
-                $stmt2->bind_param("i", $originalDriverId); 
+                $stmt2->bind_param("iss", $originalDriverId, $checkInCutoff, $currentTime); 
                 $stmt2->execute();
                 $result2 = $stmt2->get_result();
                 $newDriver = $result2->fetch_assoc();
                 $stmt2->close();
                 
                 if ($newDriver) {
-                    $fallbackDetails = $fallbackCapacity; // Store which capacity was used for logging
+                    $fallbackDetails = $fallbackCapacity;
                 }
             }
         }
 
         // --- PHASE 3: Reassign or Cancel ---
         if ($newDriver) {
-            // A replacement was found!
             $newDriverId = $newDriver['driver_id'];
             $newDriverName = $newDriver['name'];
             $newTruckId = $newDriver['truck_id'];
             $newTruckPlate = $newDriver['plate_no'];
             $newTruckCapacity = $newDriver['capacity'];
 
-            // Reassign the trip to the new driver and their corresponding truck
             $reassignStmt = $conn->prepare("UPDATE trips SET driver_id = ?, truck_id = ? WHERE trip_id = ?");
             $reassignStmt->bind_param("iii", $newDriverId, $newTruckId, $tripId);
             $reassignStmt->execute();
             $reassignStmt->close();
             
-            // Log the reassignment reason
             $reasonDetail = ($reason === 'failed_checklist') ? "failed checklist" : "missed deadline";
             
             if ($fallbackDetails) {
@@ -2015,14 +2011,13 @@ case 'get_trips_today':
                 SET modified_by = ?, modified_at = ?, edit_reason = ? 
                 WHERE trip_id = ? AND is_deleted = 0
             ");
-            $currentTime = date('Y-m-d H:i:s');
+            
             $auditStmt->bind_param("sssi", $currentUser, $currentTime, $auditReason, $tripId);
             $auditStmt->execute();
             $auditStmt->close();
 
-            // Update new driver's last assigned time (queue position)
-            $updateLastAssignedStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = NOW() WHERE driver_id = ?");
-            $updateLastAssignedStmt->bind_param("i", $newDriverId);
+            $updateLastAssignedStmt = $conn->prepare("UPDATE drivers_table SET last_assigned_at = ? WHERE driver_id = ?");
+            $updateLastAssignedStmt->bind_param("si", $currentTime, $newDriverId);
             $updateLastAssignedStmt->execute();
             $updateLastAssignedStmt->close();
             
@@ -2034,13 +2029,11 @@ case 'get_trips_today':
             ]);
 
         } else {
-            // No replacement found
             $cancelStmt = $conn->prepare("UPDATE trips SET status = 'Cancelled' WHERE trip_id = ?");
             $cancelStmt->bind_param("i", $tripId);
             $cancelStmt->execute();
             $cancelStmt->close();
 
-            // Also update the truck status to 'In Terminal' since the trip is cancelled
             $updateTruckStmt = $conn->prepare("UPDATE truck_table SET status = 'In Terminal' WHERE truck_id = ?");
             $updateTruckStmt->bind_param("i", $originalTruckId);
             $updateTruckStmt->execute();
@@ -2054,7 +2047,7 @@ case 'get_trips_today':
                 SET modified_by = ?, modified_at = ?, edit_reason = ? 
                 WHERE trip_id = ? AND is_deleted = 0
             ");
-            $currentTime = date('Y-m-d H:i:s');
+            
             $auditStmt->bind_param("sssi", $currentUser, $currentTime, $auditReason, $tripId);
             $auditStmt->execute();
             $auditStmt->close();
@@ -2067,7 +2060,6 @@ case 'get_trips_today':
         }
     } catch (Exception $e) {
         $conn->rollback();
-        // Set the response code to 500 for internal errors
         http_response_code(500); 
         throw $e;
     }

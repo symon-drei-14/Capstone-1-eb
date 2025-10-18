@@ -98,23 +98,25 @@ function updateTruckStatusFromMaintenance($conn, $truckId) {
         $newStatus = 'In Terminal';
     }
 
+    $currentTime = date('Y-m-d H:i:s');
     $updateStmt = $conn->prepare("
         UPDATE truck_table 
-        SET status = ?, last_modified_by = 'System', last_modified_at = NOW() 
+        SET status = ?, last_modified_by = 'System', last_modified_at = ? 
         WHERE truck_id = ?
     ");
     
     if ($updateStmt) {
-        $updateStmt->bind_param("si", $newStatus, $truckId);
+        $updateStmt->bind_param("ssi", $newStatus, $currentTime, $truckId);
         $updateStmt->execute();
     }
 }
 
 function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter = 'all', $showDeleted = false, $startDate = null, $endDate = null, $sortBy = 'maintenance_id', $sortDir = 'DESC') {
     // First, update any pending records that are now overdue
+    $currentDate = date('Y-m-d');
     $updateOverdue = $conn->prepare("UPDATE maintenance_table m SET status = 'Overdue' 
                                     WHERE status = 'Pending'
-                                AND date_mtnce < CURDATE()
+                                AND date_mtnce < ?
                                 AND NOT EXISTS (
                                     SELECT 1 FROM audit_logs_maintenance al 
                                     WHERE al.maintenance_id = m.maintenance_id 
@@ -132,6 +134,7 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
             "records" => [], "totalPages" => 1, "currentPage" => 1, "totalRecords" => 0, "error" => "SQL preparation error"
         ];
     }
+    $updateOverdue->bind_param("s", $currentDate);
     $updateOverdue->execute();
 
     // Update truck statuses for any newly overdue maintenance
@@ -156,14 +159,12 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
 
     $offset = ($page - 1) * $rowsPerPage;
 
-    // A whitelist of columns that are allowed to be sorted. This prevents SQL injection.
     $allowedSortColumns = [
         'truck_id' => 'm.truck_id',
         'date_mtnce' => 'm.date_mtnce',
-        'maintenance_id' => 'm.maintenance_id' // Default
+        'maintenance_id' => 'm.maintenance_id'
     ];
 
-    // Validate the sort parameters, defaulting to sorting by the newest record if they are invalid.
     $sortColumn = $allowedSortColumns[$sortBy] ?? 'm.maintenance_id';
     $sortDirection = (strtoupper($sortDir) === 'ASC') ? 'ASC' : 'DESC';
 
@@ -211,7 +212,6 @@ function getMaintenanceRecords($conn, $page = 1, $rowsPerPage = 5, $statusFilter
         $sql .= " WHERE " . implode(" AND ", $whereClauses);
     }
 
-    // Apply the dynamic sorting here. A secondary sort is added for consistency.
     $sql .= " ORDER BY $sortColumn $sortDirection, m.maintenance_id DESC LIMIT ?, ?";
     $params[] = $offset;
     $params[] = $rowsPerPage;
@@ -387,8 +387,7 @@ function updateTotalMaintenanceCost($conn, $maintenanceId) {
 }
 
 function getMaintenanceReminders($conn) {
-    // This query finds maintenance tasks that are upcoming or overdue
-    // but makes sure to exclude any that have been soft-deleted.
+    $currentDate = date('Y-m-d');
     $sql = "SELECT
                 m.maintenance_id,
                 m.truck_id,
@@ -396,22 +395,18 @@ function getMaintenanceReminders($conn) {
                 m.date_mtnce,
                 m.remarks,
                 m.status,
-                DATEDIFF(m.date_mtnce, CURDATE()) AS days_remaining
+                DATEDIFF(m.date_mtnce, ?) AS days_remaining
             FROM maintenance_table m
             JOIN truck_table t ON m.truck_id = t.truck_id
             WHERE
                 m.status != 'Completed'
                 AND t.is_deleted = 0
-                -- Fetch records due in the next 7 days, or that are already past their due date.
-                AND (DATEDIFF(m.date_mtnce, CURDATE()) <= 7 OR m.date_mtnce < CURDATE())
-                -- This part is key: It checks the most recent audit log for a maintenance item.
-                -- If that latest log says is_deleted=1, we exclude it.
+                AND (DATEDIFF(m.date_mtnce, ?) <= 7 OR m.date_mtnce < ?)
                 AND NOT EXISTS (
                     SELECT 1
                     FROM audit_logs_maintenance al
                     WHERE al.maintenance_id = m.maintenance_id
                     AND al.is_deleted = 1
-                    -- This finds the timestamp of the very last log entry for this maintenance_id
                     AND al.modified_at = (
                         SELECT MAX(al2.modified_at)
                         FROM audit_logs_maintenance al2
@@ -420,12 +415,14 @@ function getMaintenanceReminders($conn) {
                 )
             ORDER BY days_remaining ASC";
     
-    $result = $conn->query($sql);
-    
-    if (!$result) {
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
         error_log("Reminders query error: " . $conn->error);
         return [];
     }
+    $stmt->bind_param("sss", $currentDate, $currentDate, $currentDate);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
     $reminders = [];
     $updateStmt = $conn->prepare("UPDATE maintenance_table SET status = 'Overdue' WHERE maintenance_id = ?");
@@ -613,16 +610,17 @@ try {
                 }
                 
                 $maintenanceId = $conn->insert_id;
-
+                
+                $currentTime = date('Y-m-d H:i:s');
                 $auditStmt = $conn->prepare("INSERT INTO audit_logs_maintenance (maintenance_id, modified_by, modified_at, edit_reason, is_deleted) 
-                                           VALUES (?, ?, NOW(), ?, 0)");
+                                           VALUES (?, ?, ?, ?, 0)");
                 
                 if (!$auditStmt) {
                     throw new Exception("Failed to prepare audit statement: " . $conn->error);
                 }
                 
                 $editReason = "Record created";
-                $auditStmt->bind_param("iss", $maintenanceId, $username, $editReason);
+                $auditStmt->bind_param("isss", $maintenanceId, $username, $currentTime, $editReason);
                 
                 if (!$auditStmt->execute()) {
                     throw new Exception("Failed to create audit log: " . $auditStmt->error);
@@ -721,14 +719,15 @@ try {
                     throw new Exception("Failed to update maintenance record: " . $stmt->error);
                 }
 
+                $currentTime = date('Y-m-d H:i:s');
                 $auditStmt = $conn->prepare("INSERT INTO audit_logs_maintenance (maintenance_id, modified_by, modified_at, edit_reason, is_deleted) 
-                                           VALUES (?, ?, NOW(), ?, 0)");
+                                           VALUES (?, ?, ?, ?, 0)");
                 
                 if (!$auditStmt) {
                     throw new Exception("Failed to prepare audit statement: " . $conn->error);
                 }
                 
-                $auditStmt->bind_param("iss", $data->maintenanceId, $username, $editReasons);
+                $auditStmt->bind_param("isss", $data->maintenanceId, $username, $currentTime, $editReasons);
                 
                 if (!$auditStmt->execute()) {
                     throw new Exception("Failed to create audit log: " . $auditStmt->error);
@@ -772,8 +771,9 @@ try {
         $receiptImage = $data->receiptImage ?? null;
         $conn->begin_transaction();
         try {
-            $stmt = $conn->prepare("INSERT INTO maintenance_expenses (maintenance_id, expense_type, amount, receipt_image) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("isds", $data->maintenanceId, $data->expenseType, $data->amount, $receiptImage);
+            $currentTime = date('Y-m-d H:i:s');
+            $stmt = $conn->prepare("INSERT INTO maintenance_expenses (maintenance_id, expense_type, amount, receipt_image, submitted_at) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("isdss", $data->maintenanceId, $data->expenseType, $data->amount, $receiptImage, $currentTime);
             $stmt->execute();
             updateTotalMaintenanceCost($conn, $data->maintenanceId);
             $conn->commit();
@@ -913,7 +913,7 @@ try {
         }
         break;
 
-        case 'delete':
+       case 'delete':
             $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
             $deleteReason = isset($_GET['reason']) ? $_GET['reason'] : '';
 
@@ -939,15 +939,16 @@ try {
             $conn->begin_transaction();
 
             try {
+                $currentTime = date('Y-m-d H:i:s');
                 $auditStmt = $conn->prepare("INSERT INTO audit_logs_maintenance 
                     (maintenance_id, modified_by, modified_at, delete_reason, is_deleted) 
-                    VALUES (?, ?, NOW(), ?, 1)");
+                    VALUES (?, ?, ?, ?, 1)");
                 
                 if (!$auditStmt) {
                     throw new Exception("Failed to prepare audit statement: " . $conn->error);
                 }
                 
-                $auditStmt->bind_param("iss", $id, $username, $deleteReason);
+                $auditStmt->bind_param("isss", $id, $username, $currentTime, $deleteReason);
 
                 if (!$auditStmt->execute()) {
                     throw new Exception("Failed to create delete audit log: " . $auditStmt->error);
@@ -1021,11 +1022,9 @@ try {
             while ($row = $dateResult->fetch_assoc()) {
                 $existingDate = new DateTime($row['date_mtnce']);
                 
-                // Calculate absolute difference in months between the two dates
                 $interval = $restoreDate->diff($existingDate);
                 $monthsDiff = ($interval->y * 12) + $interval->m;
                 
-                // If the difference is less than 6 months, it's a violation
                 if ($monthsDiff < 6) {
                     $conflictDate = $existingDate->format('F j, Y');
                     $restoreDateFormatted = $restoreDate->format('F j, Y');
@@ -1043,7 +1042,6 @@ try {
     $conn->begin_transaction();
     
     try {
-        // Check if the record is currently marked as deleted in the latest audit log
         $checkDeletedStmt = $conn->prepare("
             SELECT is_deleted 
             FROM audit_logs_maintenance 
@@ -1058,37 +1056,33 @@ try {
         if ($deletedResult->num_rows > 0) {
             $latestLog = $deletedResult->fetch_assoc();
             
-            // Only proceed if the record is currently marked as deleted
             if ($latestLog['is_deleted'] == 1) {
                 $username = $_SESSION['username'] ?? 'System';
+                $currentTime = date('Y-m-d H:i:s');
                 
-                // Add restoration audit log entry
                 $stmt = $conn->prepare("INSERT INTO audit_logs_maintenance 
                                       (maintenance_id, modified_by, modified_at, edit_reason, is_deleted) 
-                                      VALUES (?, ?, NOW(), 'Record restored', 0)");
+                                      VALUES (?, ?, ?, 'Record restored', 0)");
                 
                 if (!$stmt) {
                     throw new Exception("Failed to prepare restore statement: " . $conn->error);
                 }
                 
-                $stmt->bind_param("is", $id, $username);
+                $stmt->bind_param("iss", $id, $username, $currentTime);
                 
                 if (!$stmt->execute()) {
                     throw new Exception("Failed to restore maintenance record: " . $stmt->error);
                 }
 
-                // Update truck status based on the restored maintenance record
                 updateTruckStatusFromMaintenance($conn, $maintenance['truck_id']);
                 
                 $conn->commit();
                 echo json_encode(["success" => true, "message" => "Maintenance record restored successfully"]);
             } else {
-                // Record is not currently deleted
                 $conn->rollback();
                 echo json_encode(["success" => false, "message" => "Record is not currently deleted"]);
             }
         } else {
-            // No audit logs found (shouldn't happen)
             $conn->rollback();
             echo json_encode(["success" => false, "message" => "No audit history found for this record"]);
         }
