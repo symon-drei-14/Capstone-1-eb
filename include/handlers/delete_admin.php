@@ -2,6 +2,7 @@
 header("Content-Type: application/json");
 require 'dbhandler.php';
 session_start();
+date_default_timezone_set('Asia/Manila'); // Set timezone at the top
 
 error_log("=== Starting admin deletion ===");
 error_log("Session data: " . print_r($_SESSION, true));
@@ -42,6 +43,7 @@ if ($is_full_delete) {
     // Perform soft delete
     $deleted_by_id = $_SESSION['admin_id'] ?? null;
     $reason = $data['reason'] ?? 'No reason provided';
+    $currentTime = date('Y-m-d H:i:s'); // Generate PHP timestamp
 
     error_log("Attempting to soft delete admin {$data['admin_id']}");
     error_log("Deleted by admin ID: {$deleted_by_id}");
@@ -63,7 +65,7 @@ if ($is_full_delete) {
 
     $stmt = $conn->prepare("UPDATE login_admin SET 
         is_deleted = TRUE, 
-        deleted_at = NOW(), 
+        deleted_at = ?, 
         deleted_by = ?, 
         delete_reason = ?
         WHERE admin_id = ?");
@@ -74,7 +76,7 @@ if ($is_full_delete) {
         exit;
     }
 
-    $stmt->bind_param("isi", $deleted_by_id, $reason, $data['admin_id']);
+    $stmt->bind_param("sisi", $currentTime, $deleted_by_id, $reason, $data['admin_id']);
     
     if ($stmt->execute()) {
         error_log("Soft delete successful - affected rows: " . $stmt->affected_rows);

@@ -1,6 +1,7 @@
 <?php
 header("Content-Type: application/json");
 session_start();
+date_default_timezone_set('Asia/Manila');
 require 'dbhandler.php';
 
 

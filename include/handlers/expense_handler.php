@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 session_start();
+date_default_timezone_set('Asia/Manila');
 require 'dbhandler.php';
 
 function safePrepare($conn, $sql, $context = '') {
