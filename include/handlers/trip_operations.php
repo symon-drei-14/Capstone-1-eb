@@ -1901,7 +1901,7 @@ case 'get_trips_today':
 
         // 1. Get the required truck capacity and trip details
         $tripStmt = $conn->prepare("
-            SELECT tr.capacity, t.truck_id 
+            SELECT tr.capacity, t.truck_id, t.trip_date
             FROM trips t
             JOIN truck_table tr ON t.truck_id = tr.truck_id
             WHERE t.trip_id = ?
@@ -1915,6 +1915,7 @@ case 'get_trips_today':
         }
         $capacity = $tripDetails['capacity'];
         $originalTruckId = $tripDetails['truck_id'];
+        $tripDate = $tripDetails['trip_date'];
 
         // Always apply the 16-hour penalty to the original driver
         $penaltyTime = (new DateTime())->modify('+16 hours')->format('Y-m-d H:i:s');
@@ -1941,7 +1942,7 @@ case 'get_trips_today':
               AND d.checked_in_at >= ?
               AND (d.penalty_until IS NULL OR d.penalty_until < ?)
               AND t.is_deleted = 0
-              AND t.status NOT IN ('In Repair', 'Overdue', 'Enroute')
+              AND t.status NOT IN ('In Repair', 'Overdue')
             ORDER BY d.last_assigned_at ASC, d.checked_in_at ASC
             LIMIT 1
         ";
