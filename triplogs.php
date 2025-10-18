@@ -1280,7 +1280,7 @@ function renderTable() {
     
 
 
-   function checkMaintenanceConflict(plateNo, tripDate, callback) {
+  function checkMaintenanceConflict(plateNo, tripDate, callback) {
     $.ajax({
         url: 'include/handlers/maintenance_handler.php',
         type: 'GET',
@@ -1294,10 +1294,10 @@ function renderTable() {
                 
                 Swal.fire({
                     title: 'Maintenance Conflict',
-                    html: `This truck has scheduled maintenance on <strong>${response.maintenanceDate}</strong>.<br><br>
-                        Maintenance Type: <strong>${response.maintenanceType}</strong><br>
-                        Remarks: <strong>${response.remarks}</strong><br><br>
-                        Trips cannot be scheduled within one week of maintenance.`,
+                    html: `This truck has a scheduled maintenance on <strong>${response.maintenanceDate}</strong>.<br><br>
+                        <strong>Type:</strong> ${response.maintenanceType}<br>
+                        <strong>Remarks:</strong> ${response.remarks}<br><br>
+                        Trips cannot be scheduled within one week before, or any time after, a pending maintenance. The maintenance must be marked as 'Completed' before new trips can be scheduled.`,
                     icon: 'warning',
                     confirmButtonText: 'OK',
                     showCancelButton: false

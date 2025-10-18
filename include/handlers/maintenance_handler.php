@@ -1100,7 +1100,7 @@ try {
             echo json_encode($counts);
             break;
 
-       // In maintenance_handler.php, ensure the checkMaintenance action is correctly implemented
+      
 case 'checkMaintenance':
     $plateNo = isset($_GET['plateNo']) ? $_GET['plateNo'] : '';
     $tripDate = isset($_GET['tripDate']) ? $_GET['tripDate'] : '';
@@ -1125,25 +1125,27 @@ case 'checkMaintenance':
     
     $stmt = $conn->prepare("
     SELECT 
-    m.date_mtnce, 
-    m.remarks, 
-    mt.type_name AS maintenance_type
-FROM maintenance_table m
-LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
-LEFT JOIN audit_logs_maintenance alm ON m.maintenance_id = alm.maintenance_id
-WHERE m.truck_id = ? 
-AND (alm.is_deleted = 0 OR alm.is_deleted IS NULL)
-AND m.status != 'Completed'
-AND (
-    -- Exact date match
-    m.date_mtnce = ?
-    OR
-    -- Within one week before maintenance
-    DATEDIFF(m.date_mtnce, ?) BETWEEN 0 AND 7
-    OR
-    -- Or if trip spans multiple days that might conflict
-    ? BETWEEN DATE_SUB(m.date_mtnce, INTERVAL 7 DAY) AND m.date_mtnce
-        )
+        m.date_mtnce, 
+        m.remarks, 
+        mt.type_name AS maintenance_type
+    FROM maintenance_table m
+    LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+    WHERE m.truck_id = ? 
+      AND m.status != 'Completed'
+      AND NOT EXISTS (
+          SELECT 1 
+          FROM audit_logs_maintenance al 
+          WHERE al.maintenance_id = m.maintenance_id 
+            AND al.is_deleted = 1
+            AND al.modified_at = (
+                SELECT MAX(al2.modified_at)
+                FROM audit_logs_maintenance al2
+                WHERE al2.maintenance_id = m.maintenance_id
+            )
+      )
+      AND ? >= DATE_SUB(m.date_mtnce, INTERVAL 7 DAY)
+    ORDER BY m.date_mtnce ASC 
+    LIMIT 1
     ");
     
     if (!$stmt) {
@@ -1151,7 +1153,7 @@ AND (
         break;
     }
     
-    $stmt->bind_param("isss", $truckId, $tripDate, $tripDate, $tripDate);
+    $stmt->bind_param("is", $truckId, $tripDate);
     $stmt->execute();
     $result = $stmt->get_result();
     
