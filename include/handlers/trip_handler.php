@@ -916,9 +916,10 @@ case 'get_trip_statistics':
     echo json_encode(['success' => true, 'statistics' => $stats]);
     break;
 
-        case 'update_trip_status':
+       case 'update_trip_status':
             $tripId = $data['trip_id'] ?? null;
             $newStatus = $data['status'] ?? null;
+            $modifiedBy = $data['driver_name'] ?? ($_SESSION['username'] ?? 'System');
             
             if (!$tripId || !$newStatus) {
                 throw new Exception("Trip ID and status required");
@@ -953,7 +954,7 @@ case 'get_trip_statistics':
             $editReason = "Status updated to $newStatus";
             $currentTime = date('Y-m-d H:i:s');
             $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=?, edit_reason=? WHERE trip_id=? AND is_deleted=0");
-            $auditStmt->bind_param("sssi", $currentUser, $currentTime, $editReason, $tripId);
+            $auditStmt->bind_param("sssi", $modifiedBy, $currentTime, $editReason, $tripId);
             $auditStmt->execute();
 
             $newTruckStatus = 'In Terminal';
