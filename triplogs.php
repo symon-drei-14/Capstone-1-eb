@@ -2671,17 +2671,23 @@ function populateEditModal(event) {
 
     
     if (event.status === 'Cancelled') {
-        
         $('#editEventStatus option[value="Cancelled"]').show(); 
         $('#editForm').find(':input:not(.close-btn, .cancel-btn)').prop('disabled', true); 
         $('#editForm').find('.save-btn').hide(); 
+    } else if (event.status === 'En Route') {
+        $('#editForm').find(':input').prop('disabled', true);
+        
+        $('#editEventStatus').prop('disabled', false);
+        $('.edit-reasons-section').find(':input').prop('disabled', false);
+        $('#editForm .save-btn').prop('disabled', false).show();
+        $('#editForm .cancel-btn').prop('disabled', false);
+        
+        $('#editEventStatus option[value="Cancelled"]').hide(); 
     } else {
-       
         $('#editForm').find(':input').prop('disabled', false);
         $('#editForm').find('.save-btn').show();
         $('#editEventStatus option[value="Cancelled"]').hide(); 
         $('#editEventPlateNo').prop('disabled', true);
-
     }
 
    
