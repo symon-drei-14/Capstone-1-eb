@@ -2678,6 +2678,7 @@ function populateEditModal(event) {
         $('#editForm').find(':input').prop('disabled', true);
         
         $('#editEventStatus').prop('disabled', false);
+        $('#editEventAdditionalCashAdvance').prop('disabled', false);
         $('.edit-reasons-section').find(':input').prop('disabled', false);
         $('#editForm .save-btn').prop('disabled', false).show();
         $('#editForm .cancel-btn').prop('disabled', false);
