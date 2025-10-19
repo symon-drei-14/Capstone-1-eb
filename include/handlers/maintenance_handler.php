@@ -22,15 +22,14 @@ function updateTruckStatusFromMaintenance($conn, $truckId) {
     if ($plateResult->num_rows === 0) {
         return;
     }
-    
-    $plateNo = $plateResult->fetch_assoc()['plate_no'];
 
     $tripStatus = null;
+    
     $tripQuery = $conn->prepare("
         SELECT status 
-        FROM assign 
-        WHERE plate_no = ? 
-        ORDER BY date DESC 
+        FROM trips 
+        WHERE truck_id = ? 
+        ORDER BY trip_date DESC 
         LIMIT 1
     ");
     
@@ -39,12 +38,14 @@ function updateTruckStatusFromMaintenance($conn, $truckId) {
         return;
     }
     
-    $tripQuery->bind_param("s", $plateNo);
+    
+    $tripQuery->bind_param("i", $truckId);
     $tripQuery->execute();
     $tripResult = $tripQuery->get_result();
     if ($tripResult->num_rows > 0) {
         $tripStatus = $tripResult->fetch_assoc()['status'];
     }
+   
 
     $maintenanceStatus = null;
     $maintenanceQuery = $conn->prepare("

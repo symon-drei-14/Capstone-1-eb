@@ -2680,10 +2680,8 @@ function populateEditModal(event) {
         $('#editForm').find(':input').prop('disabled', false);
         $('#editForm').find('.save-btn').show();
         $('#editEventStatus option[value="Cancelled"]').hide(); 
+        $('#editEventPlateNo').prop('disabled', true);
 
-       
-        $('#editEventDriver').prop('disabled', true);
-        $('#editEventSize').prop('disabled', true);
     }
 
    
@@ -2700,10 +2698,6 @@ function populateEditModal(event) {
     }
     
     $('#editModal').show();
-
-    $('#editEventDriver').prop('disabled', true);
-    $('#editEventSize').prop('disabled', true);
-    $('#editEventPlateNo').prop('disabled', true);
 }
 
 $(document).on('click', '.dropdown-item.view-expenses', function() {

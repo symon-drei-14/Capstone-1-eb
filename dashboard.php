@@ -6,7 +6,7 @@ checkAccess();
 require_once 'include/handlers/get_driving_drivers.php';
 $ongoingCount = getOngoingDeliveriesCount();
 
-// $drivingDrivers = getDrivingDrivers();
+
 
 $alldeliveries = getAllDeliveriesCount();
 $alloverduetrucks = getOverdueTrucks();

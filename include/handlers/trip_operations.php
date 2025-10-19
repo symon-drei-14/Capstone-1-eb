@@ -600,9 +600,7 @@ if ($cashAdvance > 0 || $additionalCashAdvance > 0) {
     $conn->begin_transaction();
     
     try {
-        // Validate trip date is at least 3 days in advance for new dates
         if (isset($data['date'])) {
-            
             $dateValidation = validateTripDate($data['date'], true);
             if (!$dateValidation['valid']) {
                 throw new Exception($dateValidation['message']);
@@ -618,40 +616,30 @@ if ($cashAdvance > 0 || $additionalCashAdvance > 0) {
             throw new Exception("Trip not found");
         }
 
-        // Get current driver ID before update
         $currentDriverId = $current['driver_id'];
         
         $driverId = (string)getDriverIdByName($conn, $data['driver']);
 
-        // Check if driver is being changed
-        if ($currentDriverId != $driverId) {
-            // Delete the existing checklist when driver changes
+        if ($currentDriverId && $currentDriverId != $driverId) {
+            $penaltyStmt = $conn->prepare(
+                "UPDATE drivers_table SET checked_in_at = NULL WHERE driver_id = ?"
+            );
+            $penaltyStmt->bind_param("i", $currentDriverId);
+            $penaltyStmt->execute();
+            $penaltyStmt->close();
+
             if (!deleteTripChecklist($conn, $data['id'])) {
                 throw new Exception("Failed to reset checklist for new driver");
             }
         }
-
+        
         if ($data['status'] === 'En Route') {
-            // Check if driver already has an En Route trip (excluding current trip)
             $hasEnRouteTrip = checkDriverEnRouteTrips($conn, $driverId, $data['id']);
             
             if ($hasEnRouteTrip) {
                 throw new Exception("Cannot set status to 'En Route': Driver {$data['driver']} already has an active trip with En Route status.");
             }
         }
-        
-        // $conflictingTrips = checkDriverAvailability($conn, $driverId, $data['date'], $data['id']);
-        
-        // if (!empty($conflictingTrips)) {
-        //     $conflictDetails = "";
-        //     foreach ($conflictingTrips as $trip) {
-        //         $tripDate = date('M j, Y h:i A', strtotime($trip['trip_date']));
-        //         $conflictDetails .= "• {$tripDate} - {$trip['destination']} ({$trip['status']})\n";
-        //     }
-            
-        //     throw new Exception("Driver {$data['driver']} has a conflicting trip within 2 hours of the selected time:\n\n" . 
-        //                         $conflictDetails . "\nPlease choose a different time or driver.");
-        // }
         
         $truckId = getTruckIdByPlateNo($conn, $data['plateNo']);
         $clientId = getOrCreateClientId($conn, $data['client']);
@@ -660,7 +648,6 @@ if ($cashAdvance > 0 || $additionalCashAdvance > 0) {
         $destinationId = getOrCreateDestinationId($conn, $data['destination']);
         $shippingLineId = getOrCreateShippingLineId($conn, $data['shippingLine']);
         $consigneeId = getConsigneeId($conn, $data['consignee']);
-
         $portId = getOrCreatePortId($conn, $data['port']);
 
         $stmt = $conn->prepare("UPDATE trips SET 
@@ -690,15 +677,13 @@ if ($cashAdvance > 0 || $additionalCashAdvance > 0) {
             throw new Exception("Failed to update trip: " . $stmt->error);
         }
         
-        // Update trip expenses with all three fields
        $cashAdvance = floatval($data['cashAdvance'] ?? 0);
-$additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
+        $additionalCashAdvance = floatval($data['additionalCashAdvance'] ?? 0);
 
-if (!updateTripExpenses($conn, $data['id'], $cashAdvance, $additionalCashAdvance)) {
-    throw new Exception("Failed to update trip expenses");
-}
+        if (!updateTripExpenses($conn, $data['id'], $cashAdvance, $additionalCashAdvance)) {
+            throw new Exception("Failed to update trip expenses");
+        }
         
-        // Update audit log
         $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
         $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=?, edit_reason=? WHERE trip_id=? AND is_deleted=0 ");
         $currentTime = date('Y-m-d H:i:s');
@@ -708,7 +693,6 @@ if (!updateTripExpenses($conn, $data['id'], $cashAdvance, $additionalCashAdvance
             throw new Exception("Failed to update audit log: " . $auditStmt->error);
         }
         
-        // Update truck status logic
         if ($current['status'] !== $data['status']) {
             $newTruckStatus = 'In Terminal';
             if ($data['status'] === 'En Route') {
@@ -777,7 +761,6 @@ if (!updateTripExpenses($conn, $data['id'], $cashAdvance, $additionalCashAdvance
             error_log("Driver changed: " . ($currentDriverId != $driverId ? 'YES' : 'NO'));
             error_log("=========================");
         }
-        
         
         $conn->commit();
         echo json_encode(['success' => true]);
