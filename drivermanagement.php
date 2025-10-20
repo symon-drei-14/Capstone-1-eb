@@ -232,7 +232,24 @@ let totalPages = 0;
     document.getElementById("driverModal").style.display = "block";
 }
 
-       function fetchDrivers() {
+function getTableLoadingRow(colspan) {
+    return `
+        <tr>
+            <td colspan="${colspan}" style="text-align: center; padding: 40px;">
+                <div class="table-loader">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #007bff;"></i>
+                    <p style="margin-top: 10px; color: #555;">Loading drivers...</p>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+    function fetchDrivers() {
+    const tableBody = $('#driverTableBody');
+    const colspan = $('#driverTable thead th').length;
+    tableBody.empty().append(getTableLoadingRow(colspan));
+    $('#prevPageBtn, #nextPageBtn').prop('disabled', true);
+
     $.ajax({
         url: 'include/handlers/get_all_drivers.php',
         type: 'GET',
@@ -242,14 +259,24 @@ let totalPages = 0;
                 driversData = data.drivers;
                 fetchTripCounts().then(() => {
                     renderTable();
+                    }).catch(() => {
+                    renderTable();
+                    }).finally(() => {
+                    $('#driverSearch').prop('disabled', false);
                 });
             } else {
+                tableBody.empty().append(`<tr><td colspan="${colspan}">Error fetching drivers: ${data.message}</td></tr>`);
                 alert("Error fetching drivers: " + data.message);
+                $('#driverSearch').prop('disabled', false);
+                updatePagination();
             }
         },
         error: function(xhr, status, error) {
             console.error('Error:', error);
+            tableBody.empty().append(`<tr><td colspan="${colspan}">An error occurred while fetching driver data.</td></tr>`);
             alert("An error occurred while fetching driver data.");
+            $('#driverSearch').prop('disabled', false);
+            updatePagination();
         }
     });
 }
