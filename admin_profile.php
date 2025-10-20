@@ -760,6 +760,7 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
       </div>
     </div>
 
+    <script src="include/js/logout-confirm.js"></script>
 
 <footer class="site-footer">
      <div class="footer-bottom">
