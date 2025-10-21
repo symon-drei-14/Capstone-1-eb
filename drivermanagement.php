@@ -17,7 +17,6 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     </head>
-
     <body>
 <header class="header">
     <div class="header-left">
@@ -72,8 +71,20 @@
                         </button>
                     </div>
                 </div>
-                <br />
 
+<div class="table-controls">
+                    <div class="table-info" id="showingInfo">Showing 0 to 0 of 0 entries</div>
+                    <div class="rows-per-page-container">
+                        <label for="rowsPerPageSelect">Rows per page:</label>
+                        <select id="rowsPerPageSelect" onchange="changeRowsPerPage()">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table id="driverTable">
                         <thead>
@@ -192,6 +203,7 @@ let totalPages = 0;
 
         $(document).ready(function() {
             fetchDrivers();
+            document.getElementById('rowsPerPageSelect').value = rowsPerPage;
         });
 
         function updateDateTime() {
@@ -268,7 +280,8 @@ function getTableLoadingRow(colspan) {
                 tableBody.empty().append(`<tr><td colspan="${colspan}">Error fetching drivers: ${data.message}</td></tr>`);
                 alert("Error fetching drivers: " + data.message);
                 $('#driverSearch').prop('disabled', false);
-                updatePagination();
+                updatePagination(0);
+                updateShowingInfo(0);
             }
         },
         error: function(xhr, status, error) {
@@ -276,7 +289,8 @@ function getTableLoadingRow(colspan) {
             tableBody.empty().append(`<tr><td colspan="${colspan}">An error occurred while fetching driver data.</td></tr>`);
             alert("An error occurred while fetching driver data.");
             $('#driverSearch').prop('disabled', false);
-            updatePagination();
+            updatePagination(0);
+            updateShowingInfo(0);
         }
     });
 }
@@ -307,7 +321,7 @@ function fetchTripCounts() {
     });
     
     $('#driverTableBody').empty();
-    
+    const totalEntries = driversData.length;
     totalPages = Math.ceil(driversData.length / rowsPerPage);
     var startIndex = (currentPage - 1) * rowsPerPage;
     var endIndex = startIndex + rowsPerPage;
@@ -350,7 +364,8 @@ function fetchTripCounts() {
           $('#driverTableBody').append("<tr><td colspan='11'>No drivers found</td></tr>");
        }
        
-       updatePagination();
+       updateShowingInfo(totalEntries);
+       updatePagination(totalEntries);
    }
 
        function formatTime(dateString) {
@@ -392,8 +407,9 @@ function formatDateWithTime(dateString) {
     return `<span class="date">${formattedDate}</span> <span class="time">${formattedTime}</span>`;
 }
        
-       function updatePagination() {
-    totalPages = Math.ceil(driversData.length / rowsPerPage);
+   function updatePagination(totalItems) {
+    const count = totalItems !== undefined ? totalItems : driversData.length;
+    totalPages = Math.ceil(count / rowsPerPage);
     
     $('#page-numbers').empty();
 
@@ -420,10 +436,41 @@ function formatDateWithTime(dateString) {
     $('#prevPageBtn').prop('disabled', currentPage === 1);
     $('#nextPageBtn').prop('disabled', currentPage === totalPages);
 }
+
+function updateShowingInfo(totalEntries) {
+        const infoEl = document.getElementById('showingInfo');
+        if (!infoEl) return;
+
+        if (totalEntries === 0) {
+            infoEl.textContent = 'Showing 0 to 0 of 0 entries';
+            return;
+        }
+
+        const start = (currentPage - 1) * rowsPerPage + 1;
+        const end = Math.min(currentPage * rowsPerPage, totalEntries);
+        
+        infoEl.textContent = `Showing ${start} to ${end} of ${totalEntries} entries`;
+    }
+
+    function changeRowsPerPage() {
+        rowsPerPage = parseInt(document.getElementById('rowsPerPageSelect').value, 10);
+        currentPage = 1;
+        const searchTerm = document.getElementById('driverSearch').value;
+        if (searchTerm) {
+            searchDrivers();
+        } else {
+            renderTable();
+        }
+    }
     function goToPage(page) {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
         currentPage = page;
-        renderTable();
+        const searchTerm = document.getElementById('driverSearch').value;
+        if (searchTerm) {
+            searchDrivers();
+        } else {
+            renderTable();
+        }
     }
 }
 
@@ -706,7 +753,7 @@ function formatDateWithTime(dateString) {
         document.querySelectorAll('.highlight').forEach(el => {
             el.outerHTML = el.innerHTML;
         });
-        fetchDrivers();
+        renderTable();
         return;
     }
 
@@ -729,8 +776,14 @@ function formatDateWithTime(dateString) {
     function renderFilteredDrivers(filteredDrivers, searchTerm) {
     $('#driverTableBody').empty();
     
-    if (filteredDrivers.length > 0) {
-        filteredDrivers.forEach(function(driver) {
+   const totalEntries = filteredDrivers.length;
+    totalPages = Math.ceil(totalEntries / rowsPerPage);
+    var startIndex = (currentPage - 1) * rowsPerPage;
+    var endIndex = startIndex + rowsPerPage;
+    var pageData = filteredDrivers.slice(startIndex, endIndex);
+    
+    if (pageData.length > 0) {
+        pageData.forEach(function(driver) {
             let formattedLastLogin = formatTime(driver.last_login);
             
             const highlightText = (text) => {
@@ -774,10 +827,8 @@ function formatDateWithTime(dateString) {
         $('#driverTableBody').append("<tr><td colspan='11'>No drivers found</td></tr>");
     }
     
-    $('#page-numbers').empty();
-    $('#page-numbers').append('<div class="search-results">Showing ' + filteredDrivers.length + ' result(s)</div>');
-    $('#prevPageBtn').prop('disabled', true);
-    $('#nextPageBtn').prop('disabled', true);
+   updateShowingInfo(totalEntries);
+    updatePagination(totalEntries);
 }
         
 

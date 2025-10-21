@@ -3,7 +3,7 @@
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin-top: 0px;
 }
 
 
@@ -1036,3 +1036,35 @@ h3 {
 .toggle-password:hover {
     color: #333;
 }
+
+          .table-controls {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-top:10px; 
+                flex-wrap: wrap;
+                gap: 15px;
+                border-top: 1px solid #e0e0e0; 
+                margin-top: 60px; 
+                clear: both; 
+            }
+            .table-info {
+                font-size: 0.9em;
+                color: #555;
+            }
+            .rows-per-page-container {
+                display: flex;
+                align-items: center;
+                gap: 1px;
+            }
+            .rows-per-page-container label {
+                font-size: 0.9em;
+                color: #555;
+            }
+            .rows-per-page-container select {
+                padding: 5px;
+                border-radius: 20px;
+                border: 1px solid #e2e2e2ff;
+                font-size: 0.9em;
+                width:55px;
+            }
