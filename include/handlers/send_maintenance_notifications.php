@@ -1,6 +1,7 @@
 <?php
-require 'dbhandler.php';
-require 'phpmailer_config.php';
+require_once __DIR__ . '/dbhandler.php';
+require_once __DIR__ . '/phpmailer_config.php';
+
 
 date_default_timezone_set('Asia/Manila');
 
