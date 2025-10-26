@@ -466,6 +466,7 @@
             let startDateFilter = null;
             let endDateFilter = null;
             let maintenanceData = [];
+            let originalStatusOnEdit = null;
             
         function getLocalDate() {
         const now = new Date();
@@ -1276,11 +1277,12 @@ function updateFormSectionsBasedOnStatus() {
         document.getElementById('cost').value = '';
     }
 }
-    function openModal(mode) {
+   function openModal(mode) {
     document.getElementById("maintenanceModal").style.display = "block";
     
     if (mode === 'add') {
         isEditing = false;
+        originalStatusOnEdit = null; 
         document.getElementById("modalTitle").textContent = "Add Maintenance Schedule";
         document.getElementById("maintenanceForm").reset();
         document.getElementById("maintenanceId").value = "";
@@ -1300,6 +1302,7 @@ function updateFormSectionsBasedOnStatus() {
 
 function openEditModal(id, truckId, licensePlate, date, remarks, status, supplierId, cost, maintenanceTypeId) {
     isEditing = true;
+    originalStatusOnEdit = status;
     document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
     document.getElementById("maintenanceId").value = id;
     document.getElementById("truckId").value = truckId;
@@ -1743,6 +1746,10 @@ function saveMaintenanceRecord() {
         Swal.close();
         
         if (data.success) {
+            
+            const newStatusIsCompleted = formData.status === 'Completed';
+            const justGotCompleted = (isEditing && originalStatusOnEdit !== 'Completed' && newStatusIsCompleted) || (!isEditing && newStatusIsCompleted);
+
             Swal.fire({
                 title: 'Success!',
                 text: isEditing ? 'Maintenance record updated successfully!' : 'Maintenance record added successfully!',
@@ -1754,6 +1761,34 @@ function saveMaintenanceRecord() {
                 loadMaintenanceData();
                 updateStatsCards();
                 updateRemindersBadge();
+                
+                
+                if (justGotCompleted && formData.maintenanceTypeId === 1) { 
+                    
+                    const completedDateStr = formData.date; 
+                    const dateParts = completedDateStr.split('-').map(part => parseInt(part, 10));
+                    const completedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+
+                    const nextMaintenanceDate = new Date(completedDate.getFullYear(), completedDate.getMonth() + 6, completedDate.getDate());
+                    
+                    const nextDateString = nextMaintenanceDate.toISOString().split('T')[0];
+
+                    Swal.fire({
+                        title: 'Schedule Next Maintenance?',
+                        html: `This preventive maintenance is complete. Would you like to schedule the next one for <strong>${formatDate(nextDateString)}</strong> (6 months from now) with the same remarks?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, schedule it',
+                        cancelButtonText: 'No, not now'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            
+                            scheduleNextPreventiveMaintenance(formData.truckId, formData.maintenanceTypeId, formData.supplierId, nextDateString, formData.remarks);
+                        }
+                    });
+                }
             });
         } else {
             Swal.fire({
@@ -1778,6 +1813,70 @@ function saveMaintenanceRecord() {
         Swal.fire({
             title: 'Error',
             html: errorMessage,
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    });
+}
+
+function scheduleNextPreventiveMaintenance(truckId, maintenanceTypeId, supplierId, nextDate, remarks) {
+    const formData = {
+        truckId: truckId,
+        maintenanceTypeId: maintenanceTypeId,
+        supplierId: supplierId,
+        date: nextDate,
+        remarks: remarks,
+        status: 'Pending', 
+        cost: 0,
+        editReasons: []
+    };
+
+    Swal.fire({
+        title: 'Scheduling Next Maintenance',
+        html: 'Please wait...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch(`include/handlers/maintenance_handler.php?action=add`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Success!',
+                text: 'Next preventive maintenance scheduled successfully!',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                loadMaintenanceData(); 
+                updateStatsCards();
+                updateRemindersBadge();
+            });
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: data.message || 'Could not schedule next maintenance.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    })
+    .catch(error => {
+        Swal.close();
+        console.error('Scheduling error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'Failed to schedule next maintenance.',
             icon: 'error',
             confirmButtonText: 'OK'
         });
