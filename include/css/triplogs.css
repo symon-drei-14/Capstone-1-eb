@@ -3594,3 +3594,18 @@ h3.title {
     #checklistModal .modal-footer .cancel-btn:hover {
         background-color: #5a6268;
     }
+
+    .dropdown-item.view-location {
+    color: #007bff;
+}
+.dropdown-item.view-location i {
+    color: #007bff;
+}
+
+.dropdown-item.view-location:hover {
+    background-color: #e6f2ff;
+    color: #0056b3;
+}
+.dropdown-item.view-location:hover i {
+    color: #0056b3;
+}

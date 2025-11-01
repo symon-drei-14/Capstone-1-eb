@@ -65,6 +65,7 @@ $sql = "SELECT
             tr.plate_no as truck_plate_no, 
             tr.capacity as truck_capacity,
             d.name as driver,
+            d.driver_id, d.firebase_uid,
             h.name as helper,
             disp.name as dispatcher,
             c.name as client,
@@ -107,6 +108,7 @@ if ($result->num_rows > 0) {
     'date' => $row['trip_date'],  
     'driver' => $row['driver'],
     'driver_id' => $row['driver_id'],
+    'firebase_uid' => $row['firebase_uid'],
     'helper' => $row['helper'],
     'dispatcher' => $row['dispatcher'],
     'containerNo' => $row['container_no'],
@@ -320,6 +322,9 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                         <i class="fas fa-ellipsis-v"></i>
                     </button>
                     <div class="dropdown-content">
+                        <button class="dropdown-item view-location" id="eventModalViewLocationBtn" style="display: none;">
+                            <i class="fas fa-map-marker-alt"></i> View Location
+                        </button>
                         <button class="dropdown-item edit" id="eventModalEditBtn">
                             <i class="fas fa-edit"></i> Edit Trip
                         </button>
@@ -1370,6 +1375,10 @@ function renderTripRows(trips, showDeleted) {
                         <i class="fas fa-ellipsis-v"></i>
                     </button>
                     <div class="dropdown-content">
+                        ${trip.status === 'En Route' ? 
+                        `<a href="tracking.php?driver_id=${trip.firebase_uid}" target="_blank" class="dropdown-item view-location">
+                            <i class="fas fa-map-marker-alt"></i> View Location
+                        </a>` : ''}
                         <button class="dropdown-item edit" data-id="${trip.trip_id}">
                             <i class="fas fa-edit"></i> Edit
                         </button>
@@ -1917,14 +1926,15 @@ $('#summaryType').on('change', function() {
     });
             
            
-               var calendarEvents = eventsData.map(function(event) {
+              var calendarEvents = eventsData.map(function(event) {
     return {
         id: event.id,
         title: event.client + ' - ' + event.destination,
         start: event.date,
         plateNo: event.plateNo,
         driver: event.driver,
-        driver_id: event.driver_id, 
+        driver_id: event.driver_id,
+        firebase_uid: event.firebase_uid,
         helper: event.helper,
         dispatcher: event.dispatcher,
         containerNo: event.containerNo,
@@ -2159,6 +2169,15 @@ eventClick: function(event, jsEvent, view) {
     $('#eventModal .generate-report').attr('href', `trip_report.php?id=${event.id}`);
     $('#eventModal .cancel-trip').attr('data-id', event.id);
     
+
+    if (event.status === 'En Route') {
+        $('#eventModalViewLocationBtn').show();
+        $('#eventModalViewLocationBtn').off('click').on('click', function() {
+            window.location.href = `tracking.php?driver_id=${event.firebase_uid}`;
+        });
+    } else {
+        $('#eventModalViewLocationBtn').hide();
+    }
 
       if (event.edit_reasons && event.edit_reasons !== 'null' && event.edit_reasons !== '') {
         $('#eventModalHistoryBtn').show();

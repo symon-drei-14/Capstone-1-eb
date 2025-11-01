@@ -445,12 +445,29 @@ async function fetchDriverData() {
             updateMap(enhancedDrivers, isFirstMapUpdate);
             updateDriversList(enhancedDrivers);
             isFirstMapUpdate = false;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const driverIdToFocus = urlParams.get('driver_id');
+            if (driverIdToFocus && enhancedDrivers[driverIdToFocus]) {
+                setTimeout(() => {
+                    centerOnDriver(driverIdToFocus);
+                }, 500);
+            }
+
         } else {
             console.log("Using sample data (no drivers in API response)");
             allDrivers = sampleData.drivers;
             updateMap(sampleData.drivers, isFirstMapUpdate);
             updateDriversList(sampleData.drivers);
             isFirstMapUpdate = false;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const driverIdToFocus = urlParams.get('driver_id');
+            if (driverIdToFocus && sampleData.drivers[driverIdToFocus]) {
+                 setTimeout(() => {
+                    centerOnDriver(driverIdToFocus);
+                }, 500);
+            }
         }
     } catch (error) {
         console.error('Error fetching data:', error);

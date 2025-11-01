@@ -316,12 +316,16 @@ function renderTripRowHtml($trip, $showDeleted, $searchTerm) {
         $historyButton = (!empty($trip['edit_reason']) && $trip['edit_reason'] !== 'null' && $trip['edit_reason'] !== '[]') ? 
             '<button class="dropdown-item view-reasons" data-id="' . $trip['trip_id'] . '"><i class="fas fa-history"></i> View History</button>' : '';
 
+        $viewLocationButton = ($trip['status'] === 'En Route') ?
+            '<a href="tracking.php?driver_id=' . $trip['firebase_uid'] . '" target="_blank" class="dropdown-item view-location"><i class="fas fa-map-marker-alt"></i> View Location</a>' : '';
+
         $actionCell = '
          <td data-label="Actions" class="actions">
             <div class="dropdown">
                 <button class="dropdown-btn" data-tooltip="Actions"><i class="fas fa-ellipsis-v"></i></button>
-                <div class="dropdown-content">
-                    <button class="dropdown-item edit" data-id="' . $trip['trip_id'] . '"><i class="fas fa-edit"></i> Edit</button>
+                <div class="dropdown-content">'
+                    . $viewLocationButton .
+                    '<button class="dropdown-item edit" data-id="' . $trip['trip_id'] . '"><i class="fas fa-edit"></i> Edit</button>
                     <button class="dropdown-item view-expenses" data-id="' . $trip['trip_id'] . '"><i class="fas fa-money-bill-wave"></i> View Expenses</button>
                     <button class="dropdown-item view-checklist" data-id="' . $trip['trip_id'] . '" data-driver-id="' . ($trip['driver_id'] ?? '') . '"><i class="fas fa-clipboard-check"></i> Driver Checklist</button>
                    <a href="trip_report.php?id=' . $trip['trip_id'] . '" target="_blank" class="dropdown-item Full-report"><i class="fas fa-file-alt"></i> Generate Report</a>'
@@ -859,7 +863,7 @@ if ($cashAdvance > 0 || $additionalCashAdvance > 0) {
     break;
 
 
-    case 'get_active_trips':
+   case 'get_active_trips':
             $statusFilter = $data['statusFilter'] ?? 'all';
             $sortOrder = $data['sortOrder'] ?? 'desc';
             $page = $data['page'] ?? 1;
@@ -870,7 +874,7 @@ if ($cashAdvance > 0 || $additionalCashAdvance > 0) {
 
             $query = "SELECT 
     t.trip_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
-    tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
+    tr.plate_no, tr.capacity as truck_capacity, d.name as driver, d.driver_id, d.firebase_uid, h.name as helper,
     disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
     sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
     al.modified_at as last_modified_at, al.edit_reason,
@@ -1095,7 +1099,7 @@ case 'fetchNextRow':
         $isTodayView = ($statusFilter === 'today');
         
         $baseQuery = "SELECT 
-        t.trip_id, t.driver_id, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
+        t.trip_id, t.driver_id, d.firebase_uid, t.container_no, t.trip_date, t.status, t.fcl_status, t.created_at,
         tr.plate_no, tr.capacity as truck_capacity, d.name as driver, h.name as helper,
         disp.name as dispatcher, c.name as client, p.name as port, dest.name as destination,
         sl.name as shipping_line, cons.name as consignee, al.modified_by as last_modified_by,
