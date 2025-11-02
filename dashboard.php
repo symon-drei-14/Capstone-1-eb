@@ -1052,8 +1052,8 @@ document.addEventListener('DOMContentLoaded', function() {
                    </div>
             </div>
 </div>
-           <div class="modal-footer">
-                <a href="#" id="track-delivery-btn" class="btn btn-track" target="_blank">
+         <div class="modal-footer">
+                <a href="#" id="track-delivery-btn" class="btn btn-track">
                     <i class="fas fa-map-marker-alt"></i> Track Delivery
                 </a>
             </div>
