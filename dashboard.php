@@ -82,6 +82,7 @@ $sql = "SELECT
             tr.truck_pic,
             d.name as driver,
             d.driver_id,
+            d.firebase_uid,
             h.name as helper,
             disp.name as dispatcher,
             c.name as client,
@@ -121,6 +122,7 @@ if ($result->num_rows > 0) {
             'date' => $row['date'],
             'driver' => $row['driver'],
             'driver_id' => $row['driver_id'],
+            'firebase_uid' => $row['firebase_uid'],
             'helper' => $row['helper'],
             'dispatcher' => $row['dispatcher'],
             'containerNo' => $row['container_no'],
@@ -533,6 +535,8 @@ $eventsDataJson = json_encode($eventsData);
             start: event.date,
             plateNo: event.plateNo,
             driver: event.driver,
+            driver_id: event.driver_id,
+            firebase_uid: event.firebase_uid,
             helper: event.helper,
             dispatcher: event.dispatcher,
             containerNo: event.containerNo,
@@ -608,7 +612,7 @@ $eventsDataJson = json_encode($eventsData);
     $('#modal-modified-by').text(calEvent.modifiedby || 'System');
     $('#modal-modified-at').text(modifiedDate);
 
-    var trackingUrl = `tracking.php?trip_id=${calEvent.id}`;
+    var trackingUrl = `tracking.php?driver_id=${calEvent.firebase_uid}`;
     $('#track-delivery-btn').attr('href', trackingUrl);
     
     $('#tripDetailsModal').show();
@@ -821,7 +825,7 @@ $('.shipment-card').on('click', function() {
             $('#modal-modified-by').text(trip.last_modified_by || 'System');
             $('#modal-modified-at').text(modifiedDate);
 
-            var trackingUrl = `tracking.php?trip_id=${trip.trip_id}`;
+            var trackingUrl = `tracking.php?driver_id=${trip.firebase_uid}`;
             $('#track-delivery-btn').attr('href', trackingUrl);
 
             $('#tripDetailsModal').show();
