@@ -612,8 +612,14 @@ $eventsDataJson = json_encode($eventsData);
     $('#modal-modified-by').text(calEvent.modifiedby || 'System');
     $('#modal-modified-at').text(modifiedDate);
 
-    var trackingUrl = `tracking.php?driver_id=${calEvent.firebase_uid}`;
-    $('#track-delivery-btn').attr('href', trackingUrl);
+    const trackButton = $('#track-delivery-btn');
+    if (calEvent.status === 'En Route') {
+        var trackingUrl = `tracking.php?driver_id=${calEvent.firebase_uid}`;
+        trackButton.attr('href', trackingUrl);
+        trackButton.show();
+    } else {
+        trackButton.hide();
+    }
     
     $('#tripDetailsModal').show();
 
