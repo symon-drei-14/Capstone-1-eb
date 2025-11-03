@@ -6,7 +6,7 @@ $allowedRoles = [
     'triplogs.php'              => ['Full Admin', 'Operations Manager'],
     'tracking.php'              => ['Full Admin', 'Operations Manager'],
     'maintenance.php'           => ['Full Admin', 'Fleet Manager'],
-    'informationmanagement.php' => ['Full Admin', 'Fleet Manager'],
+    'informationmanagement.php' => ['Full Admin', 'Fleet Manager', 'Operations Manager'],
     'adminmanagement.php'       => ['Full Admin'] 
 ];
 
