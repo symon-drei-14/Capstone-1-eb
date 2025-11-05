@@ -688,7 +688,7 @@ if ($cashAdvance > 0 || $additionalCashAdvance > 0) {
             throw new Exception("Failed to update trip expenses");
         }
         
-        $editReasons = isset($data['editReasons']) ? json_encode($data['editReasons']) : null;
+        $editReasons = $data['editReasons'] ?? null; 
         $auditStmt = $conn->prepare("UPDATE audit_logs_trips SET modified_by=?, modified_at=?, edit_reason=? WHERE trip_id=? AND is_deleted=0 ");
         $currentTime = date('Y-m-d H:i:s');
         $auditStmt->bind_param("sssi", $currentUser, $currentTime, $editReasons, $data['id']);

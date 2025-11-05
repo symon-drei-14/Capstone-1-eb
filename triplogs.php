@@ -338,7 +338,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                             <i class="fas fa-file-alt"></i> Generate Report
                         </a>
                         <button class="dropdown-item view-reasons" id="eventModalHistoryBtn">
-                            <i class="fas fa-history"></i> Edit History
+                            <i class="fas fa-history"></i> Edit Remarks
                         </button>
                         <button class="dropdown-item delete" id="eventModalDeleteBtn">
                             <i class="fas fa-trash-alt"></i> Delete Trip
@@ -1048,15 +1048,17 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
         </div>
 
     <div id="editReasonsModal" class="modal">
-        <div class="modal-content" style="max-width: 600px; padding:20px; overflow:hidden;">
+        <div class="modal-content" style="max-width: 600px;  overflow:hidden;">
             <div class="modal-header2">
             <span class="close">&times;</span>
             <h3>Edit Remarks</h3>
             </div>
-            <div id="editReasonsContent">
+            <div id="editReasonsContent" style="padding:20px;">
             
             </div>
-            <button type="button" class="close-btn cancel-btn" style="margin-top: 20px;">Close</button>
+            <div class="modalfooter" style="display:flex; justify-self:flex-end; padding:10px;">
+            <button type="button" class="close-btn cancel-btn">Close</button>
+            </div>
         </div>
     </div>
     </div>
@@ -1116,6 +1118,26 @@ function formatDateTime(datetimeString) {
     
   return `<span class="date">${month} ${day}, ${year}</span><br> <span class="time">${hours}:${minutes} ${ampm}</span>`;
 }
+
+function formatDateTimeSingleLine(datetimeString) {
+    if (!datetimeString) return 'N/A';
+    
+    const date = new Date(datetimeString);
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; 
+    
+    // Returns a single line, e.g., "Jan 5, 2025 at 10:30 AM"
+    return `${month} ${day}, ${year} at ${hours}:${minutes} ${ampm}`;
+}
  let currentPage = 1;
 let rowsPerPage = 5; 
 let totalPages = 1;
@@ -1145,12 +1167,16 @@ let highlightTripId = null;
     });
 
   
-    $('#editEventStatus').on('change', function() {
-        if ($(this).val() === 'En Route') {
-            $('#editAdditionalCashContainer').show();
+   $('#editEventStatus').on('change', function() {
+        var newStatus = $(this).val();
+        const originalData = $('#editForm').data('originalData');  
+        if (newStatus === 'En Route' || newStatus === 'Completed') {
+        $('#editAdditionalCashContainer').show();
+            if (originalData) {
+                $('#editEventAdditionalCashAdvance').val(originalData.additionalCashAdvance || 0);
+            }
         } else {
-            $('#editAdditionalCashContainer').hide();
-            $('#editEventAdditionalCashAdvance').val(''); 
+        $('#editAdditionalCashContainer').hide();
         }
     });
 
@@ -1393,7 +1419,7 @@ function renderTripRows(trips, showDeleted) {
                         </a>
                         ${trip.edit_reason && trip.edit_reason !== 'null' && trip.edit_reason !== '' ? 
                         `<button class="dropdown-item view-reasons" data-id="${trip.trip_id}">
-                            <i class="fas fa-history"></i> View History
+                            <i class="fas fa-history"></i> Edit Remarks
                         </button>` : ''}
                         <button class="dropdown-item delete" data-id="${trip.trip_id}">
                             <i class="fas fa-trash-alt"></i> Delete
@@ -1424,7 +1450,7 @@ function renderTripRows(trips, showDeleted) {
                 <td data-label="Cash Advance">₱${parseFloat(trip.cash_advance || 0).toFixed(2)}</td>
                 <td data-label="Additional Cash">₱${parseFloat(trip.additional_cash_advance || 0).toFixed(2)}</td>
                 ${statusCell}
-                <td data-label="Last Modified">${formatDateTime(trip.last_modified_at || trip.created_at)} 
+                <td data-label="Last Modified" data-raw-date="${trip.last_modified_at || trip.created_at}">${formatDateTime(trip.last_modified_at || trip.created_at)}
                     ${trip.last_modified_by ? `<br> <strong>${highlightText(trip.last_modified_by, searchTerm)}</strong></small>` : ''}
                 </td>
                 ${actionCell}
@@ -2209,59 +2235,68 @@ eventClick: function(event, jsEvent, view) {
 
    
    
-    $('#eventModalHistoryBtn').off('click').on('click', function() {
+$('#eventModalHistoryBtn').off('click').on('click', function() {
     var eventId = $('#eventModal').data('eventId');
     var eventData = eventsData.find(function(e) { return e.id == eventId; });
-    
+
+    var html = '';
+
     if (eventData && eventData.edit_reasons) {
-        var reasons;
         try {
-            reasons = JSON.parse(eventData.edit_reasons);
+            var log = JSON.parse(eventData.edit_reasons);
+
+            if (log.user_reason || log.automatic_changes) {
+                
+                if (log.user_reason && log.user_reason.length > 0) {
+                    html += '<h5 style="margin-top:0; margin-bottom:8px; color:#333;">User Reason(s)</h5>';
+                    html += '<ul style="margin-top:0; padding-left:20px; color:#555;">';
+                    log.user_reason.forEach(function(reason) {
+                        html += `<li style="margin-bottom:5px;">${reason}</li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                if (log.automatic_changes && log.automatic_changes.length > 0) {
+                    html += '<h5 style="margin-top:15px; margin-bottom:8px; color:#333;">Field Changes Detected</h5>';
+                    html += '<ul style="margin-top:0; padding-left:20px; color:#555; font-family: monospace; font-size: 1.1em;">';
+                    log.automatic_changes.forEach(function(change) {
+                        let formattedChange = change.replace(/ to '(.*?)'$/, " to <strong style='color:#006400;'>'$1'</strong>");
+                        html += `<li style="margin-bottom:5px;">${formattedChange}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                
+            } else {
+                html += '<h5 style="margin-top:0; margin-bottom:8px; color:#333;">Edit Reason(s)</h5>';
+                html += '<ul style="margin-top:0; padding-left:20px; color:#555;">';
+                log.forEach(function(reason) {
+                    if (reason !== "Trip created" && reason !== '"Trip created"') {
+                         html += `<li style="margin-bottom:5px;">${reason}</li>`;
+                    }
+                });
+                html += '</ul>';
+            }
+
         } catch (e) {
-            reasons = [eventData.edit_reasons];
+            html += '<h5 style="margin-top:0; margin-bottom:8px; color:#333;">Edit Reason</h5>';
+            html += '<p style="margin-top:0; color:#555;">' + eventData.edit_reasons + '</p>';
         }
 
-        if (!Array.isArray(reasons)) {
-            reasons = [reasons];
-        }
-        
-        reasons = reasons.filter(function(reason) {
-            return reason && reason !== "Trip created" && reason !== '"Trip created"';
-        });
-        
-        if (reasons.length === 0) {
-            $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
-                '<p>This trip has not been edited yet</p></div>');
-            $('#eventModal').hide();
-            $('#editReasonsModal').show();
-            return;
-        }
-        
-        var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
-        html += '<ul style="list-style-type: none; padding-left: 5px;">';
-        
-        reasons.forEach(function(reason) {
-            html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
-            html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
-            html += '</li>';
-        });
-        
-        html += '</ul>';
-        html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
-        html += 'Last modified by: ' + (eventData.modifiedby || 'System') + '<br>';
-        html += 'On: ' + formatDateTime(eventData.modifiedat);
-        html += '</p></div>';
+        html += '<p style="font-style:italic; margin-top:20px; padding-top:10px; border-top:1px solid #eee; color:#666; font-size:0.9em;">';
+        html += 'Last modified by: <strong>' + (eventData.modifiedby || 'System') + '</strong><br>';
+        html += ' ' + formatDateTimeSingleLine(eventData.modifiedat);
+        html += '</p>';
         
         $('#editReasonsContent').html(html);
-        $('#eventModal').hide();
-        $('#editReasonsModal').show();
-        
+
     } else {
+
         $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
             '<p>No edit remarks recorded for this trip</p></div>');
-        $('#eventModal').hide();
-        $('#editReasonsModal').show();
     }
+
+    $('#eventModal').hide();
+    $('#editReasonsModal').show();
 });
     
 
@@ -2631,9 +2666,7 @@ function populateEditModal(event) {
     
     var eventDate = event.date || event.trip_date;
     if (eventDate) {
-        if (eventDate.includes('T')) {
-            eventDate = eventDate.substring(0, 16); 
-        }
+     eventDate = eventDate.replace(' ', 'T').substring(0, 16);
     }
     $('#editEventDate').val(eventDate);
 
@@ -2660,7 +2693,7 @@ function populateEditModal(event) {
     $('#editEventStatus').val(event.status);
 
   
-    if (event.status === 'En Route') {
+    if (event.status === 'En Route' || event.status === 'Completed') {
         $('#editAdditionalCashContainer').show();
     } else {
         $('#editAdditionalCashContainer').hide();
@@ -2715,6 +2748,27 @@ function populateEditModal(event) {
         $('#viewChecklistBtn').hide();
     }
     
+    const originalData = {
+        date: eventDate,
+        driver: event.driver,
+        plateNo: event.truck_plate_no || event.plateNo,
+        helper: event.helper,
+        dispatcher: event.dispatcher || '',
+        containerNo: event.containerNo,
+        client: event.client,
+        port: event.port,
+        destination: event.destination,
+        shippingLine: event.shippingLine,
+        consignee: event.consignee,
+        size: event.truck_capacity ? event.truck_capacity + 'ft' : event.size,
+        fclStatus: event.fcl_status || event.size,
+        cashAdvance: event.cashAdvance,
+        additionalCashAdvance: event.additionalCashAdvance,
+        status: event.status
+    };
+
+    // Attach this data to the form itself
+    $('#editForm').data('originalData', originalData);
     $('#editModal').show();
 }
 
@@ -2911,56 +2965,74 @@ $('#addScheduleForm').on('submit', function(e) {
     });
 });
 
-  $(document).on('click', '#eventsTable .dropdown-item.view-reasons', function() {
+$(document).on('click', '#eventsTable .dropdown-item.view-reasons', function() {
     var eventId = $(this).data('id');
-    var event = eventsData.find(function(e) { return e.id == eventId; });
+    var eventData = eventsData.find(function(e) { return e.id == eventId; });
+    if (!eventData) {
+        var $row = $(this).closest('tr');
+        eventData = {
+            edit_reasons: null, 
+            modifiedby: $row.find('td[data-label="Last Modified"] strong').text() || 'System',
+            modifiedat: $row.find('td[data-label="Last Modified"]').data('raw-date')
+        };
+    }
     
-    if (event && event.edit_reasons) {
-        var reasons;
+    var html = '';
+
+    if (eventData && eventData.edit_reasons) {
         try {
-            reasons = JSON.parse(event.edit_reasons);
+            var log = JSON.parse(eventData.edit_reasons);
+
+            if (log.user_reason || log.automatic_changes) {
+                
+                if (log.user_reason && log.user_reason.length > 0) {
+                    html += '<h5 style="margin-top:0; margin-bottom:8px; color:#333;">User Reason(s)</h5>';
+                    html += '<ul style="margin-top:0; padding-left:20px; color:#555;">';
+                    log.user_reason.forEach(function(reason) {
+                        html += `<li style="margin-bottom:5px;">${reason}</li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                if (log.automatic_changes && log.automatic_changes.length > 0) {
+                    html += '<h5 style="margin-top:15px; margin-bottom:8px; color:#333;">Field Changes Detected</h5>';
+                    html += '<ul style="margin-top:0; padding-left:20px; color:#555; font-family: monospace; font-size: 1.1em;">';
+                    log.automatic_changes.forEach(function(change) {
+                        let formattedChange = change.replace(/ to '(.*?)'$/, " to <strong style='color:#006400;'>'$1'</strong>");
+                        html += `<li style="margin-bottom:5px;">${formattedChange}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                
+            } else {
+                html += '<h5 style="margin-top:0; margin-bottom:8px; color:#333;">Edit Reason(s)</h5>';
+                html += '<ul style="margin-top:0; padding-left:20px; color:#555;">';
+                log.forEach(function(reason) {
+                    if (reason !== "Trip created" && reason !== '"Trip created"') {
+                         html += `<li style="margin-bottom:5px;">${reason}</li>`;
+                    }
+                });
+                html += '</ul>';
+            }
+
         } catch (e) {
-            reasons = [event.edit_reasons];
+            html += '<h5 style="margin-top:0; margin-bottom:8px; color:#333;">Edit Reason</h5>';
+            html += '<p style="margin-top:0; color:#555;">' + eventData.edit_reasons + '</p>';
         }
 
-        if (!Array.isArray(reasons)) {
-            reasons = [reasons];
-        }
-        
-        reasons = reasons.filter(function(reason) {
-            return reason && reason !== "Trip created" && reason !== '"Trip created"';
-        });
-
-        if (reasons.length === 0) {
-            $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
-                '<p>This trip has not been edited yet</p></div>');
-            $('#editReasonsModal').show();
-            return;
-        }
-        
-        var html = '<div style="padding: 10px; background: #f9f9f9; border-radius: 5px; margin-bottom: 10px;">';
-        html += '<ul style="list-style-type: none; padding-left: 5px;">';
-        
-        reasons.forEach(function(reason) {
-            html += '<li style="margin-bottom: 8px; padding-left: 15px; position: relative;">';
-            html += '<span style="position: absolute; left: 0;">•</span> ' + reason;
-            html += '</li>';
-        });
-        
-        html += '</ul>';
-        html += '<p style="font-style: italic; margin-top: 10px; color: #666;">';
-        html += 'Last modified by: ' + (event.modifiedby || event.last_modified_by || 'System') + '<br>';
-        html += 'On: ' + formatDateTime(event.modifiedat || event.last_modified_at);
-        html += '</p></div>';
+        html += '<p style="font-style:italic; margin-top:20px; padding-top:10px; border-top:1px solid #eee; color:#666; font-size: 0.9em;">';
+        html += 'Last modified by: <strong>' + (eventData.modifiedby || eventData.last_modified_by || 'System') + '</strong><br>' ;
+        html += ' ' + formatDateTimeSingleLine(eventData.modifiedat || eventData.last_modified_at);
+        html += '</p>';
         
         $('#editReasonsContent').html(html);
-        $('#editReasonsModal').show();
 
     } else {
         $('#editReasonsContent').html('<div style="padding: 15px; background: #f5f5f5; border-radius: 5px;">'+
             '<p>No edit remarks recorded for this trip</p></div>');
-        $('#editReasonsModal').show();
     }
+    
+    $('#editReasonsModal').show();
 });
 
 
@@ -2996,11 +3068,24 @@ function validateEditReasons() {
 }
 
 
-            
 $('#editForm').on('submit', function(e) {
     e.preventDefault();
     
-    
+    const formatLogDateTime = (isoString) => {
+        if (!isoString || isoString.length < 16) return 'N/A';
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        } catch (e) { return isoString; }
+    };
+
     if ($('input[name="editReason"]:checked').length === 0) {
         Swal.fire({
             icon: 'error',
@@ -3010,7 +3095,6 @@ $('#editForm').on('submit', function(e) {
         });
         return; 
     }
-    
     
     if ($('#reason7').is(':checked') && $('#otherReasonText').val().trim() === '') {
         Swal.fire({
@@ -3022,36 +3106,20 @@ $('#editForm').on('submit', function(e) {
         $('#otherReasonText').focus();
         return;
     }
-    
+
     var selectedDriver = $('#editEventDriver').val();
     var driver = driversData.find(d => d.name === selectedDriver);
     var truckPlateNo = driver && driver.truck_plate_no ? driver.truck_plate_no : $('#editEventPlateNo').val();
     var tripDate = $('#editEventDate').val();
 
-    checkMaintenanceConflict(truckPlateNo, tripDate, function(shouldProceed) {
-        if (!shouldProceed) return;
+    const originalData = $(this).data('originalData');
 
-        var editReasons = [];
-        $('input[name="editReason"]:checked').each(function() {
-            if ($(this).val() === 'Other') {
-                editReasons.push('Other: ' + $('#otherReasonText').val().trim());
-            } else {
-                editReasons.push($(this).val());
-            }
-        });
-        
-        $.ajax({
-            url: 'include/handlers/trip_operations.php',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                action: 'edit',
-               id: $('#editEventId').val(),
-        plateNo: truckPlateNo,
+    const newData = {
         date: $('#editEventDate').val(),
         driver: selectedDriver,
+        plateNo: truckPlateNo,
         helper: $('#editEventHelper').val(),
-        dispatcher: $('#editEventDispatcher').val(),
+        dispatcher: $('#editEventDispatcher').val() || '',
         containerNo: $('#editEventContainerNo').val(),
         client: $('#editEventClient').val(),
         port: $('#editEventPort').val(),
@@ -3059,73 +3127,178 @@ $('#editForm').on('submit', function(e) {
         shippingLine: $('#editEventShippingLine').val(),
         consignee: $('#editEventConsignee').val(),
         size: $('#editEventSize').val(),
-         fclStatus: $('#editEventFCL').val(),
+        fclStatus: $('#editEventFCL').val(),
+        cashAdvance: $('#editEventCashAdvance').val() || "0",
+        additionalCashAdvance: $('#editEventAdditionalCashAdvance').val() || "0",
+        status: $('#editEventStatus').val()
+    };
 
-        cashAdvance: $('#editEventCashAdvance').val(),
-        additionalCashAdvance: $('#editEventAdditionalCashAdvance').val(),
-        status: $('#editEventStatus').val(),
-        editReasons: editReasons
-    }),
-            success: function(response) {
-    if (response.success) {
-        const editedTripId = $('#editEventId').val();
+    let detectedChanges = [];
+    
+    const isDifferent = (a, b) => {
+        const valA = a === null || typeof a === 'undefined' ? "" : String(a);
+        const valB = b === null || typeof b === 'undefined' ? "" : String(b);
+        return valA !== valB;
+    };
 
-        
-        const eventIndex = eventsData.findIndex(e => e.id == editedTripId);
-        if (eventIndex !== -1) {
-            const updatedEvent = eventsData[eventIndex];
-            updatedEvent.date = $('#editEventDate').val();
-            updatedEvent.trip_date = $('#editEventDate').val();
-            updatedEvent.driver = $('#editEventDriver').val();
-            updatedEvent.helper = $('#editEventHelper').val();
-            updatedEvent.dispatcher = $('#editEventDispatcher').val();
-            updatedEvent.containerNo = $('#editEventContainerNo').val();
-            updatedEvent.client = $('#editEventClient').val();
-            updatedEvent.port = $('#editEventPort').val();
-            updatedEvent.destination = $('#editEventDestination').val();
-            updatedEvent.shippingLine = $('#editEventShippingLine').val();
-            updatedEvent.consignee = $('#editEventConsignee').val();
-            updatedEvent.fcl_status = $('#editEventFCL').val();
-            updatedEvent.cashAdvance = $('#editEventCashAdvance').val();
-            updatedEvent.additionalCashAdvance = $('#editEventAdditionalCashAdvance').val();
-            
-            updatedEvent.status = $('#editEventStatus').val();
-            
-           
-            updatedEvent.plateNo = $('#editEventPlateNo').val();
-            updatedEvent.truck_plate_no = $('#editEventPlateNo').val();
-            updatedEvent.truck_capacity = $('#editEventSize').val().replace('ft', '');
-            updatedEvent.size = $('#editEventSize').val();
-        }
-
-        $('#editModal').hide();
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: 'Trip has been updated successfully',
-            timer: 2000,
-            showConfirmButton: false,
-            timerProgressBar: true
-        });
-        updateStats();
-        refreshCalendarEvents();
-        renderTable(); 
-         updateEventModalDetails();
-
-        if ($('#tableViewBtn').hasClass('active')) {
-            highlightTripId = editedTripId;
-            renderTable();
-        } else {
-            refreshCalendarEvents();
-        }
-    } else {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: response.message || 'Failed to update trip'
-        });
+    if (isDifferent(originalData.date, newData.date)) {
+        const oldDate = formatLogDateTime(originalData.date);
+        const newDate = formatLogDateTime(newData.date);
+        detectedChanges.push(`Date changed from '${oldDate}' to '${newDate}'`);
     }
-}
+
+    if (isDifferent(originalData.driver, newData.driver)) {
+        detectedChanges.push(`Driver changed from '${originalData.driver || 'N/A'}' to '${newData.driver}'`);
+    }
+    if (isDifferent(originalData.plateNo, newData.plateNo)) {
+        detectedChanges.push(`Plate No changed from '${originalData.plateNo || 'N/A'}' to '${newData.plateNo}'`);
+    }
+    if (isDifferent(originalData.helper, newData.helper)) {
+        detectedChanges.push(`Helper changed from '${originalData.helper || 'N/A'}' to '${newData.helper || 'N/A'}'`);
+    }
+    if (isDifferent(originalData.dispatcher, newData.dispatcher)) {
+        detectedChanges.push(`Dispatcher changed from '${originalData.dispatcher || 'N/A'}' to '${newData.dispatcher || 'N/A'}'`);
+    }
+    if (isDifferent(originalData.containerNo, newData.containerNo)) {
+        detectedChanges.push(`Container No changed from '${originalData.containerNo || 'N/A'}' to '${newData.containerNo}'`);
+    }
+    if (isDifferent(originalData.client, newData.client)) {
+        detectedChanges.push(`Client changed from '${originalData.client || 'N/A'}' to '${newData.client}'`);
+    }
+    if (isDifferent(originalData.port, newData.port)) {
+        detectedChanges.push(`Port changed from '${originalData.port || 'N/A'}' to '${newData.port}'`);
+    }
+    if (isDifferent(originalData.destination, newData.destination)) {
+        detectedChanges.push(`Destination changed from '${originalData.destination || 'N/A'}' to '${newData.destination}'`);
+    }
+    if (isDifferent(originalData.shippingLine, newData.shippingLine)) {
+        detectedChanges.push(`Shipping Line changed from '${originalData.shippingLine || 'N/A'}' to '${newData.shippingLine || 'N/A'}'`);
+    }
+    if (isDifferent(originalData.consignee, newData.consignee)) {
+        detectedChanges.push(`Consignee changed from '${originalData.consignee || 'N/A'}' to '${newData.consignee || 'N/A'}'`);
+    }
+    if (isDifferent(originalData.size, newData.size)) {
+        detectedChanges.push(`Size changed from '${originalData.size || 'N/A'}' to '${newData.size}'`);
+    }
+    if (isDifferent(originalData.fclStatus, newData.fclStatus)) {
+        detectedChanges.push(`FCL Status changed from '${originalData.fclStatus || 'N/A'}' to '${newData.fclStatus}'`);
+    }
+    if (parseFloat(originalData.cashAdvance || 0) !== parseFloat(newData.cashAdvance || 0)) {
+        detectedChanges.push(`Cash Advance changed from '₱${originalData.cashAdvance || 0}' to '₱${newData.cashAdvance}'`);
+    }
+    if (parseFloat(originalData.additionalCashAdvance || 0) !== parseFloat(newData.additionalCashAdvance || 0)) {
+        detectedChanges.push(`Add. Cash changed from '₱${originalData.additionalCashAdvance || 0}' to '₱${newData.additionalCashAdvance}'`);
+    }
+    if (isDifferent(originalData.status, newData.status)) {
+        detectedChanges.push(`Status changed from '${originalData.status}' to '${newData.status}'`);
+    }
+    
+    var userReasons = [];
+    $('input[name="editReason"]:checked').each(function() {
+        if ($(this).val() === 'Other') {
+            userReasons.push('Other: ' + $('#otherReasonText').val().trim());
+        } else {
+            userReasons.push($(this).val());
+        }
+    });
+
+    const finalLogEntry = {
+        user_reason: userReasons,
+        automatic_changes: detectedChanges.length > 0 ? detectedChanges : ["No data fields were changed"]
+    };
+
+    checkMaintenanceConflict(truckPlateNo, tripDate, function(shouldProceed) {
+        if (!shouldProceed) return;
+
+        $.ajax({
+            url: 'include/handlers/trip_operations.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+            action: 'edit',
+            id: $('#editEventId').val(),
+            plateNo: truckPlateNo,
+            date: newData.date,
+            driver: newData.driver,
+            helper: newData.helper,
+            dispatcher: newData.dispatcher,
+            containerNo: newData.containerNo,
+            client: newData.client,
+            port: newData.port,
+            destination: newData.destination,
+            shippingLine: newData.shippingLine,
+            consignee: newData.consignee,
+            size: newData.size,
+            fclStatus: newData.fclStatus,
+            cashAdvance: newData.cashAdvance,
+            additionalCashAdvance: newData.additionalCashAdvance,
+            status: newData.status,
+            editReasons: JSON.stringify(finalLogEntry)
+            }),
+            success: function(response) {
+                if (response.success) {
+                    const editedTripId = $('#editEventId').val();
+
+                    const eventIndex = eventsData.findIndex(e => e.id == editedTripId);
+                    if (eventIndex !== -1) {
+                        Object.assign(eventsData[eventIndex], {
+                            date: newData.date,
+                            trip_date: newData.date,
+                            driver: newData.driver,
+                            helper: newData.helper,
+                            dispatcher: newData.dispatcher,
+                            containerNo: newData.containerNo,
+                            client: newData.client,
+                            port: newData.port,
+                            destination: newData.destination,
+                            shippingLine: newData.shippingLine,
+                            consignee: newData.consignee,
+                            fcl_status: newData.fclStatus,
+                            cashAdvance: newData.cashAdvance,
+                            additionalCashAdvance: newData.additionalCashAdvance,
+                            status: newData.status,
+                            plateNo: truckPlateNo,
+                            truck_plate_no: truckPlateNo,
+                            truck_capacity: newData.size.replace('ft', ''),
+                            size: newData.size,
+                            edit_reasons: JSON.stringify(finalLogEntry) 
+                        });
+                    }
+
+                    $('#editModal').hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Trip has been updated successfully',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+                    
+                    updateStats();
+                    refreshCalendarEvents(); 
+                    renderTable(); 
+                    updateEventModalDetails();
+
+                    if ($('#tableViewBtn').hasClass('active')) {
+                        highlightTripId = editedTripId;
+                        renderTable(); 
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Failed to update trip'
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'AJAX Error',
+                    text: 'A server error occurred.'
+                });
+            }
         });
     });
 });
