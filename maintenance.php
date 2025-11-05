@@ -433,11 +433,17 @@
     </div>
 </div>
 
-        <div id="remarksModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div id="remarksModalContent"></div>
+       <div id="remarksModal" class="modal">
+            <div class="modal-content" style="max-width: 600px; padding:10px; overflow:hidden;">
+                <div class="modal-header">
+                    <h3>Edit Remarks</h3>
+                    <span class="close" onclick="closeModal('remarksModal')">&times;</span>
+                </div>
+                <div id="remarksModalContent" style="padding: 20px;">
+                    </div>
+                <button type="button" class="cancelbtn" onclick="closeModal('remarksModal')" style="margin-top: 20px; display:flex; justify-self:flex-end; margin-right:10px;">Close</button>
+            </div>
         </div>
-    </div>
 
         <script>
         
@@ -951,16 +957,16 @@ function renderTable(data, searchTerm = '') {
         const costDisplay = highlightMatches(`₱ ${parseFloat(row.cost || 0).toFixed(2)}`, searchTerm);
         const lastModifiedByDisplay = highlightMatches(row.lastUpdatedBy || 'System', searchTerm);
 
+       const editReasonAttr = row.editReason ? `data-edit-reason='${row.editReason.replace(/'/g, "&apos;")}'` : '';
+        const deleteReasonAttr = row.deleteReason ? `data-delete-reason='${row.deleteReason.replace(/'/g, "&apos;")}'` : '';
+        const modifiedByAttr = row.lastUpdatedBy ? `data-modified-by="${row.lastUpdatedBy}"` : 'data-modified-by="System"';
+        const modifiedAtAttr = row.lastUpdatedAt ? `data-modified-at="${row.lastUpdatedAt}"` : '';
+
         const remarksButtonHtml = (row.editReason || row.deleteReason) ?
-            `<button class="dropdown-item view-remarks-btn" 
-                data-reasons='${JSON.stringify({
-                    editReasons: row.editReason ? [row.editReason] : null,
-                    deleteReason: row.deleteReason
-                })}'>
-                <i class="fas fa-comment-dots"></i> View Remarks
+            `<button class="dropdown-item view-remarks-btn" ${editReasonAttr} ${deleteReasonAttr} ${modifiedByAttr} ${modifiedAtAttr}>
+                <i class="fas fa-comment-dots"></i> Edit Remarks
              </button>`
             : '';
-
         const actionsCell = row.isDeleted 
             ? `
             <div class="dropdown">
@@ -1032,15 +1038,17 @@ $(document).on('click', function(e) {
     }
 });
 
-$(document).on('click', '.view-remarks-btn', function() {
-
+$(document).on('click', '.view-remarks-btn', function(event) {
     event.stopPropagation(); 
     
-    const reasonsData = $(this).attr('data-reasons');
-    showEditRemarks(reasonsData);
+    const editReasonJson = $(this).attr('data-edit-reason');
+    const deleteReason = $(this).attr('data-delete-reason');
+    const modifiedBy = $(this).attr('data-modified-by');
+    const modifiedAt = $(this).attr('data-modified-at');
+    
+    showEditRemarks(editReasonJson, deleteReason, modifiedBy, modifiedAt);
     $(this).closest('.dropdown-content').removeClass('show');
 });
-
     
    function fullDeleteMaintenance(id, status) {
     
@@ -1324,9 +1332,20 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
     });
     document.getElementById('otherReasonText').value = '';
 
-    
     updateFormSectionsBasedOnStatus();
-
+    const originalData = {
+        maintenanceTypeId: maintenanceTypeId,
+        maintenanceType: $('#maintenanceTypeId option:selected').text(),
+        truckId: truckId,
+        licensePlate: licensePlate || '',
+        date: date,
+        remarks: remarks || '',
+        status: status,
+        supplierId: supplierId,
+        supplierName: $('#supplierId option:selected').text(),
+        cost: parseFloat(cost || 0).toFixed(2)
+    };
+    $('#maintenanceForm').data('originalData', originalData);
     document.getElementById("maintenanceModal").style.display = "block";
 }
 
@@ -1363,35 +1382,73 @@ function populateMaintenancePurposes(remarks) {
     });
 }
 
-    function showEditRemarks(reasonsJson) {
-        try {
-            const reasons = JSON.parse(reasonsJson);
-            let html = '<div class="remarks-modal-content"><h3>Record Details</h3>';
-            
-            if (reasons.editReasons && reasons.editReasons.length > 0) {
-                html += '<h4>Edit Reasons:</h4><ul>';
-                reasons.editReasons.forEach(reason => {
-                    html += `<li>${reason}</li>`;
-                });
-                html += '</ul>';
+function showEditRemarks(editReasonJson, deleteReason, modifiedBy, modifiedAt) {
+        let html = '';
+        let hasContent = false;
+
+        if (editReasonJson && editReasonJson !== 'null' && editReasonJson !== "Record created") {
+            try {
+                const log = JSON.parse(editReasonJson);
+                
+                if (log.user_reason || log.automatic_changes) {
+                    
+                    if (log.user_reason && log.user_reason.length > 0) {
+                        html += '<h5 style="margin-top:0; margin-bottom:8px; color:#333;">User Reason(s)</h5>';
+                        html += '<ul style="margin-top:0; padding-left:20px; color:#555;">';
+                        log.user_reason.forEach(reason => {
+                            html += `<li style="margin-bottom:5px;">${reason}</li>`;
+                        });
+                        html += '</ul>';
+                        hasContent = true;
+                    }
+
+                    if (log.automatic_changes && log.automatic_changes.length > 0 && log.automatic_changes[0] !== "No data fields were changed") {
+                        html += '<h5 style="margin-top:15px; margin-bottom:8px; color:#333;">Field Changes Detected</h5>';
+                        html += '<ul class="change-log-list" style="margin-top:0; padding-left:20px; color:#555; font-family: monospace; font-size: 1.1em;">';
+                        log.automatic_changes.forEach(change => {
+                            let formattedChange = change.replace(/ to '(.*?)'$/, " to <strong style='color:#006400;'>'$1'</strong>");
+                            html += `<li style="margin-bottom:5px;">${formattedChange}</li>`;
+                        });
+                        html += '</ul>';
+                        hasContent = true;
+                    }
+
+                } else if (Array.isArray(log) && log.length > 0) {
+                    html += '<h5 style="margin-top:0; margin-bottom:8px; color:#333;">Edit Reasons:</h5><ul>';
+                    log.forEach(reason => {
+                        html += `<li>${reason}</li>`;
+                    });
+                    html += '</ul>';
+                    hasContent = true;
+                }
+            } catch (e) {
+
+                html += '<h5 style="margin-top:0; margin-bottom:8px; color:#333;">Edit Reason:</h5>';
+                html += `<p>${editReasonJson}</p>`;
+                hasContent = true;
             }
-            
-            if (reasons.deleteReason) {
-                html += '<h4>Delete Reason:</h4>';
-                html += `<p>${reasons.deleteReason}</p>`;
-            }
-            
-            html += '<button onclick="document.getElementById(\'remarksModal\').style.display=\'none\'">Close</button></div>';
-            
-            document.getElementById('remarksModalContent').innerHTML = html;
-            document.getElementById('remarksModal').style.display = 'block';
-        } catch (e) {
-            console.error('Error parsing remarks:', e);
-            document.getElementById('remarksModalContent').innerHTML = 
-                '<div class="remarks-modal-content"><p>Error displaying remarks</p></div>';
-            document.getElementById('remarksModal').style.display = 'block';
         }
-    }     
+        
+        if (deleteReason && deleteReason !== 'null' && deleteReason !== '') {
+            html += '<h5 style="margin-top:15px; margin-bottom:8px; color:#333;">Delete Reason:</h5>';
+            html += `<p style="margin-top:0;">${deleteReason}</p>`;
+            hasContent = true;
+        }
+
+        if (!hasContent) {
+             html += '<p>No remarks found for this record.</p>';
+        }
+        
+        if (modifiedAt) {
+            html += '<p style="font-style:italic; margin-top:20px; padding-top:10px; border-top:1px solid #eee; color:#666; font-size:0.9em; margin-bottom:0;">';
+            html += 'Last modified by: <strong>' + (modifiedBy || 'System') + '</strong><br>';
+            html += ' ' + formatDateTime(modifiedAt);
+            html += '</p>';
+        }
+
+        document.getElementById('remarksModalContent').innerHTML = html;
+        document.getElementById('remarksModal').style.display = 'block';
+    }
     function closeModal(modalId) {
     const modalToClose = document.getElementById(modalId);
     if (!modalToClose) return;
@@ -1629,10 +1686,8 @@ function saveMaintenanceRecord() {
     const truckId = parseInt(document.getElementById("truckId").value);
     const newStatus = document.getElementById("status").value;
 
-   
     if (newStatus === 'In Progress') {
         const selectedTruck = trucksList.find(truck => truck.truck_id === truckId);
-        
         
         if (selectedTruck && selectedTruck.display_status === 'Enroute') {
             Swal.fire({
@@ -1644,7 +1699,6 @@ function saveMaintenanceRecord() {
         }
     }
 
-   
     const selectedPurposes = [];
     document.querySelectorAll('input[name="maintenancePurpose"]:checked').forEach(checkbox => {
         if (checkbox.value === "Other") {
@@ -1670,21 +1724,21 @@ function saveMaintenanceRecord() {
     const remarks = selectedPurposes.join(', ');
     document.getElementById('remarks').value = remarks;
 
-    let editReasons = [];
+    let userReasons = [];
     if (isEditing) {
         const checkboxes = document.querySelectorAll('input[name="editReason"]:checked');
         checkboxes.forEach(checkbox => {
             if (checkbox.value === "Other") {
                 const otherReason = document.getElementById('otherReasonText').value.trim();
                 if (otherReason) {
-                    editReasons.push("Other: " + otherReason);
+                    userReasons.push("Other: " + otherReason);
                 }
             } else {
-                editReasons.push(checkbox.value);
+                userReasons.push(checkbox.value);
             }
         });
         
-        if (editReasons.length === 0) {
+        if (userReasons.length === 0) {
             Swal.fire({
                 title: 'Edit Reason Required',
                 text: 'Please select at least one reason for editing this record.',
@@ -1698,15 +1752,70 @@ function saveMaintenanceRecord() {
     
     const maintenanceId = document.getElementById("maintenanceId").value;
 
-    const formData = {
-        truckId: truckId,
+    let detectedChanges = [];
+    const originalData = $('#maintenanceForm').data('originalData');
+
+    const newData = {
         maintenanceTypeId: parseInt(document.getElementById("maintenanceTypeId").value),
-        supplierId: parseInt(document.getElementById("supplierId").value),
+        maintenanceType: $('#maintenanceTypeId option:selected').text(),
+        truckId: parseInt(document.getElementById("truckId").value),
+        licensePlate: $('#licensePlate').val(),
         date: document.getElementById("date").value,
         remarks: document.getElementById("remarks").value.trim(),
-        status: newStatus,
-        cost: parseFloat(document.getElementById("cost").value || 0),
-        editReasons: editReasons
+        status: document.getElementById("status").value,
+        supplierId: parseInt(document.getElementById("supplierId").value),
+        supplierName: $('#supplierId option:selected').text(),
+        cost: parseFloat(document.getElementById("cost").value || 0).toFixed(2)
+    };
+
+    const isDifferent = (a, b) => {
+        const valA = a === null || typeof a === 'undefined' ? "" : String(a);
+        const valB = b === null || typeof b === 'undefined' ? "" : String(b);
+        return valA !== valB;
+    };
+
+    if (isEditing && originalData) {
+        if (isDifferent(originalData.maintenanceType, newData.maintenanceType)) {
+            detectedChanges.push(`Maintenance Type changed from '${originalData.maintenanceType}' to '${newData.maintenanceType}'`);
+        }
+        if (isDifferent(originalData.licensePlate, newData.licensePlate)) {
+            detectedChanges.push(`Truck changed from '${originalData.licensePlate}' to '${newData.licensePlate}'`);
+        }
+        
+        if (isDifferent(originalData.date, newData.date)) {
+            const oldDate = formatDate(originalData.date);
+            const newDate = formatDate(newData.date);
+            detectedChanges.push(`Date changed from '${oldDate}' to '${newDate}'`);
+        }
+
+        if (isDifferent(originalData.remarks, newData.remarks)) {
+            detectedChanges.push(`Remarks changed from '${originalData.remarks}' to '${newData.remarks}'`);
+        }
+        if (isDifferent(originalData.status, newData.status)) {
+            detectedChanges.push(`Status changed from '${originalData.status}' to '${newData.status}'`);
+        }
+        if (isDifferent(originalData.supplierName, newData.supplierName)) {
+            detectedChanges.push(`Supplier changed from '${originalData.supplierName}' to '${newData.supplierName}'`);
+        }
+        if (parseFloat(originalData.cost) !== parseFloat(newData.cost)) {
+            detectedChanges.push(`Cost changed from '₱${originalData.cost}' to '₱${newData.cost}'`);
+        }
+    }
+
+    const finalLogEntry = {
+        user_reason: userReasons,
+        automatic_changes: detectedChanges.length > 0 ? detectedChanges : ["No data fields were changed"]
+    };
+
+    const formData = {
+        truckId: newData.truckId,
+        maintenanceTypeId: newData.maintenanceTypeId,
+        supplierId: newData.supplierId,
+        date: newData.date,
+        remarks: newData.remarks,
+        status: newData.status,
+        cost: parseFloat(newData.cost),
+        editReasons: isEditing ? JSON.stringify(finalLogEntry) : "Record created"
     };
 
     if (isEditing && maintenanceId) {

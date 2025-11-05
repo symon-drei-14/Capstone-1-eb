@@ -321,6 +321,21 @@ button[type="submit"]:hover {
 }
 
 
+#remarksModal .close    {
+    font-size: 32px;
+    font-weight: normal;
+    color: #aaa;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display:flex;
+    justify-items: flex-end;
+    right: 0;
+}
+
+#remarksModal .close:hover {
+    color: #d32f2f;
+    transform: rotate(90deg);
+}
 
 
 #historyModal {

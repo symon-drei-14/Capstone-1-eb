@@ -652,7 +652,14 @@ try {
     $conn->begin_transaction();
     
     try {
-        // First, delete related audit log records
+       $stmt_expenses = $conn->prepare("DELETE FROM maintenance_expenses WHERE maintenance_id = ?");
+        if (!$stmt_expenses) {
+            throw new Exception("Database error: " . $conn->error);
+        }
+        $stmt_expenses->bind_param("i", $id);
+        $stmt_expenses->execute();
+        $stmt_expenses->close();
+
         $stmt1 = $conn->prepare("DELETE FROM audit_logs_maintenance WHERE maintenance_id = ?");
         if (!$stmt1) {
             throw new Exception("Database error: " . $conn->error);
@@ -691,7 +698,7 @@ try {
 
             $username = $_SESSION['username'] ?? 'System'; 
             $cost = isset($data->cost) ? floatval($data->cost) : 0;
-            $editReasons = isset($data->editReasons) && is_array($data->editReasons) ? implode(", ", $data->editReasons) : "";
+            $editReasons = $data->editReasons ?? null;
             
             $conn->begin_transaction();
             
