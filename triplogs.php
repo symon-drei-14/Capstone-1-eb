@@ -1158,7 +1158,7 @@ let highlightTripId = null;
     $('#rowsPerPage').val(rowsPerPage);
     updateTableInfo(totalItems, 0);
     $('#statusFilter').on('change', filterTableByStatus);
-    $('#editEventDate').attr('min', formattedNow);
+    
     $('#addEventDate').attr('min', formattedNow);
     $('#rowsPerPage').on('change', function() {
         rowsPerPage = parseInt($(this).val());
@@ -3241,6 +3241,8 @@ $('#editForm').on('submit', function(e) {
 
                     const eventIndex = eventsData.findIndex(e => e.id == editedTripId);
                     if (eventIndex !== -1) {
+                        const currentUsername = $('.profile-name').text().trim() || 'User';
+                        const newTimestamp = new Date().toISOString();
                         Object.assign(eventsData[eventIndex], {
                             date: newData.date,
                             trip_date: newData.date,
@@ -3261,7 +3263,9 @@ $('#editForm').on('submit', function(e) {
                             truck_plate_no: truckPlateNo,
                             truck_capacity: newData.size.replace('ft', ''),
                             size: newData.size,
-                            edit_reasons: JSON.stringify(finalLogEntry) 
+                            edit_reasons: JSON.stringify(finalLogEntry), 
+                            modifiedat: newTimestamp,
+                            modifiedby: currentUsername
                         });
                     }
 
