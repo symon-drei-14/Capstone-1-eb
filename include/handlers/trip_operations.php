@@ -284,7 +284,7 @@ function formatDateTimeForTable($datetimeString) {
     }
 }
 
-// New helper function to render a single row's HTML
+
 function renderTripRowHtml($trip, $showDeleted, $searchTerm) {
     $highlight = function($text, $search) {
         if (empty($search) || !isset($text)) return htmlspecialchars($text ?? '');
@@ -341,7 +341,7 @@ function renderTripRowHtml($trip, $showDeleted, $searchTerm) {
     $lastModifiedDate = $trip['last_modified_at'] ?? $trip['created_at'];
     $formattedModifiedDate = formatDateTimeForTable($lastModifiedDate);
     $lastModifiedBy = !empty($trip['last_modified_by']) ? '<br> <strong>' . $highlight($trip['last_modified_by'], $searchTerm) . '</strong>' : '';
-    $clientPort = $highlight($trip['client'] ?? 'N/A', $searchTerm) . (!empty($trip['port']) ? ' - ' . $highlight($trip['port'], $searchTerm) : '');
+
 
     $row = '
         <tr data-trip-id="' . $trip['trip_id'] . '" class="' . ($showDeleted ? 'deleted-row' : '') . '">
@@ -351,7 +351,8 @@ function renderTripRowHtml($trip, $showDeleted, $searchTerm) {
             <td data-label="Helper">' . $highlight($trip['helper'] ?? 'N/A', $searchTerm) . '</td>
             <td data-label="Dispatcher">' . $highlight($trip['dispatcher'] ?? 'N/A', $searchTerm) . '</td>
             <td data-label="Container No.">' . $highlight($trip['container_no'] ?? 'N/A', $searchTerm) . '</td>
-            <td data-label="Client - Port">' . $clientPort . '</td>
+            <td data-label="Client">' . $highlight($trip['client'] ?? 'N/A', $searchTerm) . '</td>
+            <td data-label="Port (Origin)">' . $highlight($trip['port'] ?? 'N/A', $searchTerm) . '</td>
             <td data-label="Destination">' . $highlight($trip['destination'] ?? 'N/A', $searchTerm) . '</td>
             <td data-label="Shipping Line">' . $highlight($trip['shipping_line'] ?? 'N/A', $searchTerm) . '</td>
             <td data-label="Consignee">' . $highlight($trip['consignee'] ?? 'N/A', $searchTerm) . '</td>
