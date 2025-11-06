@@ -1666,7 +1666,7 @@ $('#summaryType').on('change', function() {
 
 
             
- function populateDriverDropdowns(selectedSize = '', currentDriver = '') {
+ function populateDriverDropdowns(selectedSize = '', currentDriver = '', callback) { 
     $.ajax({
         url: 'include/handlers/truck_handler.php?action=getTrucks',
         type: 'GET',
@@ -1764,14 +1764,18 @@ $('#summaryType').on('change', function() {
                 $('#editEventDriver').html(finalHtml);
                 $('#addEventDriver').html(finalHtml);
 
+                if (callback) callback(); 
+
             } else {
                 console.error('Error fetching truck data:', truckResponse.message);
                 populateAllDrivers(selectedSize, currentDriver); 
+                if (callback) callback(); 
             }
         },
         error: function() {
             console.error('AJAX error fetching truck data');
             populateAllDrivers(selectedSize, currentDriver); 
+            if (callback) callback(); 
         }
     });
 }
@@ -1877,16 +1881,18 @@ $('#summaryType').on('change', function() {
         });
 
    
-     $('#addEventSize, #editEventSize').on('change', function() {
+ $('#addEventSize, #editEventSize').on('change', function() {
         var selectedSize = $(this).val();
         var isAddForm = $(this).attr('id') === 'addEventSize';
         
-        
-        populateDriverDropdowns(selectedSize); 
-        
-      
         if(isAddForm) {
-            selectNextDriver(selectedSize);
+            
+            populateDriverDropdowns(selectedSize, '', function() {
+                selectNextDriver(selectedSize);
+            });
+        } else {
+           
+            populateDriverDropdowns(selectedSize); 
         }
     });
 
@@ -2671,8 +2677,6 @@ function populateEditModal(event) {
     $('#editEventDate').val(eventDate);
 
     const currentSize = event.truck_capacity ? event.truck_capacity + 'ft' : event.size;
-    populateDriverDropdowns(currentSize, event.driver);
-
     
     populateHelperDropdowns();
     populateDispatcherDropdowns();
@@ -2699,9 +2703,12 @@ function populateEditModal(event) {
         $('#editAdditionalCashContainer').hide();
     }
 
-  
-    setTimeout(() => {
+    populateDriverDropdowns(currentSize, event.driver, function() {
         $('#editEventDriver').val(event.driver);
+    });
+
+   
+    setTimeout(() => {
         $('#editEventHelper').val(event.helper);
         $('#editEventDispatcher').val(event.dispatcher || '');
         $('#editEventConsignee').val(event.consignee);
@@ -2767,7 +2774,7 @@ function populateEditModal(event) {
         status: event.status
     };
 
-    // Attach this data to the form itself
+    
     $('#editForm').data('originalData', originalData);
     $('#editModal').show();
 }
