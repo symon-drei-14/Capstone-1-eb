@@ -521,8 +521,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <option value="" >Select Size</option>
                     <option value="20ft">20ft</option>
                     <option value="40ft">40ft</option>
-                    <option value="40ft HC">40ft HC</option>
-                    <option value="45ft">45ft</option>
+                    
                 </select>
 
                 <label for="editEventPlateNo">Plate No.:</label>
@@ -826,8 +825,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
                     <option value=""  disabled selected>Select Size</option>
                     <option value="20ft">20ft</option>
                     <option value="40ft">40ft</option>
-                    <option value="40ft HC">40ft HC</option>
-                    <option value="45ft">45ft</option>
+                    
                 </select>
                 <label for="addEventDriver">Driver:</label>
                 <select id="addEventDriver" name="eventDriver" required style="width: 100%;">
