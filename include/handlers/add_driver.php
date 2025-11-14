@@ -66,6 +66,10 @@ try {
         throw new Exception("Passwords do not match");
     }
 
+    if (strlen($data['password']) < 8) {
+        throw new Exception("Password must be at least 8 characters long");
+    }
+
     // Validate required fields
     if (
         empty($data['name']) ||

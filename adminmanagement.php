@@ -479,6 +479,11 @@ checkAccess();
             Swal.fire('Validation Error', 'Password is required for new admins.', 'warning');
             return;
         }
+
+        if (password && password.length < 8) {
+             Swal.fire('Validation Error', 'Password must be at least 8 characters long.', 'warning');
+             return;
+        }
         
         const saveButton = document.querySelector('#adminModal .save-btn');
         saveButton.disabled = true;

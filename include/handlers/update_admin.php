@@ -135,6 +135,11 @@ try {
     // 4. PASSWORD CHANGE FLOW 
     // -------------------------------------------------------------------------
     if ($isPasswordChanging) {
+
+         if (strlen($newPassword) < 8) {
+            throw new Exception("Password must be at least 8 characters long.");
+        }
+        
         $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
         
        

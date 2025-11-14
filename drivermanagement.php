@@ -1023,6 +1023,24 @@ function validatePassword() {
         return false;
     }
     
+    if (mode === 'add' && password.length < 8) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Password must be at least 8 characters long.'
+        });
+        return false;
+    }
+    
+    if (mode === 'edit' && password.length > 0 && password.length < 8) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'New password must be at least 8 characters long.'
+        });
+        return false;
+    }
+    
     return true;
 }
 

@@ -32,6 +32,11 @@ if ($isMandatoryReset) {
         echo json_encode(["success" => false, "message" => "Account locked for security reasons. New password and email are required for restoration."]);
         exit;
     }
+
+    if (strlen($newPassword) < 8) {
+        echo json_encode(["success" => false, "message" => "New password must be at least 8 characters long."]);
+        exit;
+    }
     
     // Simple email format validation
     if (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {

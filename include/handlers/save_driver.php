@@ -131,8 +131,9 @@ try {
 
         // Handle Password Change
         if ($isPasswordChanging) {
-            // REMOVED: Validation for 'oldPassword' is no longer required for admins.
-            // REMOVED: OTP check is no longer required.
+          if (strlen($data['password']) < 8) {
+                throw new Exception("Password must be at least 8 characters long.");
+            }
             
             $updateFields[] = "password = ?";
             $params[] = password_hash($data['password'], PASSWORD_DEFAULT);

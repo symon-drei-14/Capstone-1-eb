@@ -356,6 +356,11 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
 
            const isEmailChanging = adminEmail !== document.getElementById('displayEmail').textContent;
            const isPasswordChanging = newPassword.length > 0;
+
+           if (isPasswordChanging && newPassword.length < 8) {
+                Swal.fire('Validation Error', 'New password must be at least 8 characters long.', 'warning');
+                return;
+           }
            
            const requiresOtp = isEmailChanging || isPasswordChanging;
 

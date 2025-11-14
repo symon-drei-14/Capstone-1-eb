@@ -158,6 +158,10 @@ try {
         
         // ONLY check old password if the user is changing their password
         if ($requiresOldPasswordVerification) {
+
+              if (strlen($newPassword) < 8) {
+                throw new Exception("New password must be at least 8 characters long.");
+            }
             if (empty($oldPassword)) {
                 // This client-side check is technically redundant if the client-side works, 
                 // but kept for server-side validation integrity.

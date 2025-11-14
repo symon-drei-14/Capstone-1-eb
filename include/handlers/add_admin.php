@@ -60,6 +60,11 @@ if (!filter_var($data['admin_email'], FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
+if (strlen($data['password']) < 8) {
+    echo json_encode(["success" => false, "message" => "Password must be at least 8 characters long."]);
+    exit;
+}
+
 
 $checkStmt = $conn->prepare("SELECT admin_id FROM login_admin WHERE username = ? OR admin_email = ?");
 $checkStmt->bind_param("ss", $data['username'], $data['admin_email']);
