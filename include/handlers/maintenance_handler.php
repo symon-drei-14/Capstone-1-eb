@@ -1295,6 +1295,30 @@ case 'checkMaintenance':
         'categories' => $years
     ]);
     break;
+
+    case 'getAuditLogs':
+            $maintenanceId = isset($_GET['maintenanceId']) ? intval($_GET['maintenanceId']) : 0;
+            if ($maintenanceId <= 0) {
+                echo json_encode(["success" => false, "message" => "Invalid ID"]);
+                break;
+            }
+
+           
+            $stmt = $conn->prepare("SELECT modified_by, modified_at, edit_reason, delete_reason, is_deleted 
+                                    FROM audit_logs_maintenance 
+                                    WHERE maintenance_id = ? 
+                                    ORDER BY modified_at DESC");
+            $stmt->bind_param("i", $maintenanceId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $logs = [];
+            while ($row = $result->fetch_assoc()) {
+                $logs[] = $row;
+            }
+            
+            echo json_encode(["success" => true, "logs" => $logs]);
+            break;
             
         case 'getMaintenanceTypes':
             $sql = "SELECT maintenance_type_id, type_name FROM maintenance_types ORDER BY type_name";

@@ -29,17 +29,17 @@ try {
     if ($result && $result->num_rows > 0) {
         $driver = $result->fetch_assoc();
         
-        // Format created_at properly
+      
         if ($driver['created_at'] !== null) {
             $driver['created_at'] = date('Y-m-d H:i:s', strtotime($driver['created_at']));
         }
         
-        // Let's format the modification date too
+       
         if ($driver['last_modified_at'] !== null) {
             $driver['last_modified_at'] = date('Y-m-d H:i:s', strtotime($driver['last_modified_at']));
         }
 
-        // Format last_login properly
+       
         if ($driver['last_login'] !== null && $driver['last_login'] !== 'NULL') {
             $driver['last_login'] = date('Y-m-d H:i:s', strtotime($driver['last_login']));
         }

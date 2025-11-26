@@ -1,4 +1,4 @@
-    <?php
+<?php
     require_once __DIR__ . '/include/check_access.php';
     checkAccess(); 
     ?>
@@ -126,8 +126,8 @@
                 <option value="" disabled selected>Status Filter </option>
                 <option value="all">All Statuses</option>
                 <option value="Pending">Pending</option>
-                <option value="Completed">Completed</option>
                 <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
                 <option value="Overdue">Overdue</option>
                 <option disabled class="seperator">─ ─ ─ ─ ─ ─ ─ ─ ─</option>
                 <option value="deleted">Deleted</option>
@@ -228,6 +228,7 @@
                 <div class="form-group">
                     <label for="truckId">Truck ID:</label>
                     <select id="truckId" name="truckId" required>
+                        <!-- Options populated via JS -->
                     </select>
                 </div>
             </div>
@@ -235,7 +236,10 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="licensePlate">License Plate:</label>
-                    <input type="text" id="licensePlate" name="licensePlate" readonly>
+                    <!-- CHANGED: Now a select dropdown -->
+                    <select id="licensePlate" name="licensePlate" required>
+                        <!-- Options populated via JS -->
+                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -262,8 +266,8 @@
                     <label for="status">Status:</label>
                    <select id="status" name="status" required onchange="updateFormSectionsBasedOnStatus()">
                         <option value="Pending" selected>Pending</option>
-                        <option value="Completed">Completed</option>
                         <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
                         <option value="Overdue">Overdue</option>
                     </select>
                 </div>
@@ -772,28 +776,40 @@ function loadSuppliers() {
             });
     }
             
-            function populateTruckDropdown() {
-    const truckDropdown = document.getElementById('truckId');
-    truckDropdown.innerHTML = '';
-    
-    trucksList.forEach(truck => {
-        const option = document.createElement('option');
-        option.value = truck.truck_id;
-        option.textContent = truck.truck_id ;
-        option.setAttribute('data-plate-no', truck.plate_no);
-        truckDropdown.appendChild(option);
-    });
-    
-   
-    truckDropdown.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const plateNo = selectedOption.getAttribute('data-plate-no');
-        document.getElementById('licensePlate').value = plateNo || '';
-        
-        
-        checkTruckChange();
-    });
-}
+    // CHANGED: Populates both Truck ID and License Plate dropdowns and syncs them
+    function populateTruckDropdown() {
+        const truckDropdown = document.getElementById('truckId');
+        const licenseDropdown = document.getElementById('licensePlate');
+
+        truckDropdown.innerHTML = '';
+        licenseDropdown.innerHTML = ''; 
+
+        trucksList.forEach(truck => {
+            // Truck ID Option (Shows just ID as requested)
+            const idOption = document.createElement('option');
+            idOption.value = truck.truck_id;
+            idOption.textContent = `ID: ${truck.truck_id}`;
+            truckDropdown.appendChild(idOption);
+
+            // License Plate Option
+            const plateOption = document.createElement('option');
+            plateOption.value = truck.truck_id; // Using ID as value to sync easily
+            plateOption.textContent = truck.plate_no;
+            licenseDropdown.appendChild(plateOption);
+        });
+
+        // Sync License Plate when Truck ID changes
+        truckDropdown.addEventListener('change', function() {
+            licenseDropdown.value = this.value;
+            checkTruckChange();
+        });
+
+        // Sync Truck ID when License Plate changes
+        licenseDropdown.addEventListener('change', function() {
+            truckDropdown.value = this.value;
+            checkTruckChange();
+        });
+    }
 
             let currentStatusFilter = 'all';
 
@@ -943,7 +959,6 @@ function renderTable(data, searchTerm = '') {
             tr.classList.add('deleted-row');
         }   
         
-        
         const truckIdDisplay = highlightMatches(String(row.truckId), searchTerm);
         const licensePlateDisplay = highlightMatches(row.licensePlate || 'N/A', searchTerm);
         const dateDisplay = highlightMatches(formatDate(row.maintenanceDate), searchTerm);
@@ -957,16 +972,11 @@ function renderTable(data, searchTerm = '') {
         const costDisplay = highlightMatches(`₱ ${parseFloat(row.cost || 0).toFixed(2)}`, searchTerm);
         const lastModifiedByDisplay = highlightMatches(row.lastUpdatedBy || 'System', searchTerm);
 
-       const editReasonAttr = row.editReason ? `data-edit-reason='${row.editReason.replace(/'/g, "&apos;")}'` : '';
-        const deleteReasonAttr = row.deleteReason ? `data-delete-reason='${row.deleteReason.replace(/'/g, "&apos;")}'` : '';
-        const modifiedByAttr = row.lastUpdatedBy ? `data-modified-by="${row.lastUpdatedBy}"` : 'data-modified-by="System"';
-        const modifiedAtAttr = row.lastUpdatedAt ? `data-modified-at="${row.lastUpdatedAt}"` : '';
-
-        const remarksButtonHtml = (row.editReason || row.deleteReason) ?
-            `<button class="dropdown-item view-remarks-btn" ${editReasonAttr} ${deleteReasonAttr} ${modifiedByAttr} ${modifiedAtAttr}>
+        
+        const remarksButtonHtml = `<button class="dropdown-item view-remarks-btn" onclick="viewAuditLogs(${row.maintenanceId})">
                 <i class="fas fa-comment-dots"></i> Edit Remarks
-             </button>`
-            : '';
+             </button>`;
+
         const actionsCell = row.isDeleted 
             ? `
             <div class="dropdown">
@@ -1019,13 +1029,84 @@ function renderTable(data, searchTerm = '') {
         `;
         tableBody.appendChild(tr);
     });
-    document.querySelectorAll('.view-remarks-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            showEditRemarks(this.getAttribute('data-reasons'));
-        });
-    });
 }
 
+
+function viewAuditLogs(maintenanceId) {
+    document.getElementById('remarksModalContent').innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Loading full history logs...</div>';
+    document.getElementById('remarksModal').style.display = 'block';
+
+    fetch(`include/handlers/maintenance_handler.php?action=getAuditLogs&maintenanceId=${maintenanceId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.logs) {
+                let html = '<div class="audit-logs-container">';
+                if (data.logs.length === 0) {
+                    html += '<p>No edit history found for this record.</p>';
+                } else {
+                    data.logs.forEach(log => {
+                        html += '<div class="audit-log-entry" style="border-bottom:1px solid #eee; padding: 15px 0;">';
+                        
+                        // Header: Who and When
+                        html += `<div style="font-size:0.9em; color:#555; margin-bottom:8px; display:flex; justify-content:space-between;">
+                                    <span><strong>${log.modified_by || 'System'}</strong></span>
+                                    <span>${formatDateTime(log.modified_at)}</span>
+                                 </div>`;
+                        
+                        // Body: Changes and Reasons
+                        try {
+                            const reasonObj = JSON.parse(log.edit_reason);
+                            
+                            // User Provided Reasons
+                            if (reasonObj.user_reason && reasonObj.user_reason.length > 0) {
+                                html += '<div style="margin-bottom:5px;"><strong>Reason:</strong> <span style="color:#333;">' + reasonObj.user_reason.join(', ') + '</span></div>';
+                            } else if (reasonObj.user_reason && typeof reasonObj.user_reason === 'string') {
+                                 html += '<div style="margin-bottom:5px;"><strong>Reason:</strong> ' + reasonObj.user_reason + '</div>';
+                            }
+                            
+                            // Automatic Field Changes
+                            if (reasonObj.automatic_changes && reasonObj.automatic_changes.length > 0 && reasonObj.automatic_changes[0] !== "No data fields were changed") {
+                                html += '<div style="background:#f9f9f9; padding:8px; border-radius:4px; margin-top:5px; font-size:0.9em; border-left:3px solid #B82132;">';
+                                reasonObj.automatic_changes.forEach(change => {
+                                     let formattedChange = change.replace(/ to '(.*?)'$/, " to <strong style='color:#006400;'>'$1'</strong>");
+                                     html += `<div style="margin-bottom:2px;">• ${formattedChange}</div>`;
+                                });
+                                html += '</div>';
+                            }
+                            
+                            // If it wasn't the standard object structure
+                            if (!reasonObj.user_reason && !reasonObj.automatic_changes) {
+                                 html += `<div>${log.edit_reason}</div>`;
+                            }
+
+                        } catch(e) {
+                            // If not JSON, just display text (e.g., "Record created")
+                             html += `<div>${log.edit_reason}</div>`;
+                        }
+
+                        // Deletion info
+                        if (log.delete_reason) {
+                             html += `<div style="color:#d33; margin-top:5px; font-weight:bold;">Deleted: ${log.delete_reason}</div>`;
+                        }
+                        
+                        if (log.is_deleted == 1) {
+                             html += '<div style="margin-top:5px;"><span class="status-overdue" style="font-size:0.7em; padding:2px 6px;">Deleted State</span></div>';
+                        }
+                        
+                        html += '</div>';
+                    });
+                }
+                html += '</div>';
+                document.getElementById('remarksModalContent').innerHTML = html;
+            } else {
+                document.getElementById('remarksModalContent').innerHTML = '<p>Error loading logs.</p>';
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            document.getElementById('remarksModalContent').innerHTML = '<p>Error fetching data.</p>';
+        });
+}
 
 $(document).on('click', '.dropdown-btn', function(e) {
     e.stopPropagation();
@@ -1285,7 +1366,7 @@ function updateFormSectionsBasedOnStatus() {
         document.getElementById('cost').value = '';
     }
 }
-   function openModal(mode) {
+  function openModal(mode) {
     document.getElementById("maintenanceModal").style.display = "block";
     
     if (mode === 'add') {
@@ -1298,8 +1379,14 @@ function updateFormSectionsBasedOnStatus() {
         document.getElementById("date").value = getLocalDate();
         document.getElementById("date").setAttribute("min", getLocalDate());
         
-        document.getElementById("status").value = "Pending";
-        document.getElementById("status").disabled = true;
+        
+        const statusSelect = document.getElementById("status");
+        statusSelect.value = "Pending";
+        statusSelect.disabled = true;
+        
+        
+        const pendingOption = statusSelect.querySelector('option[value="Pending"]');
+        if (pendingOption) pendingOption.disabled = false;
         
         document.querySelector('.edit-reasons-section').style.display = 'none';
 
@@ -1314,7 +1401,10 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
     document.getElementById("modalTitle").textContent = "Edit Maintenance Schedule";
     document.getElementById("maintenanceId").value = id;
     document.getElementById("truckId").value = truckId;
-    document.getElementById("licensePlate").value = licensePlate || '';
+    
+    // CHANGED: Set the licensePlate select value using truckId
+    document.getElementById("licensePlate").value = truckId;
+
     document.getElementById("date").value = date;
     document.getElementById("remarks").value = remarks || '';
     document.getElementById("status").value = status;
@@ -1323,14 +1413,51 @@ function openEditModal(id, truckId, licensePlate, date, remarks, status, supplie
     document.getElementById("maintenanceTypeId").value = maintenanceTypeId;
     document.getElementById("supplierId").value = supplierId;
 
-    document.getElementById("status").disabled = false;
+    const statusSelect = document.getElementById("status");
+    statusSelect.disabled = false;
+
+    
+    const pendingOption = statusSelect.querySelector('option[value="Pending"]');
+    if (status === 'In Progress' || status === 'Completed') {
+        if (pendingOption) pendingOption.disabled = true;
+    } else {
+        if (pendingOption) pendingOption.disabled = false;
+    }
+
     populateMaintenancePurposes(remarks);
 
     document.querySelector('.edit-reasons-section').style.display = 'block';
+    
+    
     document.querySelectorAll('input[name="editReason"]').forEach(checkbox => {
         checkbox.checked = false;
     });
     document.getElementById('otherReasonText').value = '';
+
+    
+    const record = maintenanceData.find(r => r.maintenanceId == id);
+    if (record && record.editReason) {
+        try {
+          
+            const reasonData = typeof record.editReason === 'string' ? JSON.parse(record.editReason) : record.editReason;
+            
+            
+            if (reasonData && reasonData.user_reason && Array.isArray(reasonData.user_reason)) {
+                reasonData.user_reason.forEach(r => {
+                    if (r.startsWith("Other: ")) {
+                        const otherCheckbox = document.querySelector('input[name="editReason"][value="Other"]');
+                        if (otherCheckbox) otherCheckbox.checked = true;
+                        document.getElementById('otherReasonText').value = r.replace("Other: ", "");
+                    } else {
+                        const checkbox = document.querySelector(`input[name="editReason"][value="${r}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Error parsing previous edit reasons:", e);
+        }
+    }
 
     updateFormSectionsBasedOnStatus();
     const originalData = {
@@ -1759,7 +1886,8 @@ function saveMaintenanceRecord() {
         maintenanceTypeId: parseInt(document.getElementById("maintenanceTypeId").value),
         maintenanceType: $('#maintenanceTypeId option:selected').text(),
         truckId: parseInt(document.getElementById("truckId").value),
-        licensePlate: $('#licensePlate').val(),
+        // CHANGED: Get the selected text (Plate No) instead of value (ID) for logging purposes
+        licensePlate: $('#licensePlate option:selected').text(),
         date: document.getElementById("date").value,
         remarks: document.getElementById("remarks").value.trim(),
         status: document.getElementById("status").value,
