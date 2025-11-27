@@ -443,6 +443,32 @@ class NotificationService {
         );
     }
 
+    public function sendMaintenanceNotification($driverId, $data) {
+        $title = $data['title'] ?? 'Maintenance Alert';
+        $body = $data['body'] ?? 'New maintenance schedule added for your truck.';
+        
+        $payload = [
+            'type' => 'maintenance',
+            'maintenance_id' => (string)($data['maintenance_id'] ?? ''),
+            'truck_id' => (string)($data['truck_id'] ?? ''),
+            'click_action' => 'MAINTENANCE_SCREEN',
+            'sound' => 'default'
+        ];
+
+        $notificationId = $this->createNotification(
+            $driverId, 
+            $title, 
+            $body, 
+            'maintenance',
+            null,
+            $payload
+        );
+        
+        error_log("Maintenance notification created with ID: $notificationId for driver: $driverId");
+        
+        return $notificationId !== false;
+    }
+
     public function sendTestNotification($driverId, $message = "Test notification from Mansar Trucking") {
         $title = "Test Notification";
         $body = $message;

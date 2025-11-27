@@ -4,6 +4,9 @@ session_start();
 date_default_timezone_set('Asia/Manila');
 require 'dbhandler.php';
 
+require_once 'NotificationService.php';
+$notificationService = new NotificationService($conn);
+
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -576,22 +579,24 @@ try {
         echo json_encode(["success" => true, "records" => $records]);
         break;
             
-        case 'add':
+case 'add':
             $data = json_decode(file_get_contents("php://input"));
-            
-            if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceTypeId, $data->supplierId)) {
+
+            if (!isset($data->truckId, $data->date, $data->remarks, $data->status, $data->maintenanceTypeId)) {
                 echo json_encode(["success" => false, "message" => "Missing required fields"]);
                 exit;
             }
 
             $username = $_SESSION['username'] ?? 'System'; 
             $cost = isset($data->cost) ? floatval($data->cost) : 0;
-            
+
+            $supplierId = (!empty($data->supplierId) && $data->supplierId !== 0) ? $data->supplierId : null;
+
             $conn->begin_transaction();
             
             try {
                 $stmt = $conn->prepare("INSERT INTO maintenance_table (truck_id, maintenance_type_id, supplier_id, date_mtnce, remarks, status, cost) 
-                                       VALUES (?, ?, ?, ?, ?, ?, ?)");
+                                        VALUES (?, ?, ?, ?, ?, ?, ?)");
                 
                 if (!$stmt) {
                     throw new Exception("Failed to prepare insert statement: " . $conn->error);
@@ -600,7 +605,7 @@ try {
                 $stmt->bind_param("iiisssd", 
                     $data->truckId,
                     $data->maintenanceTypeId,
-                    $data->supplierId,
+                    $supplierId,
                     $data->date, 
                     $data->remarks,
                     $data->status,
@@ -612,10 +617,10 @@ try {
                 }
                 
                 $maintenanceId = $conn->insert_id;
-                
+
                 $currentTime = date('Y-m-d H:i:s');
                 $auditStmt = $conn->prepare("INSERT INTO audit_logs_maintenance (maintenance_id, modified_by, modified_at, edit_reason, is_deleted) 
-                                           VALUES (?, ?, ?, ?, 0)");
+                                             VALUES (?, ?, ?, ?, 0)");
                 
                 if (!$auditStmt) {
                     throw new Exception("Failed to prepare audit statement: " . $conn->error);
@@ -629,6 +634,51 @@ try {
                 }
 
                 updateTruckStatusFromMaintenance($conn, $data->truckId);
+
+
+                $driverQuery = $conn->prepare("SELECT driver_id FROM drivers_table WHERE assigned_truck_id = ?");
+                $driverQuery->bind_param("i", $data->truckId);
+                $driverQuery->execute();
+                $driverRes = $driverQuery->get_result();
+
+                if ($driverRes->num_rows > 0) {
+                    $driverData = $driverRes->fetch_assoc();
+                    $targetDriverId = $driverData['driver_id'];
+
+                    $typeQuery = $conn->prepare("SELECT type_name FROM maintenance_types WHERE maintenance_type_id = ?");
+                    $typeQuery->bind_param("i", $data->maintenanceTypeId);
+                    $typeQuery->execute();
+                    $typeRes = $typeQuery->get_result();
+                    $typeName = ($typeRes->num_rows > 0) ? $typeRes->fetch_assoc()['type_name'] : 'Maintenance';
+
+                    $formattedDate = date('M j, Y', strtotime($data->date));
+
+                    $notificationData = [
+                        'title' => 'Maintenance Alert',
+                        'body' => "Your truck is scheduled for $typeName on $formattedDate.",
+                        'maintenance_id' => $maintenanceId,
+                        'truck_id' => $data->truckId
+                    ];
+
+                    if (method_exists($notificationService, 'sendMaintenanceNotification')) {
+                        $notificationService->sendMaintenanceNotification($targetDriverId, $notificationData);
+                    } else {
+                        $payload = [
+                            'type' => 'maintenance',
+                            'maintenance_id' => (string)$maintenanceId,
+                            'click_action' => 'MAINTENANCE_SCREEN'
+                        ];
+                        $notificationService->createNotification(
+                            $targetDriverId, 
+                            $notificationData['title'], 
+                            $notificationData['body'], 
+                            'maintenance', 
+                            null, 
+                            $payload
+                        );
+                    }
+                    error_log("Maintenance notification sent to driver ID: " . $targetDriverId);
+                }
                 
                 $conn->commit();
                 echo json_encode(["success" => true, "message" => "Maintenance record created successfully"]);
@@ -1295,6 +1345,46 @@ case 'checkMaintenance':
         'categories' => $years
     ]);
     break;
+
+
+    case 'getAssignedTruck':
+        $driverId = isset($_GET['driverId']) ? $_GET['driverId'] : '';
+        
+        if (empty($driverId)) {
+            echo json_encode(["success" => false, "message" => "Driver ID required"]);
+            break;
+        }
+
+        $stmt = $conn->prepare("
+            SELECT d.assigned_truck_id, t.plate_no 
+            FROM drivers_table d 
+            LEFT JOIN truck_table t ON d.assigned_truck_id = t.truck_id 
+            WHERE d.driver_id = ?
+        ");
+        
+        if (!$stmt) {
+            echo json_encode(["success" => false, "message" => "DB Error: " . $conn->error]);
+            break;
+        }
+
+        $stmt->bind_param("s", $driverId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            if ($row['assigned_truck_id']) {
+                echo json_encode([
+                    "success" => true, 
+                    "truck_id" => $row['assigned_truck_id'], 
+                    "plate_no" => $row['plate_no']
+                ]);
+            } else {
+                echo json_encode(["success" => false, "message" => "No truck assigned"]);
+            }
+        } else {
+            echo json_encode(["success" => false, "message" => "Driver not found"]);
+        }
+        break;
 
     case 'getAuditLogs':
             $maintenanceId = isset($_GET['maintenanceId']) ? intval($_GET['maintenanceId']) : 0;
