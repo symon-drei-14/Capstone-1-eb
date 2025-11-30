@@ -485,4 +485,28 @@ class NotificationService {
         
         return $result !== false;
     }
+
+
+    public function sendMaintenanceUpdateNotification($driverId, $data) {
+        $status = $data['status'] ?? 'Updated';
+        $title = "Maintenance Update";
+        
+        if ($status === 'In Progress') {
+            $body = "Maintenance has started on your truck.";
+        } elseif ($status === 'Completed') {
+            $body = "Maintenance is complete. Your truck is ready.";
+        } else {
+            $body = "Maintenance status updated to: $status";
+        }
+        
+        $payload = [
+            'type' => 'maintenance_update',
+            'maintenance_id' => (string)($data['maintenance_id'] ?? ''),
+            'status' => $status,
+            'click_action' => 'MAINTENANCE_SCREEN',
+            'sound' => 'default'
+        ];
+
+        return $this->createNotification($driverId, $title, $body, 'maintenance_update', null, $payload);
+    }
 }

@@ -738,10 +738,10 @@ case 'add':
     }
     break;
             
-        case 'edit':
+case 'edit':
             $data = json_decode(file_get_contents("php://input"));
             
-            if (!isset($data->maintenanceId, $data->truckId, $data->maintenanceTypeId, $data->supplierId)) {
+            if (!isset($data->maintenanceId, $data->truckId, $data->maintenanceTypeId)) {
                 echo json_encode(["success" => false, "message" => "Missing required fields"]);
                 exit;
             }
@@ -749,15 +749,16 @@ case 'add':
             $username = $_SESSION['username'] ?? 'System'; 
             $cost = isset($data->cost) ? floatval($data->cost) : 0;
             $editReasons = $data->editReasons ?? null;
-            
+
+            $supplierId = (!empty($data->supplierId) && $data->supplierId !== 0) ? $data->supplierId : null;
+
             $conn->begin_transaction();
             
             try {
-                // Update maintenance_table
                 $stmt = $conn->prepare("UPDATE maintenance_table SET 
-                                       truck_id = ?, maintenance_type_id = ?, supplier_id = ?, 
-                                       date_mtnce = ?, remarks = ?, status = ?, cost = ?
-                                       WHERE maintenance_id = ?");
+                                        truck_id = ?, maintenance_type_id = ?, supplier_id = ?, 
+                                        date_mtnce = ?, remarks = ?, status = ?, cost = ?
+                                        WHERE maintenance_id = ?");
                 
                 if (!$stmt) {
                     throw new Exception("Failed to prepare update statement: " . $conn->error);
@@ -766,7 +767,7 @@ case 'add':
                 $stmt->bind_param("iiisssdi", 
                     $data->truckId,
                     $data->maintenanceTypeId,
-                    $data->supplierId,
+                    $supplierId,
                     $data->date, 
                     $data->remarks,
                     $data->status,
@@ -780,7 +781,7 @@ case 'add':
 
                 $currentTime = date('Y-m-d H:i:s');
                 $auditStmt = $conn->prepare("INSERT INTO audit_logs_maintenance (maintenance_id, modified_by, modified_at, edit_reason, is_deleted) 
-                                           VALUES (?, ?, ?, ?, 0)");
+                                             VALUES (?, ?, ?, ?, 0)");
                 
                 if (!$auditStmt) {
                     throw new Exception("Failed to prepare audit statement: " . $conn->error);
@@ -793,8 +794,37 @@ case 'add':
                 }
 
                 updateTruckStatusFromMaintenance($conn, $data->truckId);
-                
+
                 $conn->commit();
+
+                if ($data->status === 'In Progress' || $data->status === 'Completed') {
+
+                    $driverQuery = $conn->prepare("SELECT driver_id FROM drivers_table WHERE assigned_truck_id = ?");
+                    $driverQuery->bind_param("i", $data->truckId);
+                    $driverQuery->execute();
+                    $driverRes = $driverQuery->get_result();
+
+                    if ($driverRes->num_rows > 0) {
+                        $driverData = $driverRes->fetch_assoc();
+                        $targetDriverId = $driverData['driver_id'];
+
+                        $notifData = [
+                            'maintenance_id' => $data->maintenanceId,
+                            'status' => $data->status,
+                            'truck_id' => $data->truckId
+                        ];
+
+                        if (method_exists($notificationService, 'sendMaintenanceUpdateNotification')) {
+                            $notificationService->sendMaintenanceUpdateNotification($targetDriverId, $notifData);
+                            error_log("Maintenance status update sent to driver ID: $targetDriverId (Status: {$data->status})");
+                        } else {
+                             $title = "Maintenance Update";
+                             $body = "Your truck maintenance status is now: " . $data->status;
+                             $notificationService->createNotification($targetDriverId, $title, $body, 'maintenance_update', null, $notifData);
+                        }
+                    }
+                }
+
                 echo json_encode(["success" => true, "message" => "Maintenance record updated successfully"]);
                 
             } catch (Exception $e) {
