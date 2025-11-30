@@ -24,14 +24,15 @@ h3 {
 
 
 @media (max-width: 768px) {
-    .sidebar {
-        display: none;
-        position: absolute;
-        z-index: 999;
-        background-color: #fff;
-        width: 250px;
-        height: 100%;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+   .sidebar {
+         top: 10px !important; 
+        height: 105vh !important; 
+        width: 100% !important; 
+        z-index: 1500;
+        padding-top: 30px; 
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        
     }
 
     .sidebar.show {
@@ -601,6 +602,7 @@ body {
 @media (max-width: 768px) {
     .header2 .company {
         height: 80px;
+        z-index: 100 !important;
     }
 
     .drivers-sidebar {

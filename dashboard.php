@@ -639,12 +639,15 @@ $eventsDataJson = json_encode($eventsData);
             const openSidebar = () => {
                 sidebar.classList.add('expanded');
                 backdrop.classList.add('show');
+                document.body.classList.add('no-scroll');
+               
             };
 
 
             const closeSidebar = () => {
                 sidebar.classList.remove('expanded');
-                backdrop.classList.remove('show');
+                backdrop.classList.remove('show'); 
+                document.body.classList.remove('no-scroll');
             };
 
 
@@ -1463,7 +1466,7 @@ function renderCostTrendsChart(data, chartType = 'donut', title = 'Cost Trends')
     const options = {
         series: data.data,
         chart: {
-            width: 580,
+            width: '100%',
             type: chartType,
         },
         labels: data.labels,
@@ -1549,7 +1552,7 @@ function renderMonthlyChart(data) {
             height: 350,
             type: 'line',
             stacked: false,
-            width: 580,
+            width: '100%',
         },
         stroke: {
             width: [2, 2, 2, 2, 2],
@@ -1640,7 +1643,7 @@ function renderYearlyChart(data) {
             type: 'bar',
             height: 350,
             stacked: true,
-            width: 580,
+            width: '100%',
         },
         plotOptions: {
             bar: {
@@ -1707,7 +1710,7 @@ function renderDefaultCostChart() {
     const options = {
         series: [44, 55, 41, 17, 15],
         chart: {
-            width: 580,
+            width: '100%',
             type: 'donut',
         },
         labels: ['Fuel', 'Toll Gate', 'Food', 'Emergency', 'Others'],

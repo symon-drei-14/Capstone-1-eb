@@ -1865,7 +1865,13 @@ h3.title {
                 width: 100%;
                 justify-content: space-between;
             }
-            
+            body.table-view .filter-toggle-container {
+                position: static !important; /* Stop floating on top of other elements */
+                right: auto !important;
+                margin-left: auto !important; /* Push to the right side using Flexbox */
+                margin-top: 0 !important;
+                width: 110% !important;
+            }
             body.table-view .filter-toggle-container,
             body.table-view .status-filter-container {
                 margin-left: 0;
@@ -3313,7 +3319,8 @@ h3.title {
     }
     .events-table td:nth-child(18) {
         position: absolute;
-        top: 0.5rem;
+        top: 1.5rem !important;
+        margin-left: 10px !important; 
         right: 0rem;
         border: none;
         padding: 0;
@@ -3322,6 +3329,22 @@ h3.title {
     }
     .events-table td:nth-child(18)::before {
         content: ""; 
+    }
+
+    .events-table td:nth-child(17) {
+        border-bottom: none !important; 
+        padding-top: 12px !important;
+        padding-bottom: 5px !important;
+        margin-top: 5px;
+        border-top: 1px dashed #e0e0e0; 
+        color: #666;
+        font-size: 0.85rem !important; 
+    }
+
+    .events-table td:nth-child(17):before {
+        color: #888 !important;
+        font-weight: normal !important;
+        font-size: 0.85rem !important;
     }
     .events-table .dropdown {
         padding-top: 0;
@@ -3334,12 +3357,50 @@ h3.title {
         margin: 10px auto;
     }
     #editForm, #addScheduleForm {
+        display: flex !important;
+        flex-direction: column !important;
         grid-template-columns: 1fr !important; 
-        gap: 0;
+        gap: 15px !important;
+        padding: 10px 15px !important;
     }
     #editForm > div, #addScheduleForm > div {
-        margin-bottom: 15px;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;  
     }
+    #editForm fieldset, 
+    #addScheduleForm fieldset {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+    #editModal .modal-content,
+    #addScheduleModal .modal-content {
+        width: 95% !important;
+        max-height: 90vh !important;
+        overflow-y: scroll !important; /* Ensure scrollability */
+        padding-bottom: 20px;
+    }
+    #editForm .reason-option input[type="checkbox"] {
+    margin-right: 0 !important; 
+    margin-left: 10px !important; 
+    position: static !important; 
+    width: 18px !important; 
+    height: 18px !important;
+}
+
+#editForm .reason-option label {
+    margin-left: 0 !important; 
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    text-align: left !important;
+    width: auto !important;
+}
+
+#editForm .reason-option {
+    align-items: center !important; 
+    justify-content: space-between !important; 
+}
+}
     #editForm .edit-reasons-section {
         width: auto;
         grid-column: 1 / -1 !important; 
@@ -3381,7 +3442,7 @@ h3.title {
     text-align: left;    
     font-weight: 500;
 }
-}
+
 .event-modal-actions .dropdown {
     position: relative;
     right: 30px;

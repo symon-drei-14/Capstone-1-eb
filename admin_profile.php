@@ -556,10 +556,12 @@ $loggedInAdminId = $_SESSION['admin_id'] ?? null;
              const openSidebar = () => {
                  sidebar.classList.add('expanded');
                  backdrop.classList.add('show');
+                 document.body.classList.add('no-scroll');
              };
              const closeSidebar = () => {
                  sidebar.classList.remove('expanded');
                  backdrop.classList.remove('show');
+                 document.body.classList.remove('no-scroll');
              };
              toggleBtn.addEventListener('click', function (e) {
                  e.stopPropagation(); 

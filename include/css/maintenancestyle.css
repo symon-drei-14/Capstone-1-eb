@@ -1821,8 +1821,6 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 }
 
 
-/* For Mobile Phones (e.g., <= 768px) */
-/* For Mobile Phones (e.g., <= 768px) */
 @media (max-width: 768px) {
     h3 {
         margin: 70px 10px 10px;
@@ -1909,14 +1907,34 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     border-top-right-radius: 8px;
 }
 
-#maintenanceTable td[data-label="Actions"] {
-    justify-content: center;
-    padding: 8px 15px;
-    overflow: visible;
-}
+/* Target the Actions cell specifically */
+    #maintenanceTable td[data-label="Actions"] {
+        justify-content: flex-end !important; /* Push content to the right */
+        padding-right: 10px; /* Add slight padding from the edge */
+    }
 
+
+    #maintenanceTable td[data-label="Actions"] .dropdown-content {
+        position: absolute;
+        right: 10px !important; /* Keep it slightly off the right edge */
+        top: 35px !important; 
+        z-index: 1000;
+        width: 150px; 
+        margin-right:-150px !important;
+    }
+    
+    .dropdown-btn{
+        margin-right:-300px !important;
+    }
+    
+    /* Ensure the row allows the dropdown to overflow visible */
+    #maintenanceTable tr {
+        overflow: visible !important; 
+    }
+}
 #maintenanceTable tr td:last-child {
     border-bottom: none;
+    
 }
 
 #maintenanceTable td .modified-details {

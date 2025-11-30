@@ -94,12 +94,14 @@ checkAccess();
         const openSidebar = () => {
             sidebar.classList.add('expanded');
             backdrop.classList.add('show');
+            document.body.classList.add('no-scroll');
         };
 
 
         const closeSidebar = () => {
             sidebar.classList.remove('expanded');
             backdrop.classList.remove('show');
+            document.body.classList.remove('no-scroll');
         };
 
 

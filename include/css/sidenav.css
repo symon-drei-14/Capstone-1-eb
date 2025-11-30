@@ -478,8 +478,13 @@
 /* Fix z-index hierarchy for all mobile screens */
 @media screen and (max-width: 768px) {
     .sidebar {
-        top:0;
-        z-index: 1100; 
+         top: 10px !important; 
+        height: 105vh !important; 
+        width: 100% !important; 
+        z-index: 1500;
+        padding-top: 30px; 
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
         
     }
     
@@ -494,5 +499,15 @@
     .toggle-sidebar-btn {
         z-index: 1700; 
     }
+        .logout-section {
+        margin-bottom: 3.8rem!important;
+    }
+    
 }
 
+body.no-scroll {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}

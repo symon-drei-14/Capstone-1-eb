@@ -1429,4 +1429,8 @@ cursor: pointer;
         width: 95%;
         margin: 20% auto;
     }
+
+    .dropdown-btn{
+        margin-left: 100px !important;
+    }
 }
