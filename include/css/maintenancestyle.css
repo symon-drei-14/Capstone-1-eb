@@ -1940,8 +1940,9 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 #maintenanceTable td .modified-details {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     gap: 2px;
+    text-align: center;
 }
 #maintenanceTable td .modified-details strong {
     font-weight: 600;
