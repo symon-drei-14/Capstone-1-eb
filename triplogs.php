@@ -1010,7 +1010,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
      </div>
 </div>
 
-
+<div class="table-responsive-wrapper">
 <table class="events-table" id="eventsTable"> 
     <thead>
         <tr>
@@ -1036,6 +1036,7 @@ $driverQuery = "SELECT d.driver_id, d.name, t.plate_no as truck_plate_no, t.capa
     </thead>
     <tbody id="eventTableBody"></tbody>
 </table>
+</div>
             <div class="pagination-container">
                 <div class="pagination">
                     <button class="prev" id="prevPageBtn">&laquo</button> 

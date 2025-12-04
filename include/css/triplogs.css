@@ -371,13 +371,22 @@
     text-overflow: ellipsis;
     max-width: 200px; 
 } */
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;  
+    -webkit-overflow-scrolling: touch; 
+    margin-bottom: 20px;
+    border-radius: 15px; 
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); 
+    background: #fff;
+}
 
 .events-table {
     max-width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
     background-color: #fff;
-    
+
     table-layout: auto;
     font-size: 14px;
     border-top-left-radius:15px;
@@ -557,16 +566,18 @@ border-top-right-radius:15px;
             white-space: nowrap;
         } */
         
-        @media screen and (max-width: 768px) {
-            .events-table {
-                width: 100%;
-                font-size: 12px;
-            }
-        
-            .events-table th, .events-table td {
-                padding: 8px 10px;
-            }
-        }
+       @media screen and (max-width: 992px) {
+    .main-container {
+        width: auto;
+        margin: 10px;
+        padding: 10px;
+    }
+    
+    /* Hide specific details in header on mobile to save space */
+    .header-right .datetime-container {
+        display: none; 
+    }
+}
         
         .toggle-btns {
             display: flex;
@@ -1878,6 +1889,59 @@ h3.title {
                 margin-right: 0;
             }
         }
+        @media screen and (max-width: 900px) {
+    .calendar-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    /* Make buttons full width for easier tapping */
+    #addScheduleBtnTable, 
+    #expenseSummaryBtn {
+        width: 100%; 
+        margin-right: 0;
+        text-align: center;
+    }
+
+    /* Stack the filters */
+    .status-filter-container {
+        flex-direction: column;
+        width: 100%;
+        margin: 0;
+    }
+
+    #statusFilter {
+        width: 100%; /* Full width dropdown */
+    }
+
+    /* Search Bar Full Width */
+    .search-container {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 10px;
+        left: 0;
+    }
+
+    #searchInput {
+        width: 100%;
+    }
+    
+    /* Date Filter Stacking */
+    .date-filter-container {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .date-input-group {
+        width: 100%;
+    }
+    
+    .date-input {
+        width: 100%;
+        box-sizing: border-box; /* Ensure padding doesn't overflow width */
+    }
+}
 
 #eventModal .modal-content.redesigned {
     max-width: 800px;
@@ -2046,7 +2110,7 @@ h3.title {
 
 #eventModal .trip-details-grid-revised {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px;
 }
 
@@ -3216,11 +3280,27 @@ h3.title {
     .stats-container-wrapper {
         margin: 15px 10px;
     }
-    .stats-container {
-        flex-wrap: wrap;
+   .stats-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 2 cards per row */
+        gap: 10px;
+        overflow-x: visible; /* Disable horizontal scroll, show grid */
+        padding: 0;
     }
-    .stat-card {
-        flex-basis: 100%;
+    .stat-card:last-child {
+        grid-column: span 2; 
+    }
+   .stat-card {
+        margin: 0; /* Remove side margins */
+        min-width: 0; /* Allow shrinking */
+        padding: 10px;
+    }
+    .stat-value {
+        font-size: 20px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
     }
     .calendar-container {
         padding: 5px;
@@ -3319,8 +3399,8 @@ h3.title {
     }
     .events-table td:nth-child(18) {
         position: absolute;
-        top: 1.5rem !important;
-        margin-left: 10px !important; 
+        top: 0.8rem !important;
+        margin-left: 50px !important; 
         right: 0rem;
         border: none;
         padding: 0;
