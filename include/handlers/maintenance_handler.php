@@ -1298,6 +1298,63 @@ case 'checkMaintenance':
     }
     break;
 
+
+case 'getUpcomingMaintenance':
+    $truckId = isset($_GET['truckId']) ? intval($_GET['truckId']) : 0;
+    
+    if ($truckId <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid truck ID"]);
+        exit;
+    }
+    
+    $sql = "SELECT 
+                m.maintenance_id,
+                m.truck_id,
+                m.date_mtnce,
+                m.remarks,
+                m.status,
+                mt.type_name as maintenance_type_name,
+                DATEDIFF(m.date_mtnce, CURDATE()) as days_until
+            FROM maintenance_table m
+            LEFT JOIN maintenance_types mt ON m.maintenance_type_id = mt.maintenance_type_id
+            LEFT JOIN (
+                SELECT maintenance_id, is_deleted,
+                       ROW_NUMBER() OVER (PARTITION BY maintenance_id ORDER BY modified_at DESC) as rn
+                FROM audit_logs_maintenance
+            ) latest_audit ON m.maintenance_id = latest_audit.maintenance_id AND latest_audit.rn = 1
+            WHERE m.truck_id = ? 
+            AND m.status IN ('Pending', 'In Progress', 'Overdue')
+            AND (latest_audit.is_deleted = 0 OR latest_audit.is_deleted IS NULL)
+            ORDER BY m.date_mtnce ASC
+            LIMIT 1";
+    
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        error_log("getUpcomingMaintenance query error: " . $conn->error);
+        echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+        exit;
+    }
+    
+    $stmt->bind_param("i", $truckId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $maintenance = $result->fetch_assoc();
+        echo json_encode([
+            "success" => true, 
+            "maintenance" => $maintenance
+        ]);
+    } else {
+        echo json_encode([
+            "success" => true, 
+            "maintenance" => null
+        ]);
+    }
+    
+    $stmt->close();
+    break;
+
     case 'getMaintenanceFrequency':
     
     $sql = "SELECT 
